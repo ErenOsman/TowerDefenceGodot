@@ -196,6 +196,8 @@ func refresh() -> void:
 	_name.text = hand.name if hand != null else f.name
 	_name.add_theme_color_override("font_color", TdTheme.color("bad") if enemy else TdTheme.color("accent.light"))
 	if hand != null: _sub.text = "Tower · %d energy" % hand.cost
+	elif tower_id != null and c.is_coop and c.owner_of(e) != "":
+		_sub.text = "Your tower" if c.owner_of(e) == c.local_player else "%s's tower" % c.player_name(c.owner_of(e))
 	elif tower_id != null: _sub.text = "Tower"
 	elif enemy: _sub.text = "Enemy"
 	elif session.is_commanded(e): _sub.text = "Yours"
@@ -229,13 +231,15 @@ func refresh() -> void:
 	_next.text = ""
 	_next.visible = false
 	# sell
-	var can_sell := tower_id != null and f != null and f.life == LifeState.Alive
+	var can_sell := tower_id != null and f != null and f.life == LifeState.Alive and (not c.is_coop or c.owner_of(e) == c.local_player)
 	_sell.visible = can_sell
 	if can_sell:
 		_sell_value.text = "+%d" % session.sell_value(tower_id)
 		var keep := session.last_reason
 		var ok := session.can_sell(tower_id) and c.can_act
-		_sell.set_interactable(ok, session.last_reason if session.last_reason != "" else "Not now")
+		var why: String = session.last_reason if session.last_reason != "" else "Not now"
+		if c.is_coop and not c.is_my_turn and c.wait_reason != "": why = c.wait_reason
+		_sell.set_interactable(ok, why)
 		session.last_reason = keep
 	_owner_key = _key_of(e, hand)
 	size = Vector2(WIDTH, 0)

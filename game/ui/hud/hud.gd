@@ -23,6 +23,8 @@ var sequence: HudSequence
 var pause: HudPause
 var end_screen: HudEndScreen
 var info: HudInfoPopup
+## The co-op parts (turn strip, Pass, chat, notices): only when controller.is_coop, else null.
+var coop_hud: HudCoop = null
 var layout := {}
 
 var _bound := false
@@ -96,6 +98,11 @@ func bind(c: LevelController) -> void:
 	c.sequence_changed.connect(func(): _dirty = true)
 	c.pause_requested.connect(open_pause)
 	c.level_ended.connect(_on_level_ended)
+	if c.is_coop and coop_hud == null:
+		coop_hud = HudCoop.new()
+		root.add_child(coop_hud)
+		root.move_child(coop_hud, pause.get_index()) # under the popups
+		coop_hud.bind(c)
 	var keys = get_tree().root.get_node_or_null("KeyBinds") if is_inside_tree() else null
 	if keys != null and keys.has_signal("changed"): keys.changed.connect(func():
 		top_bar.keys_changed()
@@ -141,7 +148,7 @@ func _on_level_ended(outcome: int) -> void:
 
 func _panels_changed() -> void:
 	if controller == null: return
-	controller.ui_panel_open = pause.is_open() or info.is_open() or end_screen.visible
+	controller.ui_panel_open = pause.is_open() or info.is_open() or end_screen.visible or (coop_hud != null and coop_hud.typing())
 
 # ------------------------------------------------------------------ refresh
 

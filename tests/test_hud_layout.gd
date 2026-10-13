@@ -62,7 +62,7 @@ func test_bar_raises_above_the_tray() -> void:
 func test_hint_without_bar() -> void:
 	var h := HudLayout.hint_without_bar(SCREEN, 2, 300.0)
 	assert_true(h["centred"])
-	assert_num(h["x"], 810.0)
+	assert_num(h["x"], 960.0)
 	var long := HudLayout.hint_without_bar(SCREEN, 6, 600.0)
 	assert_false(long["centred"])
 	assert_num(long["x"], HudLayout.tray_rect(SCREEN, 6).end.x + 24.0)

@@ -2,7 +2,7 @@ extends Control
 ## The Camp (UI_Camp.cs; Camp & Chapters — Design): the home between levels once Chapter 1 is won. A 3D camp
 ## laid out from res://art/camp/layout.json (map-kit ground with its frame, the station props on a ring round the
 ## Campfire, all facing the camera; Tent and Supplies) with a station button over each prop: Chapters (the chapter picker, then a chapter's
-## levels), Towers (the hand editor over every owned tower), Codex, and Main menu; Workshop and Multiplayer are
+## levels), Towers (the hand editor over every owned tower), Codex, and Main menu; Multiplayer (the co-op lobby); Workshop is
 ## locked ("Coming later"). The first visit (PlayerProfile.camp_seen) shows a welcome card, then a tour: the
 ## Princess's speech bubble (TdTextBubble) points at each station in turn, the station highlighted; a click goes on,
 ## Skip ends it. Map music comes from SceneFlow (AudioMgr.play_scene_music).
@@ -18,7 +18,7 @@ const STATIONS := [
 	{"id": "Chapters", "label": "Chapters", "icon": "icon_castle", "action": "open_chapters", "locked": false, "primary": true},
 	{"id": "Codex", "label": "Codex", "icon": "icon_codex", "action": "open_codex", "locked": false},
 	{"id": "Workshop", "label": "Workshop", "icon": "icon_edit", "action": "", "locked": true},
-	{"id": "Multiplayer", "label": "Multiplayer", "icon": "icon_onboard", "action": "", "locked": true},
+	{"id": "Multiplayer", "label": "Multiplayer", "icon": "icon_onboard", "action": "open_multiplayer", "locked": false},
 ]
 ## Used when layout.json cannot be read (same values as layout.json, the ring layout of 2026-10-13).
 const FALLBACK_LAYOUT := {
@@ -45,7 +45,7 @@ const TOUR := [
 	["Towers", "Towers: every tower you own. Choose which ones you bring in your hand."],
 	["Codex", "Codex: every tower, enemy and status you have met, and tips."],
 	["Workshop", "Workshop: changing your towers comes later."],
-	["Multiplayer", "Multiplayer: playing with others comes later."],
+	["Multiplayer", "Multiplayer: play a level together with friends online, each with your own towers."],
 ]
 const TOUR_SPEAKER := "Princess"
 
@@ -73,6 +73,9 @@ func _ready() -> void:
 	if welcome_card.visible:
 		await get_tree().process_frame
 		TdPanelTransition.open(welcome_card.get_child(0))
+	elif has_node("/root/Net") and get_node("/root/Net").reopen_lobby: # back from a co-op match
+		get_node("/root/Net").reopen_lobby = false
+		open_multiplayer.call_deferred()
 
 # ------------------------------------------------------------------ the 3D camp
 
@@ -452,3 +455,12 @@ func open_codex() -> TdPopup:
 ## Towers: the hand editor over every owned tower.
 func open_towers() -> TdPopup:
 	return open_popup("hand_editor")
+
+## Multiplayer: the co-op lobby (connects to the relay).
+func open_multiplayer() -> TdPopup:
+	end_tour()
+	var p := CoopLobby.new()
+	p.free_on_close = true
+	popups.add_child(p)
+	p.open()
+	return p

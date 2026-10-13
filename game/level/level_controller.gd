@@ -25,6 +25,10 @@ signal energy_ticked(amount: int, energy: int)
 signal sequence_changed
 ## A refusal or hint message was set ("" when it faded).
 signal message_changed(text: String)
+## Co-op: the banner text changed ("Şule left the match.", a desync, the connection lost; "" = none).
+signal coop_notice_changed(text: String)
+## Co-op: a chat line arrived (chat_lines grew).
+signal chat_changed
 
 ## Run directly: the level played (LevelAsset id) and the towers (TowerAsset ids) when the save has none.
 @export var test_level_id: String = "chapter1-1"
@@ -130,10 +134,11 @@ func view_of(id: int) -> EntityView:
 var shown: ViewFrame:
 	get: return director.shown if director != null else null
 
-## Player commands are accepted: nothing is playing, it is the player phase and the level runs.
+## Player commands are accepted: nothing is playing, it is the player phase and the level runs (co-op: and it is
+## your turn, with nothing of yours still on its way to the relay).
 var can_act: bool:
 	get: return session != null and not director.busy and session.phase == Phase.Player and not session.is_over \
-		and not (_sequence != null and _sequence.blocking)
+		and not (_sequence != null and _sequence.blocking) and (coop == null or coop.my_turn)
 
 ## The speech-bubble sequence playing (the level's intro, the tutorial's steps, an entrance), or null.
 var sequence: SequenceRun:
@@ -197,6 +202,7 @@ var hint: String:
 			return _aim_instinct_hint() if quick_cast_held else "Click a green tile. Right-click cancels."
 		if _message != null: return _message
 		if preview_enemy_phase: return threat_summary
+		if coop != null: return wait_reason
 		return ""
 
 ## The hint line shows a refusal now (why the last command failed): the HUD draws it in red.
@@ -224,15 +230,17 @@ var waves_total: int:
 var is_tutorial: bool:
 	get:
 		var app = _auto("GameApp")
-		return app != null and level != null and app.is_tutorial(level)
+		return app != null and level != null and app.is_tutorial(level) and coop == null
 
-## The end screen offers Retry: always, except after winning the tutorial.
+## The end screen offers Retry: always, except after winning the tutorial (and never in co-op).
 var can_retry: bool:
-	get: return not is_tutorial or session == null or session.outcome != Outcome.Won
+	get: return coop == null and (not is_tutorial or session == null or session.outcome != Outcome.Won)
 
-## What the end screen's leave button says: "Camp" / "Level select"; the tutorial leads to the main menu.
+## What the end screen's leave button says: "Camp" / "Level select"; the tutorial leads to the main menu; co-op
+## goes back to the lobby.
 var leave_label: String:
 	get:
+		if coop != null: return "Lobby"
 		if is_tutorial: return "Main menu"
 		var app = _auto("GameApp")
 		return app.home_label() if app != null else "Level select"
@@ -242,7 +250,7 @@ var next_level_asset: LevelAsset:
 	get:
 		var app = _auto("GameApp")
 		var sd = _auto("SaveData")
-		if app == null or sd == null or level == null or app.catalog == null: return null
+		if coop != null or app == null or sd == null or level == null or app.catalog == null: return null
 		var next: CatalogEntry = app.catalog.to_catalog().next_after(level.get_id(), sd.progress)
 		return app.catalog.find_level(next.level_id) if next != null else null
 
@@ -273,9 +281,18 @@ func _ready() -> void:
 func _setup() -> void:
 	var app = _auto("GameApp")
 	var lib: ContentLibrary = app.lib if app != null else ContentLibrary.load("res://data/content")
-	var dev = DevLaunch.take() # dev tools only (Level Playtester / F1 panel): null in normal play
+	var coop_info := CoopLaunch.take() # a co-op match from the relay (Net.match_ready): {} in single player
+	var dev = DevLaunch.take() if coop_info.is_empty() else null # dev tools only (Level Playtester / F1 panel): null in normal play
 	if dev != null: _apply_dev_launch(dev, lib)
-	if LevelLaunch.has_request():
+	if not coop_info.is_empty():
+		level = lib.catalog.find_level(str(coop_info.get("level", ""))) if lib.catalog != null else null
+		if level == null:
+			setup_error = "This co-op level is not in your game: %s." % coop_info.get("level", "")
+			return
+		if LevelLaunch.has_request():
+			LevelLaunch.clear()
+			_launched = true
+	elif LevelLaunch.has_request():
 		level = LevelLaunch.level
 		LevelLaunch.clear()
 		_launched = true
@@ -292,18 +309,21 @@ func _setup() -> void:
 		return
 	PresentationTimings.current = PresentationTimings.from_library(lib)
 	converter = AssetConverter.new()
-	var hand: Array = []
-	if level.fixed_hand != null:
-		for t in level.fixed_hand:
-			if t != null: hand.append(converter.tower(t, TowerIds.new_id()))
-	if hand.is_empty() and not _dev_hand: hand = _saved_hand(app)
-	if hand.is_empty(): hand = _test_hand(lib)
-	var rules := converter.rules(_rules_asset)
-	session = LevelSession.new(converter.level(level), rules, hand, maxi(1, level_seed))
-	if session.last_error != "":
-		setup_error = session.last_error
-		session = null
-		return
+	if not coop_info.is_empty():
+		if not _setup_coop(coop_info, lib): return
+	else:
+		var hand: Array = []
+		if level.fixed_hand != null:
+			for t in level.fixed_hand:
+				if t != null: hand.append(converter.tower(t, TowerIds.new_id()))
+		if hand.is_empty() and not _dev_hand: hand = _saved_hand(app)
+		if hand.is_empty(): hand = _test_hand(lib)
+		var rules := converter.rules(_rules_asset)
+		session = LevelSession.new(converter.level(level), rules, hand, maxi(1, level_seed))
+		if session.last_error != "":
+			setup_error = session.last_error
+			session = null
+			return
 	recorder = FrameRecorder.of_session(session)
 	_build_world()
 
@@ -344,6 +364,7 @@ func _setup() -> void:
 		return a != null and a.face_target_on_cast
 	presenters.scene_of = _model_scene
 	presenters.energy_ticked.connect(func(amount, energy): energy_ticked.emit(amount, energy))
+	presenters.pool_energy_ticked.connect(_on_pool_energy)
 	director = Director.new(session.log, presenters, recorder)
 	director.beat_started.connect(_follow_action)
 	director.beat_ended.connect(func(beat):
@@ -352,8 +373,10 @@ func _setup() -> void:
 	views.sync(director.shown) # bases and anything present before the first event
 
 	_add_hud()
-	session.start()
-	_start_intro()
+	if coop != null: coop.start() # round 1, slot 0 acting (no intro, no entrances: nothing waits on a local click)
+	else:
+		session.start()
+		_start_intro()
 	if not _launched:
 		var audio = _auto("AudioMgr")
 		if audio != null and flow_game_id() >= 0: audio.play_scene_music(flow_game_id(), level)
@@ -501,8 +524,10 @@ func _process(delta: float) -> void:
 	if _was_busy != director.busy:
 		_was_busy = director.busy
 		version += 1
-	_check_entrances()
-	_discover_for_codex()
+	if coop != null: _tick_coop(unscaled)
+	else:
+		_check_entrances()
+		_discover_for_codex()
 	_tick_sequence(unscaled)
 	if director.busy and _pressed("Skip"): skip()
 	_handle_pause_keys()
@@ -542,6 +567,7 @@ func _exit_tree() -> void:
 		if flow != null: flow.release_loading_screen()
 	if recorder != null: recorder.detach()
 	if PresentationTimings.current != null: PresentationTimings.current = null
+	if coop != null: coop.detach()
 
 func _notification(what: int) -> void:
 	# closing the game during the tutorial counts as skipping it (its reward given)
@@ -563,12 +589,12 @@ func set_hud_insets(top: float, bottom: float, right: float) -> void:
 func default_hud_insets() -> Vector3:
 	var abilities := 0
 	if session != null:
-		for t in session.hand:
+		for t in hand_towers:
 			if t.entity != null: abilities = maxi(abilities, t.entity.abilities.size())
 		for id in session.bases:
 			var b: Entity = session.state.get_entity(id)
 			if b != null: abilities = maxi(abilities, b.abilities.size())
-	var pieces := session.hand.size() if session != null else 0
+	var pieces := hand_towers.size() if session != null else 0
 	var bottom := 168.0 + (140.0 if 130 * pieces + 110 * abilities > 1372 else 0.0)
 	return Vector3(96.0, bottom, 0.0)
 
@@ -624,6 +650,10 @@ func toggle_aim(ability: AbilityDef) -> void:
 		return
 	if not can_act: return
 	_cancel_modes()
+	if not commands(caster):
+		_say("Not your tower")
+		version += 1
+		return
 	if not session.can_cast(caster, ability):
 		_say(session.last_reason)
 		version += 1
@@ -643,6 +673,10 @@ func quick_cast(ability: AbilityDef) -> void:
 	var caster: Entity = session.state.get_entity(_selected) if session != null else null
 	if caster == null or not can_act: return
 	_cancel_modes()
+	if not commands(caster):
+		_say("Not your tower")
+		version += 1
+		return
 	if not session.can_cast(caster, ability):
 		_say(session.last_reason)
 		version += 1
@@ -651,6 +685,9 @@ func quick_cast(ability: AbilityDef) -> void:
 	if aim == null:
 		_say(Instinct.last_reason)
 		version += 1
+		return
+	if coop != null:
+		_coop_send(CoopSession.cast_command(caster, ability, aim))
 		return
 	_do(func(): return session.cast(caster, ability, aim))
 	if _message == null: _notify_cast(ability, true)
@@ -672,11 +709,18 @@ func sell_selected() -> void:
 	var e: Entity = session.state.get_entity(_selected) if session != null else null
 	var tower_id = session.tower_id_of(e) if e != null else null
 	if tower_id == null: return
-	_do(func(): return session.sell(tower_id))
+	if coop != null:
+		if not can_act: return
+		_coop_send(CoopSession.sell_command(tower_id))
+	else: _do(func(): return session.sell(tower_id))
 	_selected = -1
 
+## Ends the round (co-op: ends your turn for this round — final; the enemies move once everyone has ended).
 func end_round() -> void:
 	if not can_act: return
+	if coop != null:
+		_coop_send({"k": "end_turn"})
+		return
 	_do(func(): session.end_round(); return true)
 	if _sequence != null: _sequence.notify(SequenceEvent.RoundEnded)
 
@@ -685,6 +729,171 @@ func skip() -> void:
 	if director == null or not director.busy: return
 	director.skip()
 	version += 1
+
+# ------------------------------------------------------------------ co-op (CoopMode; null in single player)
+
+## The co-op match (game/level/coop_mode.gd) when the level was started by the relay (CoopLaunch), else null.
+## `coop.coop` is its CoopSession; `session` is then `coop.session` (the wrapped LevelSession), so the Director,
+## recorder, views and HUD read it exactly as in single player. Your commands go to the relay and are applied
+## when it echoes them (every client applies every command in relay order).
+var coop: CoopMode = null
+## Seconds left on the co-op banner (player left), and until the level is left after a desync / a lost match.
+const COOP_NOTICE_SECONDS := 4.0
+const COOP_LEAVE_SECONDS := 5.0
+var coop_notice := ""
+var _coop_notice_left := 0.0
+var _coop_leave_in := -1.0
+## Chat lines of the match, oldest first: [{name, text, color, system}] (the HUD shows the last few).
+var chat_lines: Array = []
+var _my_pool := 0
+
+var is_coop: bool:
+	get: return coop != null
+## Your player id ("" in single player).
+var local_player: String:
+	get: return coop.me if coop != null else ""
+## Whose turn it is: "" when nobody acts (enemy phase, over) or in single player.
+var current_player: String:
+	get: return coop.current_player if coop != null else ""
+var current_player_name: String:
+	get: return coop.name_of(coop.current_player) if coop != null and coop.current_player != "" else ""
+## Single player: always true. Co-op: it is your turn and nothing of yours is on its way to the relay.
+var is_my_turn: bool:
+	get: return coop == null or coop.my_turn
+## "Waiting for Şule" while someone else acts, "Sending…" while your command travels, else "".
+var wait_reason: String:
+	get:
+		if coop == null or coop.desync or coop.lost: return ""
+		var p := coop.current_player
+		if p == "": return ""
+		if p != coop.me: return "Waiting for %s" % coop.name_of(p)
+		return "Sending…" if coop.awaiting > 0 else ""
+## "Your turn" / "Şule's turn" / "" (nobody acts or single player).
+var turn_text: String:
+	get: return coop.turn_text() if coop != null else ""
+var turn_color: Color:
+	get: return coop.color_of(coop.current_player) if coop != null and coop.current_player != "" else Color.WHITE
+
+## The towers of YOUR hand (co-op: only yours; single player: the session's hand). The tray and the Hand keys use it.
+var hand_towers: Array:
+	get:
+		if session == null: return []
+		return coop.my_hand() if coop != null else session.hand
+
+## The energy the HUD shows: the shown frame's (single player, co-op with one shared pool) or your own pool as its
+## EnergyChanged events have played (co-op with separate pools).
+var shown_energy: int:
+	get:
+		if coop != null and not coop.coop.shared_pool: return _my_pool
+		var f := shown
+		return f.energy if f != null else (session.energy if session != null else 0)
+
+## You may command this unit: the session's rule, and in co-op your own towers (or a leaver's), bases and allies.
+func commands(e: Entity) -> bool:
+	if session == null or e == null or not session.is_commanded(e): return false
+	return coop == null or coop.controls(e)
+
+## The player who brought a placed tower ("" for no tower, single player, or a base / an ally).
+func owner_of(e: Entity) -> String:
+	if coop == null or e == null: return ""
+	var tid = session.tower_id_of(e)
+	return coop.coop.owner_of(tid) if tid != null else ""
+
+## A player's name and colour (slot), for the HUD.
+func player_name(player: String) -> String:
+	return coop.name_of(player) if coop != null else ""
+func player_color(player: String) -> Color:
+	return coop.color_of(player) if coop != null else Color.WHITE
+
+## Co-op: gives your turn away (you act again after the others this round).
+func pass_turn() -> void:
+	if coop == null or not can_act: return
+	_coop_send({"k": "pass"})
+
+## Co-op: whether you could still do something besides walking (End turn's attention); single player: the session's.
+func anything_left() -> bool:
+	if session == null: return false
+	return coop.coop.anything_to_do(coop.me) if coop != null else session.anything_to_do()
+
+## Co-op: sends a chat line to the room.
+func send_chat(text: String) -> void:
+	if coop != null: coop.say(text)
+
+## Co-op: leaves the match for the lobby (the Camp opens Multiplayer again).
+func leave_coop() -> void:
+	if coop == null: return
+	coop.leave()
+	var net = CoopLaunch.net if CoopLaunch.net != null else _auto("Net")
+	if net != null and "reopen_lobby" in net: net.reopen_lobby = true
+	var flow = _auto("SceneFlow")
+	if flow == null: return
+	_restore_speed()
+	flow.go(flow.Camp)
+
+func _setup_coop(info: Dictionary, lib: ContentLibrary) -> bool:
+	var net = CoopLaunch.net if CoopLaunch.net != null else _auto("Net")
+	var me := str(info.get("local_player", net.player_id if net != null and "player_id" in net else ""))
+	coop = CoopMode.create(info, net, lib, converter, me)
+	if coop.setup_error != "":
+		setup_error = coop.setup_error
+		coop.detach()
+		coop = null
+		return false
+	session = coop.session
+	_recorded = true # co-op gives nothing back to single player (no records, no rewards)
+	_my_pool = coop.my_energy()
+	coop.turn_changed.connect(func(_p): version += 1)
+	coop.command_applied.connect(_on_coop_command)
+	coop.desynced.connect(func(_r, reason): _coop_end("%s Back to the lobby…" % reason))
+	coop.match_lost.connect(func(reason): _coop_end("%s Back to the lobby…" % reason))
+	coop.player_gone.connect(func(_p, n): _set_coop_notice("%s left the match." % n, COOP_NOTICE_SECONDS))
+	coop.chat_line.connect(func(from_name, text, color):
+		chat_lines.append({"name": from_name, "text": text, "color": color, "system": from_name == ""})
+		if chat_lines.size() > 50: chat_lines.pop_front()
+		chat_changed.emit())
+	return true
+
+## Sends one of your commands (checked here first); it is applied when the relay echoes it.
+func _coop_send(cmd: Dictionary) -> void:
+	if coop.send(cmd): _message = null
+	else: _say(coop.last_reason)
+	_cancel_modes()
+	version += 1
+
+func _on_coop_command(player: String, cmd: Dictionary, ok: bool) -> void:
+	# your placement arrived: its tower is selected, as in single player
+	if ok and player == coop.me and str(cmd.get("k", "")) == "place":
+		var placed := session.placed_tower(str(cmd.get("tower", "")))
+		if placed != null: _selected = placed.id
+	version += 1
+
+func _on_pool_energy(slot: int, amount: int, energy: int) -> void:
+	if coop == null or slot != int(coop.slots.get(coop.me, -1)): return
+	_my_pool = energy
+	energy_ticked.emit(amount, energy)
+
+func _set_coop_notice(text: String, seconds: float) -> void:
+	coop_notice = text
+	_coop_notice_left = seconds
+	coop_notice_changed.emit(text)
+	version += 1
+
+## A desync or a lost match: the banner says why, and the level is left for the lobby a few seconds later.
+func _coop_end(text: String) -> void:
+	if _coop_leave_in >= 0.0: return
+	_cancel_modes()
+	_set_coop_notice(text, INF)
+	_coop_leave_in = COOP_LEAVE_SECONDS
+
+func _tick_coop(unscaled: float) -> void:
+	if _coop_notice_left > 0.0 and _coop_notice_left != INF:
+		_coop_notice_left -= unscaled
+		if _coop_notice_left <= 0.0: _set_coop_notice("", 0.0)
+	if _coop_leave_in >= 0.0:
+		_coop_leave_in -= unscaled
+		if _coop_leave_in < 0.0:
+			_coop_leave_in = INF # once
+			leave_coop()
 
 # ------------------------------------------------------------------ dev hooks (game/dev; unused in normal play)
 
@@ -713,6 +922,7 @@ func dev_add_energy(amount: int) -> bool:
 
 ## Plays the level again from the start (asking for the same level).
 func retry() -> void:
+	if coop != null: return
 	if level != null: LevelLaunch.request(level)
 	var flow = _auto("SceneFlow")
 	if flow != null and flow.current == flow_game_id(): flow.restart_current()
@@ -721,6 +931,9 @@ func retry() -> void:
 ## Goes home: the Camp once Chapter 1 is won, level select before (from the tutorial: the main menu); leaving a
 ## level that is still running saves it as quit.
 func level_select() -> void:
+	if coop != null:
+		leave_coop()
+		return
 	_record(true)
 	var flow = _auto("SceneFlow")
 	var app = _auto("GameApp")
@@ -742,6 +955,7 @@ func skip_tutorial() -> void:
 
 ## Plays the next level (see next_level_asset); does nothing when there is none.
 func next_level() -> void:
+	if coop != null: return
 	var next := next_level_asset
 	if next == null: return
 	LevelLaunch.request(next)
@@ -752,6 +966,9 @@ func next_level() -> void:
 
 ## Saves the level as quit if it is still running (leaving the game from the pause menu).
 func record_quit() -> void:
+	if coop != null:
+		coop.leave() # quitting the game: the others get player_left now
+		return
 	_record(true)
 
 ## The name players see for a status ID.
@@ -874,7 +1091,7 @@ func _handle_input() -> void:
 	for i in 9:
 		if not _pressed("Ability%d" % (i + 1)): continue
 		if hand:
-			if i < session.hand.size(): _select_hand(i)
+			if i < hand_towers.size(): _select_hand(i)
 		elif ability_keys and _selected_tower() != null: _select_ability(i)
 		return
 	# a board click acts when the button comes up, only when the press started on the board and did not drag the map
@@ -894,6 +1111,12 @@ func _click_tile(p: Vector2i) -> void:
 		select(_shown_entity_at(p))
 		return
 	if _placing != null:
+		if coop != null:
+			if coop.coop.can_place(coop.me, _placing, p): _coop_send(CoopSession.place_command(_placing, p))
+			else:
+				_say(coop.coop.last_reason)
+				version += 1
+			return
 		if session.can_place(_placing, p):
 			var tower_id: String = _placing
 			_do(func(): return session.place(tower_id, p))
@@ -918,6 +1141,9 @@ func _click_tile(p: Vector2i) -> void:
 					break
 		if caster != null and aim != null and aim.tile == p:
 			var ability := _aiming
+			if coop != null:
+				_coop_send(CoopSession.cast_command(caster, ability, aim))
+				return
 			_do(func(): return session.cast(caster, ability, aim))
 			if _message == null: _notify_cast(ability, false)
 			return
@@ -930,7 +1156,7 @@ func _click_tile(p: Vector2i) -> void:
 
 ## The Hand modifier + 1–9: a placed tower is selected, a tower in the hand starts (or stops) placing.
 func _select_hand(index: int) -> void:
-	var tower_id: String = session.hand[index].id
+	var tower_id: String = hand_towers[index].id
 	var placed := session.placed_tower(tower_id)
 	if placed != null: select(placed.id)
 	elif can_act: toggle_placing(tower_id)
@@ -938,7 +1164,7 @@ func _select_hand(index: int) -> void:
 ## The selected entity when the player commands it (a placed tower, a base or an ally), else null.
 func _selected_tower() -> Entity:
 	var e: Entity = session.state.get_entity(_selected)
-	return e if session.is_commanded(e) else null
+	return e if commands(e) else null
 
 ## While an ability key is held with a commanded unit selected, its ability's range shows as if its row were
 ## hovered (also when it cannot be cast now); letting go clears it.
@@ -1111,7 +1337,7 @@ func _ready_units_now() -> Array:
 	_ready_units = []
 	var reason := session.last_reason
 	for unit in session.player_units:
-		if not unit.on_board: continue
+		if not unit.on_board or (coop != null and not coop.controls(unit)): continue
 		for a in unit.abilities:
 			if not a.targeting.is_movement and session.can_cast(unit, a):
 				_ready_units.append(unit)
@@ -1337,6 +1563,7 @@ func _update_board_feedback() -> void:
 ## "Ready!" over each unit you command that has a ready ability besides walking.
 func _pop_ready(f: ViewFrame) -> void:
 	for unit in session.player_units:
+		if coop != null and not coop.controls(unit): continue
 		var frame: EntityFrame = f.get_frame(unit.id)
 		var view := view_of(unit.id)
 		if frame == null or frame.life != LifeState.Alive or view == null: continue

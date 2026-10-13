@@ -7,6 +7,9 @@ extends IPresenterFactory
 
 ## Emitted when an EnergyChanged event plays (the HUD's counter ticks): amount, energy after.
 signal energy_ticked(amount: int, energy: int)
+## Co-op with separate pools: an EnergyChanged event of one player's pool played (its Pool fact = the slot).
+## These never fire energy_ticked (a plain level has no Pool fact).
+signal pool_energy_ticked(slot: int, amount: int, energy: int)
 
 const DAMAGE := OverlayStyle.FX_DAMAGE
 const HEAL := OverlayStyle.FX_HEAL
@@ -96,7 +99,8 @@ func _present(e: GameEvent, beat: BeatPlayback, look: AbilityPresentationAsset) 
 		GameEventType.EnergyChanged:
 			var amount := int(e.facts.get("Amount", 0.0))
 			var energy := int(e.facts.get("Energy", 0.0))
-			energy_ticked.emit(amount, energy)
+			if e.facts.has("Pool"): pool_energy_ticked.emit(int(e.facts["Pool"]), amount, energy)
+			else: energy_ticked.emit(amount, energy)
 			return null
 
 		GameEventType.EntitySpawned, GameEventType.EntityResurrected:

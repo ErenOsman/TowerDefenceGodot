@@ -25,7 +25,7 @@ func refresh() -> void:
 	if c == null or c.session == null: return
 	var s := c.session
 	var f: ViewFrame = c.shown
-	var hand: Array = s.hand
+	var hand: Array = c.hand_towers # co-op: only yours
 	while _pieces.size() < hand.size():
 		var p := HudHandPiece.new()
 		_row.add_child(p)
@@ -35,7 +35,7 @@ func refresh() -> void:
 	while _pieces.size() > hand.size():
 		_pieces.pop_back().queue_free()
 	var keys = get_tree().root.get_node_or_null("KeyBinds")
-	var energy: int = f.energy if f != null else s.energy
+	var energy: int = c.shown_energy
 	for i in hand.size():
 		var t: TowerDef = hand[i]
 		var frame := _placed_frame(f, t.id)
@@ -92,7 +92,7 @@ func _tooltip(t: TowerDef, i: int, frame: EntityFrame, affordable: bool, keys) -
 	if frame != null:
 		return TooltipText.content(header, body, "Click to select it", "Sell +%d" % c.session.sell_value(t.id))
 	var cost := "%d energy" % t.cost
-	var energy: int = c.shown.energy if c.shown != null else c.session.energy
+	var energy: int = c.shown_energy
 	if not affordable:
 		return TooltipText.content(header, body, cost, TooltipText.colored(TooltipText.harmful_color(), HudText.shortfall(t.cost, energy)))
 	return TooltipText.content(header, body, "Click, then a lit tile", TooltipText.colored(TooltipText.value_color(), cost))
@@ -106,7 +106,11 @@ func _on_pressed(p: HudHandPiece) -> void:
 	if frame != null:
 		c.select_and_show(frame.id)
 		return
-	var energy: int = c.shown.energy if c.shown != null else c.session.energy
+	if c.is_coop and not c.is_my_turn and c.placing != t.id:
+		p.deny("")
+		c.refuse(c.wait_reason if c.wait_reason != "" else "Not your turn")
+		return
+	var energy: int = c.shown_energy
 	if energy < t.cost and c.placing != t.id:
 		p.deny("")
 		c.refuse(HudText.cost_missing_hint(t.name, t.cost, energy))

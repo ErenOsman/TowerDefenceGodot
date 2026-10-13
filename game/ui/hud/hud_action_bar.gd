@@ -53,7 +53,7 @@ func _init() -> void:
 func caster_of(c: LevelController) -> Entity:
 	if c == null or c.session == null: return null
 	var e: Entity = c.session.state.get_entity(c.selected)
-	return e if e != null and c.session.is_commanded(e) and e.alive else null
+	return e if e != null and c.commands(e) and e.alive else null
 
 ## Whether the bar has something to show now.
 func wanted(c: LevelController) -> bool:
@@ -87,6 +87,9 @@ func refresh() -> void:
 		if held: left = 0
 		var castable: bool = _caster != null and not busy and c.session.can_cast(_caster, a)
 		var reason: String = c.session.last_reason if _caster != null and not castable else ""
+		if castable and not c.is_my_turn: # co-op: someone else acts
+			castable = false
+			reason = c.wait_reason
 		castable_flags.append(castable)
 		_reasons.append(HudText.ability_refusal(a.display_name, castable or _caster == null, left, held, reason))
 		var key_text := ""

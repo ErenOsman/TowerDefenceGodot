@@ -91,14 +91,14 @@ static func bottom_row(screen: Vector2, pieces: int, abilities: int, bar_w: floa
 		"bottom_inset": (screen.y - bar.position.y) if raised else TRAY_H,
 	}
 
-## Where the hint line goes with no bar shown: the bottom strip between the tray and End turn, centred on the free
-## area unless the tray reaches it ({"x", "y", "centred"}).
+## Where the hint line goes with no bar shown: centred on the SCREEN in the bottom strip (like the bar; user decision
+## 2026-10-13), pushed right only when the tray would reach it ({"x", "y", "centred"}).
 static func hint_without_bar(screen: Vector2, pieces: int, hint_w: float) -> Dictionary:
 	var tray := tray_rect(screen, pieces)
-	var cx := free_centre_x(screen)
+	var cx := screen.x / 2.0
 	var y := screen.y - BAR_BOTTOM + 4.0
-	if cx - hint_w / 2.0 < tray.end.x + BAR_GAP:
-		return {"x": tray.end.x + BAR_GAP, "y": y, "centred": false}
+	if cx - hint_w / 2.0 < tray.end.x + TRAY_CLEAR:
+		return {"x": tray.end.x + TRAY_CLEAR, "y": y, "centred": false}
 	return {"x": cx, "y": y, "centred": true}
 
 static func inspector_rect(screen: Vector2, height: float) -> Rect2:

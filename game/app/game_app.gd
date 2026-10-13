@@ -104,6 +104,14 @@ func _scene(path: String) -> PackedScene:
 
 # ---------------------------------------------------------------- level launch
 
+func _ready() -> void:
+	_hook_coop.call_deferred() # the Net autoload comes after this one
+
+## A co-op match started by the relay (Net.match_ready) opens the level (CoopLaunch).
+func _hook_coop() -> void:
+	var net := get_node_or_null("/root/Net")
+	if net != null: CoopLaunch.hook(net)
+
 ## The level the Game scene should play (LevelLaunch.level); null = none requested.
 var level_launch: LevelAsset:
 	get: return LevelLaunch.level

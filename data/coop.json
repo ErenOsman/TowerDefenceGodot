@@ -1,0 +1,14 @@
+{
+	"id": "multiplayer",
+	"displayName": "Multiplayer",
+	"levels": [
+		{"level": "chapter1-1", "sharedPool": true, "coopHandCap": 3},
+		{"level": "chapter1-2", "sharedPool": true, "coopHandCap": 3},
+		{"level": "chapter1-3", "sharedPool": false, "coopHandCap": 3},
+		{"level": "chapter1-4", "sharedPool": false, "coopHandCap": 3},
+		{"level": "chapter2-1", "sharedPool": false, "coopHandCap": 3},
+		{"level": "chapter2-2", "sharedPool": false, "coopHandCap": 3},
+		{"level": "chapter2-3", "sharedPool": false, "coopHandCap": 3},
+		{"level": "chapter2-4", "sharedPool": false, "coopHandCap": 3}
+	]
+}

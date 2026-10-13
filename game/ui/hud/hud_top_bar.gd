@@ -223,6 +223,8 @@ func _process(delta: float) -> void:
 	if f == null: return
 	_round.text = "Round %d" % f.round
 	var phase_text := HudText.phase_name(f.phase, f.outcome)
+	if controller.is_coop and f.phase == Phase.Player and f.outcome == Outcome.Running and controller.turn_text != "":
+		phase_text = controller.turn_text # co-op: whose turn it is ("Your turn" / "Şule's turn")
 	_phase.text = phase_text
 	_phase_tag.visible = phase_text != ""
 	if _phase_shown != f.phase:
@@ -233,7 +235,7 @@ func _process(delta: float) -> void:
 		TdTheme.tween(_phase_tag).tween_property(_phase_tag, "modulate:a", 1.0, TdTheme.motion("quick"))
 	_wave.text = HudText.wave_text(f.waves)
 	_show_pips(f.waves)
-	_show_energy(f.energy, dt)
+	_show_energy(controller.shown_energy, dt)
 	_show_hp(f, dt)
 	_show_end_turn(f)
 	_tracker.size = _tracker.get_combined_minimum_size()
@@ -294,18 +296,19 @@ func _show_end_turn(f: ViewFrame) -> void:
 	var keys = _keys()
 	var label := HudText.end_turn_label(f.phase, f.outcome)
 	var chip: String = (keys.first("EndRound") if keys != null else "Enter") if f.phase == Phase.Player and f.outcome == Outcome.Running else ""
-	var state := [label, can_end, chip, f.phase]
+	var wait: String = controller.wait_reason if controller.is_coop and f.phase == Phase.Player else ""
+	var state := [label, can_end, chip, f.phase, wait]
 	if state != _end_state:
 		_end_state = state
 		end_turn.text = label
-		end_turn.set_interactable(can_end, "Enemies are moving" if f.phase != Phase.Player else "Wait for the action to finish")
+		end_turn.set_interactable(can_end, "Enemies are moving" if f.phase != Phase.Player else (wait if wait != "" else "Wait for the action to finish"))
 		end_turn.set_key_hint(chip)
 	if _skip.interactable != busy:
 		_skip.set_interactable(busy)
 		_skip.denied_reason = "" # the kit opens a denied reason above the button: ours opens below (_on_skip_denied)
 	if _tip_version != controller.version:
 		_tip_version = controller.version
-		_nothing_left = not controller.session.anything_to_do()
+		_nothing_left = not controller.anything_left()
 		if can_end: _end_turn_tip()
 		refresh_keys()
 	controller.preview_enemy_phase = can_end and end_turn.hovered
@@ -343,6 +346,7 @@ func _end_turn_tip() -> void:
 	var forecast := controller.enemy_forecast
 	for unit in session.player_units:
 		if not unit.on_board: continue
+		if controller.is_coop and not controller.commands(unit): continue # co-op: what YOU can still use
 		var who: String = labels.get(unit.id, unit.name)
 		for a in unit.abilities:
 			if a.targeting.is_movement: continue
@@ -357,7 +361,8 @@ func _end_turn_tip() -> void:
 	if forecast != null:
 		if threat.is_empty(): lines.append(TooltipText.colored(TooltipText.helpful_color(), "No damage this turn"))
 		else: lines.append(TooltipText.colored(TooltipText.harmful_color(), "Enemy turn: " + " · ".join(threat)))
-	lines.append("Ends your turn: the enemies move and attack, then a new round starts.")
+	if controller.is_coop: lines.append("Ends your turn for this round (final; Pass instead gives the turn away). Once everyone has ended, the enemies move and attack.")
+	else: lines.append("Ends your turn: the enemies move and attack, then a new round starts.")
 	if usable.size() > 0: lines.append(TooltipText.colored(TooltipText.helpful_color(), "Usable now: " + ", ".join(usable)))
 	if next.size() > 0: lines.append(TooltipText.colored(TooltipText.neutral_color(), "Ready next turn: " + ", ".join(next)))
 	var keys = _keys()

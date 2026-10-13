@@ -15,3 +15,14 @@ Unity repo by `tools/sync_from_unity.sh` (the Unity repo is the single source of
 
 ## Decisions taken while testing the Godot build
 See `docs/Decisions.md` (2026-10-13 rows) — they are logged in the Unity repo and synced here.
+
+## Co-op rules (sim) — Godot-only for now
+- `CoopSession` (`sim/level/coop_session.gd`) wraps a `CoopLevelSession` (a LevelSession subclass that only changes the
+  hand cap and, with separate pools, where energy changes are booked). Single player is untouched.
+- The Multiplayer station's level list lives in `data/coop.json` (`CoopList`): per level `sharedPool` and `coopHandCap`
+  (default 3). **These fields should move into the Unity content later** (the catalog's chapter-like Multiplayer list
+  and the level's `isSharedPool`), then `data/coop.json` goes away and `CoopList` reads the catalog.
+- Separate pools write one EnergyChanged per pool with the extra fact `Pool` = the player's slot (the HUD should show
+  only the local player's pool). GiveEnergy level events are split 1/N like income; a closed (leaver's) share is lost.
+- A leaver's towers can be cast with by anyone but not sold (a sold tower would go back to a hand nobody plays).
+- `pass` is a GDScript keyword: the method is `pass_turn(player)`; the protocol command stays `{"k": "pass"}`.

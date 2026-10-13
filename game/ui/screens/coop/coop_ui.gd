@@ -1,0 +1,297 @@
+class_name CoopUi
+extends RefCounted
+## Builders shared by the co-op screens (mockups ~/uiux/mockups/screens-b/lobby-*.html): flat rounded boxes, text
+## fields, the 1–6 player picker, level thumbnails (minimap), the paper level card (waves, towers each, energy rule,
+## turns), level rows, hand medallion strips, status pills.
+
+const ROW_BG := Color(0.29, 0.21, 0.16, 0.92)
+const ROW_LINE := Color(0.43, 0.32, 0.24)
+const SEL_BG := Color("3f74c9")
+const SEL_LINE := Color("9cc2ff")
+const WELL_BG := Color(0.13, 0.095, 0.075, 0.88)
+const GOOD := Color("59b35c")
+const BAD := Color("e2584f")
+const GOLD := Color("f3c34e")
+
+static var _thumbs := {}   # level id + size → ImageTexture
+
+## A flat rounded StyleBox.
+static func box(bg: Color, radius := 12, border := Color(0, 0, 0, 0), width := 2, pad := Vector4(14, 10, 14, 10), dashed := false) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = bg
+	sb.set_corner_radius_all(radius)
+	if border.a > 0.0:
+		sb.border_color = border
+		sb.set_border_width_all(width)
+	sb.content_margin_left = pad.x; sb.content_margin_top = pad.y
+	sb.content_margin_right = pad.z; sb.content_margin_bottom = pad.w
+	if dashed: sb.draw_center = bg.a > 0.0
+	return sb
+
+static func flat_panel(bg: Color, radius := 12, border := Color(0, 0, 0, 0), pad := Vector4(14, 10, 14, 10)) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", box(bg, radius, border, 2, pad))
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return p
+
+## A cream text field (the kit's LineEdit) with a placeholder; secret hides the text.
+static func field(placeholder: String, width := 0.0, secret := false, max_len := 0) -> LineEdit:
+	var e := LineEdit.new()
+	e.placeholder_text = placeholder
+	e.secret = secret
+	if max_len > 0: e.max_length = max_len
+	e.custom_minimum_size = Vector2(width, 56)
+	TdTheme.apply_type(e, "body", TdTheme.color("ink"), 24)
+	e.add_theme_color_override("font_placeholder_color", Color(TdTheme.color("ink"), 0.55))
+	e.add_theme_color_override("caret_color", TdTheme.color("accent.fill"))
+	e.add_theme_constant_override("caret_width", 3)
+	e.add_theme_stylebox_override("normal", box(Color("efe2c4"), 10, Color("c9b48c"), 2, Vector4(18, 6, 18, 6)))
+	e.add_theme_stylebox_override("focus", box(Color(0, 0, 0, 0), 10, SEL_LINE, 3, Vector4(18, 6, 18, 6)))
+	return e
+
+## Marks a field as wrong (red border) or normal.
+static func field_error(e: LineEdit, wrong: bool) -> void:
+	e.add_theme_stylebox_override("normal", box(Color("efe2c4"), 10, BAD if wrong else Color("c9b48c"), 3 if wrong else 2, Vector4(18, 6, 18, 6)))
+	e.add_theme_stylebox_override("focus", box(Color(0, 0, 0, 0), 10, BAD if wrong else SEL_LINE, 3, Vector4(18, 6, 18, 6)))
+
+## The red warning line under a field (icon + text), hidden while text is "".
+static func warning(text := "") -> HBoxContainer:
+	var h := TdMenu.hbox(8)
+	h.add_child(TdMenu.picture(TdMenu.warn_icon(), Vector2(22, 22)))
+	var l := TdMenu.label(text, "body", BAD, 22)
+	l.name = "Text"
+	h.add_child(l)
+	h.visible = text != ""
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return h
+
+static func set_warning(w: HBoxContainer, text: String, color := BAD) -> void:
+	var l: Label = w.get_node("Text")
+	l.text = text
+	l.add_theme_color_override("font_color", color)
+	w.visible = text != ""
+
+## The 1–6 picker: kit TAB buttons; on_pick(n). Returns the buttons (index 0 = 1 player).
+static func count_picker(parent: Container, selected: int, on_pick: Callable) -> Array:
+	var out := []
+	for n in range(NetProtocol.MIN_COUNT, NetProtocol.MAX_COUNT + 1):
+		var b := TdMenu.button(TdButton.Style.TAB, str(n), Vector2(56, 52))
+		b.selectable = true
+		b.selected = n == selected
+		b.font_size = 26
+		var k := n
+		b.clicked.connect(func():
+			for x in out: x.set_selected(x == b)
+			on_pick.call(k))
+		parent.add_child(b)
+		out.append(b)
+	return out
+
+## The level's minimap as a texture (cached).
+static func thumb(level_id: String, pixels := 6) -> Texture2D:
+	var key := "%s@%d" % [level_id, pixels]
+	if _thumbs.has(key): return _thumbs[key]
+	var a := CoopLevels.level_asset(level_id)
+	var img := MenuLogic.minimap_image(a, pixels) if a != null else null
+	var t: Texture2D = ImageTexture.create_from_image(img) if img != null else null
+	_thumbs[key] = t
+	return t
+
+static func thumb_rect(level_id: String, size: Vector2, pixels := 6) -> Control:
+	var frame := flat_panel(Color(0.07, 0.055, 0.045), 8, Color(0.25, 0.19, 0.14), Vector4(3, 3, 3, 3))
+	frame.custom_minimum_size = size
+	var r := TdMenu.picture(thumb(level_id, pixels), size - Vector2(6, 6))
+	r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	frame.add_child(r)
+	return frame
+
+static func waves_of(level_id: String) -> int:
+	var a := CoopLevels.level_asset(level_id)
+	return a.waves.size() if a != null else 0
+
+## A chip on the paper card: icon + bold number + word.
+static func fact_chip(icon: String, value: String, word: String) -> PanelContainer:
+	var p := flat_panel(Color("e9dbb9"), 10, Color("c9b48c"), Vector4(12, 6, 12, 6))
+	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var h := TdMenu.hbox(8)
+	p.add_child(h)
+	if icon != "" and TdTheme.has_sprite(icon):
+		var i := TdMenu.picture(TdTheme.texture(icon), Vector2(24, 24))
+		i.modulate = TdTheme.color("ink")
+		h.add_child(i)
+	h.add_child(TdMenu.label(value, "h3", TdTheme.color("ink"), 26))
+	var w := TdMenu.label(word, "body", TdTheme.color("ink"), 20)
+	w.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	h.add_child(w)
+	return p
+
+## A wide note row on the paper card (icon + rich text).
+static func note_row(icon: String, bbcode: String) -> PanelContainer:
+	var p := flat_panel(Color("e9dbb9"), 10, Color("c9b48c"), Vector4(12, 6, 12, 6))
+	var h := TdMenu.hbox(10)
+	p.add_child(h)
+	if icon != "" and TdTheme.has_sprite(icon):
+		var i := TdMenu.picture(TdTheme.texture(icon), Vector2(24, 24))
+		i.modulate = Color("c98a12") if icon == "icon_energy" else TdTheme.color("ink")
+		i.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		h.add_child(i)
+	h.add_child(TdMenu.rich(bbcode, "body", TdTheme.color("ink"), 20))
+	return p
+
+## The paper level card: map, name, (description), waves · towers each, energy rule, turns note.
+## Returns {panel, map, title, desc, facts, energy, turns, extra (VBox for buttons)}.
+static func level_card(width: float, map_h: float, with_desc := false) -> Dictionary:
+	var p := TdMenu.panel(TdPanel.Kind.PAPER, 12)
+	p.custom_minimum_size = Vector2(width, 0)
+	var v := TdMenu.vbox(10)
+	p.add_child(v)
+	var map_frame := flat_panel(Color(0.12, 0.09, 0.07), 12, Color(0, 0, 0, 0), Vector4(8, 8, 8, 8))
+	map_frame.custom_minimum_size = Vector2(0, map_h)
+	v.add_child(map_frame)
+	var map := TextureRect.new()
+	map.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	map.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	map.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	map_frame.add_child(map)
+	var title := TdMenu.label("", "h2", TdTheme.color("ink"), 34)
+	v.add_child(title)
+	var desc := TdMenu.wrap_label("", "body", TdTheme.color("ink"), 21)
+	desc.visible = with_desc
+	v.add_child(desc)
+	var facts := TdMenu.hbox(10)
+	v.add_child(facts)
+	var energy := note_row("icon_energy", "")
+	v.add_child(energy)
+	var turns := note_row("icon_clock", "Turns in join order (the numbers); [b]Pass[/b] moves you to the end.")
+	v.add_child(turns)
+	var extra := TdMenu.vbox(8)
+	v.add_child(extra)
+	return {"panel": p, "map": map, "title": title, "desc": desc, "facts": facts, "energy": energy, "turns": turns, "extra": extra}
+
+## Fills a level card for a level and a player count.
+static func fill_level_card(card: Dictionary, level_id: String, players: int) -> void:
+	var a := CoopLevels.level_asset(level_id)
+	card.map.texture = thumb(level_id, 12)
+	card.title.text = CoopLevels.level_name(level_id)
+	card.desc.text = a.description if a != null else ""
+	for c in card.facts.get_children(): c.queue_free()
+	card.facts.add_child(fact_chip("icon_wave", str(waves_of(level_id)), "waves"))
+	card.facts.add_child(fact_chip("icon_cards", str(CoopLevels.hand_cap(level_id)), "towers each"))
+	var e := CoopLevels.energy_text(level_id, players)
+	var parts := e.split(" · ", true, 1)
+	var rich: RichTextLabel = card.energy.get_child(0).get_child(card.energy.get_child(0).get_child_count() - 1)
+	rich.text = "[b]%s[/b] · %s (set by the level)" % [parts[0], parts[1]] if parts.size() > 1 else e
+
+## A level row (thumb, name, "3 waves", optional tag); selectable. Returns the TdButton-like PanelContainer.
+static func level_row(level_id: String, width: float, selected: bool, tag := "") -> PanelContainer:
+	var p := PanelContainer.new()
+	p.custom_minimum_size = Vector2(width, 70)
+	p.mouse_filter = Control.MOUSE_FILTER_STOP
+	p.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	p.add_theme_stylebox_override("panel", box(SEL_BG if selected else ROW_BG, 10, SEL_LINE if selected else ROW_LINE, 3 if selected else 2, Vector4(8, 6, 16, 6)))
+	var h := TdMenu.hbox(14)
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.add_child(h)
+	h.add_child(thumb_rect(level_id, Vector2(80, 56), 4))
+	var v := TdMenu.vbox(0)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(v)
+	v.add_child(TdMenu.label(CoopLevels.level_name(level_id), "h3", TdTheme.color("cream.100"), 26))
+	v.add_child(TdMenu.label("%d waves" % waves_of(level_id), "small", TdTheme.color("cream.200"), 20))
+	if tag != "":
+		var t := TdMenu.pill("[b]%s[/b]" % tag, Color(0.12, 0.09, 0.07, 0.85), GOLD, 20)
+		t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		h.add_child(t)
+	return p
+
+## A strip of hand medallions for tower type ids, padded with empty circles up to cap.
+static func hand_strip(types: Array, cap: int, diameter := 46.0) -> HBoxContainer:
+	var h := TdMenu.hbox(4)
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for i in maxi(cap, types.size()):
+		if i < types.size():
+			var ta := CoopLevels.tower_asset(str(types[i]))
+			var view: String = ta.entity.view if ta != null and ta.entity != null else ""
+			var m := TdMenu.medallion(TdMenu.unit_picture(view, ta.icon if ta != null else ""), diameter)
+			if ta != null: m.tooltip_text = ta.get_display_name()
+			h.add_child(m)
+		else:
+			h.add_child(empty_circle(diameter))
+	return h
+
+static func empty_circle(d: float) -> Control:
+	var p := Panel.new()
+	p.custom_minimum_size = Vector2(d, d)
+	p.add_theme_stylebox_override("panel", box(Color(0.1, 0.075, 0.06, 0.7), int(d / 2), Color(0.35, 0.27, 0.2), 2, Vector4.ZERO))
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return p
+
+## A filled status pill ("Ready", "Waiting", "Full", "Playing").
+static func state_pill(text: String, bg: Color, fg: Color) -> PanelContainer:
+	return TdMenu.pill("[b]%s[/b]" % text, bg, fg, 20)
+
+## A player's medallion: the bust of the first tower in their hand (else an empty circle).
+static func player_medal(hand: Array, d := 56.0) -> Control:
+	if hand.is_empty(): return empty_circle(d)
+	var ta := CoopLevels.tower_asset(str(hand[0]))
+	var view: String = ta.entity.view if ta != null and ta.entity != null else ""
+	return TdMenu.medallion(TdMenu.unit_picture(view, ta.icon if ta != null else ""), d)
+
+## A round number badge (slot number).
+static func number_badge(n: int, dim := false) -> Control:
+	var p := PanelContainer.new()
+	p.custom_minimum_size = Vector2(32, 32)
+	p.add_theme_stylebox_override("panel", box(Color(0.35, 0.3, 0.27) if dim else Color("efe2c4"), 16, Color(0, 0, 0, 0), 0, Vector4(0, 0, 0, 0)))
+	var l := TdMenu.label(str(n), "h3", TdTheme.color("cream.300") if dim else TdTheme.color("ink"), 20)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	p.add_child(l)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return p
+
+## Removes all children at once (a queued child would still count in a container for a frame).
+static func clear(c: Node) -> void:
+	for ch in c.get_children():
+		c.remove_child(ch)
+		ch.queue_free()
+
+## A centred window popup body: CenterContainer + WINDOW panel of a size; returns {center, panel, body}.
+static func window(parent: Control, size: Vector2, pad := 32.0) -> Dictionary:
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(center)
+	var p := TdMenu.panel(TdPanel.Kind.WINDOW, pad)
+	p.custom_minimum_size = size
+	center.add_child(p)
+	var v := TdMenu.vbox(14)
+	p.add_child(v)
+	return {"center": center, "panel": p, "body": v}
+
+## The title row: big title, optional sub text, close button. Returns {row, title, sub, close}.
+static func title_row(text: String, sub := "", size := 56) -> Dictionary:
+	var h := TdMenu.hbox(18)
+	var t := TdMenu.label(text, "display", TdTheme.color("cream.100"), size)
+	h.add_child(t)
+	var s := TdMenu.label(sub, "body", TdTheme.color("cream.200"), 22)
+	s.size_flags_vertical = Control.SIZE_SHRINK_END
+	s.visible = sub != ""
+	h.add_child(s)
+	var sp := TdMenu.spacer()
+	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	h.add_child(sp)
+	var x := TdMenu.close_button()
+	x.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	h.add_child(x)
+	return {"row": h, "title": t, "sub": s, "close": x}
+
+## Opens a popup; outside a running tree (headless tests) it is shown without the transition.
+static func show_popup(p: TdPopup) -> void:
+	if p.is_inside_tree():
+		p.open()
+		return
+	p._ensure_built()
+	p.is_open = true
+	p.visible = true
+	p._on_open()
