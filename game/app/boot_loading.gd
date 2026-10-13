@@ -49,15 +49,10 @@ func _build() -> void:
 	bg.color = Color(0.09, 0.08, 0.07)
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
-	# the shared blurred diorama (user decision 2026-10-13: boot, welcome, main menu and loading use one image), centred, covering
-	var shared := load("res://art/ui/Backgrounds/Spitters Blurred.png") as Texture2D
-	if shared != null:
-		var pic := TextureRect.new()
-		pic.texture = shared
-		pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-		pic.set_anchors_preset(Control.PRESET_FULL_RECT)
-		add_child(pic)
+	# Boot keeps the plain dark wood backdrop + vignette (user decision 2026-10-13: like the Unity boot screen);
+	# the blurred diorama is for Welcome, Main menu and Loading only.
+	if ClassDB.class_exists("TdMenu") or ResourceLoader.exists("res://game/ui/screens/parts/td_menu.gd"):
+		TdMenu.wood_background(self, true)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
