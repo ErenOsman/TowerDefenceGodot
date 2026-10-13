@@ -63,6 +63,7 @@ func _ready() -> void:
 	_vp = SubViewport.new()
 	_vp.size = SIZE
 	_vp.own_world_3d = true
+	_vp.transparent_bg = true # the board floats on the card's wood well, no black box
 	_vp.msaa_3d = Viewport.MSAA_2X
 	_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(_vp)
@@ -93,7 +94,7 @@ func _finish(tex: Texture2D) -> void:
 	queue_free()
 	_next.call_deferred()
 
-## The board world: light like the menus' dioramas, the level's tiles and bases, a camera framing the whole board.
+## The board world: light like the menus' dioramas (transparent background, shadows kept), the level's tiles and bases, a camera framing the whole board.
 func _build_world(lv: LevelAsset) -> bool:
 	var app := TdMenu.app()
 	if app == null or lv == null: return false
@@ -101,7 +102,8 @@ func _build_world(lv: LevelAsset) -> bool:
 	if def == null: return false
 	var root := Node3D.new()
 	_vp.add_child(root)
-	TdDiorama._add_light(root, TdTheme.color("wood.900"))
+	TdDiorama._add_light(root, Color(0, 0, 0, 0), true)
+	for sun in root.find_children("*", "DirectionalLight3D", false, false): sun.shadow_enabled = true
 	var grid := def.build_grid()
 	var board := BoardView.new()
 	root.add_child(board)

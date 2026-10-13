@@ -1,6 +1,6 @@
 extends SceneTree
 ## Dev script: screenshots the hand editor (Hand select) under Xvfb.
-##   ~/godot/run.sh projects/td -s tools/hand_shot.gd [-- <out dir>]
+##   ~/godot/run.sh projects/td -s tools/hand_shot.gd [-- <out dir> [level]]   (level: only the from-level shot, Mage selected)
 ##   ~/godot/run.sh projects/td --resolution 1280x720 -s tools/hand_shot.gd -- user://hand720
 ## Uses its own save (user://hand_shot.json, deleted first): 3–5 towers of every type, a hand of 4.
 ## PNGs: <out dir>/hand_<n>_<step>.png — level (cap 4, "Two Roads"), plain (Camp), filtered, full, layout 3 renaming.
@@ -38,9 +38,15 @@ func _run() -> void:
 	he.set_level_context(4, "Two Roads")
 	he.open()
 	await _frames(40)
-	he._select(save.towers.towers[2].id)
+	for o in save.towers.towers:
+		if o.type == "mage":
+			he._select(o.id)
+			break
 	await _frames(5)
 	await _shot("level")
+	if OS.get_cmdline_user_args().size() > 1 and OS.get_cmdline_user_args()[1] == "level":
+		quit()
+		return
 	he.close()
 	await _frames(20)
 	he.set_level_context(-1, "")

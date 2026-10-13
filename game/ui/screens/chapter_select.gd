@@ -1,8 +1,8 @@
 extends TdPopup
 ## The Camp's chapter picker (UI_ChapterSelect.cs; Camp & Chapters — Design; a medium window, 70 % × 70 %, title
 ## top-left, × top-right): main chapters in a row, side chapters in a row below (hidden while there are none).
-## A card shows the chapter at a glance: a board thumbnail of its first level (rendered once by ChapterThumbs; the
-## minimap until then), its name, one dot per level (green ✓ won, filled cobalt open, hollow locked), a progress bar
+## A card shows the chapter at a glance: a board thumbnail of its first level (rendered once by ChapterThumbs on a wood
+## well; the minimap until then), its name, one dot per level (green ✓ won, filled cobalt open, hollow locked), a progress bar
 ## (GOOD green when complete, cobalt only on the active chapter: the one holding the next level to play) with
 ## "2 / 4 won" / "4 / 4 won ✓ Complete", and the tower its last level gives on the first clear. A locked chapter
 ## shows why ("Finish Chapter 1 first"). Picking an open chapter emits chapter_opened(chapter) (the Camp opens the
@@ -17,6 +17,9 @@ const CARD_PAD := 20.0
 const THUMB_W := 304.0
 const DOT := 22.0
 const GAP := 24
+const BODY_SEP := 18
+const HEAD_H := 52.0   # the title row (× button height)
+const COL_SEP := 18
 
 var cards: Array = []   # TdButton per chapter card
 var card_infos: Array = []   # the MenuLogic.chapter_cards dictionaries, same order as cards
@@ -24,19 +27,22 @@ var _main_row: HFlowContainer
 var _side_row: HFlowContainer
 var _side_label: Control
 var _scroll: ScrollContainer
+var _main_heading: Control
 var _card_h := CARD_H
 
 func _build() -> void:
 	var p := TdMenu.panel(TdPanel.Kind.WINDOW, 32)
+	# medium window: 70 % wide, as tall as its rows (centred; _fit_height sets the height after each draw)
 	p.anchor_left = 0.15
 	p.anchor_right = 0.85
-	p.anchor_top = 0.15
-	p.anchor_bottom = 0.85
-	p.offset_left = 0; p.offset_right = 0; p.offset_top = 0; p.offset_bottom = 0
-	p.custom_minimum_size = Vector2(1180, 620)
+	p.anchor_top = 0.5
+	p.anchor_bottom = 0.5
+	p.offset_left = 0; p.offset_right = 0
+	p.grow_vertical = GROW_DIRECTION_BOTH
+	p.custom_minimum_size = Vector2(1180, 0)
 	add_child(p)
 	window = p
-	var col := TdMenu.vbox(18)
+	var col := TdMenu.vbox(COL_SEP)
 	p.add_child(col)
 	var head := TdMenu.hbox(16)
 	col.add_child(head)
@@ -53,11 +59,13 @@ func _build() -> void:
 	_scroll = ScrollContainer.new()
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_scroll.size_flags_vertical = SIZE_EXPAND_FILL
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	col.add_child(_scroll)
-	var body := TdMenu.vbox(18)
+	var body := TdMenu.vbox(BODY_SEP)
 	body.size_flags_horizontal = SIZE_EXPAND_FILL
 	_scroll.add_child(body)
-	body.add_child(TdMenu.section_heading("Story", 30))
+	_main_heading = TdMenu.section_heading("Story", 30)
+	body.add_child(_main_heading)
 	_main_row = _flow()
 	body.add_child(_main_row)
 	_side_label = TdMenu.section_heading("Side chapters", 30)
@@ -92,7 +100,27 @@ func draw() -> void:
 	card_infos.append_array(side)
 	_side_label.visible = not side.is_empty()
 	_side_row.visible = not side.is_empty()
+	_fit_height(main.size(), side.size(), w)
 	TdMenu.pop_in(cards)
+
+## Sizes the window to its content: the title row, the headings and the card rows (2 per row), scrolling only when
+## that is taller than 80 % of the screen. One row of cards is the smallest it gets.
+func _fit_height(n_main: int, n_side: int, w: float) -> void:
+	var b4 := TdButton.bleed_for(TdButton.Style.ROW, Vector2(w, _card_h))
+	var row_h := _card_h + b4.y + b4.w
+	var heading_h := _main_heading.get_combined_minimum_size().y
+	var rows := func(n: int) -> float:
+		var r := maxi(1, ceili(n / 2.0))
+		return r * row_h + (r - 1) * GAP
+	var body_h: float = heading_h + BODY_SEP + rows.call(n_main)
+	if n_side > 0: body_h += 2 * BODY_SEP + heading_h + rows.call(n_side)
+	var screen := size if size.y > 0.0 else get_viewport_rect().size
+	var pad := 2.0 * 32.0 + HEAD_H + COL_SEP
+	var scroll_h := minf(body_h, screen.y * 0.8 - pad)
+	_scroll.custom_minimum_size.y = scroll_h
+	var h := pad + scroll_h
+	window.offset_top = -h / 2.0
+	window.offset_bottom = h / 2.0
 
 ## Two cards per row across the window's inside (the window is 70 % of the screen, at least its minimum width).
 func _card_width() -> float:
@@ -143,10 +171,10 @@ func _card(row: HFlowContainer, info: Dictionary, w: float) -> TdButton:
 		b.clicked.connect(func(): open_chapter(c))
 	return b
 
-## The first level's board (cached per chapter; the minimap until it has rendered), in a dark well. Locked: dimmed
-## with a lock over it.
+## The first level's board (cached per chapter; the minimap until it has rendered), on a wood well. Locked: dimmed
+## with a lock over it. The board is rendered on a transparent background, so it stands on the wood.
 func _thumb(info: Dictionary) -> Control:
-	var well := TdMenu.panel(TdPanel.Kind.WELL, 6)
+	var well := TdMenu.panel(TdPanel.Kind.WOOD, 6)
 	well.custom_minimum_size = Vector2(THUMB_W, _card_h - 2.0 * CARD_PAD)
 	well.clip_contents = true
 	well.mouse_filter = MOUSE_FILTER_IGNORE

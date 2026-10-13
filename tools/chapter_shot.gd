@@ -1,6 +1,7 @@
 extends SceneTree
 ## Dev script: screenshots the Camp's chapter select (cards with board thumbnails, level dots, bar, reward).
 ##   ~/godot/run.sh projects/td -s tools/chapter_shot.gd [-- <out dir>]
+##   ~/godot/run.sh projects/td -s tools/chapter_shot.gd -- <out dir> complete   (only the first two shots: quick)
 ##   ~/godot/run.sh projects/td --resolution 1280x720 -s tools/chapter_shot.gd -- <out dir>
 ## Own save (user://chapter_shot.json, deleted first). Shots: chapter_complete (Chapter 1 complete via
 ## GameApp.complete_chapter1, Chapter 2 active), chapter_progress (+ one Chapter 2 level won), chapter_locked
@@ -11,10 +12,12 @@ var out_dir := "user://chapter_shot"
 var flow: Node
 var app: Node
 var save: Node
+var quick := false
 
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	if args.size() > 0: out_dir = args[0]
+	quick = args.size() > 1 and args[1] == "complete"
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
 	_run.call_deferred()
 
@@ -41,6 +44,10 @@ func _run() -> void:
 	await _frames(60)
 	await _shot("chapter_complete")
 	for c in ch.card_infos: print("card: ", c.name, " | ", c.progress, " | ", c.reason, " | active=", c.active, " | reward=", c.reward_name)
+	if quick:
+		print("CHAPTER SHOT DONE")
+		quit()
+		return
 	# one Chapter 2 level won
 	app.win_first_levels(5)
 	ch.draw()

@@ -6,11 +6,12 @@ extends RefCounted
 ## the saved layouts on GameData (switch, rename, keep the active one in step with the hand).
 ## Every tower is an individual (its own tower ID): two Archers are two entries, never "×2".
 
-const ROLES := ["Attack", "Spell", "Support", "Control", "Movement"]
+## No "Movement" role: every tower walks (Tower Walk), so it would match them all (UI/UX, doc cd1b6a5).
+const ROLES := ["Attack", "Spell", "Support", "Control"]
 const DELIVERIES := ["Melee", "Projectile", "Lobbed", "Spell"]
 ## The role chips' dots (the mockup's role colours).
 const ROLE_COLORS := {"Attack": Color("#FF7A6B"), "Spell": Color("#C59BFF"), "Support": Color("#7EE08A"),
-	"Control": Color("#FFD46B"), "Movement": Color("#BDA98C")}
+	"Control": Color("#FFD46B")}
 ## The cost slider's top: at it the slider means "any".
 const COST_ANY := 300
 ## The cost quick chips: [label, min, max].
@@ -27,7 +28,7 @@ const FULL_REASON := "Hand full: remove one to add another."
 
 ## A tower definition's traits from its abilities: {"roles": [...] in ROLES order, "delivery": [...] in DELIVERIES
 ## order, "move": bool, "heal": bool, "status": bool}.
-##  Attack / Spell / Movement: an ability carries that tag. Support: it heals or applies a Buff status.
+##  Attack / Spell: an ability carries that tag. Support: it heals or applies a Buff status.
 ##  Control: it applies a status that takes control (Taunted, Stunned…) or pushes / pulls.
 ##  Delivery: an ability's Melee / Projectile / Lobbed tag; Spell when a Spell ability has none of those.
 ##  move: a Movement ability. heal: a heal step. status: it applies a status.
@@ -44,7 +45,6 @@ static func traits(def: EntityDef) -> Dictionary:
 			if tags.has(Tags.Attack): roles["Attack"] = true
 			if tags.has(Tags.Spell): roles["Spell"] = true
 			if tags.has(Tags.Movement):
-				roles["Movement"] = true
 				move = true
 			var own := false
 			for d in [Tags.Melee, Tags.Projectile, Tags.Lobbed]:
@@ -253,8 +253,8 @@ static func layout_count(hand: Array) -> String:
 # ------------------------------------------------------------------ detail texts
 
 ## The detail card's stat tiles: up to `count` of Max HP, Power, Range, Speed, then Potency, Duration, Radius (the ones
-## the tower has). Array of [stat, label, value text].
-static func stat_tiles(me: IEntity, vocab: Vocabulary, count := 4) -> Array:
+## the tower has; no cap: extra stats add rows to the 2-column grid). Array of [stat, label, value text].
+static func stat_tiles(me: IEntity, vocab: Vocabulary, count := 99) -> Array:
 	var out := []
 	if me == null or vocab == null: return out
 	for s in ["MaxHp", "Power", "Range", "Speed", "Potency", "Duration", "Radius"]:
@@ -271,6 +271,11 @@ static func stat_tiles(me: IEntity, vocab: Vocabulary, count := 4) -> Array:
 static func num_text(v) -> String:
 	var f := float(v)
 	return str(int(f)) if is_equal_approx(f, roundf(f)) else str(snappedf(f, 0.01))
+
+## A result pill's name: a walk's reach is tiles ("2 Tiles", "1 Tile"); the rest as MenuLogic.result_name.
+static func result_name(value: String, n: String) -> String:
+	if n == "Move": return "Tile" if value == "1" else "Tiles"
+	return MenuLogic.result_name(n)
 
 ## An ability row's subtitle: its tags, the delivery in lower case ("Attack · projectile · 1 turn CD").
 static func ability_subtitle(tags: Array, cooldown: int, until_reset: bool) -> String:

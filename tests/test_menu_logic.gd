@@ -157,7 +157,8 @@ func test_controls_rows_group_headers_modifiers_then_keys() -> void:
 	assert_eq(shape[8], "k:Ability1")
 	assert_eq(shape[16], "k:Ability9")
 	assert_eq(shape[17], "h:Camera")
-	assert_eq(shape.size(), 3 + 3 + 3 + 9 + 6, "3 headers, 3 modifiers, 18 keys")
+	assert_eq(shape.slice(24), ["h:Co-op", "k:Pass", "k:Chat"], "co-op keys last")
+	assert_eq(shape.size(), 4 + 3 + 3 + 9 + 6 + 2, "4 headers, 3 modifiers, 20 keys")
 	assert_eq(MenuLogic.modifier_option(Modifiers.None), "No modifier")
 	assert_eq(MenuLogic.modifier_option(Modifiers.CtrlShift), "Ctrl+Shift")
 
@@ -286,7 +287,7 @@ func test_level_select_row_state_and_number() -> void:
 func test_level_select_hand_texts_and_facts() -> void:
 	assert_eq(MenuLogic.slots_used_text(5), "5 of 8 slots used")
 	assert_eq(MenuLogic.hand_strip_note("Two Roads", 5, 4), "Two Roads takes the first 4 towers; the rest wait on the bench.")
-	assert_eq(MenuLogic.hand_strip_note("Two Roads", 3, 4), "Two Roads takes up to 4 towers.")
+	assert_eq(MenuLogic.hand_strip_note("Two Roads", 3, 4), "Two Roads takes the first 4 towers.")
 	assert_eq(MenuLogic.hand_strip_note("Two Roads", 0, 4), "Your hand is empty: add towers with Change hand.")
 	assert_eq(MenuLogic.reward_lines("Priest", true), ["First win reward: Priest", "Already yours: replays give no reward."])
 	assert_eq(MenuLogic.reward_lines("Priest", false)[0], "Win it to earn: Priest")

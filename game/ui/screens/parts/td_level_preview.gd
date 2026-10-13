@@ -14,7 +14,7 @@ static var cache: Dictionary = {}
 var supersample := 1.5
 ## Camera pitch (degrees below the horizon) and turn (degrees; negative = seen from the front left).
 var pitch := 52.0
-var yaw := -16.0
+var yaw := -6.0
 ## Turned off by tools/tests that must not build 3D (the minimap only).
 var render_boards := true
 
@@ -150,7 +150,7 @@ static func _fit(cam: Camera3D, px: Vector2, grid: Vector2i, p_pitch: float, p_y
 	var corners := []
 	for x in [-0.8, grid.x - 0.2]:
 		for z in [0.8, 0.2 - float(grid.y)]:
-			for y in [-0.25, 0.6]: corners.append(Vector3(x, y, z))
+			for y in [-0.2, 0.0]: corners.append(Vector3(x, y, z))
 	var dir := Vector3(0, sin(deg_to_rad(p_pitch)), cos(deg_to_rad(p_pitch))).rotated(Vector3.UP, deg_to_rad(p_yaw))
 	var dist := float(maxi(grid.x, grid.y)) * 2.2
 	var half_tan := tan(deg_to_rad(cam.fov) * 0.5)
@@ -170,7 +170,7 @@ static func _fit(cam: Camera3D, px: Vector2, grid: Vector2i, p_pitch: float, p_y
 			lo = Vector2(minf(lo.x, s.x), minf(lo.y, s.y))
 			hi = Vector2(maxf(hi.x, s.x), maxf(hi.y, s.y))
 		var aspect := px.x / maxf(px.y, 1.0)
-		var need := maxf((hi.x - lo.x) / (2.0 * aspect), (hi.y - lo.y) / 2.0) / 0.97
+		var need := maxf((hi.x - lo.x) / (2.0 * aspect), (hi.y - lo.y) / 2.0) / 0.85
 		if pass_i < 3:
 			dist *= need
 		else:

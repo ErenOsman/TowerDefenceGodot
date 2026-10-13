@@ -33,4 +33,4 @@ See `docs/Decisions.md` (2026-10-13 rows) — they are logged in the Unity repo 
   it should be added there (and to the save docs) when Unity gets the Hand select screen. The active layout always
   mirrors `towers.hand` (the hand levels use); a save without the key gets Layout 1 = the hand, 2–4 empty.
 - Tower roles / delivery in the hand editor's filters are derived from the abilities (`HandLogic.traits`), not authored:
-  every tower has Tower Walk, so every tower counts as "Movement" / "Can move" until the content marks it otherwise.
+  every tower has Tower Walk, so there is no "Movement" role chip and no "Can move" toggle (UI Design Rules, cd1b6a5).

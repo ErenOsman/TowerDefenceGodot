@@ -230,12 +230,12 @@ static func plural(n: int, word: String, words := "") -> String:
 	return word if n == 1 else (words if words != "" else word + "s")
 
 ## The hand strip's note: "Two Roads takes the first 4 towers; the rest wait on the bench." (more towers than the
-## cap), "Two Roads takes up to 4 towers." (they all come), or what to do with an empty hand.
+## cap), "Two Roads takes the first 4 towers." (they all come; the words of hand select), or what to do with an empty hand.
 static func hand_strip_note(level_name: String, hand_count: int, cap: int) -> String:
 	if hand_count == 0: return "Your hand is empty: add towers with Change hand."
 	var who := level_name if level_name != "" else "This level"
 	if hand_count > cap: return "%s takes the first %d %s; the rest wait on the bench." % [who, cap, plural(cap, "tower")]
-	return "%s takes up to %d %s." % [who, cap, plural(cap, "tower")]
+	return "%s takes the first %d %s." % [who, cap, plural(cap, "tower")]
 
 ## "5 of 8 slots used".
 static func slots_used_text(used: int, slots := TowerCollection.MaxHand) -> String:

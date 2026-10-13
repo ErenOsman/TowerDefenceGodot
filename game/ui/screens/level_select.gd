@@ -54,7 +54,6 @@ var _reward_icon: Control
 var _play: TdMenuButton
 var _note: Label
 var _tray: HBoxContainer
-var _zones: HBoxContainer
 var _slots_used: Label
 var _popups: Control
 var _rows: Array = []
@@ -271,8 +270,6 @@ func _build_hand() -> void:
 	col.add_child(tray_box)
 	_tray = TdMenu.hbox(6)
 	tray_box.add_child(_tray)
-	_zones = TdMenu.hbox(0)
-	col.add_child(_zones)
 	var side := TdMenu.vbox(14)
 	side.custom_minimum_size = Vector2(300, 0)
 	side.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -664,9 +661,6 @@ func _draw_hand(level: LevelAsset, pop: bool) -> void:
 	for c in _tray.get_children():
 		_tray.remove_child(c)
 		c.queue_free()
-	for c in _zones.get_children():
-		_zones.remove_child(c)
-		c.queue_free()
 	_pieces.clear()
 	var towers := SaveData.towers
 	var cap := clampi(level.hand_cap if level != null else TowerCollection.MaxHand, 0, TowerCollection.MaxHand)
@@ -682,13 +676,6 @@ func _draw_hand(level: LevelAsset, pop: bool) -> void:
 		piece.pressed.connect(open_hand_editor)
 		_tray.add_child(piece)
 		_pieces.append(piece)
-	# the zones under the tray: "In this level: N" over the first cap slots, "Bench" over the rest
-	var step := HandSlot.SLOT.x + 6.0
-	_zones.add_child(TdMenu.spacer(0, 18))
-	_zones.add_child(_zone("In this level: %d" % cap, cap * step - 6.0 + 8.0, TdTheme.color("gold"), TdTheme.color("gold"), true))
-	if cap < TowerCollection.MaxHand:
-		_zones.add_child(TdMenu.spacer(0, 16))
-		_zones.add_child(_zone("Bench", (TowerCollection.MaxHand - cap) * step - 6.0, TdTheme.color("cream.300"), TdTheme.color("wood.500"), false))
 	_note.text = MenuLogic.hand_strip_note(level.get_display_name() if level != null else "", towers.hand.size(), cap)
 	_slots_used.text = MenuLogic.slots_used_text(towers.hand.size())
 	if pop: TdMenu.pop_in(_pieces, 0.03)
@@ -705,27 +692,6 @@ func _cut() -> Control:
 	wrap.mouse_filter = MOUSE_FILTER_IGNORE
 	wrap.add_child(c)
 	return wrap
-
-func _zone(text: String, width: float, col: Color, line: Color, arrow: bool) -> Control:
-	var v := TdMenu.vbox(4)
-	v.custom_minimum_size = Vector2(maxf(width, 60.0), 0)
-	v.mouse_filter = MOUSE_FILTER_IGNORE
-	var bar := ColorRect.new()
-	bar.color = line
-	bar.custom_minimum_size = Vector2(0, 3)
-	bar.mouse_filter = MOUSE_FILTER_IGNORE
-	v.add_child(bar)
-	var h := TdMenu.hbox(6)
-	h.alignment = BoxContainer.ALIGNMENT_BEGIN if arrow else BoxContainer.ALIGNMENT_CENTER
-	v.add_child(h)
-	if arrow:
-		var ic := TdMenu.picture(TdTheme.texture("icon_play"), Vector2(16, 16))
-		ic.modulate = col
-		ic.size_flags_vertical = SIZE_SHRINK_CENTER
-		h.add_child(TdMenu.spacer(0, 4))
-		h.add_child(ic)
-	h.add_child(TdMenu.label(text, "plate", col, 18))
-	return v
 
 ## Opens the hand editor popup over this screen (with the selected level, for its hand cap); returns it.
 func open_hand_editor() -> TdPopup:
@@ -827,6 +793,7 @@ class HandSlot extends Control:
 		_plate.position = Vector2(8, SLOT.y - 32)
 		if empty or bench: _plate.set_extra_state("Locked")
 		add_child(_plate)
+		if bench: modulate.a = 0.8 # benched slots a little dimmer (as in hand select)
 		TdTooltipTrigger.attach(self, "", "Click: change hand" if not empty else "Empty slot. Click: change hand")
 
 	func _restyle() -> void:

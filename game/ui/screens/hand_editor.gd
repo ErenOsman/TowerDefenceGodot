@@ -239,7 +239,7 @@ func _build_filters() -> Control:
 		qc.add_child(c)
 		_cost_chips.append(c)
 	v.add_child(qc)
-	for pair in [["move", "Can move"], ["heal", "Heals"], ["status", "Applies statuses"], ["hide", "Hide my hand"]]:
+	for pair in [["heal", "Heals"], ["status", "Applies statuses"], ["hide", "Hide my hand"]]:
 		var t := Button.new()
 		t.text = pair[1]
 		t.toggle_mode = true
@@ -603,6 +603,18 @@ func _refresh_detail() -> void:
 		l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_detail.add_child(l)
 		return
+	# everything above the action scrolls (a tower with many stats or abilities)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = SIZE_EXPAND_FILL
+	_detail.add_child(scroll)
+	var gutter := MarginContainer.new()
+	gutter.add_theme_constant_override("margin_right", 14) # room for the scrollbar
+	gutter.size_flags_horizontal = SIZE_EXPAND_FILL
+	scroll.add_child(gutter)
+	var body := TdMenu.vbox(10)
+	body.size_flags_horizontal = SIZE_EXPAND_FILL
+	gutter.add_child(body)
 	var head := HFlowContainer.new()
 	head.add_theme_constant_override("h_separation", 10)
 	var n := TdMenu.label(e.name, "h2", TdTheme.color("accent.ink"), 32)
@@ -610,14 +622,14 @@ func _refresh_detail() -> void:
 	var num := TdMenu.label(HandLogic.number_text(e), "micro", TdTheme.color("ink.2"), 18)
 	num.size_flags_vertical = SIZE_SHRINK_END
 	head.add_child(num)
-	_detail.add_child(head)
+	body.add_child(head)
 	var cost := TdMenu.rich("[img=20x20 color=%s]%s[/img] [font_size=22][color=%s]%d[/color][/font_size] energy" % [TdTheme.rich("gold.ink"),
 		TdTheme.texture("icon_energy").resource_path, TdTheme.rich("gold.ink"), e.cost], "small", TdTheme.color("ink.2"), 18)
-	_detail.add_child(cost)
+	body.add_child(cost)
 	var type: TowerAsset = e.type
 	var desc := type.description if type != null else ""
 	if desc == "" and type != null and type.entity != null: desc = type.entity.description
-	if desc != "": _detail.add_child(TdMenu.rich(TooltipText.describe(desc), "body", TdTheme.color("ink"), 18))
+	if desc != "": body.add_child(TdMenu.rich(TooltipText.describe(desc), "body", TdTheme.color("ink"), 18))
 	var def: EntityDef = e.def
 	var vocab: Vocabulary = GameApp.rules.vocabulary if GameApp.rules != null else null
 	var me: IEntity = DefStats.new(def) if def != null else null
@@ -627,21 +639,17 @@ func _refresh_detail() -> void:
 		tiles.add_theme_constant_override("h_separation", 6)
 		tiles.add_theme_constant_override("v_separation", 6)
 		for t in HandLogic.stat_tiles(me, vocab): tiles.add_child(_stat_tile(t[0], t[1], t[2]))
-		_detail.add_child(tiles)
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = SIZE_EXPAND_FILL
-	_detail.add_child(scroll)
+		body.add_child(tiles)
 	var rows := TdMenu.vbox(0)
 	rows.size_flags_horizontal = SIZE_EXPAND_FILL
-	scroll.add_child(rows)
+	body.add_child(rows)
 	if def != null:
 		for ab in def.abilities:
 			var asset = GameApp.convert.asset_of(ab, "AbilityAsset")
 			var icon: Texture2D = TdTheme.ability_icon(MenuLogic.icon_name(asset.icon)) if asset != null and asset.icon != "" else null
 			var pills := []
 			if me != null and vocab != null:
-				for r in AbilityText.tags(ab, me, vocab): pills.append([str(r[0]), MenuLogic.result_name(str(r[1]))])
+				for r in AbilityText.tags(ab, me, vocab): pills.append([str(r[0]), HandLogic.result_name(str(r[0]), str(r[1]))])
 			rows.add_child(_ability_row(icon, ab.display_name, HandLogic.ability_subtitle(ab.tags, ab.cooldown, ab.cooldown_until_reset), pills, "", false))
 		for pv in PassiveView.of(def):
 			var asset = GameApp.convert.asset_of(pv.def, "PassiveAsset")
@@ -681,7 +689,7 @@ const STAT_ICONS := {"MaxHp": "icon_heart", "Power": "icon_power", "Potency": "i
 func _stat_tile(stat: String, label: String, value: String) -> Control:
 	var p := PanelContainer.new()
 	p.add_theme_stylebox_override("panel", TdTheme.stylebox("paper_stat", Color.WHITE, [8, 2, 8, 2]))
-	p.custom_minimum_size = Vector2(167, 44)
+	p.custom_minimum_size = Vector2(158, 44)
 	p.size_flags_horizontal = SIZE_EXPAND_FILL
 	var h := TdMenu.hbox(6)
 	p.add_child(h)

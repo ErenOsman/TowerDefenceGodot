@@ -30,24 +30,24 @@ func _names(list: Array) -> Array:
 
 func test_roles_and_delivery_come_from_the_abilities() -> void:
 	var a := _traits("archer")
-	assert_seq(a.roles, ["Attack", "Movement"])
+	assert_seq(a.roles, ["Attack"], "no Movement role: every tower walks")
 	assert_seq(a.delivery, ["Projectile"])
 	assert_true(a.move)
 	assert_false(a.heal)
 	assert_false(a.status)
 	var g := _traits("guardian")
-	assert_seq(g.roles, ["Attack", "Control", "Movement"], "Taunt applies Taunted: Control")
+	assert_seq(g.roles, ["Attack", "Control"], "Taunt applies Taunted: Control")
 	assert_seq(g.delivery, ["Melee"])
 	assert_true(g.status)
 	var p := _traits("priest")
-	assert_seq(p.roles, ["Attack", "Spell", "Support", "Movement"], "Mend heals: Support")
+	assert_seq(p.roles, ["Attack", "Spell", "Support"], "Mend heals: Support")
 	assert_seq(p.delivery, ["Spell"])
 	assert_true(p.heal)
 	var d := _traits("drummer")
-	assert_seq(d.roles, ["Spell", "Support", "Movement"], "Rally applies a Buff: Support, no attack")
+	assert_seq(d.roles, ["Spell", "Support"], "Rally applies a Buff: Support, no attack")
 	assert_true(d.status)
 	assert_seq(_traits("cannon").delivery, ["Lobbed"])
-	assert_seq(_traits("mage").roles, ["Attack", "Spell", "Movement"], "a burn is damage, not control")
+	assert_seq(_traits("mage").roles, ["Attack", "Spell"], "a burn is damage, not control")
 	assert_seq(HandLogic.traits(null).roles, [])
 
 func test_entries_are_individuals_with_their_index() -> void:
@@ -204,4 +204,10 @@ func test_detail_texts() -> void:
 	var t: TowerAsset = lib().catalog.find_tower("archer")
 	var me := DefStats.new(_conv.entity(t.entity))
 	var vocab: Vocabulary = _conv.rules(lib().rules).vocabulary
+	assert_eq(HandLogic.result_name("2", "Move"), "Tiles", "a walk's reach is tiles")
+	assert_eq(HandLogic.result_name("1", "Move"), "Tile")
+	assert_eq(HandLogic.result_name("10", "Damage"), "Damage")
+	var mage: TowerAsset = lib().catalog.find_tower("mage")
+	assert_seq(HandLogic.stat_tiles(DefStats.new(_conv.entity(mage.entity)), vocab).map(func(x): return x[1]),
+		["Max HP", "Power", "Range", "Speed", "Potency", "Radius"], "no cap: Potency and Radius make a third row")
 	assert_seq(HandLogic.stat_tiles(me, vocab).map(func(x): return "%s %s" % [x[2], x[1]]), ["20 Max HP", "10 Power", "2 Range", "2 Speed"])

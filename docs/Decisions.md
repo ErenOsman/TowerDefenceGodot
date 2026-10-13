@@ -45,6 +45,8 @@ Format: date · decision · reason. The commit that made the change is in bracke
 
 | Date | Decision | Reason |
 | --- | --- | --- |
+| 2026-10-13 | Hand select has FOUR fixed layout tabs (Layout 1 holds the hand, 2–4 start empty, rename only; the active layout is the one levels use); saved as `handLayouts` {active, layouts[{name, hand}]} next to the hand (Godot build first; the Unity GameData lacks the field) | Eren ("4 layout olsun"); UI doc 30e8a78 (Hand select section) |
+| 2026-10-13 | Level select, hand select and chapter select follow the UI/UX agent's screens-b mockups (level-select.html, hand-select.html) in the Godot build: numbered rows with Won/New/lock states, fact tiles, enemy chips, rendered board preview, first-win reward line, 8-slot hand strip with the cap divider; chapter cards with thumbnail, level dots, reward and green-when-complete progress | Eren asked for "the new level select"; built 961bf86 |
 | 2026-10-13 | The action bar is centred on the screen (~62 px above the bottom), never left-aligned next to the hand tray; a wide tray pushes it right by just enough (24 px clearance), else it rises a row, still centred | Eren, testing the Godot build. In the UI Design Rules doc (4dca561) |
 | 2026-10-13 | The aiming ability button: gold rim, lifted 5 px, slow gold glow pulse, gold key badge; the unit's other abilities dim to 60 %; the bar label reads "Shoot: pick a target"; right click, Esc or the same key cancels | Eren: it was not clear which ability was selected. In the doc (8685694) |
 | 2026-10-13 | No "Next: …" forecast line on the enemy's inspector card nor in its Info window; the enemy's coming turn is previewed on the board when hovered | Eren ("yazmasın"). UI doc 334ad65, NEWS 32 |
