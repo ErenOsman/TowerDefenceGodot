@@ -69,7 +69,7 @@ func _card(row: HBoxContainer, info: Dictionary) -> TdButton:
 	v.position = Vector2(24, 22)
 	v.size = Vector2(312, 106)
 	v.mouse_filter = MOUSE_FILTER_IGNORE
-	b.add_child(v)
+	b.face_node().add_child(v)
 	var name_l := TdMenu.label(info.name, "h2", TdTheme.color("cream.100") if info.open else TdTheme.color("cream.300"), 34)
 	name_l.mouse_filter = MOUSE_FILTER_IGNORE
 	v.add_child(name_l)
@@ -90,7 +90,7 @@ func _card(row: HBoxContainer, info: Dictionary) -> TdButton:
 		var lock := TdMenu.picture(TdTheme.texture("icon_lock"), Vector2(28, 28))
 		lock.position = Vector2(316, 20)
 		lock.modulate = TdTheme.color("cream.300")
-		b.add_child(lock)
+		b.face_node().add_child(lock)
 	else:
 		var c: int = info.chapter
 		b.clicked.connect(func(): open_chapter(c))

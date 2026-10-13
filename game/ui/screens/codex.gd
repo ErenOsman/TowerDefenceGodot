@@ -9,7 +9,8 @@ extends TdPopup
 
 const SECTIONS := [CodexSection.Towers, CodexSection.Enemies, CodexSection.Statuses, CodexSection.Tips]
 const TAB_NAMES := ["Towers", "Enemies", "Statuses", "Tips"]
-const WIDTH := 1530.0
+const TAB_WIDTHS := [200.0, 236.0, 236.0, 190.0] # faces; TdButton adds its bleed room
+const WIDTH := 1600.0
 const HEIGHT := 900.0
 const STAT_ICONS := {"MaxHp": "icon_heart", "Power": "icon_power", "Potency": "icon_power", "Duration": "icon_clock",
 	"Speed": "icon_speed", "Range": "icon_range", "Radius": "icon_range"}
@@ -28,6 +29,8 @@ var _bar: Control
 var _page_scroll: ScrollContainer
 var _left: VBoxContainer
 var _preview_card: PanelContainer
+var _chip_card: PanelContainer
+var _chip_icon: TextureRect
 var _preview: TdModelPreview
 var _picture: TextureRect
 var _hint: Label
@@ -55,15 +58,18 @@ func _build() -> void:
 	var head := TdMenu.hbox(16)
 	col.add_child(head)
 	var t := TdMenu.label("Codex", "display", TdTheme.color("cream.100"), 64)
-	t.custom_minimum_size = Vector2(240, 0)
+	t.custom_minimum_size = Vector2(200, 0)
 	head.add_child(t)
 	var tabs := TdMenu.hbox(14)
 	tabs.size_flags_horizontal = SIZE_EXPAND_FILL
 	tabs.alignment = BoxContainer.ALIGNMENT_BEGIN
 	head.add_child(tabs)
-	tab_buttons = TdMenu.tabs(tabs, TAB_NAMES, [], Vector2(206, 64), func(i): show_section(SECTIONS[i]))
+	tab_buttons = TdMenu.tabs(tabs, TAB_NAMES, [], Vector2(220, 64), func(i): show_section(SECTIONS[i]))
+	for k in TAB_WIDTHS.size(): # wide enough for the label + its "N new" pill with 16 px padding
+		tab_buttons[k].custom_minimum_size.x = TAB_WIDTHS[k]
+		tab_buttons[k].size.x = TAB_WIDTHS[k]
 	var prog := TdMenu.vbox(6)
-	prog.custom_minimum_size = Vector2(250, 0)
+	prog.custom_minimum_size = Vector2(240, 0)
 	prog.alignment = BoxContainer.ALIGNMENT_CENTER
 	head.add_child(prog)
 	_progress = TdMenu.label("", "header", TdTheme.color("cream.100"), 28)
@@ -94,7 +100,7 @@ func _build() -> void:
 	body.add_child(well)
 	_list_scroll = ScrollContainer.new()
 	_list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_list_scroll.get_v_scroll_bar().custom_minimum_size = Vector2(12, 0)
+	TdDragScroll.attach(_list_scroll)
 	well.add_child(_list_scroll)
 	_list = TdMenu.vbox(16)
 	_list.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -105,7 +111,7 @@ func _build() -> void:
 	_page_scroll = ScrollContainer.new()
 	_page_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	page.add_child(_page_scroll)
-	_page_scroll.get_v_scroll_bar().theme_type_variation = "PaperVScrollBar"
+	TdDragScroll.attach(_page_scroll, true)
 	var cols := TdMenu.hbox(30)
 	cols.size_flags_horizontal = SIZE_EXPAND_FILL
 	cols.size_flags_vertical = SIZE_EXPAND_FILL
@@ -122,6 +128,16 @@ func _build() -> void:
 	_preview_card.add_theme_stylebox_override("panel", card)
 	_preview_card.custom_minimum_size = Vector2(276, 364)
 	_left.add_child(_preview_card)
+	# a status's icon: a small chip box of its own (the model card is for units)
+	_chip_card = PanelContainer.new()
+	_chip_card.add_theme_stylebox_override("panel", card)
+	_chip_card.custom_minimum_size = Vector2(150, 150)
+	_chip_card.size_flags_horizontal = SIZE_SHRINK_BEGIN
+	var cc := CenterContainer.new()
+	_chip_card.add_child(cc)
+	_chip_icon = TdMenu.picture(null, Vector2(104, 104))
+	cc.add_child(_chip_icon)
+	_left.add_child(_chip_card)
 	var stage := Control.new()
 	stage.custom_minimum_size = Vector2(276, 364)
 	_preview_card.add_child(stage)
@@ -244,12 +260,12 @@ func _tab_new(i: int, n: int) -> void:
 		p.free()
 		return
 	p.mouse_filter = MOUSE_FILTER_IGNORE
-	b.add_child(p)
+	b.face_node().add_child(p)
 	b.set_meta("new_pill", p)
 	var place := func() -> void:
 		if not is_instance_valid(p): return
 		var w := f.get_string_size(TAB_NAMES[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x
-		p.position = Vector2(b._label.position.x + w + 10.0, (b.size.y - p.size.y) / 2.0)
+		p.position = Vector2(b._label.position.x + w + 10.0, (b.face_rect().size.y - p.size.y) / 2.0)
 	place.call_deferred()
 
 func _new_count(s: int) -> int:
@@ -261,8 +277,8 @@ func _new_count(s: int) -> int:
 func _make_row(e: Dictionary) -> TdButton:
 	var b := TdButton.new()
 	b.style = TdButton.Style.ROW
-	b.custom_minimum_size = Vector2(290, 60)
-	b.size = Vector2(290, 60)
+	b.custom_minimum_size = Vector2(268, 60) # + the button's bleed room: fits the list beside its scrollbar
+	b.size = Vector2(268, 60)
 	b.selectable = true
 	b.clicked.connect(func(): select(e))
 	_list.add_child(b)
@@ -270,40 +286,54 @@ func _make_row(e: Dictionary) -> TdButton:
 	return b
 
 func _draw_row(b: TdButton, e: Dictionary) -> void:
-	for c in b.get_children():
+	for c in b.face_node().get_children():
 		if c.has_meta("row_part"): c.queue_free()
 	var known := _known(e)
 	var tex: Texture2D = null
 	if known: tex = _entry_picture(e)
 	var icon: Control
+	var kit_medal := _kit_medallion(e, "medallion_256")
 	if not known:
-		icon = TdMenu.picture(TdTheme.texture("lock_badge"), Vector2(40, 40))
+		icon = TdMenu.picture(_locked_texture(e), Vector2(40, 40))
+	elif e.section == CodexSection.Towers and kit_medal != null:
+		icon = TdMenu.picture(kit_medal, Vector2(40, 40)) # the kit's medallion, mipmapped down
 	elif e.section == CodexSection.Towers or e.section == CodexSection.Enemies:
 		icon = TdMenu.medallion(tex, 40, e.section == CodexSection.Enemies)
 	else:
 		icon = TdMenu.picture(tex if tex != null else TdTheme.texture("icon_info"), Vector2(36, 36))
 	icon.position = Vector2(12, 10)
 	icon.set_meta("row_part", true)
-	b.add_child(icon)
+	b.face_node().add_child(icon)
 	var l := TdMenu.label(e.name if known else "???", "header", TdTheme.color("cream.100"), 26)
 	var dot := known and SaveData.codex.is_new(e.section, e.id)
 	l.position = Vector2(66, 0)
-	l.size = Vector2(160 if dot else 216, 60)
+	l.size = Vector2(140 if dot else 194, 60)
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.clip_text = true
 	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	l.mouse_filter = MOUSE_FILTER_IGNORE
 	l.set_meta("row_part", true)
-	b.add_child(l)
+	b.face_node().add_child(l)
 	if dot:
 		var n := TdMenu.label("• New", "small", TdTheme.color("accent.light"), 20)
-		n.position = Vector2(226, 0)
+		n.position = Vector2(204, 0)
 		n.size = Vector2(60, 60)
 		n.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		n.mouse_filter = MOUSE_FILTER_IGNORE
 		n.set_meta("row_part", true)
-		b.add_child(n)
+		b.face_node().add_child(n)
 	b.selected = not selected.is_empty() and selected.section == e.section and selected.id == e.id
+
+## The kit's per-unit medallion (units/<folder>/<icon name>.png: medallion_256, locked_128), or null.
+static func _kit_medallion(e: Dictionary, folder: String) -> Texture2D:
+	if e.section != CodexSection.Towers and e.section != CodexSection.Enemies: return null
+	var n := MenuLogic.icon_name(e.icon)
+	return TdTheme.kit("units/%s/%s" % [folder, n]) if n != "" else null
+
+## An undiscovered entry's picture: its unit's locked silhouette medallion (128 px), else the lock badge.
+static func _locked_texture(e: Dictionary) -> Texture2D:
+	var t := _kit_medallion(e, "locked_128")
+	return t if t != null else TdTheme.texture("lock_badge")
 
 func _entry_picture(e: Dictionary) -> Texture2D:
 	var a = e.asset
@@ -333,10 +363,12 @@ func _show_page(e: Dictionary) -> void:
 	_preview.clear()
 	_preview.visible = false
 	_picture.visible = false
+	_picture.offset_left = -80; _picture.offset_right = 80; _picture.offset_top = -100; _picture.offset_bottom = 60
 	_hint.visible = false
 	_left.visible = true
 	_preview_card.visible = true
-	_small_card(false)
+	_chip_card.visible = false
+	_left.custom_minimum_size.x = 276.0
 	_subtitle.visible = true
 	_description.size_flags_horizontal = SIZE_EXPAND_FILL
 	_description.custom_minimum_size = Vector2.ZERO
@@ -351,7 +383,11 @@ func _show_page(e: Dictionary) -> void:
 		_title.text = "???"
 		_subtitle.text = MenuLogic.section_name(e.section)
 		_body.text = MenuLogic.locked_text(e.section)
-		_picture.texture = TdTheme.texture("lock_badge")
+		# drawn at its native size (128 px; the badge 52), centred in the card: no upscaling, no clipping
+		_picture.texture = _locked_texture(e)
+		var n := _picture.texture.get_size() * (0.5 if _picture.texture == TdTheme.texture("lock_badge") else 1.0)
+		_picture.offset_left = -n.x / 2.0; _picture.offset_right = n.x / 2.0
+		_picture.offset_top = -n.y / 2.0 - 20.0; _picture.offset_bottom = n.y / 2.0 - 20.0
 		_picture.visible = true
 		return
 	var a = e.asset
@@ -375,10 +411,10 @@ func _show_page(e: Dictionary) -> void:
 		if d.duration >= 0: rows.append(TooltipText.row("Lasts", MenuLogic.lasts_text(d.duration, d.duration_unit == DurationUnit.Rounds)))
 		rows.append(TooltipText.row("Again", MenuLogic.stacking_shown(d.stacking, d.max_stacks)))
 		_body.text = "\n".join(PackedStringArray(rows))
-		_picture.texture = GameApp.icon_texture(a.icon) if a.icon != "" else null
-		_picture.visible = _picture.texture != null
-		_preview_card.visible = _picture.visible
-		_small_card(true)
+		_chip_icon.texture = GameApp.icon_texture(a.icon) if a.icon != "" else null
+		_chip_card.visible = _chip_icon.texture != null
+		_preview_card.visible = false
+		_left.custom_minimum_size.x = 150.0 # the text starts right after the small chip box
 	else:
 		var tip: CodexTip = e.tip
 		_title.text = tip.title
@@ -517,14 +553,3 @@ func _chip(value: String, label: String) -> Control:
 
 const CHIP_ICONS := {"Damage": "icon_power", "Heal": "icon_heart", "Range": "icon_range", "Area": "icon_range",
 	"Hits": "icon_volley", "Jumps": "icon_next", "Duration": "icon_clock", "Pushback": "icon_move", "Pull": "icon_move"}
-
-## The picture card: full size for models, a small chip box for status icons.
-func _small_card(small: bool) -> void:
-	_preview_card.custom_minimum_size = Vector2(160, 160) if small else Vector2(276, 364)
-	_preview_card.get_child(0).custom_minimum_size = _preview_card.custom_minimum_size
-	_preview_card.size_flags_horizontal = SIZE_SHRINK_BEGIN
-	_picture.offset_left = -56 if small else -80
-	_picture.offset_right = 56 if small else 80
-	_picture.offset_top = -56 if small else -100
-	_picture.offset_bottom = 56 if small else 60
-	_preview_card.reset_size()

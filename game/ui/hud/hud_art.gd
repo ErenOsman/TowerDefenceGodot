@@ -163,4 +163,4 @@ static func tag_line(tags: Array, size := 20, tint := "") -> String:
 		if icon_name != "" and TdTheme.has_sprite(icon_name):
 			img = "[img=%dx%d color=%s]%s[/img] " % [size, size, col, TdTokens.SPRITES[icon_name][0]]
 		parts.append("%s[b]%s[/b]\u00a0%s" % [img.replace("[/img] ", "[/img]\u00a0"), value, label.replace(" ", "\u00a0")])
-	return "   ".join(parts)
+	return "  ".join(parts)

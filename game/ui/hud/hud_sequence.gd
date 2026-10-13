@@ -43,6 +43,9 @@ void fragment() {
 
 ## The dim behind a pointing bubble (~30 %), with a soft lit hole round the target.
 var _dim: ColorRect
+var _medal: Control
+## How far the bubble's speaker plate and medallion reach above its box.
+const BUBBLE_HEAD := 34.0
 
 func _ready() -> void:
 	_dim = ColorRect.new()
@@ -62,9 +65,14 @@ func _ready() -> void:
 	add_child(_ring)
 	dialogue = TdDialogueBox.new()
 	dialogue.size = Vector2(1100, 220)
-	dialogue.portrait_height = 520
+	# no bust beside the box: the Princess stands on the board (the board's speaker prop); only a small medallion
+	# on the name plate, as in the Unity build
+	_medal = HudArt.medallion(52, "medallion_ring", 5)
+	_medal.position = Vector2(-4, -36)
+	_medal.visible = false
 	add_child(dialogue)
 	dialogue.hide_line()
+	(dialogue.get("_content") as Control).add_child(_medal) # hides with the box
 	dialogue.set_skip_key("")
 	dialogue.clicked.connect(_on_dialogue_clicked)
 	_wood_plate(dialogue)
@@ -72,6 +80,7 @@ func _ready() -> void:
 	bubble = TdTextBubble.new()
 	bubble.set_anchors_preset(PRESET_FULL_RECT)
 	add_child(bubble)
+	bubble.offset_top = HudLayout.TOP_BAR + 16.0 + BUBBLE_HEAD - bubble.margin
 	bubble.hide_bubble()
 	bubble.set_skip_key("")
 	bubble.clicked.connect(func(): if controller != null: controller.continue_sequence())
@@ -132,7 +141,9 @@ func _process(delta: float) -> void:
 			if world != null and controller.camera != null and not controller.camera.in_view(world, 0.02): controller.camera.glide(world)
 		else:
 			bubble.hide_bubble()
-			dialogue.show_line(_speaker(line), text, waits, portrait)
+			dialogue.show_line(_speaker(line), text, waits, null)
+			_medal.visible = portrait != null
+			HudArt.set_medallion(_medal, portrait)
 			var step := ""
 			if run.count > 1: step = ("Tutorial · " if controller.is_tutorial else "") + "%d/%d" % [run.index + 1, run.count]
 			dialogue.set_notes(step, how)
@@ -140,6 +151,12 @@ func _process(delta: float) -> void:
 	var fade := clampf(_mode_t / 0.25, 0.0, 1.0)
 	if _pointing:
 		var spot = _target(line, false)
+		if spot != null and line.point_at != SequencePointAt.UI:
+			var box_h: float = bubble.box_rect().size.y
+			var top: float = bubble.global_position.y + bubble.margin
+			if spot.y - bubble.gap - box_h < top:
+				var feet = _target(line, true)
+				if feet != null: spot = feet + Vector2(0, 12)
 		# a HUD target always keeps it inside; a board target only while it is on screen (off screen it follows)
 		var on_screen: bool = spot != null and Rect2(Vector2.ZERO, size).has_point(spot)
 		bubble.keep_inside = line.point_at == SequencePointAt.UI or on_screen
@@ -150,16 +167,30 @@ func _process(delta: float) -> void:
 		var hole_r: float = (maxf(ui_rect.size.x, ui_rect.size.y) / 2.0 + 24.0) if ui_rect != null else 70.0
 		# a line that waits for the player to act leaves the board lit (user, 2026-10-10): only the ring marks the target
 		_set_dim(hole, hole_r, 0.0 if line.continue_on == SequenceContinue.Event else 0.3 * fade)
+		_board_ring(line, ui_rect == null)
 		_ring.visible = ui_rect != null
 		if ui_rect != null:
-			var side: float = maxf(ui_rect.size.x, ui_rect.size.y) + 40.0
-			_ring.size = Vector2(side, side)
-			_ring.position = ui_rect.get_center() - _ring.size / 2.0
+			var r := HudSequence.ring_rect(ui_rect, size)
+			_ring.position = r.position
+			_ring.size = r.size
 			_ring.queue_redraw()
 	else:
 		_ring.visible = false
 		_dim.visible = false
+		_board_ring(null, false)
 		dialogue.modulate.a = fade
+
+## Exactly one light ring per line: the board's ring (sequence marks) goes round the world target the bubble
+## points at, and is off while the bubble points at a HUD element (that ring is the HUD's). The HUD processes after
+## the controller, so this replaces the ring it set for the line's original point-at.
+func _board_ring(line, world: bool) -> void:
+	if controller == null or controller.overlay == null or controller.overlay.sequence == null: return
+	if line == null or not world:
+		controller.overlay.sequence.set_target(null, false)
+		return
+	var at = controller.sequence_target_screen(line, true)
+	var zoom: float = WorldUi.readable(controller.camera.zoom_factor()) if controller.camera != null else 1.0
+	controller.overlay.sequence.set_target(at, false, null, Vector2(120, 64) * zoom)
 
 func _set_dim(centre, radius: float, alpha: float) -> void:
 	_dim.visible = alpha > 0.0
@@ -196,11 +227,23 @@ func effective_line(line: SequenceLine) -> SequenceLine:
 	for k in ["speaker", "continue_on", "wait_for", "pauses_play", "seconds", "tile_x", "tile_y"]: out.set(k, line.get(k))
 	return out
 
+## The HUD ring's rect: the element grown 10 px, kept 4 px inside the screen (never cut by its edge).
+static func ring_rect(target: Rect2, screen: Vector2) -> Rect2:
+	var r := target.grow(10.0)
+	var inside := Rect2(Vector2(4, 4), screen - Vector2(8, 8))
+	return r.intersection(inside) if inside.intersects(r) else r
+
 func _draw_ring() -> void:
-	var r := _ring.size.x / 2.0 * (1.0 + 0.06 * sin(_clock * 4.0))
-	var c := _ring.size / 2.0
-	_ring.draw_arc(c, r, 0.0, TAU, 64, Color(TdTheme.color("gold.light"), 0.9), 5.0, true)
-	_ring.draw_arc(c, r + 6.0, 0.0, TAU, 64, Color(TdTheme.color("gold"), 0.35), 6.0, true)
+	var pulse := 0.5 + 0.5 * sin(_clock * 4.0)
+	var box := StyleBoxFlat.new()
+	box.draw_center = false
+	box.set_corner_radius_all(int(minf(_ring.size.x, _ring.size.y) / 2.0))
+	box.set_border_width_all(5)
+	box.border_color = Color(TdTheme.color("gold.light"), 0.75 + 0.25 * pulse)
+	box.shadow_color = Color(TdTheme.color("gold"), 0.35 * pulse)
+	box.shadow_size = 8
+	box.anti_aliasing = true
+	_ring.draw_style_box(box, Rect2(Vector2.ZERO, _ring.size))
 
 func _on_dialogue_clicked() -> void:
 	if controller == null: return

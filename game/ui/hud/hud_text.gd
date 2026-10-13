@@ -60,9 +60,13 @@ static func energy_missing(cost: int, energy: int) -> int:
 static func cost_missing(cost: int, energy: int) -> String:
 	return "Needs %d energy (you have %d)" % [cost, energy]
 
-## The hint line's refusal for a piece clicked without the energy: "Mage needs 30 more energy (120, you have 90)."
+## The hint line's refusal for a piece clicked without the energy: "Cannon needs 280 energy (you have 0)."
 static func cost_missing_hint(tower_name: String, cost: int, energy: int) -> String:
-	return "%s needs %d more energy (%d, you have %d)." % [tower_name, energy_missing(cost, energy), cost, energy]
+	return "%s needs %d energy (you have %d)." % [tower_name, cost, energy]
+
+## The hand tooltip's footer for a piece you cannot afford (beside "280 energy"): "Needs 180 more".
+static func shortfall(cost: int, energy: int) -> String:
+	return "Needs %d more" % energy_missing(cost, energy)
 
 # ------------------------------------------------------------------ action bar
 
@@ -203,6 +207,11 @@ static func fill_stats(description: String, values: Dictionary) -> String:
 		out += description.substr(at, m.get_start() - at) + "[b]%s[/b]" % num(values[m.get_string(1)])
 		at = m.get_end()
 	return out + description.substr(at)
+
+## "[b]1[/b] tiles" → "[b]1[/b] tile" (the counted words descriptions use after a filled-in number).
+static func singular_after_one(text: String) -> String:
+	var re := RegEx.create_from_string("(\\[b\\]1\\[/b\\]\\s+)(tile|turn|round|enemy|hit|target|time|stack)s\\b")
+	return re.sub(text, "$1$2", true)
 
 ## The caster's stats for fill_stats (the stats it has: Power, Speed, Range…). self_entity: an Entity or DefStats.
 static func stat_values(self_entity, vocab) -> Dictionary:

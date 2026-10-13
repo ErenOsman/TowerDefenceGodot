@@ -71,9 +71,19 @@ func tick(dt: float) -> void:
 		mat.set_shader_parameter("view_size", get_viewport_rect().size)
 		_dim.color = Color(0.05, 0.04, 0.03, 0.3 * _fade)
 	if _ring_at != null:
+		# exactly one ring, on the target, never cut by the screen edge: it shrinks to fit near an edge and its
+		# centre is kept inside (an inset of 12 px)
+		var view := get_viewport_rect().size
 		var s := 1.0 + 0.08 * sin(_time * 4.0)
-		_ring.size = _ring_size * s
-		_ring.position = _ring_at - _ring.size * 0.5
+		var want := _ring_size * s
+		var c: Vector2 = _ring_at
+		var room := Vector2(minf(c.x, view.x - c.x), minf(c.y, view.y - c.y)) - Vector2(12, 12) - Vector2(11, 11)
+		var fit := Vector2(clampf(want.x, 24.0, maxf(24.0, room.x * 2.0)), clampf(want.y, 16.0, maxf(16.0, room.y * 2.0)))
+		_ring.size = fit
+		var pos := c - fit * 0.5
+		pos.x = clampf(pos.x, 12.0 + 11.0, maxf(23.0, view.x - fit.x - 23.0))
+		pos.y = clampf(pos.y, 12.0 + 11.0, maxf(23.0, view.y - fit.y - 23.0))
+		_ring.position = pos
 		_ring.queue_redraw()
 	_arrow.visible = _arrow_at != null
 	if _arrow_at != null:

@@ -105,7 +105,12 @@ func bind(c: LevelController) -> void:
 		for d in c.converter.built("StatusDef"):
 			if not d.has_tag(Tags.Hidden): names.append(d.display_name)
 		TooltipText.set_keywords(names)
+	# tooltips are 340 wide in the battle (UI Design Rules, Tooltip); back to the kit's width when the level goes
+	TdTooltip.box().set_box_width(340)
 	_dirty = true
+
+func _exit_tree() -> void:
+	if is_instance_valid(TdTooltip._layer): TdTooltip.box().set_box_width(TdTooltipBox.WIDTH)
 
 ## A HUD element by node name (sequence lines point at "EndTurnButton", "HandTray", …), or null.
 func find_ui(element: String) -> Control:
@@ -182,7 +187,8 @@ func _layout() -> void:
 		action_bar.size = action_bar.get_combined_minimum_size()
 		action_bar.position = Vector2(r.position.x, r.end.y - action_bar.size.y)
 	var bottom: float = layout["bottom_inset"] if action_bar.visible else HudLayout.TRAY_H
-	_send_insets(HudLayout.TOP_BAR, bottom, HudLayout.RIGHT_BAR)
+	# top bar + bottom row only: the board is centred on the whole width (the card may cover its edge)
+	_send_insets(HudLayout.TOP_BAR, bottom, 0.0)
 
 ## Tells the camera what the HUD covers (the controller's set_hud_insets when it has one, else the camera's insets).
 func _send_insets(top: float, bottom: float, right: float) -> void:

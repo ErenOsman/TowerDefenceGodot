@@ -61,6 +61,7 @@ func _build() -> void:
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	left.add_child(scroll)
+	TdDragScroll.attach(scroll)
 	_list = TdMenu.vbox(14)
 	_list.size_flags_horizontal = SIZE_EXPAND_FILL
 	scroll.add_child(_list)
@@ -199,8 +200,8 @@ func _draw_list(pop: bool) -> void:
 		var level := _asset.find_level(item.level_id)
 		var b := TdButton.new()
 		b.style = TdButton.Style.ROW
-		b.custom_minimum_size = Vector2(478, 50)
-		b.size = Vector2(478, 50)
+		b.custom_minimum_size = Vector2(456, 50) # + the button's bleed room
+		b.size = Vector2(456, 50)
 		b.text = level.get_display_name() if level != null else item.level_id
 		b.font_size = 26
 		b.selectable = true
@@ -209,10 +210,10 @@ func _draw_list(pop: bool) -> void:
 			# locked: 60 % with a 24 px lock; the viewed row stays selected (cobalt) even when locked
 			if not b.selected: b.set_extra_state("Locked")
 			b.modulate.a = 1.0 if b.selected else 0.6
-			var lock := TdMenu.picture(TdTheme.texture("icon_lock"), Vector2(24, 24))
-			lock.position = Vector2(438, 13)
+			var lock := TdMenu.picture(TdTheme.texture("icon_lock"), Vector2(30, 30)) # the glyph is ~24 px inside its PNG
+			lock.position = Vector2(414, 10)
 			lock.modulate = TdTheme.color("cream.100")
-			b.add_child(lock)
+			b.face_node().add_child(lock)
 		var id: String = item.level_id
 		b.clicked.connect(func(): select(id)) # a locked row shows what opens it
 		_list.add_child(b)

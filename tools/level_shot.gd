@@ -30,6 +30,7 @@ func _run() -> void:
 	level = scene.instantiate()
 	level.test_level_id = level_id
 	level.test_hand = PackedStringArray(["archer", "archer"])
+	if OS.get_cmdline_user_args().has("no_hud"): level.hud_scene_path = "" # the board alone, framed by the defaults
 	if OS.get_cmdline_user_args().has("drawn_plates"):
 		level.ready.connect(func(): level.overlay.plates.make_plate = func(): return BoardPlate.new())
 	level.instant_override = false

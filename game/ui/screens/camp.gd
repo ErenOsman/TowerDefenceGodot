@@ -1,22 +1,41 @@
 extends Control
-## The Camp (UI_Camp.cs; Camp & Chapters — Design): the home between levels once Chapter 1 is won. A small 3D
-## camp (map-kit ground with the camp props: War Table, Miniature Shelf, Codex Lectern, Tower Workshop, Signal Post,
-## Tent, Campfire, Supplies) with a station button over each prop: Chapters (the chapter picker, then a chapter's
+## The Camp (UI_Camp.cs; Camp & Chapters — Design): the home between levels once Chapter 1 is won. A 3D camp
+## laid out from res://art/camp/layout.json (Camp Ground, the station props on an arc round the Campfire, Tent and
+## Supplies) with a station button over each prop: Chapters (the chapter picker, then a chapter's
 ## levels), Towers (the hand editor over every owned tower), Codex, and Main menu; Workshop and Multiplayer are
 ## locked ("Coming later"). The first visit (PlayerProfile.camp_seen) shows a welcome card, then a tour: the
 ## Princess's speech bubble (TdTextBubble) points at each station in turn, the station highlighted; a click goes on,
 ## Skip ends it. Map music comes from SceneFlow (AudioMgr.play_scene_music).
 
 const SCREENS := "res://game/ui/screens/"
-## [id, label, icon, prop, tile position (x, depth), prop scale, locked]
+## Where the props stand: the Blender agent's camp layout (source of truth). Board 18×9 tiles, x left→right,
+## depth front→back; Godot position = Vector3(x, 0, -depth); yaw = rotation_degrees.y.
+const LAYOUT := "res://art/camp/layout.json"
+## The stations, data-driven: adding one = an entry here + a slot with its name in layout.json.
+## {id, label, icon, action (method name, "" for none), locked}
 const STATIONS := [
-	["Towers", "Towers", "icon_cards", "Miniature Shelf", Vector2(0.7, 3.5), 1.5, false],
-	["Chapters", "Chapters", "icon_castle", "War Table", Vector2(2.3, 3.2), 1.6, false],
-	["Codex", "Codex", "icon_codex", "Codex Lectern", Vector2(3.8, 3.5), 1.7, false],
-	["Workshop", "Workshop", "icon_edit", "Tower Workshop", Vector2(5.3, 3.3), 1.5, true],
-	["Multiplayer", "Multiplayer", "icon_onboard", "Signal Post", Vector2(6.7, 3.4), 1.3, true],
+	{"id": "Towers", "label": "Towers", "icon": "icon_cards", "action": "open_towers", "locked": false},
+	{"id": "Chapters", "label": "Chapters", "icon": "icon_castle", "action": "open_chapters", "locked": false, "primary": true},
+	{"id": "Codex", "label": "Codex", "icon": "icon_codex", "action": "open_codex", "locked": false},
+	{"id": "Workshop", "label": "Workshop", "icon": "icon_edit", "action": "", "locked": true},
+	{"id": "Multiplayer", "label": "Multiplayer", "icon": "icon_onboard", "action": "", "locked": true},
 ]
-const DECOR := [["Campfire", Vector2(3.6, 1.2), 1.6, 0.0], ["Tent", Vector2(0.6, 1.0), 1.6, 35.0], ["Supplies", Vector2(6.2, 0.8), 1.5, -20.0]]
+## Used when layout.json cannot be read (same values as the Blender layout of 2026-10-13).
+const FALLBACK_LAYOUT := {
+	"centre": {"prop": "Campfire", "tile": [8.5, 2.2], "scale": 1.6, "yaw": 0},
+	"slots": [
+		{"tile": [2.42, 4.26], "face_yaw": -35.6, "station": "Towers", "prop": "Miniature Shelf", "scale": 1.5},
+		{"tile": [5.23, 5.96], "face_yaw": -20.5, "station": "Chapters", "prop": "War Table", "scale": 1.6},
+		{"tile": [8.5, 6.5], "face_yaw": 0.0, "station": "Codex", "prop": "Codex Lectern", "scale": 1.7},
+		{"tile": [11.77, 5.96], "face_yaw": 20.5, "station": "Workshop", "prop": "Tower Workshop", "scale": 1.5},
+		{"tile": [14.58, 4.26], "face_yaw": 35.6, "station": "Multiplayer", "prop": "Signal Post", "scale": 1.3},
+	],
+	"decor": [{"prop": "Tent", "tile": [0.9, 8.0], "scale": 1.6, "yaw": 25}, {"prop": "Supplies", "tile": [16.2, 8.0], "scale": 1.5, "yaw": -20}],
+}
+const BOARD := Vector2(18, 9)
+## Station buttons: the gap kept between them, and how far above its prop's top a button sits.
+const BUTTON_GAP := 16.0
+const BUTTON_LIFT := 28.0
 const TOUR := [
 	["Chapters", "Chapters: pick a chapter, then a level. Side chapters appear here as you open them."],
 	["Towers", "Towers: every tower you own. Choose which ones you bring in your hand."],
@@ -25,7 +44,6 @@ const TOUR := [
 	["Multiplayer", "Multiplayer: playing with others comes later."],
 ]
 const TOUR_SPEAKER := "Princess"
-const GROUND := Vector2i(8, 5)
 
 var buttons := {}       # station id → TdMenuButton
 var props := {}         # station id → Node3D
@@ -65,24 +83,35 @@ func _build_world() -> void:
 	var root := Node3D.new()
 	_vp.add_child(root)
 	TdDiorama._add_light(root, TdTheme.color("wood.900"))
-	# the ground: the map kit's ground pieces (BoardView over an empty map)
-	var level := LevelAsset.new()
-	var rows: Array[String] = []
-	for y in GROUND.y: rows.append(".".repeat(GROUND.x))
-	level.terrain = rows
-	var board := BoardView.new()
-	root.add_child(board)
-	var kit: Array = GameApp.lib.rules.tiles if GameApp.lib.rules != null else []
-	board.build(BattleGrid.new(GROUND.x, GROUND.y), level, kit, func(p): return GameApp.model_scene(p))
-	for s in STATIONS: props[s[0]] = _prop(root, s[3], s[4], s[5], 0.0)
-	for d in DECOR: _prop(root, d[0], d[1], d[2], d[3])
+	var layout := load_layout()
+	var ground_scene: PackedScene = GameApp.camp_scene("Camp Ground")
+	if ground_scene != null:
+		var g: Node3D = ground_scene.instantiate()
+		g.position = Vector3(BOARD.x / 2.0 - 0.5, 0.0, -(BOARD.y / 2.0 - 0.5))
+		root.add_child(g)
+	for slot in layout.get("slots", []):
+		if slot.get("prop") == null or slot.get("station") == null: continue
+		props[str(slot.station)] = _prop(root, str(slot.prop), _tile(slot.tile), float(slot.get("scale", 1.0)), float(slot.get("face_yaw", 0.0)))
+	var centre: Dictionary = layout.get("centre", {})
+	if not centre.is_empty(): _prop(root, str(centre.prop), _tile(centre.tile), float(centre.get("scale", 1.0)), float(centre.get("yaw", 0.0)))
+	for d in layout.get("decor", []): _prop(root, str(d.prop), _tile(d.tile), float(d.get("scale", 1.0)), float(d.get("yaw", 0.0)))
 	_cam = Camera3D.new()
 	_cam.fov = 34.0
 	root.add_child(_cam)
 	_cam.current = true
-	var c := Vector3((GROUND.x - 1) / 2.0, 0.0, -(GROUND.y - 1) / 2.0)
-	_cam.position = c + Vector3(0, 7.2, 8.6)
-	_cam.look_at(c + Vector3(0, 0, -0.2), Vector3.UP)
+	var c := Vector3(BOARD.x / 2.0 - 0.5, 0.0, -(BOARD.y / 2.0 - 0.5))
+	_cam.position = c + Vector3(0, 13.5, 15.0)
+	_cam.look_at(c + Vector3(0, 0, -0.4), Vector3.UP)
+
+## The camp layout (layout.json), or the built-in copy when it cannot be read.
+static func load_layout() -> Dictionary:
+	if FileAccess.file_exists(LAYOUT):
+		var d = JSON.parse_string(FileAccess.get_file_as_string(LAYOUT))
+		if d is Dictionary and d.has("slots"): return d
+	return FALLBACK_LAYOUT
+
+static func _tile(t) -> Vector2:
+	return Vector2(float(t[0]), float(t[1])) if t is Array and t.size() >= 2 else Vector2.ZERO
 
 func _prop(root: Node3D, prop: String, at: Vector2, scale_by: float, yaw: float) -> Node3D:
 	var sc: PackedScene = GameApp.camp_scene(prop)
@@ -99,6 +128,21 @@ func _prop(root: Node3D, prop: String, at: Vector2, scale_by: float, yaw: float)
 		top = maxf(top, (mi.global_transform * mi.get_aabb()).end.y)
 	m.set_meta("top", top)
 	return m
+
+## A prop's screen rectangle in canvas coordinates (its meshes' boxes projected).
+func _prop_rect(n: Node3D) -> Rect2:
+	if n == null or _cam == null or _vp.size.x <= 0: return Rect2(size / 2.0, Vector2.ONE)
+	var k := size / Vector2(_vp.size)
+	var r := Rect2()
+	var first := true
+	for m in n.find_children("*", "MeshInstance3D", true, false):
+		var box: AABB = m.global_transform * m.get_aabb()
+		for i in 8:
+			var p := _cam.unproject_position(box.get_endpoint(i)) * k
+			if first: r = Rect2(p, Vector2.ZERO)
+			else: r = r.expand(p)
+			first = false
+	return r
 
 ## A prop's top in canvas coordinates (where its station button goes).
 func _screen_of(n: Node3D) -> Vector2:
@@ -117,24 +161,24 @@ func _build_ui() -> void:
 	var sub := TdMenu.label("Your home between levels", "body", TdTheme.color("cream.200"), 24)
 	sub.position = Vector2(62, 112)
 	add_child(sub)
-	for s in STATIONS:
+	for st in STATIONS:
 		var b := TdMenuButton.new()
-		b.style = TdButton.Style.MENU_PRIMARY if s[0] == "Chapters" else TdButton.Style.MENU_WOOD
-		b.custom_minimum_size = Vector2(236, 72 if s[6] else 60)
+		b.style = TdButton.Style.MENU_PRIMARY if st.get("primary", false) else TdButton.Style.MENU_WOOD
+		b.custom_minimum_size = Vector2(236, 72 if st.locked else 60)
 		b.size = b.custom_minimum_size
-		b.text = s[1]
-		b.icon = TdTheme.texture(s[2])
+		b.text = st.label
+		b.icon = TdTheme.texture(st.icon)
 		b.selectable = true
 		b.left_pad = 20
 		b.font_size = 26
 		add_child(b)
-		buttons[s[0]] = b
-		if s[6]:
+		buttons[st.id] = b
+		if st.locked:
 			b.sub = "Coming later"
 			b.set_interactable(false, "Coming later")
-	buttons["Chapters"].clicked.connect(func(): open_chapters())
-	buttons["Towers"].clicked.connect(func(): open_towers())
-	buttons["Codex"].clicked.connect(func(): open_popup("codex"))
+		elif st.action != "":
+			b.clicked.connect(Callable(self, st.action))
+		if not props.has(st.id): b.visible = false # no slot for it in the layout yet
 	var menu := TdMenuButton.new()
 	menu.style = TdButton.Style.MENU_WOOD
 	menu.custom_minimum_size = Vector2(290, 64)
@@ -167,23 +211,66 @@ func _build_ui() -> void:
 	resized.connect(_place_buttons)
 	_place_buttons.call_deferred()
 
-## Each station's button sits just above its prop (re-placed every frame: the 3D view's size settles late), with a
-## short stem down to the prop.
+## Each station's button sits above its prop with a leader line down to it (re-placed every frame: the 3D view's
+## size settles late). Buttons never overlap: laid out left to right along the row, pushed apart to keep BUTTON_GAP;
+## a button that would still collide moves to a second row above.
 func _place_buttons() -> void:
-	for s in STATIONS:
-		var b: TdButton = buttons[s[0]]
-		var p := _screen_of(props.get(s[0]))
-		b.position = p - Vector2(b.size.x / 2.0, b.size.y + 18.0)
-		var stem: ColorRect = b.get_meta("stem") if b.has_meta("stem") else null
-		if stem == null:
-			stem = ColorRect.new()
-			stem.color = Color(TdTheme.color("cream.100"), 0.7)
-			stem.mouse_filter = MOUSE_FILTER_IGNORE
-			add_child(stem)
-			move_child(stem, b.get_index())
-			b.set_meta("stem", stem)
-		stem.position = Vector2(p.x - 1.5, p.y - 20.0)
-		stem.size = Vector2(3, 18)
+	var items := []
+	for st in STATIONS:
+		var b: TdButton = buttons[st.id]
+		if not b.visible or not props.has(st.id): continue
+		items.append({"b": b, "anchor": _screen_of(props[st.id])})
+	var rects := layout_buttons(items.map(func(i): return [i.anchor, i.b.size]), size.x, BUTTON_GAP, BUTTON_LIFT)
+	for k in items.size():
+		var b: TdButton = items[k].b
+		var r: Rect2 = rects[k]
+		b.position = r.position
+		var line: Line2D = b.get_meta("leader") if b.has_meta("leader") else null
+		if line == null:
+			line = Line2D.new()
+			line.width = 3.0
+			line.default_color = Color(TdTheme.color("cream.100"), 0.7)
+			add_child(line)
+			move_child(line, b.get_index())
+			b.set_meta("leader", line)
+		var a: Vector2 = items[k].anchor
+		line.points = PackedVector2Array([Vector2(r.get_center().x, r.end.y), a])
+
+## Places buttons (each [anchor point, size]) centred above their anchors, `lift` px up, without overlaps: sorted by
+## x and pushed right to keep `gap`; the row is then shifted back inside [gap, width - gap]; a button that still
+## collides goes to a second row above. Returns a Rect2 per input, in input order. (Static: tested.)
+static func layout_buttons(items: Array, width: float, gap: float, lift: float) -> Array:
+	var order := range(items.size())
+	order.sort_custom(func(a, b): return items[a][0].x < items[b][0].x)
+	var rects := []
+	rects.resize(items.size())
+	var row_y := 1e9
+	for i in order: row_y = minf(row_y, items[i][0].y - lift - items[i][1].y)
+	var xs := []
+	var prev_end := -1e9
+	for i in order:
+		var w: float = items[i][1].x
+		var x := maxf(items[i][0].x - w / 2.0, prev_end + gap)
+		xs.append(x)
+		prev_end = x + w
+	# shift the whole row back inside the screen
+	if not xs.is_empty():
+		var over: float = prev_end - (width - gap)
+		var under: float = gap - xs[0]
+		var shift := -over if over > 0.0 else (under if under > 0.0 else 0.0)
+		for k in xs.size(): xs[k] += shift
+	for k in order.size():
+		var i: int = order[k]
+		var sz: Vector2 = items[i][1]
+		var y := minf(items[i][0].y - lift - sz.y, row_y + 40.0) # roughly one row, following the anchors a little
+		var r := Rect2(Vector2(xs[k], y), sz)
+		# still colliding with an earlier button (after the shift): up to the second row
+		for j in range(k):
+			var other: Rect2 = rects[order[j]]
+			if other.grow(gap / 2.0).intersects(r.grow(gap / 2.0)):
+				r.position.y = other.position.y - sz.y - gap
+		rects[i] = r
+	return rects
 
 func _process(_delta: float) -> void:
 	_place_buttons()
@@ -209,7 +296,7 @@ func _build_welcome() -> void:
 	p.add_child(m)
 	var col := TdMenu.vbox(14)
 	m.add_child(col)
-	var eyebrow := TdMenu.label("CHAPTER 1 COMPLETE", "micro", TdTheme.color("gold"), 22)
+	var eyebrow := TdMenu.label("CHAPTER 1 COMPLETE", "micro", TdTheme.color("cream.200"), 22)
 	eyebrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(eyebrow)
 	var t := TdMenu.label("Welcome to the Camp", "plaque_title", TdTheme.color("cream.100"), 52)
@@ -255,15 +342,23 @@ func show_tour_step(index: int) -> void:
 		b.selected = true
 		bubble.show_line(TOUR_SPEAKER, TOUR[index][1], true, GameApp.portrait_texture("Princess"))
 		bubble.set_hint("Tour · %d/%d" % [index + 1, TOUR.size()], "Click or [b]%s[/b]" % KeyBinds.first(KeyBinds.Skip))
-		# below the station row (the stations line the back of the camp), so the bubble never covers another station
-		# the bubble's area starts under the station row, so it opens below the station and covers no other one
-		bubble.offset_top = b.get_global_rect().end.y - 30.0
-		bubble.point_at(Vector2(b.get_global_rect().get_center().x, b.get_global_rect().end.y - 4.0))
+		# beside the station's prop (right of it, or left for props on the right half), under the station row: the
+		# bubble's area is cut to that side, so it covers neither the prop it describes nor another station
+		var pr := _prop_rect(props.get(TOUR[index][0]))
+		var row_bottom := b.get_global_rect().end.y
+		var right_side := pr.get_center().x < size.x * 0.6
+		bubble.offset_top = row_bottom - 30.0
+		bubble.offset_left = pr.end.x + 8.0 if right_side else 0.0
+		bubble.offset_right = 0.0 if right_side else -(size.x - pr.position.x + 8.0)
+		var tip := Vector2(pr.end.x - 6.0 if right_side else pr.position.x + 6.0, maxf(row_bottom - 4.0, pr.position.y))
+		bubble.point_at(tip)
 		return
 	end_tour()
 
 func end_tour() -> void:
 	tour_step = -1
+	bubble.offset_left = 0.0
+	bubble.offset_right = 0.0
 	if _highlighted != null: _highlighted.selected = false
 	_highlighted = null
 	bubble.hide_bubble()
@@ -308,6 +403,10 @@ func open_chapter(chapter: int) -> TdPopup:
 	popups.add_child(ls)
 	ls.open()
 	return ls
+
+## Codex station.
+func open_codex() -> TdPopup:
+	return open_popup("codex")
 
 ## Towers: the hand editor over every owned tower.
 func open_towers() -> TdPopup:

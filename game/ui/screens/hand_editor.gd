@@ -104,6 +104,7 @@ func refresh(pop := false) -> void:
 	_cap_note.visible = level != null
 	_owned_title.text = "Click one to add it at the end (slot %d)" % (towers.hand.size() + 1) if towers.hand.size() < TowerCollection.MaxHand else "The hand is full (%d)" % TowerCollection.MaxHand
 	_empty.visible = others == 0
+	_owned_title.visible = others > 0
 	_owned_row.visible = others > 0
 	if pop: TdMenu.pop_in(made, 0.03)
 

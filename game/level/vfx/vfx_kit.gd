@@ -61,14 +61,29 @@ static func spawn(n: String, at: Vector3, parent: Node, lifetime: float = 2.0) -
 	if fx == null: return null
 	parent.add_child(fx)
 	fx.global_position = at
+	start(fx) # only now, placed in the tree: world-space particles are born where the effect is
 	var life := maxf(lifetime, float(fx.get_meta("duration", 1.0)))
 	var timer := parent.get_tree().create_timer(life, false, false, false) # scaled time: freezes on pause
 	timer.timeout.connect(func(): if is_instance_valid(fx): fx.queue_free())
 	return fx
 
-## A loop effect (status, trail) for the caller to parent; null when the kit has none by that name.
+## A loop effect (status, trail) for the caller to parent; null when the kit has none by that name. It does not
+## emit yet: call start(fx) once it is in the tree and placed.
 static func loop(n: String) -> Node3D:
 	return build(n)
+
+## Starts an effect's emitters (after it has been added to the tree and placed): each layer restarts, a delayed
+## burst after its delay (game time).
+static func start(fx: Node3D) -> void:
+	if fx == null or not fx.is_inside_tree(): return
+	for p in fx.get_children():
+		if not (p is CPUParticles3D): continue
+		var delay := float(p.get_meta("delay", 0.0))
+		if delay > 0.0:
+			var t := fx.get_tree().create_timer(delay, false, false, false)
+			t.timeout.connect(func(): if is_instance_valid(p): p.restart())
+		else:
+			p.restart()
 
 ## The effect's node: one CPUParticles3D per layer under a Node3D. Null when unknown or effects are off.
 static func build(n: String) -> Node3D:
@@ -157,13 +172,11 @@ static func _layer(l: Dictionary, is_loop: bool) -> CPUParticles3D:
 	p.mesh = _mesh(orient)
 	p.material_override = _material(str(l.sprite), add, orient)
 	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	p.emitting = true
+	# never emitting until start(): a world-space emitter that starts before its effect is placed spawns its first
+	# particles at the world origin
+	p.emitting = false
 	var delay := float(l.get("delay", 0.0))
-	if delay > 0.0 and burst:
-		p.emitting = false
-		p.ready.connect(func():
-			var t := p.get_tree().create_timer(delay, false, false, false)
-			t.timeout.connect(func(): if is_instance_valid(p): p.restart()))
+	if delay > 0.0 and burst: p.set_meta("delay", delay)
 	return p
 
 static func _shape(p: CPUParticles3D, sh: Dictionary) -> void:

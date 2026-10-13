@@ -73,7 +73,8 @@ func _run() -> void:
 	var b: TdButton = hud.action_bar.button(0)
 	if b != null:
 		_hover_control(b)
-		await _wait(1.8)
+		await _until_tooltip()
+		_report_tail("ability 1", b)
 	await _shot("3_selected_tooltip")
 	_park_mouse()
 	await _frames(5)
@@ -82,7 +83,8 @@ func _run() -> void:
 	var poor := _piece_for("cannon")
 	if poor != null:
 		_hover_control(poor)
-		await _wait(1.8)
+		await _until_tooltip()
+		_report_tail("piece", poor)
 		await _shot("4_piece_tooltip")
 		poor._gui_input(_release())
 		await _frames(6)
@@ -128,7 +130,7 @@ func _run() -> void:
 
 	# End turn hovered: the enemy phase on the board, the tooltip
 	_hover_control(hud.top_bar.end_turn)
-	await _wait(1.8)
+	await _until_tooltip()
 	await _shot("7_end_turn_hover")
 	_park_mouse()
 	await _frames(5)
@@ -191,6 +193,18 @@ func _tutorial() -> void:
 		await _frames(30)
 		await _shot("t5_ability_line")
 	quit(0)
+
+## Waits until the hover tooltip shows (up to 8 s; slow machines), then a few frames for its fade.
+func _until_tooltip() -> void:
+	var until := Time.get_ticks_msec() + 8000
+	while not TdTooltip.is_visible() and Time.get_ticks_msec() < until: await process_frame
+	await _wait(0.4)
+
+func _report_tail(what: String, c: Control) -> void:
+	var box := TdTooltip.box()
+	var tail: Control = box.get("_tail")
+	var t := tail.get_global_rect().get_center().x if tail != null and tail.visible else -1.0
+	print("%s: anchor centre %.1f  tail centre %.1f  box %.1f..%.1f" % [what, c.get_global_rect().get_center().x, t, box.get_global_rect().position.x, box.get_global_rect().end.x])
 
 func _frames(n: int) -> void:
 	for i in n: await process_frame

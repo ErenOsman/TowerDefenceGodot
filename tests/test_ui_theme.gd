@@ -108,3 +108,23 @@ func test_theme_resource_loads() -> void:
 	assert_true(th.has_stylebox("normal", "PrimaryButton"))
 	assert_true(th.get_stylebox("panel", "WindowPanel") is TdSliceBox)
 	assert_eq(th.get_font_size("font_size", "H1Label"), 44)
+
+func test_button_bleed_room() -> void:
+	# a row in a list keeps room for its 5 px outset + 6 px denied shake inside its own rect
+	assert_eq(TdButton.bleed_for(TdButton.Style.ROW, Vector2(400, 60)), Vector4(11, 5, 11, 5))
+	# menu buttons grow from their left edge: more room on the right
+	var m := TdButton.bleed_for(TdButton.Style.MENU_WOOD, Vector2(440, 64))
+	assert_true(m.z > m.x and m.w >= 12.0, str(m))
+	# abilities: clock ring left/bottom, cooldown badge top/right
+	var a := TdButton.bleed_for(TdButton.Style.ABILITY, Vector2(84, 84))
+	assert_true(a.y >= 24.0 and a.z >= 24.0 and a.w >= 17.0, str(a))
+	var b := TdButton.new()
+	b.style = TdButton.Style.ROW
+	b.custom_minimum_size = Vector2(400, 60)
+	b.bleed_mode = TdButton.Bleed.ON
+	assert_eq(b.get_combined_minimum_size(), Vector2(422, 70))
+	b.size = Vector2(422, 70)
+	assert_eq(b.face_rect(), Rect2(11, 5, 400, 60))
+	b.bleed_mode = TdButton.Bleed.OFF
+	assert_eq(b.face_rect(), Rect2(0, 0, 422, 70))
+	b.free()

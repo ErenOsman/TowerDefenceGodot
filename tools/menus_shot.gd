@@ -32,8 +32,14 @@ func _run() -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(save.path))
 	save.load_data()
 	app.ensure_loaded()
-	# Welcome (first launch)
-	flow.go(flow.Welcome)
+	# Boot (the shell agent's screen), then Welcome (first launch)
+	if _want("boot"):
+		change_scene_to_file("res://game/boot.tscn")
+		await _frames(15)
+		await _shot("boot")
+		await _until(func(): return flow.current == flow.Welcome and not flow.is_loading, 20.0)
+	else:
+		flow.go(flow.Welcome)
 	await _until(func(): return flow.current == flow.Welcome and not flow.is_loading, 20.0)
 	await _frames(20)
 	var welcome = current_scene
@@ -66,6 +72,10 @@ func _run() -> void:
 	if _want("settings"):
 		var s = menu.open_popup("settings")
 		await _frames(25)
+		await _shot("menu_settings_open") # the menu list behind stays plain (no hover / focus ring)
+		root.get_node("SettingsMgr").set_master_volume(0.0)
+		root.get_node("SettingsMgr").set_music_volume(1.0)
+		s.refresh_all()
 		for i in 4:
 			s.show_tab(i)
 			await _frames(4)
@@ -86,14 +96,30 @@ func _run() -> void:
 	# some discoveries, so the Codex has pages and new dots
 	for id in ["slime", "runner", "big-slime"]: save.codex.discover(CodexSection.Enemies, id)
 	for id in ["burn", "shield", "taunted"]: save.codex.discover(CodexSection.Statuses, id)
+	root.get_node("SettingsMgr").set_master_volume(0.3)
 	save.save()
 	if _want("codex") and ResourceLoader.exists("res://game/ui/screens/codex.tscn"):
 		var cx = menu.open_popup("codex")
 		await _frames(40)
 		await _shot("codex_towers")
+		# the Guardian's page, scrolled down
+		save.codex.discover(CodexSection.Towers, "guardian")
+		cx.show_section(CodexSection.Towers)
+		for e in cx.entries:
+			if e.id == "guardian": cx.select(e)
+		await _frames(10)
+		cx._page_scroll.scroll_vertical = 200
+		await _frames(6)
+		await _shot("codex_guardian_scrolled")
 		cx.show_section(CodexSection.Enemies)
 		await _frames(10)
 		await _shot("codex_enemies")
+		for e in cx.entries:
+			if not save.codex.is_discovered(e.section, e.id):
+				cx.select(e)
+				break
+		await _frames(8)
+		await _shot("codex_enemy_locked")
 		cx.show_section(CodexSection.Statuses)
 		await _frames(10)
 		await _shot("codex_statuses")

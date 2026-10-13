@@ -10,6 +10,26 @@ const GAME_TITLE := "Tower Defence"
 static func app() -> Node:
 	return (Engine.get_main_loop() as SceneTree).root.get_node_or_null("GameApp")
 
+## The shared menu background (Boot, Welcome, main menu, loading; the Unity build's image).
+const MENU_BACKGROUND := "res://art/ui/Backgrounds/Spitters Blurred.png"
+
+## The shared background image, centred and covering the parent (aspect kept, cropped), over dark wood.
+static func menu_background(parent: Control) -> TextureRect:
+	var bg := ColorRect.new()
+	bg.color = TdTheme.color("wood.900")
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(bg)
+	var r := TextureRect.new()
+	r.texture = load(MENU_BACKGROUND) if ResourceLoader.exists(MENU_BACKGROUND) else null
+	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	r.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	r.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(r)
+	return r
+
 ## A full-rect dark wood background (backdrop_wood) with the vignette over it.
 static func wood_background(parent: Control, vignette := true) -> Control:
 	var bg := ColorRect.new()
@@ -176,12 +196,13 @@ static func pop_in(items: Array, stagger := 0.035) -> void:
 		var ctl: Control = c
 		ctl.pivot_offset = ctl.custom_minimum_size / 2.0 if ctl.size == Vector2.ZERO else ctl.size / 2.0
 		ctl.scale = Vector2(0.9, 0.9)
+		var target := ctl.modulate.a # a dimmed control (a locked row at 60 %) pops in to its own alpha
 		ctl.modulate.a = 0.0
 		var tw := TdTheme.tween(ctl)
 		tw.tween_interval(stagger * i)
 		tw.set_parallel(true)
 		TdTheme.ease_tweener(tw.tween_property(ctl, "scale", Vector2.ONE, TdTheme.motion("normal")), "lift")
-		tw.tween_property(ctl, "modulate:a", 1.0, TdTheme.motion("quick"))
+		tw.tween_property(ctl, "modulate:a", target, TdTheme.motion("quick"))
 		i += 1
 
 ## Slides controls in from the left with a fade (main menu list: x -24, 0.25 s, stagger 0.04 s).
@@ -227,8 +248,8 @@ static func section_heading(text: String, size := 28) -> HBoxContainer:
 	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return h
 
-## The logo slot (the game's name is not decided): a marked container named "LogoSlot" holding the placeholder
-## title; swap its child for the logo later. Thin cream outline, rounded, no fill.
+## The logo slot (the game's name is not decided): a container named "LogoSlot" holding the placeholder name;
+## swap its child for the logo later. Thin cream outline, rounded, no fill.
 static func logo_slot(font_size := 76, slot_size := Vector2.ZERO) -> PanelContainer:
 	var p := PanelContainer.new()
 	p.name = "LogoSlot"
@@ -243,6 +264,7 @@ static func logo_slot(font_size := 76, slot_size := Vector2.ZERO) -> PanelContai
 	p.custom_minimum_size = slot_size
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	p.tooltip_text = "Logo slot (placeholder title)"
+	# the placeholder name (user decision 2026-10-13: keep the text until there is a logo)
 	var t := label(GAME_TITLE, "display", TdTheme.color("cream.100"), font_size)
 	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

@@ -42,6 +42,8 @@ func _on_begin() -> void:
 		var t := VfxKit.loop(trail)
 		if t != null: _ball.add_child(t)
 	_on_update(0.0)
+	for c in _ball.get_children():
+		if c.has_meta("loop"): VfxKit.start(c) # the trail starts once the shot is at the muzzle
 
 func _on_update(t: float) -> void:
 	if _ball == null or not is_instance_valid(_ball): return

@@ -18,15 +18,16 @@ extends Camera3D
 @export var glide_speed: float = 3.0
 ## What the HUD covers, in canvas pixels (the 1920×1080 reference): left, right, top, bottom. The board is fitted
 ## and centred in what is left: the top bar (96), the bottom row (tray + action bar, 168; +140 when they need two
-## rows) and the right bar (300, always counted so selecting does not move the board). The HUD sets them with
-## set_hud_insets.
-@export var hud_insets: Vector4 = Vector4(0.0, 300.0, 96.0, 168.0)
+## rows). Left and right are 0 by default: the board is centred on the whole width and the right bar may cover its
+## edge (Eren, 2026-10-11). The HUD sets them with set_hud_insets.
+@export var hud_insets: Vector4 = Vector4(0.0, 0.0, 96.0, 168.0)
 ## Vertical field of view (degrees).
 @export var view_fov: float = 50.0
 
 const DRAG_THRESHOLD := 8.0   # reference pixels a press must move to become a drag
 const SHAKE_TIME := 0.3
 const MODEL_HEIGHT := 0.8     # room above the far row for the models
+const GUTTER := 20.0          # canvas pixels kept free between the board and the HUD
 
 ## Key polling: an object with held(action) and pressed(action) (the level's key adapter); null = no keys.
 var keys = null
@@ -140,6 +141,13 @@ func free_area() -> Rect2:
 	var right := hud_insets.y / maxf(1.0, size.x)
 	var top := hud_insets.z / maxf(1.0, size.y)
 	var bottom := hud_insets.w / maxf(1.0, size.y)
+	# a gutter round the free area, so the board never touches the HUD's edges
+	var gx := GUTTER / maxf(1.0, size.x)
+	var gy := GUTTER / maxf(1.0, size.y)
+	left += gx
+	right += gx
+	top += gy
+	bottom += gy
 	return Rect2(left, top, clampf(1.0 - left - right, 0.2, 1.0), clampf(1.0 - top - bottom, 0.2, 1.0))
 
 ## The centre of the free area in canvas pixels, for hints and banners that sit over the board.

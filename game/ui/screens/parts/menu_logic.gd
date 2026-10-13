@@ -344,3 +344,10 @@ static func result_name(n: String) -> String:
 static func stacking_shown(stacking: int, max_stacks: int) -> String:
 	if stacking == Stacking.Stack and max_stacks >= 99: return "adds a stack and starts its time over"
 	return stacking_text(stacking, max_stacks)
+
+## A game speed as shown: "0.5×", "1×", "1.5×", "2×", "0.25×" (up to 2 decimals, trailing zeros dropped).
+static func speed_text(speed: float) -> String:
+	var t := "%.2f" % speed
+	while t.ends_with("0"): t = t.substr(0, t.length() - 1)
+	if t.ends_with("."): t = t.substr(0, t.length() - 1)
+	return t + "×"

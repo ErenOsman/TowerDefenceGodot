@@ -7,11 +7,23 @@ extends Control
 ## StatusDef → Texture2D (the status icon), or null.
 var icon_of: Callable = Callable()
 var status: TdEntityStatus
+## An opaque dark backing behind the full plate (the kit's backing is translucent: a neighbour's bar showed through).
+var _backing: Panel
 var _keys: Array = []
 var _shown_once := false
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_backing = Panel.new()
+	_backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(0.11, 0.085, 0.065, 0.94)
+	box.border_color = OverlayStyle.RIM
+	box.set_border_width_all(2)
+	box.set_corner_radius_all(8)
+	_backing.add_theme_stylebox_override("panel", box)
+	_backing.visible = false
+	add_child(_backing)
 	status = TdEntityStatus.new()
 	add_child(status)
 
@@ -24,7 +36,7 @@ func show_frame(f: EntityFrame) -> void:
 		_shown_once = true
 	else: status.set_health(f.hp, maxi(1, f.max_hp))
 	var wanted: Array = []
-	for s in OverlayStyle.ordered_statuses(f.statuses):
+	for s in PlateLayer.status_order(f.statuses):
 		var key: String = s.def.name if s.def != null else s.name
 		wanted.append(key)
 		var stacks: int = s.shield if s.shield > 0 else s.stacks
@@ -60,3 +72,7 @@ func tick(_dt: float) -> void:
 ## Hangs the kit plate above the origin (its bar's bottom edge on it, centred).
 func _align() -> void:
 	status.position = Vector2(-status.size.x * 0.5, -status.size.y)
+	_backing.visible = status.full
+	if status.full:
+		_backing.position = status.position - Vector2(10, 8)
+		_backing.size = status.size + Vector2(20, 14)

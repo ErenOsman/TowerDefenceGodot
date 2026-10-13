@@ -13,6 +13,8 @@ const TABS := ["Audio", "Display", "Gameplay", "Controls"]
 const TAB_ICONS := ["icon_sound", "icon_monitor", "icon_sliders", "icon_keyboard"]
 const WIDTH := 900.0
 const CONTROL_W := 520.0
+## The window's top edge (reference px): the tallest tab (Controls) is then centred on the screen.
+const TOP := 130.0
 
 var tab_buttons: Array = []
 var pages: Array = []
@@ -38,9 +40,16 @@ func _build() -> void:
 	center.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	center.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(center)
+	# the window's top edge is pinned (it grows downward with the tab's rows), so the tab row never jumps
+	center.queue_free()
 	var p := TdMenu.panel(TdPanel.Kind.WINDOW, 24)
 	p.custom_minimum_size = Vector2(WIDTH, 0)
-	center.add_child(p)
+	p.set_anchors_preset(PRESET_CENTER_TOP)
+	p.offset_left = -WIDTH / 2.0
+	p.offset_right = WIDTH / 2.0
+	p.offset_top = TOP
+	p.grow_horizontal = GROW_DIRECTION_BOTH
+	add_child(p)
 	window = p
 	var col := TdMenu.vbox(16)
 	p.add_child(col)
@@ -54,7 +63,7 @@ func _build() -> void:
 	head.add_child(x)
 	var tabs_row := TdMenu.hbox(10)
 	col.add_child(tabs_row)
-	tab_buttons = TdMenu.tabs(tabs_row, TABS, [], Vector2((WIDTH - 48 - 30) / 4.0, 56), show_tab)
+	tab_buttons = TdMenu.tabs(tabs_row, TABS, [], Vector2((WIDTH - 48 - 30) / 4.0 - 22.0, 56), show_tab)
 	if OS.has_feature("web"): tab_buttons[1].visible = false
 	var well := TdMenu.panel(TdPanel.Kind.WELL, 18)
 	col.add_child(well)
@@ -104,6 +113,7 @@ func show_tab(i: int) -> void:
 	for k in pages.size():
 		pages[k].visible = k == i
 		tab_buttons[k].selected = k == i
+	if window != null: window.reset_size.call_deferred()
 	reset_button.get_parent().visible = i == 3
 	if i == 3: refresh_controls()
 
@@ -116,7 +126,7 @@ func refresh_all() -> void:
 		_sliders[n][1].text = str(int(roundf(v * 100.0)))
 	for n in _toggles: _toggles[n].set_pressed_no_signal(bool(s.get(n)))
 	_speed.set_value_no_signal(MenuLogic.speed_stage(s.game_speed))
-	_speed_value.text = "%.2f" % s.game_speed
+	_speed_value.text = MenuLogic.speed_text(s.game_speed)
 	_fill_resolutions()
 	_fullscreen.set_pressed_no_signal(s.is_fullscreen)
 	refresh_controls()
@@ -153,6 +163,7 @@ func _slider_row(page: Container, text: String, setting: String, setter: Callabl
 	sl.custom_minimum_size = Vector2(410, 40)
 	sl.size_flags_vertical = SIZE_SHRINK_CENTER
 	sl.focus_mode = FOCUS_NONE
+	_full_track(sl)
 	h.add_child(sl)
 	var val := TdMenu.label("0", "header", TdTheme.color("cream.100"), 24)
 	val.custom_minimum_size = Vector2(70, 0)
@@ -218,14 +229,15 @@ func _gameplay_page() -> Control:
 	_speed.custom_minimum_size = Vector2(410, 40)
 	_speed.size_flags_vertical = SIZE_SHRINK_CENTER
 	_speed.focus_mode = FOCUS_NONE
+	_full_track(_speed)
 	h.add_child(_speed)
-	_speed_value = TdMenu.label("1.00", "header", TdTheme.color("cream.100"), 24)
+	_speed_value = TdMenu.label("1×", "header", TdTheme.color("cream.100"), 24)
 	_speed_value.custom_minimum_size = Vector2(70, 0)
 	_speed_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	h.add_child(_speed_value)
 	_speed.value_changed.connect(func(v):
 		var speed: float = MenuLogic.GAME_SPEEDS[clampi(int(v), 0, MenuLogic.GAME_SPEEDS.size() - 1)]
-		_speed_value.text = "%.2f" % speed
+		_speed_value.text = MenuLogic.speed_text(speed)
 		SettingsMgr.set_game_speed(speed))
 	_row(p, "Game speed", h)
 	_toggle_row(p, "Follow action", "follow_action", func(v): SettingsMgr.set_follow_action(v))
@@ -234,6 +246,12 @@ func _gameplay_page() -> Control:
 	_toggle_row(p, "Instant playback", "instant_playback", func(v): SettingsMgr.set_instant_playback(v))
 	_toggle_row(p, "Always show health", "always_show_health", func(v): SettingsMgr.set_always_show_health(v))
 	return p
+
+## The knob's centre reaches both ends of the track: the track spans the whole slider, the knob overhangs half its
+## width at 0 and 100, and the fill runs to the knob's centre (no track showing past the knob, no gap at the end).
+static func _full_track(sl: HSlider) -> void:
+	sl.add_theme_constant_override("center_grabber", 1)
+	sl.add_theme_constant_override("grabber_offset", 0)
 
 # ------------------------------------------------------------------ controls
 
@@ -254,6 +272,7 @@ func _controls_page() -> Control:
 	scroll.custom_minimum_size = Vector2(0, 520)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	outer.add_child(scroll)
+	TdDragScroll.attach(scroll)
 	var list := TdMenu.vbox(6)
 	list.size_flags_horizontal = SIZE_EXPAND_FILL
 	scroll.add_child(list)

@@ -65,6 +65,16 @@ const ICON_GAP := 12.0
 		focus_mode = FOCUS_ALL if v else FOCUS_NONE
 ## Why it is disabled: shown on hover and on a denied click.
 @export var denied_reason := ""
+enum Bleed { AUTO, ON, OFF }
+## Room for what grows past the face (sprite outsets, the selected ring, hover / press scale, the denied shake, the
+## ability ring and badges, the focus ring) kept INSIDE the control, so a clipping parent (ScrollContainer, a panel
+## with clip_contents) never cuts it. AUTO: on when the parent is a Container (lists, rows, menus, tabs), off when the
+## button is placed by hand; ABILITY and END_TURN (HUD bars with fixed widths) only reserve it with ON. When on, the face keeps its logical size (custom_minimum_size) and sits inset
+## by bleed(); the control's minimum size grows by it.
+@export var bleed_mode: Bleed = Bleed.AUTO:
+	set(v):
+		bleed_mode = v
+		if is_node_ready(): update_minimum_size(); _layout()
 
 var hovered := false
 var pressed := false
@@ -92,6 +102,7 @@ var _showing_reason := false
 var _cd_soon := false
 var _clock := 0.0
 var _built := false
+var _face_origin := Vector2.ZERO
 
 func _init() -> void:
 	mouse_filter = MOUSE_FILTER_STOP
@@ -349,7 +360,7 @@ func _gui_input(event: InputEvent) -> void:
 				_set_pressed(true)
 			accept_event()
 		else:
-			var inside := Rect2(Vector2.ZERO, size).has_point(event.position)
+			var inside := face_rect().has_point(event.position)
 			var was := pressed
 			_set_pressed(_held_key)
 			if inside:
@@ -401,7 +412,7 @@ func _tap() -> void:
 func _show_reason() -> void:
 	if denied_reason == "" or not is_inside_tree(): return
 	# clear of what hangs outside the rect (ability ring and badge, end turn glow)
-	var r := get_global_rect()
+	var r := face_global_rect()
 	var grow := 20.0 if style == Style.ABILITY else (8.0 if style == Style.END_TURN else 0.0)
 	TdTooltip.show_beside(r.grow(grow), TdTooltipPlacement.Side.ABOVE_CENTRED, null, TooltipText.colored(TooltipText.harmful_color(), denied_reason))
 	TdTooltip.own(self)
@@ -432,7 +443,7 @@ func _process(delta: float) -> void:
 		_cd.texture = TdTheme.texture("cd_badge_soon" if soon else "cd_badge")
 
 func _apply_motion() -> void:
-	_content.position = _motion.offset()
+	_content.position = _face_origin + _motion.offset()
 	_content.scale = Vector2.ONE * _motion.scale_value()
 	_content.modulate.a = _motion.alpha
 
@@ -505,7 +516,9 @@ func _sinks() -> bool:
 
 func _layout() -> void:
 	if not _built: return
-	var s := size
+	var fr := face_rect()
+	_face_origin = fr.position
+	var s := fr.size
 	_content.size = s
 	_content.pivot_offset = Vector2(0, s.y / 2.0) if (style == Style.MENU_PRIMARY or style == Style.MENU_WOOD) else s / 2.0
 	_bg.position = Vector2.ZERO
@@ -587,4 +600,70 @@ func _layout() -> void:
 			_tag.position = Vector2(s.x - _tag.get_minimum_size().x - 6, s.y - 24)
 
 func _get_minimum_size() -> Vector2:
-	return custom_minimum_size
+	var b := bleed()
+	return custom_minimum_size + Vector2(b.x + b.z, b.y + b.w) if (b.x + b.y + b.z + b.w) > 0.0 else Vector2.ZERO
+
+## Is the bleed room reserved now (bleed_mode, or AUTO inside a Container)?
+func bleed_active() -> bool:
+	if bleed_mode == Bleed.ON: return true
+	if bleed_mode == Bleed.OFF: return false
+	if style == Style.ABILITY or style == Style.END_TURN: return false
+	return get_parent() is Container
+
+## The room kept around the face (left, top, right, bottom); zero when bleed is off.
+func bleed() -> Vector4:
+	if not bleed_active(): return Vector4.ZERO
+	return bleed_for(style, custom_minimum_size if custom_minimum_size != Vector2.ZERO else SIZES[style], keyboard_focus)
+
+## The room a style needs around a face of `face` size (left, top, right, bottom): the largest sprite outset of its
+## states, hover / press / attention scale growth (menu buttons grow from their left edge), the denied shake, the
+## focus ring, and for abilities the clock ring, key badge and cooldown badge.
+static func bleed_for(st: int, face: Vector2, focus := false) -> Vector4:
+	var style_d := TdTheme.control_style(STYLE_NAMES[st])
+	var o := 0.0
+	for k in ["normal", "hover", "pressed", "disabled", "selected"]:
+		var n: String = style_d.get(k, "")
+		if n != "": for v in TdTheme.sprite_outset(n): o = maxf(o, float(v))
+	for n in style_d.get("extra", {}).values():
+		for v in TdTheme.sprite_outset(n): o = maxf(o, float(v))
+	var p := TdTheme.feedback(PROFILES[st])
+	var grow := maxf(float(p["hover_scale"]), 1.0) * (1.03 if st == Style.END_TURN or st == Style.PRIMARY or st == Style.MENU_PRIMARY else 1.0) - 1.0
+	var gx := grow * face.x / 2.0
+	var gy := grow * face.y / 2.0
+	var menu := st == Style.MENU_PRIMARY or st == Style.MENU_WOOD
+	var shake := float(p["denied_shake"])
+	var l := maxf(o, 0.0) + (0.0 if menu else gx) + shake
+	var r := maxf(o, 0.0) + (gx * 2.0 if menu else gx) + shake
+	var t := o + gy
+	var b := o + gy
+	if focus:
+		l = maxf(l, 8.0); r = maxf(r, 8.0); t = maxf(t, 8.0); b = maxf(b, 8.0)
+	if st == Style.ABILITY:
+		var ro := 17.0 * face.x / 84.0
+		l = maxf(l, maxf(ro, 6.0)) + shake; b = maxf(b, ro)
+		t = maxf(t, 24.0); r = maxf(r, 24.0) + shake # the cooldown badge (38 round, centred 4 px out of the top-right corner)
+	return Vector4(ceilf(l), ceilf(t), ceilf(r), ceilf(b))
+
+## The node that holds the face (it moves, scales and shakes with the button's feedback). Add decorations here
+## (a lock icon, a "new" dot) at face coordinates, so they stay on the face whatever the bleed room.
+func face_node() -> Control:
+	_build()
+	return _content
+
+## The face's rect in the control (inside the bleed room).
+func face_rect() -> Rect2:
+	var b := bleed()
+	return Rect2(Vector2(b.x, b.y), size - Vector2(b.x + b.z, b.y + b.w))
+
+## The face's rect in canvas coordinates (tooltips anchor to this, not to the bleed room).
+func face_global_rect() -> Rect2:
+	var r := face_rect()
+	return Rect2(get_global_transform() * r.position, r.size * get_global_transform().get_scale())
+
+func _has_point(point: Vector2) -> bool:
+	return face_rect().has_point(point)
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PARENTED and is_node_ready():
+		update_minimum_size()
+		_layout()

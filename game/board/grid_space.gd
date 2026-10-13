@@ -20,15 +20,37 @@ static func to_tile(w: Vector3) -> Vector2i:
 static func to_world_dir(d: Vector2i) -> Vector3:
 	return Vector3(d.x, 0.0, -d.y)
 
-## The point on the ground plane (y = height) under a screen point, or null (the ray misses it).
+## The point on the ground plane (y = height) under a screen point (canvas / viewport coordinates, as
+## Viewport.get_mouse_position and Camera3D.unproject_position use), or null (it misses the plane).
+## Camera3D.project_ray_* ignore a frustum projection's offset (Godot computes the ray from symmetric half
+## extents), and the board camera is off-centre, so their hit is only the first guess: it is then corrected until
+## unproject_position(hit) lands on the screen point (Newton steps on the plane, 2×2 Jacobian by finite
+## differences). unproject_position handles the offset, the stretch and an embedded window, so picking matches
+## what is drawn.
 static func ground_under(cam: Camera3D, screen: Vector2, height: float = 0.0) -> Variant:
-	if cam == null: return null
+	if cam == null or not cam.is_inside_tree(): return null
 	var origin := cam.project_ray_origin(screen)
 	var dir := cam.project_ray_normal(screen)
 	if absf(dir.y) < 1e-5: return null
 	var t := (height - origin.y) / dir.y
 	if t < 0.0: return null
-	return origin + dir * t
+	var g := origin + dir * t
+	for i in 6:
+		if cam.is_position_behind(g): return null
+		var at := cam.unproject_position(g)
+		var e := screen - at
+		if e.length_squared() < 0.0025: break
+		var h := 0.01
+		var jx := (cam.unproject_position(g + Vector3(h, 0, 0)) - at) / h
+		var jz := (cam.unproject_position(g + Vector3(0, 0, h)) - at) / h
+		var det := jx.x * jz.y - jz.x * jx.y
+		if absf(det) < 1e-9: break
+		var a := (e.x * jz.y - jz.x * e.y) / det
+		var b := (jx.x * e.y - e.x * jx.y) / det
+		var step := Vector3(a, 0.0, b)
+		if step.length() > 50.0: return null # toward the horizon: the pointer is above it
+		g += step
+	return g
 
 ## The tile under a screen point (a ray onto the ground plane), or null when it misses the board.
 static func tile_under(cam: Camera3D, screen: Vector2, grid) -> Variant:

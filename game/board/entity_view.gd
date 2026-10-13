@@ -301,6 +301,7 @@ func set_status_vfx(wanted: Dictionary, make_loop: Callable) -> void:
 		add_child(loop)
 		loop.position = Vector3.UP * (0.4 * s)
 		loop.scale = Vector3.ONE * s
+		VfxKit.start(loop) # placed at the feet first, then emitting
 		_status_vfx[k] = loop
 
 ## The status loops showing (tests).

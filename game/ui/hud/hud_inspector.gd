@@ -10,8 +10,9 @@ extends PanelContainer
 
 signal info_pressed
 
-const WIDTH := 340.0
-const INNER := 300.0
+## The card: 360 wide, 32 px from the right edge, 96 from the top (Unity's BattleHudBuilder); 16 px padding.
+const WIDTH := 360.0
+const INNER := 328.0
 
 var controller: LevelController
 var shown_id := -1
@@ -59,12 +60,15 @@ func _init() -> void:
 	_name = HudArt.label("", "h2", TdTheme.color("accent.light"))
 	_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_name.clip_text = true
-	_name.custom_minimum_size = Vector2(150, 0)
+	_name.custom_minimum_size = Vector2(140, 0)
 	names.add_child(_name)
 	var sub_row := HudArt.hbox(6)
 	names.add_child(sub_row)
 	_sub = HudArt.label("", "body", TdTheme.color("cream.300"), 20)
 	_sub.size_flags_horizontal = SIZE_EXPAND_FILL
+	_sub.clip_text = true
+	_sub.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_sub.custom_minimum_size = Vector2(60, 0)
 	_sub.size_flags_vertical = SIZE_SHRINK_CENTER
 	sub_row.add_child(_sub)
 	_info = TdButton.new()
@@ -128,6 +132,7 @@ func _init() -> void:
 	_sell = TdButton.new()
 	_sell.name = "SellButton"
 	_sell.style = TdButton.Style.DANGER
+	_sell.bleed_mode = TdButton.Bleed.OFF # the card does not clip: keep it as wide as the rows above
 	_sell.custom_minimum_size = Vector2(INNER, 48)
 	_sell.size = Vector2(INNER, 48)
 	_sell.text = ""
@@ -136,7 +141,7 @@ func _init() -> void:
 	sell_row.z_index = 1
 	sell_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	sell_row.set_anchors_preset(PRESET_FULL_RECT)
-	_sell.add_child(sell_row)
+	_sell.face_node().add_child(sell_row) # on the face: it moves with it and keeps clear of the bleed room
 	sell_row.add_child(HudArt.label("Sell", "button", TdTheme.color("cream.100"), 26))
 	_sell_value = HudArt.label("", "button", TdTheme.color("gold.light"), 26)
 	sell_row.add_child(_sell_value)
@@ -146,7 +151,7 @@ func _init() -> void:
 		"Refunds half the cost, scaled by the tower's remaining HP. The tower goes back to the hand.").set_placement(TdTooltipPlacement.Side.LEFT, self)
 
 func _set_panel(enemy: bool) -> void:
-	add_theme_stylebox_override("panel", TdTheme.stylebox("panel_wood_enemy" if enemy else "panel_wood", Color.WHITE, [20, 20, 20, 22]))
+	add_theme_stylebox_override("panel", TdTheme.stylebox("panel_wood_enemy" if enemy else "panel_wood", Color.WHITE, [16, 18, 16, 20]))
 
 ## What the card shows now: {entity, frame, hand} or null.
 func subject(c: LevelController):
@@ -241,7 +246,7 @@ func _key_of(e: Entity, hand: TowerDef) -> String:
 func _show_statuses(f: EntityFrame) -> void:
 	var list: Array = f.statuses if f != null else []
 	var visible_list := []
-	for st in list:
+	for st in OverlayStyle.ordered_statuses(list):
 		if st.def != null and st.def.has_tag(Tags.Hidden): continue
 		visible_list.append(st)
 	var key := ""
@@ -272,7 +277,7 @@ func _show_stats(tiles: Array) -> void:
 	_stats.visible = not tiles.is_empty()
 
 ## One stat tile (paper_stat): line 1 icon + value (+ bonus badge), line 2 the stat's name.
-static func stat_tile(t: Dictionary, width := 145.0) -> Control:
+static func stat_tile(t: Dictionary, width := 159.0) -> Control:
 	var p := HudArt.panel("paper_stat", [10, 4, 8, 4])
 	p.mouse_filter = MOUSE_FILTER_IGNORE
 	p.custom_minimum_size = Vector2(width, 58)
@@ -350,7 +355,7 @@ func _row(icon: Texture2D, title: String, state: String, state_color: Color) -> 
 	n.clip_text = true
 	n.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	h.add_child(n)
-	var st := HudArt.label(state, "small", state_color)
+	var st := HudArt.label(state, "small", state_color, 18)
 	st.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	h.add_child(st)
 	return row

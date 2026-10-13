@@ -1,6 +1,6 @@
 extends CanvasLayer
-## The loading screen before a level (UI_Loading.cs; the Unity build's look): the last menu diorama blurred behind
-## (TdDiorama.snapshot; dark wood with a vignette when there is none), a wood plaque holding the logo slot
+## The loading screen before a level (UI_Loading.cs; the Unity build's look): the shared menu background image
+## (TdMenu.menu_background, centred and covering), a wood plaque holding the logo slot
 ## (the placeholder name), a status line with the percentage, a cobalt bar and one random Codex tip with the player's
 ## keys. The contract with SceneFlow: layer 100, SceneFlow.load_pending(self) loads the pending level and opens it
 ## under this screen; the first 80 % of the bar follows the read, then it eases on while the level holds the screen
@@ -41,14 +41,7 @@ func _build() -> void:
 	root.theme = TdTheme.theme()
 	root.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(root)
-	var has_dio := TdDiorama.has_snapshot()
-	TdMenu.wood_background(root, true)
-	if has_dio:
-		var dio := TdDiorama.new()
-		dio.build_board = false
-		dio.dim = 0.6
-		dio.blur = 2.2
-		root.add_child(dio)
+	TdMenu.menu_background(root) # the shared menu image, centred and covering
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE

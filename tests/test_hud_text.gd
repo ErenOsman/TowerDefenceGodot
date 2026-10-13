@@ -6,7 +6,6 @@ func test_cost_missing() -> void:
 	assert_eq(HudText.energy_missing(180, 150), 30)
 	assert_eq(HudText.energy_missing(100, 150), 0)
 	assert_eq(HudText.cost_missing(180, 150), "Needs 180 energy (you have 150)")
-	assert_eq(HudText.cost_missing_hint("Mage", 120, 90), "Mage needs 30 more energy (120, you have 90).")
 
 func test_ready_count_and_line() -> void:
 	assert_eq(HudText.ready_count([]), 0)
@@ -102,11 +101,18 @@ func test_hint_wording() -> void:
 	assert_eq(Hud.hint_text("No damage this turn", false, "No damage this turn"), "")
 	assert_eq(Hud.hint_text("Click a free tile off the path. Right-click cancels.", false, ""), "Click a free tile off the path. Right-click cancels.")
 
-func test_grouped_entries() -> void:
-	assert_eq(HudTopBar.grouped(["Archer · Shoot", "Archer · Shoot", "Mage · Fireball"]), "Archer · Shoot (2), Mage · Fireball")
-	assert_eq(HudTopBar.grouped([]), "")
-
 func test_piece_key() -> void:
 	assert_eq(HudText.piece_key("4", "Ctrl"), "4")
 	assert_eq(HudText.piece_key("4", ""), "4")
 	assert_eq(HudText.piece_key("", "Ctrl"), "")
+
+func test_round3_copy() -> void:
+	assert_eq(HudText.cost_missing_hint("Cannon", 280, 0), "Cannon needs 280 energy (you have 0).")
+	assert_eq(HudText.shortfall(280, 100), "Needs 180 more")
+	assert_eq(HudText.singular_after_one("for [b]1[/b] turns, [b]2[/b] tiles"), "for [b]1[/b] turn, [b]2[/b] tiles")
+
+func test_unit_labels() -> void:
+	var l := HudTopBar.unit_labels([[5, "Archer"], [7, "Base"], [9, "Archer"]])
+	assert_eq(l[5], "Archer 1")
+	assert_eq(l[9], "Archer 2")
+	assert_eq(l[7], "Base")

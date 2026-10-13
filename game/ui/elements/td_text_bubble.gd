@@ -35,6 +35,7 @@ var _hint_right: RichTextLabel
 var _divider: ColorRect
 var _skip: TdButton
 var _tail: TextureRect
+var _patch: ColorRect
 var _letters := 0
 var _revealed := 0.0
 var _waits := false
@@ -57,11 +58,9 @@ func _build() -> void:
 	_box.gui_input.connect(_on_box_input)
 	_box.visible = false
 	add_child(_box)
-	_tail = TextureRect.new()
-	_tail.mouse_filter = MOUSE_FILTER_IGNORE
-	_tail.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_tail.stretch_mode = TextureRect.STRETCH_SCALE
-	_box.add_child(_tail)
+	var parts := TdTooltipBox.make_tail(_box)
+	_patch = parts[0]
+	_tail = parts[1]
 	_plate = Panel.new()
 	_plate.mouse_filter = MOUSE_FILTER_IGNORE
 	_plate.add_theme_stylebox_override("panel", TdTheme.stylebox("tag_phase_player"))
@@ -255,13 +254,9 @@ func _place() -> void:
 		centre.y = clampf(centre.y, r.position.y + margin + bs.y / 2.0, r.end.y - margin - bs.y / 2.0)
 	_box.position = (centre - bs / 2.0).round()
 	_tail.visible = has_target
+	_patch.visible = has_target
 	if has_target:
-		var name := "tooltip_tail_down" if above else "tooltip_tail_up"
-		_tail.texture = TdTheme.texture(name)
-		var ts := TdTheme.sprite_size(name)
-		_tail.size = ts
-		var lx := clampf(target.x - _box.position.x, 28.0, bs.x - 28.0)
-		_tail.position = Vector2(lx - ts.x / 2.0, bs.y - 6.0 if above else -ts.y + 6.0)
+		TdTooltipBox.place_tail(_tail, _patch, bs, target.x - _box.position.x, above, TdTheme.color("paper.bottom"))
 
 func _process(delta: float) -> void:
 	if not is_shown(): return

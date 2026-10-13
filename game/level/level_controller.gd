@@ -355,6 +355,87 @@ func _setup() -> void:
 		if audio != null and flow_game_id() >= 0: audio.play_scene_music(flow_game_id(), level)
 	version += 1
 
+## The Princess speaks the tutorial (SequenceSpeaker.Princess): like the Unity build, her model stands ON the board
+## while one of her lines shows — on a free ground tile in the board's left third, just in front of the road
+## (toward the camera), 1.6× a unit, facing the camera, Idle playing — popping in and out with her lines, and is
+## freed when the sequence ends. It is a board node (never attached to the camera). Off: princess_on_board = false.
+@export var princess_on_board: bool = true
+const PRINCESS_VIEW := "Assets/Art/Models/Princess/Princess Blender.prefab"
+const PRINCESS_SCALE := 1.6
+var _princess: Node3D = null
+var _princess_rig: EntityRig = null
+var _princess_shown := 0.0     # 0..1 pop-in (unscaled)
+
+## The Princess's model stands on the board now.
+var princess_visible: bool:
+	get: return _princess != null and _princess.visible
+
+## Where the speaker prop stands (its feet, world), or null when it is not shown — for the HUD to point at her.
+func speaker_prop_world():
+	return _princess.global_position if princess_visible else null
+
+func _update_princess(dt: float) -> void:
+	var line: SequenceLine = sequence.current if sequence != null else null
+	var want := princess_on_board and line != null and line.speaker == SequenceSpeaker.Princess
+	if want and _princess == null:
+		var scene := _model_scene(PRINCESS_VIEW)
+		if scene == null:
+			princess_on_board = false
+			return
+		_princess = scene.instantiate()
+		_princess.name = "Princess"
+		add_child(_princess)
+		var player: AnimationPlayer = _princess.find_child("AnimationPlayer", true, false)
+		if player != null and player.get_animation_list().size() > 0: _princess_rig = EntityRig.new(player)
+		_princess.position = _princess_spot()
+		_princess.visible = false
+	if _princess == null: return
+	_princess_shown = clampf(_princess_shown + (dt if want else -dt) / 0.25, 0.0, 1.0)
+	if _princess_shown <= 0.0 and sequence == null: # the sequence is over: she goes
+		_princess.queue_free()
+		_princess = null
+		_princess_rig = null
+		return
+	_princess.visible = _princess_shown > 0.0
+	var k := 1.0 - pow(1.0 - _princess_shown, 3.0)
+	_princess.scale = Vector3.ONE * PRINCESS_SCALE * maxf(0.01, k)
+	var yaw = GridSpace.look_yaw(_princess.position, camera.global_position)
+	if yaw != null: _princess.rotation.y = yaw
+
+## Where she stands: a free ground tile in the board's left third, as close in front of (south of, toward the
+## camera) the road as possible, whose plinth stays above the dialogue box (the bottom DIALOGUE_BAND canvas pixels:
+## the box must not cover her); when no tile in front qualifies, behind the road. Never a path, wall, chasm or build
+## tile, nor one with a unit.
+const DIALOGUE_BAND := 470.0 # the box, its name plate and a little air
+
+func _princess_spot() -> Vector3:
+	var grid := session.state.grid
+	var want_x := roundi((grid.width - 1) * 0.3)
+	var road_y := grid.height / 2
+	var best := 999
+	for path in grid.paths:
+		for t in path.tiles:
+			if absi(t.x - want_x) < best:
+				best = absi(t.x - want_x)
+				road_y = t.y
+	var limit := get_viewport().get_visible_rect().size.y - DIALOGUE_BAND
+	var pick = null
+	var pick_score := 1 << 30
+	for x in range(0, maxi(1, ceili(grid.width / 3.0)) + 1):
+		for y in grid.height:
+			var p := Vector2i(x, y)
+			if y == road_y or grid.tile(p) != TileType.Ground or grid.buildable.has(p) or session.state.entity_at(p) != null: continue
+			# the plinth's front edge (toward the camera) must show above the dialogue box
+			var front := GridSpace.to_world(p) + Vector3(0.0, 0.0, 0.5 * PRINCESS_SCALE)
+			if camera != null and (camera.is_position_behind(front) or camera.unproject_position(front).y > limit): continue
+			var score := (road_y - 1 - y) * 10 if y < road_y else 1000 + (y - road_y - 1) * 10
+			score += absi(x - want_x)
+			if score < pick_score:
+				pick_score = score
+				pick = p
+	if pick == null: return GridSpace.to_world(Vector2i(want_x, road_y)) + Vector3(0.0, 0.0, -0.75)
+	return GridSpace.to_world(pick)
+
 ## The HUD over the level (game/ui/hud), when its scene exists.
 var hud: Node = null
 
@@ -436,6 +517,7 @@ func _process(delta: float) -> void:
 		level_ended.emit(session.outcome)
 	# after the camera moved this frame (it processes first): plates, markers and floaters follow it
 	overlay.refresh(director.shown, views.all, unscaled)
+	_update_princess(unscaled)
 	preview_rects.clear()
 	board.highlight_screen_rects(camera, preview_rects)
 	_update_sequence_marks()
@@ -466,13 +548,14 @@ func _notification(what: int) -> void:
 # ------------------------------------------------------------------ public API (HUD commands)
 
 ## What the HUD covers, in canvas pixels (the camera fits the board in the rest): the top bar, the bottom row
-## (hand tray + action bar) and the right bar (always counted). The HUD calls this when its layout changes.
+## (hand tray + action bar) and the right bar (0 by default: Eren's 2026-10-11 rule, the board is centred on the whole
+## width and the right bar may cover its edge). The HUD calls this when its layout changes.
 func set_hud_insets(top: float, bottom: float, right: float) -> void:
 	if camera != null: camera.set_hud_insets(top, bottom, right)
 
 ## The insets used until the HUD sets them (Vector3 top, bottom, right): top bar 96; bottom row 168, +140 when the
 ## tray and the action bar do not fit side by side at 1920 (130 per hand piece + 110 per ability > 1372); right
-## bar 300.
+## 0 (the board is centred on the whole screen width; the right bar may cover its edge).
 func default_hud_insets() -> Vector3:
 	var abilities := 0
 	if session != null:
@@ -483,7 +566,7 @@ func default_hud_insets() -> Vector3:
 			if b != null: abilities = maxi(abilities, b.abilities.size())
 	var pieces := session.hand.size() if session != null else 0
 	var bottom := 168.0 + (140.0 if 130 * pieces + 110 * abilities > 1372 else 0.0)
-	return Vector3(96.0, bottom, 300.0)
+	return Vector3(96.0, bottom, 0.0)
 
 ## Continues the sequence's line when it waits for a click (the bubble's click).
 func continue_sequence() -> void:
@@ -1001,8 +1084,13 @@ func _ready_units_now() -> Array:
 
 func _draw_highlights() -> void:
 	board.clear_highlights()
-	if director.busy: return
 	var caster: Entity = session.state.get_entity(_selected)
+	# the cobalt selection ring stays on whatever is selected (a tower, a base or an enemy: blue = the player's
+	# selection), also while an action plays — then on the tile its view stands on
+	var sel_view := view_of(_selected)
+	if director.busy:
+		if sel_view != null and sel_view.visible and not sel_view.is_dead: _selection_ring(GridSpace.to_tile(sel_view.world_position), 1.0)
+		return
 	if caster != null and caster.on_board: _selection_ring(caster.pos, 1.0)
 	if _tray_hover >= 0 and _tray_hover != _selected:
 		var lit: Entity = session.state.get_entity(_tray_hover)

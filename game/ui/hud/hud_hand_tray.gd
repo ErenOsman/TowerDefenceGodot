@@ -70,26 +70,32 @@ func _placed_frame(f: ViewFrame, tower_id: String) -> EntityFrame:
 func _tooltip(t: TowerDef, i: int, frame: EntityFrame, affordable: bool, keys) -> Dictionary:
 	var c := controller
 	var vocab = c.session.state.vocab
+	# one tag line: HP, then the main attack's result tags (Damage, Range…), as many as fit one line
 	var tags := []
 	if t.entity != null:
 		var stats := DefStats.new(t.entity)
 		tags.append(["MaxHp", "%d/%d" % [frame.hp, frame.max_hp] if frame != null else HudText.num(stats.stat("MaxHp")), "HP"])
-		for st in HudText.SHOWN_STATS:
-			var v = AbilityText.speed(stats, vocab) if st == "Speed" else AbilityText.own_stat(stats, st, vocab)
-			if v != null: tags.append([st, HudText.num(v), st])
+		var main: AbilityDef = null
+		for a in t.entity.abilities:
+			if main == null and not a.targeting.is_movement: main = a
+		if main != null:
+			for r in AbilityText.tags(main, stats, vocab):
+				if tags.size() < 3: tags.append([str(r[1]), str(r[0]), str(r[1])])
 	var key: String = HudText.piece_key(keys.first(HudText.ability_key(i)), keys.modifier_name(keys.get_modifier("Hand"))) if keys != null and i < 9 else ""
 	var desc: String = t.type.description if t.type != null else ""
 	var sub := "Tower · key " + key if key != "" else "Tower"
 	if frame != null: sub = "Tower · on the board"
 	var body := TooltipText.describe(TooltipText.from_rich(desc))
-	var line := HudArt.tag_line(tags)
+	var line := "[font_size=20]%s[/font_size]" % HudArt.tag_line(tags, 18) if not tags.is_empty() else ""
 	if line != "": body += ("\n" if body != "" else "") + line
 	var header := TooltipText.title(t.name, TooltipText.tower_color(), sub)
 	if frame != null:
 		return TooltipText.content(header, body, "Click to select it", "Sell +%d" % c.session.sell_value(t.id))
 	var cost := "%d energy" % t.cost
-	return TooltipText.content(header, body, "Click, then a lit tile",
-		TooltipText.colored(TooltipText.value_color() if affordable else TooltipText.harmful_color(), cost))
+	var energy: int = c.shown.energy if c.shown != null else c.session.energy
+	if not affordable:
+		return TooltipText.content(header, body, cost, TooltipText.colored(TooltipText.harmful_color(), HudText.shortfall(t.cost, energy)))
+	return TooltipText.content(header, body, "Click, then a lit tile", TooltipText.colored(TooltipText.value_color(), cost))
 
 func _on_pressed(p: HudHandPiece) -> void:
 	var c := controller
@@ -102,7 +108,7 @@ func _on_pressed(p: HudHandPiece) -> void:
 		return
 	var energy: int = c.shown.energy if c.shown != null else c.session.energy
 	if energy < t.cost and c.placing != t.id:
-		p.deny(HudText.cost_missing(t.cost, energy))
+		p.deny("")
 		c.refuse(HudText.cost_missing_hint(t.name, t.cost, energy))
 		return
 	c.toggle_placing(t.id)

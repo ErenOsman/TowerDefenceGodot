@@ -5,9 +5,9 @@ extends SubViewportContainer
 ## front view on unscaled time (so it moves over a paused game too); drag left / right to turn it.
 ##   var p := TdModelPreview.new(); p.custom_minimum_size = Vector2(275, 300); add_child(p); p.show_model(scene)
 
-## The model faces this camera at yaw 0: 30 degrees shows a 3/4 front view. It sways ±SWAY degrees around its
+## The model faces this camera at yaw 0: -30 degrees (its bow side) shows a 3/4 front view. It sways ±SWAY degrees around its
 ## facing (so the front stays in view) instead of spinning all the way round; a drag turns it freely.
-const START_YAW := 30.0
+const START_YAW := -30.0
 const SWAY := 40.0
 
 @export var spin_speed := 12.0

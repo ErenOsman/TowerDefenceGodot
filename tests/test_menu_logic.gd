@@ -225,3 +225,30 @@ func test_stat_words_become_numbers() -> void:
 	assert_eq(MenuLogic.result_name("Move"), "Range")
 	assert_eq(MenuLogic.stacking_shown(Stacking.Stack, 9999), "adds a stack and starts its time over")
 	assert_eq(MenuLogic.stacking_shown(Stacking.Stack, 3), "adds a stack (up to 3) and starts its time over")
+
+func test_speed_text() -> void:
+	assert_eq(MenuLogic.speed_text(1.0), "1×")
+	assert_eq(MenuLogic.speed_text(0.5), "0.5×")
+	assert_eq(MenuLogic.speed_text(0.25), "0.25×")
+	assert_eq(MenuLogic.speed_text(1.5), "1.5×")
+
+func test_camp_buttons_never_overlap() -> void:
+	var camp = load("res://game/ui/screens/camp.gd")
+	var sz := Vector2(236, 60)
+	# anchors crowded together (props standing close): every pair must keep apart
+	var items := [[Vector2(500, 400), sz], [Vector2(560, 380), sz], [Vector2(610, 410), sz], [Vector2(1850, 400), sz], [Vector2(1900, 420), sz]]
+	var rects: Array = camp.layout_buttons(items, 1920.0, 16.0, 28.0)
+	assert_eq(rects.size(), 5)
+	for i in rects.size():
+		assert_true(rects[i].position.x >= 0.0 and rects[i].end.x <= 1920.0, "inside the screen")
+		for j in range(i + 1, rects.size()):
+			assert_false(rects[i].grow(7.0).intersects(rects[j].grow(7.0)), "buttons %d and %d keep a gap" % [i, j])
+	assert_true(rects[0].end.y <= 400.0 - 28.0 + 0.1, "above its anchor")
+
+func test_camp_layout_reads_the_stations() -> void:
+	var camp = load("res://game/ui/screens/camp.gd")
+	var layout: Dictionary = camp.load_layout()
+	var names := []
+	for s in layout.slots:
+		if s.get("station") != null: names.append(s.station)
+	for st in camp.STATIONS: assert_contains(names, st.id, "every station has a slot in layout.json")

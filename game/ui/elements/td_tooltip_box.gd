@@ -16,7 +16,17 @@ const PAD_LEFT := 18.0
 const HEADER_GAP := 6.0
 const FOOTER_H := 40.0
 const TAIL_INSET := 28.0  # the tail stays this far from the box's corners
-const TAIL_TUCK := 6.0    # how far the tail reaches into the box (over its rim)
+## The tail's paper edge sits exactly on the inner edge of the box's rim (tooltip_paper: paper ends at the logical
+## rect, 1 px rim, then 2 px transparent outset), so its first rows of paper cover the rim between its corners and its
+## outline continues the rim; the rest protrudes. TAIL_TUCK = how far the sprite reaches inside the logical rect.
+const TAIL_TUCK := 0.0
+## The tail sprite's outline thickness at its top corners and the box rim's thickness (reference px).
+const TAIL_OUTLINE := 3.5
+const TAIL_RIM := 1.0
+## tooltip_paper's light band just inside its top rim (sampled from the sprite).
+const TOP_HIGHLIGHT := Color8(248, 240, 224)
+## The tail sprites' transparent rows at the tip end (4 px in the 2x PNG).
+const TAIL_EMPTY := 2.0
 
 var _bg: Panel
 var _header: RichTextLabel
@@ -25,6 +35,7 @@ var _footer: Control
 var _footer_label: Label
 var _footer_value: RichTextLabel
 var _tail: TextureRect
+var _patch: ColorRect
 var _width := WIDTH
 
 func _init() -> void:
@@ -57,12 +68,9 @@ func _init() -> void:
 	_footer_value.add_theme_font_override("bold_font", TdTheme.font("nunito_extrabold"))
 	_footer_value.add_theme_color_override("default_color", TdTheme.color("gold.ink"))
 	_footer.add_child(_footer_value)
-	_tail = TextureRect.new()
-	_tail.mouse_filter = MOUSE_FILTER_IGNORE
-	_tail.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_tail.stretch_mode = TextureRect.STRETCH_SCALE
-	_tail.visible = false
-	add_child(_tail)
+	var parts := make_tail(self)
+	_patch = parts[0]
+	_tail = parts[1]
 
 func _rich(f: Font, size: int) -> RichTextLabel:
 	var r := RichTextLabel.new()
@@ -109,7 +117,7 @@ func set_content(header: String, body: String, footer_label := "", footer_value 
 	_footer.visible = has_footer
 	if has_footer:
 		_footer.position = Vector2(1, y - 2)
-		_footer.size = Vector2(_width - 2, FOOTER_H)
+		_footer.size = Vector2(_width - 2, FOOTER_H - 2) # ends at the rim's inner edge (never over the rim)
 		_footer_label.text = footer_label
 		_footer_label.position = Vector2(PAD_LEFT - 1, 0)
 		_footer_label.size = Vector2(inner_w * 0.55, FOOTER_H)
@@ -127,14 +135,47 @@ func set_content(header: String, body: String, footer_label := "", footer_value 
 ## pointing = false hides it.
 func set_tail(pointing: bool, down := true, anchor_x := 0.0) -> void:
 	_tail.visible = pointing
+	_patch.visible = pointing
 	if not pointing: return
+	# a down tail joins the bottom edge: the footer band's paper.2 when the band shows, else the plain paper bottom
+	var edge := TdTheme.color("paper.2") if (down and _footer.visible) else TdTheme.color("paper.bottom")
+	place_tail(_tail, _patch, size, anchor_x, down, edge)
+
+## The tail's two nodes under a box (call once; add them after the box's other children): [patch ColorRect, tail].
+static func make_tail(parent: Control) -> Array:
+	var patch := ColorRect.new()
+	patch.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	patch.visible = false
+	parent.add_child(patch)
+	var tail := TextureRect.new()
+	tail.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tail.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tail.stretch_mode = TextureRect.STRETCH_SCALE
+	tail.visible = false
+	parent.add_child(tail)
+	return [patch, tail]
+
+## Places a tail on a paper box of box_size so box + tail read as one shape: the tail at anchor_x (clamped 28 px from
+## the corners), whole pixels, its paper edge on the rim's inner edge; a patch in the joined edge's colour covers the
+## rim between the tail's top corners (no half pixel of rim shows through the scaled sprite); the tail's paper is
+## tinted to that edge colour (edge / the sprite's paper.bottom fill; the dark outline stays dark). Up tails always use
+## TOP_HIGHLIGHT, the colour of tooltip_paper's top band.
+static func place_tail(tail: TextureRect, patch: ColorRect, box_size: Vector2, anchor_x: float, down: bool, edge: Color) -> void:
 	var name := "tooltip_tail_down" if down else "tooltip_tail_up"
-	_tail.texture = TdTheme.texture(name)
+	tail.texture = TdTheme.texture(name)
 	var ts := TdTheme.sprite_size(name)
-	_tail.size = ts
-	var x := clampf(anchor_x, TAIL_INSET, maxf(TAIL_INSET, size.x - TAIL_INSET))
-	_tail.position = Vector2(x - ts.x / 2.0, size.y - TAIL_TUCK if down else -ts.y + TAIL_TUCK)
+	tail.size = ts
+	var x := roundf(clampf(anchor_x, TAIL_INSET, maxf(TAIL_INSET, box_size.x - TAIL_INSET)))
+	tail.position = Vector2(roundf(x - ts.x / 2.0), roundf(box_size.y - TAIL_TUCK if down else -ts.y + TAIL_TUCK))
+	var fill := TdTheme.color("paper.bottom") # the tail sprite's paper colour
+	if not down: edge = TOP_HIGHLIGHT # an up tail joins the paper's light top band
+	var tint := Color(edge.r / fill.r, edge.g / fill.g, edge.b / fill.b, 1.0) # may exceed 1: a lighter edge brightens the paper
+	tail.self_modulate = tint
+	patch.color = Color(fill.r * tint.r, fill.g * tint.g, fill.b * tint.b, 1.0)
+	var pw := ts.x - 2.0 * TAIL_OUTLINE
+	patch.size = Vector2(pw, TAIL_RIM + 1.0)
+	patch.position = Vector2(roundf(x - pw / 2.0), box_size.y - 1.0 if down else -TAIL_RIM)
 
 ## How far the tail sticks out of the box (for placement gaps).
 func tail_length(down := true) -> float:
-	return TdTheme.sprite_size("tooltip_tail_down" if down else "tooltip_tail_up").y - TAIL_TUCK
+	return TdTheme.sprite_size("tooltip_tail_down" if down else "tooltip_tail_up").y - TAIL_TUCK - TAIL_EMPTY

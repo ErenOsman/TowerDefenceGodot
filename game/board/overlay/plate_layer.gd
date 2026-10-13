@@ -28,6 +28,11 @@ var _last_toughness := {}
 var _since_hit := {}
 var _any_full := false
 
+## A frame's statuses in plate slot order — defensive buffs → control → damage over time → the rest, newest first
+## within each group. The one rule for every status row (board plates and the HUD's inspector).
+static func status_order(statuses: Array) -> Array:
+	return OverlayStyle.ordered_statuses(statuses)
+
 func _init() -> void:
 	name = "Plates"
 	mouse_filter = Control.MOUSE_FILTER_IGNORE

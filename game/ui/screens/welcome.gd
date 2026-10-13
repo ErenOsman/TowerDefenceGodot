@@ -15,10 +15,9 @@ var _leaving := false
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	theme = TdTheme.theme()
-	TdMenu.wood_background(self)
-	var dio := TdDiorama.new()
-	dio.dim = 0.62
-	dio.focus = Vector2(0.5, 0.56)
+	TdMenu.menu_background(self)
+	var dio := TdDiorama.new() # only the sharp miniatures in front; the board is the shared background image
+	dio.build_board = false
 	add_child(dio)
 	dio.add_mini("Assets/Art/Models/Archer/Archer Blender.prefab", Vector2(340, 715), 270.0, 18.0)
 	dio.add_mini("Assets/Art/Models/Guardian/Guardian Blender.prefab", Vector2(-340, 720), 270.0, -18.0)
@@ -53,7 +52,7 @@ func _build() -> void:
 	var col := TdMenu.vbox(12)
 	margin.add_child(col)
 
-	var eyebrow := TdMenu.label("FIRST TIME HERE", "micro", TdTheme.color("gold"), 22)
+	var eyebrow := TdMenu.label("FIRST TIME HERE", "micro", TdTheme.color("cream.200"), 22)
 	var fv := FontVariation.new()
 	fv.base_font = TdTheme.font("plinth")
 	fv.spacing_glyph = 3

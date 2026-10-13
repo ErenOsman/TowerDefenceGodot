@@ -91,3 +91,8 @@ func test_hint_never_crosses_the_tray() -> void:
 	assert_num(HudLayout.hint_left(560.0, 500.0, SCREEN, 4, true, 640.0), 640.0)
 	assert_num(HudLayout.hint_left(560.0, 500.0, SCREEN, 4, false, 0.0), tray_end + 24.0)
 	assert_num(HudLayout.hint_left(700.0, 300.0, SCREEN, 4, true, 650.0), 700.0)
+
+func test_ring_rect_stays_on_screen() -> void:
+	var r := HudSequence.ring_rect(Rect2(1720, 892, 168, 168), SCREEN)
+	assert_true(Rect2(Vector2.ZERO, SCREEN).encloses(r))
+	assert_eq(HudSequence.ring_rect(Rect2(500, 500, 100, 50), SCREEN), Rect2(490, 490, 120, 70))

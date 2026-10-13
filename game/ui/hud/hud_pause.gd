@@ -29,7 +29,7 @@ func _ready() -> void:
 	settings_button.clicked.connect(_open_settings)
 	codex_button = _add(wide_button("Codex", TdButton.Style.SECONDARY, "icon_codex"))
 	codex_button.clicked.connect(func(): _open_sub(CODEX_SCENE))
-	leave_button = _add(wide_button("Quit to level select", TdButton.Style.DANGER, "icon_back"))
+	leave_button = _add(wide_button("Quit to level select", TdButton.Style.SECONDARY, "icon_back"))
 	leave_button.clicked.connect(_leave)
 	quit_button = _add(wide_button("Quit game", TdButton.Style.DANGER, "icon_quit"))
 	quit_button.clicked.connect(_quit)

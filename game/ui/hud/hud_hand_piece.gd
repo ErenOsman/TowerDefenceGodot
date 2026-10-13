@@ -3,7 +3,7 @@ extends Control
 ## One tower of the hand in the tray (hud-menu-spec §6.4, UI Design Rules "The hand is a tray of miniatures"): a slot
 ## 124 × 160 whose parts move, never the slot. States (priority Placed > Picked > CantAfford > InHand):
 ## - in hand: the miniature on its plinth (112 tall), name plate, gold cost coin top-left, key top-right; hover lifts it
-##   16 px and scales 1.06; Picked (placing) lifts 30 px, scale 1.1 with the gold glow;
+##   12 px and scales 1.06; Picked (placing) keeps that height and scale, the gold glow behind it says it is picked;
 ## - can't afford: the miniature at 40 % and grey, the coin red, the plate poor; a click shakes it and says what is missing;
 ## - placed: the empty plinth with the tower's colour portrait medallion, the "placed" plate, an HP bar (numbers on
 ##   hover) and, when show_pips, one mini pip per ability; hover lights its ring on the board;
@@ -17,6 +17,8 @@ signal hover_changed(piece: HudHandPiece, hovered: bool)
 const SLOT := Vector2(124, 160)
 ## Every name plate's top (one baseline across the tray).
 const PLATE_Y := 118.0
+## How far the miniature lifts on hover and while picked (the same height).
+const HOVER_LIFT := 12.0
 ## Mini cooldown pips on placed pieces. Off: the 2026-10-09 build review removed them (the Unity build shows none).
 static var show_pips := false
 ## The arrow over the selected piece. Off: selection is colour only (2026-10-09 review, Unity build).
@@ -211,7 +213,7 @@ func _restyle() -> void:
 	# one baseline for every plate (placed or not); the HP bar under a placed one
 	_plate.position = Vector2((SLOT.x - 108) / 2.0, PLATE_Y)
 	_hp.position.y = PLATE_Y + 28 + 4
-	_tag.visible = _placed and not _selected
+	_tag.visible = false # the medallion already says it is on the board (user, 2026-10-13)
 	_key.visible = not _placed
 	if _tag.visible:
 		_tag.size = _tag.get_combined_minimum_size()
@@ -230,9 +232,9 @@ func _process(delta: float) -> void:
 		lift = 8.0 if _selected else 0.0
 		sc = 1.06 if hovered else 1.0
 	elif _picked:
-		lift = 30.0; sc = 1.1
+		lift = HOVER_LIFT; sc = 1.06 # picked = hover height; the gold glow says it is picked
 	elif hovered and not _poor:
-		lift = 16.0; sc = 1.06
+		lift = HOVER_LIFT; sc = 1.06
 	var k := clampf(dt / TdTheme.motion("quick") * 2.5, 0.0, 1.0)
 	_lift = lerpf(_lift, lift, k)
 	_scale = lerpf(_scale, sc, k)
@@ -242,7 +244,7 @@ func _process(delta: float) -> void:
 		shake = sin(_shake_t * TAU * 4.0) * 7.0 * (1.0 - _shake_t)
 	_render.position = Vector2((SLOT.x - 112) / 2.0 + shake, PLATE_Y + 2 - 112 - _lift)
 	_render.scale = Vector2.ONE * _scale
-	var lifted := clampf(_lift / 30.0, 0.0, 1.0)
+	var lifted := clampf(_lift / HOVER_LIFT, 0.0, 1.0)
 	_shadow.scale = Vector2.ONE * lerpf(1.0, 0.6, lifted)
 	_shadow.modulate.a = lerpf(1.0, 0.4, lifted)
 	_medal.position = Vector2((SLOT.x - 64) / 2.0 + shake, PLATE_Y - 86 - _lift)

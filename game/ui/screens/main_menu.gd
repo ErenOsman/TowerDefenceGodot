@@ -17,15 +17,14 @@ var popups: Control
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	theme = TdTheme.theme()
-	TdMenu.wood_background(self)
-	var dio := TdDiorama.new()
-	dio.focus = Vector2(0.64, 0.5)
-	dio.fill = 0.72
-	dio.dim = 0.5
+	TdMenu.menu_background(self)
+	var dio := TdDiorama.new() # only the sharp miniatures; the board is the shared background image
+	dio.build_board = false
 	add_child(dio)
-	dio.add_mini("Assets/Art/Models/Archer/Archer Blender.prefab", Vector2(-800, 975), 250.0, 22.0)
-	dio.add_mini("Assets/Art/Models/Mage/Mage Blender.prefab", Vector2(-250, 975), 250.0, -22.0)
-	dio.add_mini("Assets/Art/Models/Guardian/Guardian Blender.prefab", Vector2(-525, 1000), 270.0, 0.0)
+	# turned toward the viewer's lower left, like the Unity menu
+	dio.add_mini("Assets/Art/Models/Archer/Archer Blender.prefab", Vector2(-800, 975), 250.0, -35.0)
+	dio.add_mini("Assets/Art/Models/Mage/Mage Blender.prefab", Vector2(-250, 975), 250.0, -35.0)
+	dio.add_mini("Assets/Art/Models/Guardian/Guardian Blender.prefab", Vector2(-525, 1000), 270.0, -35.0)
 	_build()
 	popups = Control.new()
 	popups.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -104,9 +103,25 @@ func open_popup(scene: String) -> TdPopup:
 	p.free_on_close = true
 	popups.add_child(p)
 	if p.has_signal("secret_used"): p.secret_used.connect(func(_m): refresh())
-	p.closed.connect(func(): if is_inside_tree(): _first_button().grab_focus())
+	_set_list_live(false)
+	p.closed.connect(func():
+		if not is_inside_tree(): return
+		if TdPopup.open_popups.is_empty(): _set_list_live(true)
+		_first_button().grab_focus())
 	p.open()
 	return p
+
+## While a popup is on top the list is inert: no hover, no pressed or focused look behind the scrim.
+func _set_list_live(on: bool) -> void:
+	if not on: get_viewport().gui_release_focus()
+	for c in list.get_children():
+		if not (c is TdButton): continue
+		var b: TdButton = c
+		b.mouse_filter = MOUSE_FILTER_STOP if on else MOUSE_FILTER_IGNORE
+		if not on:
+			b.hovered = false
+			b.force_state(false, false)
+			b.hover_changed.emit(false)
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	# Up / Down through the list (wrapping); Esc does nothing on the main menu (Quit is explicit)

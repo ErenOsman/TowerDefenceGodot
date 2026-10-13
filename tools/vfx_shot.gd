@@ -31,6 +31,7 @@ func _run() -> void:
 		var fx := VfxKit.build(n)
 		world.add_child(fx)
 		fx.position = p
+		VfxKit.start(fx)
 		var label := Label3D.new()
 		label.text = n
 		label.font_size = 28

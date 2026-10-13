@@ -63,6 +63,29 @@ func _text(t: String, x: float, y: float, role := "small", col := Color(0, 0, 0,
 	_at(l, x, y)
 	return l
 
+## A clipping container (clip_contents on) placed on the page, with a faint outline so its edge is visible.
+func _clip_box(c: Control, x: float, y: float, sz: Vector2) -> Control:
+	c.clip_contents = true
+	c.size = sz
+	c.custom_minimum_size = sz
+	var edge := ReferenceRect.new()
+	edge.border_color = Color(1, 1, 1, 0.25)
+	edge.editor_only = false
+	edge.position = Vector2(x, y)
+	edge.size = sz
+	edge.mouse_filter = MOUSE_FILTER_IGNORE
+	_at(c, x, y)
+	_root.add_child(edge)
+	return c
+
+func _child_button(parent: Control, style: int, label: String, sz: Vector2) -> TdButton:
+	var b := TdButton.new()
+	b.style = style
+	b.custom_minimum_size = sz
+	b.text = label
+	parent.add_child(b)
+	return b
+
 func _button(style: int, label: String, x: float, y: float, sz := Vector2.ZERO) -> TdButton:
 	var b := TdButton.new()
 	b.style = style
@@ -92,21 +115,29 @@ func _page_a() -> void:
 			if j == 3: b.selectable = true; b.selected = true
 			if j == 4: b.set_interactable(false, "Needs 40 energy")
 			b.force_state(j == 1, j == 2)
-	# menu buttons (deep sprites)
-	var my := 420
-	_text("Menu", 32, my + 20, "small")
-	var m1 := _button(TdButton.Style.MENU_PRIMARY, "Continue", 150, my, Vector2(340, 64))
+	# menu buttons (deep sprites) in a clipping HBox: hover scale + sink stay whole (bleed room)
+	var my := 412
+	_text("Menu", 32, my + 28, "small")
+	var mrow := _clip_box(HBoxContainer.new(), 140, my, Vector2(1100, 84))
+	var m1 := _child_button(mrow, TdButton.Style.MENU_PRIMARY, "Continue", Vector2(320, 64))
 	m1.icon = TdTheme.texture("icon_continue")
-	var m2 := _button(TdButton.Style.MENU_WOOD, "Codex", 510, my, Vector2(340, 64))
+	var m2 := _child_button(mrow, TdButton.Style.MENU_WOOD, "Codex", Vector2(320, 64))
 	m2.icon = TdTheme.texture("icon_codex"); m2.force_state(true, false)
-	var m3 := _button(TdButton.Style.MENU_WOOD, "Settings", 870, my, Vector2(340, 64))
+	var m3 := _child_button(mrow, TdButton.Style.MENU_WOOD, "Settings", Vector2(320, 64))
 	m3.icon = TdTheme.texture("icon_settings"); m3.force_state(true, true)
-	# rows
-	var r1 := _button(TdButton.Style.ROW, "Archer", 1340, 100, Vector2(320, 60))
-	var r2 := _button(TdButton.Style.ROW, "Guardian", 1340, 176, Vector2(320, 60)); r2.force_state(true, false)
-	var r3 := _button(TdButton.Style.ROW, "Mage", 1340, 252, Vector2(320, 60)); r3.selectable = true; r3.selected = true
-	var r4 := _button(TdButton.Style.ROW, "???", 1340, 328, Vector2(320, 60)); r4.set_extra_state("Locked")
-	r1.set_key_hint("1")
+	# rows in a clipping ScrollContainer (like Level select): the selected ring and hover look stay whole
+	var sc := ScrollContainer.new()
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_clip_box(sc, 1330, 92, Vector2(340, 310))
+	var list := VBoxContainer.new()
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list.add_theme_constant_override("separation", 0)
+	sc.add_child(list)
+	var r3 := _child_button(list, TdButton.Style.ROW, "Rock Garden", Vector2(0, 60)); r3.selectable = true; r3.selected = true
+	var r2 := _child_button(list, TdButton.Style.ROW, "Guardian", Vector2(0, 60)); r2.force_state(true, false)
+	var r1 := _child_button(list, TdButton.Style.ROW, "Archer", Vector2(0, 60)); r1.set_key_hint("1")
+	var r4 := _child_button(list, TdButton.Style.ROW, "???", Vector2(0, 60)); r4.set_extra_state("Locked")
+	var r5 := _child_button(list, TdButton.Style.ROW, "Mage", Vector2(0, 60))
 	# icon buttons
 	var ix := 1700
 	_text("Icon", ix, 68, "small")
@@ -121,8 +152,11 @@ func _page_a() -> void:
 	var ay := 540
 	_text("Ability: ready · hover · aiming · cooldown 1 · cooldown 2/3 · held · blocked · passive", 32, ay - 34, "small")
 	var faces := ["Shoot", "Fireball", "TowerWalk", "Volley", "Bombard", "Execute", "Mend", "Rally"]
+	var arow := _clip_box(HBoxContainer.new(), 30, ay - 8, Vector2(1080, 140))
+	arow.add_theme_constant_override("separation", -12) # neighbours' bleed rooms may overlap; faces never do
 	for k in faces.size():
-		var b := _button(TdButton.Style.ABILITY, "", 60 + k * 132, ay + 14, Vector2(84, 84))
+		var b := _child_button(arow, TdButton.Style.ABILITY, "", Vector2(84, 84))
+		b.bleed_mode = TdButton.Bleed.ON # abilities reserve their ring / badge room only when asked
 		b.icon = TdTheme.ability_face(faces[k])
 		match k:
 			0: b.set_ability_state(0, 1, false, false, "1")

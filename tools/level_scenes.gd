@@ -32,6 +32,8 @@ func _run() -> void:
 		"statuses": await _statuses()
 		"tutorial": await _tutorial()
 		"defeat": await _defeat()
+		"walker": await _walker()
+		"vfx": await _vfx()
 		_: print("unknown scenario ", scenario)
 	quit(0)
 
@@ -111,15 +113,104 @@ func _best_attacker() -> Array:
 			best_score = score
 	return [best, best_score]
 
+## An enemy whose coming turn walks 2+ tiles (Runner, Brute, Bat speed 2, Jackalope 3), hovered: the dashed path,
+## the stop tile and, when it reaches someone, the attack line and the damage. Level: the 4th argument
+## (default chapter1-3).
+func _walker() -> void:
+	var args := OS.get_cmdline_user_args()
+	await _open(args[3] if args.size() > 3 else "chapter1-3", ["archer", "archer"])
+	level.skip_sequence()
+	await _settle()
+	var s := level.session
+	var tiles := _build_tiles_near_path(s.hand.size(), 1)
+	for i in tiles.size():
+		level.toggle_placing(s.hand[i].id)
+		level.click_tile(tiles[i])
+		await _settle()
+	level.select(-1)
+	var found: Entity = null
+	var best := 0
+	for r in 16:
+		found = null
+		best = 0
+		for e in s.enemies:
+			var walked := 0
+			var hits := 0
+			for st in level._forecast_of(e):
+				if st.is_movement: walked = maxi(walked, st.aim.path.size() if st.aim.path != null else 1)
+				elif st.preview.targets.size() > 0: hits = 1
+			var score := (10 if walked >= 2 else 0) + hits * 5 + walked
+			if walked >= 2 and score > best:
+				best = score
+				found = e
+		if best >= 15 or (found != null and r >= 8): break
+		level.instant_override = true
+		level.end_round()
+		await _settle()
+		level.instant_override = false
+		if s.is_over: break
+	await _frames(3)
+	if found == null:
+		print("no enemy walking 2+ tiles found")
+		await _shot("walker_none")
+		return
+	var desc := []
+	for st in level._forecast_of(found): desc.append("%s%s" % [st.ability.name, (" path %s" % [st.aim.path]) if st.is_movement else (" hits %s" % [st.preview.targets])])
+	print("hovering %s at %s round %d: %s" % [found.name, found.pos, s.round, desc])
+	level.hover_override = found.pos
+	await _frames(6)
+	await _shot("walker_hover")
+
+## An Archer shoots a slime far from the world origin, slowed down: frames of the bow twang at the archer, the
+## arrow and its trail, the hit spark on the slime; plus the kit's ring (Smash Dust) dropped on the slime's tile
+## and a Spawn Pop at the archer's feet through the same VfxKit.spawn path, to show where effects land.
+func _vfx() -> void:
+	await _open("chapter1-1", ["archer"])
+	level.skip_sequence()
+	await _settle()
+	var s := level.session
+	level.toggle_placing(s.hand[0].id)
+	level.click_tile(_build_tiles_near_path(1)[0])
+	await _settle()
+	var archer: Entity = s.placed_tower(s.hand[0].id)
+	var shoot: AbilityDef = null
+	for a in archer.abilities:
+		if not a.targeting.is_movement: shoot = a
+	var aims: Array = []
+	for r in 12:
+		aims = Targeting.valid_aims(s.state, archer.id, shoot)
+		if aims.size() > 0: break
+		level.instant_override = true
+		level.end_round()
+		await _settle()
+		level.instant_override = false
+	await _frames(3)
+	if aims.is_empty():
+		print("no target came in range")
+		return
+	var target_tile: Vector2i = aims[0].tile
+	print("archer at ", archer.pos, " shoots ", target_tile)
+	level.select(archer.id)
+	level.toggle_aim(shoot)
+	Engine.time_scale = 0.2
+	level.click_tile(target_tile)
+	VfxKit.spawn("Smash Dust", GridSpace.to_world(target_tile, 0.4), level.board)
+	VfxKit.spawn("Spawn Pop", GridSpace.to_world(archer.pos, 0.4), level.board)
+	for k in 8:
+		await _frames(3)
+		await _shot("vfx_%d" % k)
+	Engine.time_scale = 1.0
+
 func _statuses() -> void:
 	await _open("chapter1-1", ["archer", "archer"])
 	level.skip_sequence()
 	await _settle()
 	var s := level.session
-	var tiles := _build_tiles_near_path(1)
-	level.toggle_placing(s.hand[0].id)
-	level.click_tile(tiles[0])
-	await _settle()
+	var tiles := _build_tiles_near_path(2)
+	for i in 2:
+		level.toggle_placing(s.hand[i].id)
+		level.click_tile(tiles[i])
+		await _settle()
 	var unit: Entity = s.placed_tower(s.hand[0].id)
 	var app = root.get_node_or_null("GameApp")
 	var lib: ContentLibrary = app.lib if app != null else ContentLibrary.load("res://data/content")
@@ -142,8 +233,9 @@ func _statuses() -> void:
 	var names := []
 	for st in f.statuses: names.append("%s x%d (%d turns, shield %d)" % [st.name, st.stacks, st.turns_left, st.shield])
 	print("statuses on ", unit.name, ": ", names)
+	level.select(-1)
 	level.hover_override = Vector2i(-9, -9)
-	await _frames(4)
+	await _frames(6)
 	await _shot("statuses_compact")
 	level.select(unit.id)
 	level.hover_override = unit.pos
@@ -152,7 +244,9 @@ func _statuses() -> void:
 
 func _tutorial() -> void:
 	await _open("tutorial", ["archer"])
-	await _frames(6)
+	await _frames(30)
+	print("intro line: %s | princess on board %s at %s" % [level.sequence.current.text if level.sequence != null else "-", level.princess_visible, level.speaker_prop_world()])
+	await _shot("tutorial_intro")
 	var s := level.session
 	for i in 20:
 		var run := level.sequence

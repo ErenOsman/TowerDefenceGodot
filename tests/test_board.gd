@@ -69,8 +69,9 @@ func test_camera_bounds_and_free_area() -> void:
 	assert_eq(cam.clamp_focus(Vector3(20, 3, 4)), Vector3(9.5, 0, 0.5), "zoomed all the way in: up to the board's edges")
 	assert_eq(cam.clamp_focus(Vector3(-3, 0, -9)), Vector3(-0.5, 0, -4.5))
 	var free := cam.free_area()
-	assert_num(snappedf(free.position.y, 0.0001), snappedf(96.0 / 1080.0, 0.0001), "under the top bar")
-	assert_num(snappedf(free.end.y, 0.0001), snappedf(1.0 - 168.0 / 1080.0, 0.0001), "above the hand tray")
+	assert_num(snappedf(free.position.y, 0.0001), snappedf((96.0 + BoardCamera.GUTTER) / 1080.0, 0.0001), "under the top bar, with a gutter")
+	assert_num(snappedf(free.end.y, 0.0001), snappedf(1.0 - (168.0 + BoardCamera.GUTTER) / 1080.0, 0.0001), "above the hand tray, with a gutter")
+	assert_num(snappedf(free.end.x, 0.0001), snappedf(1.0 - BoardCamera.GUTTER / 1920.0, 0.0001), "the whole width (the right bar may cover the edge)")
 	cam.free()
 
 # ------------------------------------------------------------------ presenters on a fake clock

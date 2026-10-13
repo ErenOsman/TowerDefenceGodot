@@ -10,8 +10,10 @@ extends RefCounted
 
 const MARGIN := 32.0
 const TOP_BAR := 96.0
+## The free board area the bottom row centres on: the screen minus the right bar's 300 px (UI Design Rules). The
+## camera does not keep it clear (insets right = 0): the open card may cover the board's edge.
 const RIGHT_BAR := 300.0
-const INSPECTOR_W := 340.0
+const INSPECTOR_W := 360.0
 const INSPECTOR_TOP := 96.0
 const TRAY_H := 168.0
 const PIECE_W := 124.0
