@@ -4,3 +4,4 @@
 # local saves/logs/renders
 *.log
 out/
+godot.local.sh

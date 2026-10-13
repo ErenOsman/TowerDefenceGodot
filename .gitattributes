@@ -1,0 +1,9 @@
+# Godot writes LF everywhere; keep the working tree LF on every OS so .import/.tscn files never show as modified.
+* text=auto eol=lf
+*.png binary
+*.fbx binary
+*.ttf binary
+*.mp3 binary
+*.glb binary
+*.wav binary
+*.ogg binary
