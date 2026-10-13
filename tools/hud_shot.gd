@@ -207,9 +207,11 @@ func _run() -> void:
 	print("outcome ", level.session.outcome, " round ", level.session.round, " panel open ", level.ui_panel_open)
 	quit(0)
 
-## The guided tutorial (GuidedTutorial, data/tutorial.json): the steps that point at something to click — the piece
-## (t2), the lit tiles (t3), the archer (t5), Tower Walk and its tile (t6), Shoot and the slime (t8), a refusal (t8b).
-## tools/tutorial_shot.gd runs this with the tutorial level.
+## The guided tutorial (GuidedTutorial, data/tutorial.json): the piece (t2), the lit tiles (t3), the archer (t5),
+## Tower Walk (t6a) and its tile (t6b), Shoot (t8a), the slime (t8b) and a refused click (t8c).
+## tools/tutorial_shot.gd runs this with the tutorial level; `tutorial_short` stops after t6b.
+var tutorial_short := false
+
 func _tutorial() -> void:
 	var g: GuidedTutorial = level.guided
 	if g == null:
@@ -223,7 +225,7 @@ func _tutorial() -> void:
 	await _frames(40)
 	await _shot("t2_piece")
 	level.toggle_placing(level.session.hand[0].id)
-	_hover_tile(Vector2i(10, 1))
+	_hover_tile(Vector2i(10, 3))
 	await _frames(40)
 	await _shot("t3_tiles")
 	level.click_tile(Vector2i(10, 1))
@@ -246,32 +248,36 @@ func _tutorial() -> void:
 	var walk = g.walk_tile()
 	_hover_tile(walk)
 	await _frames(40)
+	print("step ", g.index, " (7 = the walk tile)")
 	await _shot("t6b_walk_tile")
+	if tutorial_short:
+		quit(0)
+		return
 	level.click_tile(walk)
 	_hover_tile(Vector2i(-5, -5))
 	level.hover_override = null
 	await _settle()
-	# step 7: End turn until the slime is in range (Instant on to get there)
+	# End turn until the slime is in range (Instant on to get there)
 	level.instant_override = true
 	for i in 20:
-		if g.index != 7: break
+		if g.index != 8: break
 		level.end_round()
 		await _settle()
 		await _frames(3)
 	level.instant_override = false
 	level.select(archer.id)
 	await _frames(50)
-	print("step ", g.index, " (8 = Shoot)")
+	print("step ", g.index, " (9 = Click Shoot)")
 	await _shot("t8a_shoot_button")
 	level.toggle_aim(g.ability("Shoot"))
 	var slime := g.first_enemy()
 	if slime != null: _hover_tile(slime.pos)
 	await _frames(40)
 	await _shot("t8b_shoot_target")
-	level.click_tile(Vector2i(8, 0)) # not the slime: refused, the hint repeats, the bubble shakes
-	await _frames(5)
+	level.click_tile(Vector2i(8, 0)) # not the slime: refused, the bubble says what was wrong and shakes
+	await _frames(3)
 	await _shot("t8c_refused")
-	print("refusals ", g.refusals, " hint '", level.hint, "'")
+	print("refusals ", g.refusals, " says '", g.last_hint, "'")
 	quit(0)
 
 ## Waits until the hover tooltip shows (up to 8 s; slow machines), then a few frames for its fade.

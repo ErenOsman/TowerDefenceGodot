@@ -39,28 +39,36 @@ See `docs/Decisions.md` (2026-10-13 rows) — they are logged in the Unity repo 
 The tutorial level plays a guided ("babysitting") tutorial instead of `Sequences/Tutorial Steps` when
 `data/tutorial.json` exists (`game/level/guided_tutorial.gd`, owned by the LevelController; other levels' intros and
 entrances still use SequenceRun). At every step only one action is possible: it is ringed and the Princess's bubble
-points at it; anything else is refused (the line repeated on the hint line, the ringed target and the bubble shake).
+points at it (one ring per line, the tail ends on its edge); anything else is refused (the bubble says what was wrong; the ringed target and the bubble shake).
 Space / a click goes on on talk lines; Skip ends the guidance (free play). **Move these texts into the Unity content**
 (`Data/Sequences/Tutorial Steps`) once Unity gets the same gating; then `data/tutorial.json` keeps only `allow`/`advance`.
 
 | # | Princess says | Allowed (ringed) | Goes on when |
 | --- | --- | --- | --- |
-| 1 | Slimes come down this road to your castle. | nothing (points at road tile (4,2), then the castle) | click / Space (twice) |
-| 2 | Place your Archer: click its piece. | the Archer's tray piece | placing starts |
-| 3 | Now click a lit tile. | build tiles (10,1) and (10,3) only (only they light) | the tower is placed |
-| 4 | End the turn to let the slime come. | End turn | the round ended |
-| 5 | A slime. Towers can move: click your Archer. | selecting the Archer | it is selected |
-| 6 | Click Tower Walk, then the lit tile. | Tower Walk, then the tile 2 steps toward the slime on the archer's row | the walk is cast |
-| 7 | End turn until it is in range. | End turn | by itself: the first enemy is in Shoot range at a turn start |
-| 8 | Shoot: click Shoot, then the slime. | Shoot, then the slime | the shot is cast |
-| 8b | Nice shot. | nothing | 1.5 s |
-| 9 | Abilities have a cooldown; End turn refreshes them. | End turn | the round ended |
-| 10 | A Runner is fast. {click:QuickCast} Shoot to fire at the nearest target. | quick cast Shoot (or a normal Shoot at an enemy); End turn while nothing is in range | a cast |
-| 11 | That's it: place, move, shoot, end turn. Finish the wave. | everything | the level is won (end screen) |
+| 1 | Slimes come down this road… | nothing (points at road tile (4,2)) | click / Space |
+| 2 | …to your castle. Keep it safe. | nothing (points at the castle) | click / Space |
+| 3 | Click your Archer to place it. | the Archer's tray piece | placing starts |
+| 4 | Now click a lit tile. | build tiles (10,3) and (10,1) only (only they light; the ring is on (10,3)) | the tower is placed |
+| 5 | End the turn to let the slime come. | End turn | the round ended |
+| 6 | Towers can move. Click your Archer. | selecting the Archer | it is selected |
+| 7 | Click Tower Walk. | the Tower Walk button | aiming starts |
+| 8 | Now click the lit tile. | the tile 2 steps toward the slime on the archer's row | the walk is cast |
+| 9 | Click End turn until the slime is in range. | End turn | by itself: the first enemy is in Shoot range at a turn start |
+| 10 | Click Shoot. | the Shoot button | aiming starts |
+| 11 | Now click the slime. | the slime | the shot is cast |
+| 12 | Nice shot. | nothing | 1.5 s |
+| 13 | Shoot needs a turn to recover. Click End turn. | End turn | the round ended |
+| 14 | A Runner is fast. {click:QuickCast} Shoot to fire at the nearest target. | quick cast Shoot (or a normal Shoot at an enemy); End turn while nothing is in range | a cast |
+| 15 | That's it: place, move, shoot, end turn. Finish the wave. | everything | the level is won (end screen) |
+
+Refusals (with the shake, in the bubble's note; the hint line under the bar is hidden while the tutorial speaks):
+"Not now: click the slime first." (what the line needs next: the Archer piece / the lit tile / your Archer / Tower Walk /
+Shoot / End turn / the slime, "Shift-click Shoot" on line 14) and "Finish this step first." on talk lines.
+End turn shows at 60 % on lines that do not allow it.
 
 `data/tutorial.json` = the Sequences.json line fields (`speaker`, `text`, `pointAt`, `tileX/Y`, `uiElement`,
 `continueOn`, `seconds`, `waitFor`, `pausesPlay`) plus:
-- `advance`: `click` | `seconds:<s>` | `event:<placing|placed|selected|cast|round_ended|in_range|won>` (it decides
+- `advance`: `click` | `seconds:<s>` | `event:<placing|placed|selected|aiming|cast|round_ended|in_range|won>` (it decides
   `continueOn`; talk lines pause play).
 - `allow` tokens: `piece:<tower type id>`, `tile:x,y`, `select:archer` (the player's first tower), `ability:<ability id>`,
   `aim_tile:x,y`, `aim_tile:toward_enemy:<n>` (n tiles along the archer's row toward the first enemy; the nearest valid
@@ -68,4 +76,5 @@ Space / a click goes on on talk lines; Skip ends the guidance (free play). **Mov
   turn only while the line's ability can hit no enemy or is not ready), `quick_cast`, `all`. `[]` = talk only.
   What a step needs first is implied: the piece again while a tile line is not placing; the archer while an ability
   line's tower is not selected. Right-click / Esc cancelling always works. Selling is refused until `all`.
-- `hint` (optional): the refusal text (default: the line's text; talk lines: "Click the bubble or press Space to go on.").
+- `hint` (optional): replaces the generated refusal text.
+- A line that goes on at `event:aiming` refuses aim clicks (one step = one action: the button, then the target).

@@ -23,13 +23,17 @@ var _hidden_version := -1
 var _pointing := false
 var _mode_t := 1.0
 var _clock := 0.0
-## The guided tutorial: extra board rings (every lit tile), the shake on a refused action, the text kept when only
-## the target changes.
-var _tile_rings: Control
-var _tile_ring_points: Array = []
+## The guided tutorial: the piece's own ring (under its badges), the shake and the "Not now" note on a refused action,
+## the text kept when only the target changes.
+var _piece_ring: Control
 var _refusals := 0
 var _shake_t := 1.0
 var _shown_text := ""
+var _note := ""
+var _note_right := ""
+var _refusal_until := -1.0
+## The board ring's size (canvas px at zoom 1); the bubble's tail ends on its edge.
+const BOARD_RING := Vector2(120, 64)
 
 func _init() -> void:
 	name = "Sequence"
@@ -70,16 +74,16 @@ func _ready() -> void:
 	_ring.visible = false
 	_ring.draw.connect(_draw_ring)
 	add_child(_ring)
-	_tile_rings = Control.new()
-	_tile_rings.mouse_filter = MOUSE_FILTER_IGNORE
-	_tile_rings.set_anchors_preset(PRESET_FULL_RECT)
-	_tile_rings.draw.connect(_draw_tile_rings)
-	add_child(_tile_rings)
+	_piece_ring = Control.new()
+	_piece_ring.name = "TutorialRing"
+	_piece_ring.mouse_filter = MOUSE_FILTER_IGNORE
+	_piece_ring.draw.connect(_draw_piece_ring)
 	dialogue = TdDialogueBox.new()
 	dialogue.size = Vector2(1100, 220)
 	# no bust beside the box: the Princess stands on the board (the board's speaker prop); only a small medallion
 	# on the name plate, as in the Unity build
 	_medal = HudArt.medallion(52, "medallion_ring", 5)
+	(_medal.get_node("Ring") as TextureRect).texture = HudSequence.teal_ring("medallion_ring")
 	_medal.position = Vector2(-4, -36)
 	_medal.visible = false
 	add_child(dialogue)
@@ -97,6 +101,8 @@ func _ready() -> void:
 	bubble.set_skip_key("")
 	bubble.clicked.connect(func(): if controller != null: controller.continue_sequence())
 	_wood_plate(bubble)
+	var medal_ring = bubble.get("_medal_ring")
+	if medal_ring is TextureRect: medal_ring.texture = HudSequence.teal_ring("medal_ring") # the Princess: teal, not cobalt
 	bubble.skip_clicked.connect(func(): if controller != null: controller.skip_sequence())
 	resized.connect(_layout)
 	_layout()
@@ -130,8 +136,7 @@ func _process(delta: float) -> void:
 		_dim.visible = false
 		_run = null
 		_shown_text = ""
-		_tile_ring_points.clear()
-		_tile_rings.queue_redraw()
+		_place_piece_ring(null)
 		return
 	line = effective_line(line)
 	_guided_marks(line, dt)
@@ -156,10 +161,12 @@ func _process(delta: float) -> void:
 			bubble.show_line(_speaker(line), text, waits, portrait)
 			if same: bubble.reveal_all() # only the target moved (the guided tutorial's next click): no retyping
 			if guided != null:
-				var note := "Tutorial · %d/%d" % [run.index + 1, run.count] if line.continue_on != SequenceContinue.Seconds else ""
-				bubble.set_hint(note, "Click or [b]%s[/b]" % skip_key if waits else "")
+				_note = "Tutorial · %d/%d" % [run.index + 1, run.count] if line.continue_on != SequenceContinue.Seconds else ""
+				_note_right = "Click or " + HudSequence.key_chip(skip_key) if waits else ""
+				_refusal_until = -1.0
+				_set_note(_note, false)
 			else:
-				bubble.set_hint("" if waits else how.trim_prefix("Click to hide. "), "Click or [b]%s[/b]" % skip_key if waits else "")
+				bubble.set_hint("" if waits else how.trim_prefix("Click to hide. "), "Click or " + HudSequence.key_chip(skip_key) if waits else "")
 			_shown_text = text
 			var world = controller.sequence_target_world(line)
 			if world != null and controller.camera != null and not controller.camera.in_view(world, 0.02): controller.camera.glide(world)
@@ -176,7 +183,14 @@ func _process(delta: float) -> void:
 	var fade := clampf(_mode_t / 0.25, 0.0, 1.0)
 	if _pointing:
 		var spot = _target(line, false)
-		if spot != null and line.point_at != SequencePointAt.UI:
+		if _guided() != null and line.point_at != SequencePointAt.UI:
+			# the tail ends on the edge of the one ring (its top, or its bottom when the bubble must go below)
+			var ground = _target(line, true)
+			var half: float = BOARD_RING.y * 0.5 * _ring_zoom() + 2.0
+			spot = ground - Vector2(0, half) if ground != null else null
+			if spot != null and spot.y - bubble.gap - bubble.box_rect().size.y < bubble.global_position.y + bubble.margin:
+				spot = ground + Vector2(0, half)
+		elif spot != null and line.point_at != SequencePointAt.UI:
 			var box_h: float = bubble.box_rect().size.y
 			var top: float = bubble.global_position.y + bubble.margin
 			if spot.y - bubble.gap - box_h < top:
@@ -194,8 +208,10 @@ func _process(delta: float) -> void:
 		# a line that waits for the player to act leaves the board lit (user, 2026-10-10): only the ring marks the target
 		_set_dim(hole, hole_r, 0.0 if line.continue_on == SequenceContinue.Event else 0.3 * fade)
 		_board_ring(line, ui_rect == null)
-		_ring.visible = ui_rect != null
-		if ui_rect != null:
+		var piece := _ui_control(line) as HudHandPiece if _guided() != null else null
+		_place_piece_ring(piece)
+		_ring.visible = ui_rect != null and piece == null
+		if ui_rect != null and piece == null:
 			var r := HudSequence.ring_rect(ui_rect, size)
 			_ring.position = r.position + Vector2(_shake_offset(), 0)
 			_ring.size = r.size
@@ -204,6 +220,7 @@ func _process(delta: float) -> void:
 		_ring.visible = false
 		_dim.visible = false
 		_board_ring(null, false)
+		_place_piece_ring(null)
 		dialogue.modulate.a = fade
 
 ## Exactly one light ring per line: the board's ring (sequence marks) goes round the world target the bubble
@@ -215,8 +232,10 @@ func _board_ring(line, world: bool) -> void:
 		controller.overlay.sequence.set_target(null, false)
 		return
 	var at = controller.sequence_target_screen(line, true)
-	var zoom: float = WorldUi.readable(controller.camera.zoom_factor()) if controller.camera != null else 1.0
-	controller.overlay.sequence.set_target(at, false, null, Vector2(120, 64) * zoom)
+	controller.overlay.sequence.set_target(at, false, null, BOARD_RING * _ring_zoom())
+
+func _ring_zoom() -> float:
+	return WorldUi.readable(controller.camera.zoom_factor()) if controller != null and controller.camera != null else 1.0
 
 func _set_dim(centre, radius: float, alpha: float) -> void:
 	_dim.visible = alpha > 0.0
@@ -280,43 +299,94 @@ func _guided() -> GuidedTutorial:
 	if controller == null or controller.guided == null or controller.guided.finished: return null
 	return controller.guided
 
-## The guided tutorial's extra marks: a ring on every lit tile besides the one the bubble points at, and a shake of
-## the ringed target and the bubble when an action was refused.
+## The guided tutorial's refusal: the ringed target and the bubble shake, and the bubble's note says what was wrong
+## (red, a few seconds) — the hint line under the bar is hidden while the tutorial speaks (one voice).
 func _guided_marks(line: SequenceLine, dt: float) -> void:
 	var guided := _guided()
-	_tile_ring_points.clear()
-	if guided != null:
-		if guided.refusals != _refusals:
-			_refusals = guided.refusals
-			_shake_t = 0.0
-			var target := _ui_control(line)
-			if target is HudHandPiece: (target as HudHandPiece).deny("")
-			elif target is TdButton: (target as TdButton).shake()
-		var pointed := Vector2i(line.tile_x, line.tile_y) if line.point_at == SequencePointAt.Tile else Vector2i(-99, -99)
-		for t in guided.ring_tiles():
-			if t == pointed or controller.camera == null: continue
-			var w := GridSpace.to_world(t) + Vector3.UP * 0.05
-			if controller.camera.is_position_behind(w): continue
-			_tile_ring_points.append(controller.camera.unproject_position(w))
+	if guided != null and guided.refusals != _refusals:
+		_refusals = guided.refusals
+		_shake_t = 0.0
+		var target := _ui_control(line)
+		if target is HudHandPiece: (target as HudHandPiece).deny("")
+		elif target is TdButton: (target as TdButton).shake()
+		_refusal_until = _clock + 2.5
+		_set_note(guided.last_hint, true)
+	elif _refusal_until >= 0.0 and _clock >= _refusal_until:
+		_refusal_until = -1.0
+		_set_note(_note, false)
 	_shake_t = minf(1.0, _shake_t + dt / 0.32)
-	_tile_rings.queue_redraw()
+
+func _set_note(text: String, refusal: bool) -> void:
+	var left = bubble.get("_hint_left")
+	if left is Label: left.add_theme_color_override("font_color", TdTheme.color("bad") if refusal else TdTheme.color("ink.2"))
+	bubble.set_hint(text, _note_right)
 
 ## The refusal shake (±7 px, like a denied hand piece), 0 when still.
 func _shake_offset() -> float:
 	return sin(_shake_t * TAU * 4.0) * 7.0 * (1.0 - _shake_t) if _shake_t < 1.0 else 0.0
 
-## The soft light rings of the board marks (SequenceMarks' look) round each extra lit tile.
-func _draw_tile_rings() -> void:
-	if _tile_ring_points.is_empty(): return
-	var zoom: float = WorldUi.readable(controller.camera.zoom_factor()) if controller != null and controller.camera != null else 1.0
-	var half := Vector2(120, 64) * zoom * (1.0 + 0.08 * sin(_clock * 4.0)) * 0.5
-	for c in _tile_ring_points:
-		var pts := PackedVector2Array()
-		for i in 49:
-			var a := i * TAU / 48.0
-			pts.append(c + Vector2(_shake_offset() + cos(a) * half.x, sin(a) * half.y))
-		for k in [[22.0, 0.07], [15.0, 0.12], [9.0, 0.2], [4.0, 0.35], [2.0, 0.55]]:
-			_tile_rings.draw_polyline(pts, Color(1.0, 0.94, 0.72, k[1]), k[0], true)
+## A key as a chip in BBCode (dark wood, cream bold): "Click or [Space]".
+static func key_chip(key: String) -> String:
+	return "[bgcolor=#%s][color=#%s][b] %s [/b][/color][/bgcolor]" % [TdTheme.color("wood.800").to_html(false), TdTheme.color("cream.100").to_html(false), key]
+
+static var _teal_rings := {}
+
+## A kit medallion ring with its cobalt band repainted teal (the Princess's medallion: cobalt is kept for what is
+## active / selected).
+static func teal_ring(sprite: String) -> Texture2D:
+	if _teal_rings.has(sprite): return _teal_rings[sprite]
+	var tex: Texture2D = TdTheme.texture(sprite)
+	if tex == null: return null
+	var img := tex.get_image()
+	if img == null: return tex
+	if img.is_compressed(): img.decompress()
+	img.convert(Image.FORMAT_RGBA8)
+	var teal: Color = TdTheme.color("teal")
+	for y in img.get_height():
+		for x in img.get_width():
+			var c := img.get_pixel(x, y)
+			if c.a > 0.0 and c.b > c.r + 0.15 and c.b > c.g + 0.05: # the cobalt band (and its anti-aliased edge)
+				var k := c.get_luminance() / 0.45
+				img.set_pixel(x, y, Color(teal.r * k, teal.g * k, teal.b * k, c.a))
+	var out := ImageTexture.create_from_image(img)
+	_teal_rings[sprite] = out
+	return out
+
+## The piece's ring: a child of the piece under its key badge and cost coin, a rounded rect 6 px outside it, kept
+## on screen (its glow too) at the bottom edge. null removes it.
+func _place_piece_ring(piece: HudHandPiece) -> void:
+	if not is_instance_valid(_piece_ring): # freed with a piece that left the tray
+		_piece_ring = Control.new()
+		_piece_ring.name = "TutorialRing"
+		_piece_ring.mouse_filter = MOUSE_FILTER_IGNORE
+		_piece_ring.draw.connect(_draw_piece_ring)
+	if piece == null:
+		if _piece_ring.get_parent() != null: _piece_ring.get_parent().remove_child(_piece_ring)
+		return
+	if _piece_ring.get_parent() != piece:
+		if _piece_ring.get_parent() != null: _piece_ring.get_parent().remove_child(_piece_ring)
+		piece.add_child(_piece_ring)
+		piece.move_child(_piece_ring, 0)
+	var r := Rect2(Vector2(-6, -6), piece.size + Vector2(12, 12))
+	var screen_bottom := get_viewport_rect().size.y
+	var bottom_global := piece.global_position.y + r.end.y * piece.get_global_transform().get_scale().y
+	var over := bottom_global - (screen_bottom - 12.0) # the glow (8 px) and a little air stay on screen
+	if over > 0.0: r.size.y -= over / maxf(0.01, piece.get_global_transform().get_scale().y)
+	_piece_ring.position = r.position + Vector2(_shake_offset(), 0)
+	_piece_ring.size = r.size
+	_piece_ring.queue_redraw()
+
+func _draw_piece_ring() -> void:
+	var pulse := 0.5 + 0.5 * sin(_clock * 4.0)
+	var box := StyleBoxFlat.new()
+	box.draw_center = false
+	box.set_corner_radius_all(18)
+	box.set_border_width_all(5)
+	box.border_color = Color(TdTheme.color("gold.light"), 0.75 + 0.25 * pulse)
+	box.shadow_color = Color(TdTheme.color("gold"), 0.35 * pulse)
+	box.shadow_size = 8
+	box.anti_aliasing = true
+	_piece_ring.draw_style_box(box, Rect2(Vector2.ZERO, _piece_ring.size))
 
 func _on_dialogue_clicked() -> void:
 	if controller == null: return

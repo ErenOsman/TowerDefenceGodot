@@ -44,11 +44,12 @@ func _archer_id() -> String:
 func _ability(n: String) -> AbilityDef:
 	return g.ability(n)
 
-## Asserts a command was refused: the refusal count went up and the line stayed.
-func _refused(before: int, at: int, what: String) -> void:
+## Asserts a command was refused: the refusal count went up, the line stayed and the refusal says what was wrong.
+func _refused(before: int, at: int, what: String, says := "") -> void:
 	assert_eq(g.refusals, before + 1, what + " is refused")
 	assert_eq(g.index, at, what + " leaves the line")
-	assert_eq(c.hint, g.last_hint, what + ": the hint repeats")
+	assert_eq(c.hint, g.last_hint, what + ": the refusal text is the controller's message")
+	if says != "": assert_eq(g.last_hint, says, what + ": what was wrong")
 
 func _to_placing() -> void:
 	c.continue_sequence()
@@ -66,24 +67,25 @@ func _to_walk(place := Vector2i(10, 1)) -> void:
 	_idle()
 
 func test_the_lines_load_in_order_with_their_rules() -> void:
-	assert_eq(g.steps.size(), 13)
+	assert_eq(g.steps.size(), 15)
 	assert_eq(g.index, 0)
-	assert_eq(g.run.current.text, "Slimes come down this road to your castle.")
+	assert_eq(g.run.current.text, "Slimes come down this road…")
+	assert_eq(g.steps[1].line.text, "…to your castle. Keep it safe.")
 	assert_eq(g.run.current.speaker, SequenceSpeaker.Princess)
 	assert_true(g.talking)
 	assert_true(c.sequence == g.run, "the HUD reads the tutorial's run")
 	assert_true(c.sequence.blocking, "a talk line pauses play")
-	for s in g.steps: assert_true(s.line.text.length() <= 90, "short line: " + s.line.text)
-	assert_eq(g.steps[11].line.text, "A Runner is fast. Shift-click Shoot to fire at the nearest target.", "{click:QuickCast} filled")
+	for st in g.steps: assert_true(st.line.text.length() <= 90, "short line: " + st.line.text)
+	assert_eq(g.steps[13].line.text, "A Runner is fast. Shift-click Shoot to fire at the nearest target.", "{click:QuickCast} filled")
 
 func test_the_whole_tutorial_step_by_step() -> void:
-	# 1: talk only — the road, then the castle; every action is refused
+	# road, then castle: talk only — every action is refused
 	assert_eq(g.display_line().point_at, SequencePointAt.Tile)
 	assert_eq(Vector2i(g.display_line().tile_x, g.display_line().tile_y), Vector2i(4, 2))
 	var r := g.refusals
 	c.toggle_placing(_archer_id())
 	assert_null(c.placing, "no placing during a talk line")
-	_refused(r, 0, "the piece during a talk line")
+	_refused(r, 0, "the piece during a talk line", "Finish this step first.")
 	r = g.refusals
 	c.end_round()
 	_refused(r, 0, "End turn during a talk line")
@@ -93,45 +95,44 @@ func test_the_whole_tutorial_step_by_step() -> void:
 	assert_eq(g.display_line().point_at, SequencePointAt.Speaker, "then the castle")
 	c.continue_sequence()
 
-	# 2: only the Archer's piece
+	# only the Archer's piece
 	assert_eq(g.index, 2)
 	assert_false(g.talking)
 	assert_eq(g.display_line().ui_element, "@piece")
 	r = g.refusals
 	c.end_round()
-	_refused(r, 2, "End turn while the piece is asked for")
+	_refused(r, 2, "End turn while the piece is asked for", "Not now: click the Archer piece first.")
 	c.toggle_placing(_archer_id())
 	assert_eq(c.placing, _archer_id())
 	_idle()
 
-	# 3: only the two lit tiles
+	# only the two lit tiles; the bubble (and the one ring) on the far one
 	assert_eq(g.index, 3)
 	assert_eq(g.display_line().point_at, SequencePointAt.Tile)
-	assert_eq(g.ring_tiles(), [Vector2i(10, 3), Vector2i(10, 1)])
-	assert_eq(Vector2i(g.display_line().tile_x, g.display_line().tile_y), Vector2i(10, 3), "the bubble points at the far tile (the near one stays in view below it)")
+	assert_eq(Vector2i(g.display_line().tile_x, g.display_line().tile_y), Vector2i(10, 3))
 	assert_true(g.hides_card, "the card stays closed during the guided steps")
-	assert_true(c.input_allowed("tile", Vector2i(10, 3)))
+	assert_true(c.input_allowed("tile", Vector2i(10, 1)) and c.input_allowed("tile", Vector2i(10, 3)))
 	assert_false(c.input_allowed("tile", Vector2i(9, 1)), "other build tiles do not light")
 	r = g.refusals
 	c.click_tile(Vector2i(9, 1))
-	_refused(r, 3, "another build tile")
+	_refused(r, 3, "another build tile", "Not now: click the lit tile first.")
 	assert_eq(c.placing, _archer_id(), "still placing after a refused tile")
 	c.click_tile(Vector2i(10, 1))
 	_idle()
 	var archer := g.archer()
-	assert_true(archer != null and archer.pos == Vector2i(10, 1), "placed on the lit tile")
+	assert_true(archer != null and archer.pos == Vector2i(10, 1), "placed on a lit tile")
 
-	# 4: only End turn
+	# only End turn
 	assert_eq(g.index, 4)
 	assert_eq(g.display_line().ui_element, "EndTurnButton")
 	r = g.refusals
 	c.toggle_aim(_ability("Shoot"))
-	_refused(r, 4, "Shoot while End turn is asked for")
+	_refused(r, 4, "Shoot while End turn is asked for", "Not now: click End turn first.")
 	assert_null(c.aiming)
 	c.end_round()
 	_idle()
 
-	# 5: select the Archer (the tutorial cleared the selection that placing made)
+	# select the Archer (the tutorial cleared the selection that placing made)
 	assert_eq(g.index, 5)
 	assert_eq(c.selected, -1, "nothing selected when asked to select")
 	var slime := g.first_enemy()
@@ -139,7 +140,7 @@ func test_the_whole_tutorial_step_by_step() -> void:
 	assert_eq(g.display_line().point_at, SequencePointAt.FirstTower)
 	r = g.refusals
 	c.select(slime.id)
-	_refused(r, 5, "selecting the slime")
+	_refused(r, 5, "selecting the slime", "Not now: click your Archer first.")
 	assert_eq(c.selected, -1)
 	r = g.refusals
 	c.click_tile(Vector2i(3, 0))
@@ -148,79 +149,87 @@ func test_the_whole_tutorial_step_by_step() -> void:
 	assert_eq(c.selected, archer.id)
 	_idle()
 
-	# 6: Tower Walk, then exactly the tile two steps toward the slime
+	# "Click Tower Walk." — the button only
 	assert_eq(g.index, 6)
-	assert_eq(g.walk_tile(), Vector2i(8, 1))
 	assert_eq(g.display_line().ui_element, "@ability:move")
 	r = g.refusals
 	c.toggle_aim(_ability("Shoot"))
-	_refused(r, 6, "Shoot while Tower Walk is asked for")
+	_refused(r, 6, "Shoot while Tower Walk is asked for", "Not now: click Tower Walk first.")
 	c.toggle_aim(_ability("Tower Walk"))
 	assert_eq(c.aiming, _ability("Tower Walk"))
+	assert_false(c.input_allowed("aim", Vector2i(8, 1)), "no walking on the click-the-button line")
+	_idle()
+
+	# "Now click the lit tile." — exactly the tile two steps toward the slime
+	assert_eq(g.index, 7)
+	assert_eq(g.walk_tile(), Vector2i(8, 1))
 	assert_eq(g.display_line().point_at, SequencePointAt.Tile)
 	assert_eq(Vector2i(g.display_line().tile_x, g.display_line().tile_y), Vector2i(8, 1))
 	assert_true(c.input_allowed("aim", Vector2i(8, 1)))
 	assert_false(c.input_allowed("aim", Vector2i(9, 1)), "only the one walk tile")
 	r = g.refusals
 	c.click_tile(Vector2i(9, 1))
-	_refused(r, 6, "another walk tile")
+	_refused(r, 7, "another walk tile", "Not now: click the lit tile first.")
 	assert_eq(c.aiming, _ability("Tower Walk"), "still aiming after a refused tile")
 	c.click_tile(Vector2i(8, 1))
 	_idle()
 	assert_eq(archer.pos, Vector2i(8, 1), "the archer walked")
 
-	# 7: End turn until the slime is in range; the line moves on by itself
-	assert_eq(g.index, 7)
+	# End turn until the slime is in range; the line moves on by itself
+	assert_eq(g.index, 8)
 	r = g.refusals
 	c.select(archer.id)
 	c.toggle_aim(_ability("Shoot"))
-	_refused(r, 7, "Shoot before it is in range")
+	_refused(r, 8, "Shoot before it is in range")
 	var turns := 0
-	while g.index == 7 and turns < 20:
+	while g.index == 8 and turns < 20:
 		assert_false(g.enemy_in_range(), "the line waits only while out of range")
 		c.end_round()
 		_idle()
 		turns += 1
-	assert_eq(g.index, 8, "in range: the line went on by itself")
+	assert_eq(g.index, 9, "in range: the line went on by itself")
 	assert_true(g.enemy_in_range())
 
-	# 8: Shoot + the slime only
+	# "Click Shoot." then "Now click the slime."
 	slime = g.first_enemy()
 	c.select(archer.id)
 	r = g.refusals
 	c.quick_cast(_ability("Shoot"))
-	_refused(r, 8, "a quick cast where a normal Shoot is asked for")
+	_refused(r, 9, "a quick cast where a normal Shoot is asked for", "Not now: click Shoot first.")
 	r = g.refusals
 	c.toggle_aim(_ability("Tower Walk"))
-	_refused(r, 8, "Tower Walk while Shoot is asked for")
+	_refused(r, 9, "Tower Walk while Shoot is asked for")
 	c.toggle_aim(_ability("Shoot"))
 	assert_eq(c.aiming, _ability("Shoot"))
+	assert_false(c.input_allowed("aim", slime.pos), "no shooting on the click-the-button line")
+	_idle()
+	assert_eq(g.index, 10)
 	assert_eq(g.display_line().point_at, SequencePointAt.FirstEnemy)
 	r = g.refusals
 	c.click_tile(Vector2i(8, 0))
-	_refused(r, 8, "shooting at an empty tile")
+	_refused(r, 10, "shooting at an empty tile", "Not now: click the slime first.")
 	c.click_tile(slime.pos)
 	_idle()
 
 	# "Nice shot." for 1.5 s
-	assert_eq(g.index, 9)
+	assert_eq(g.index, 11)
 	assert_true(g.talking)
 	r = g.refusals
 	c.end_round()
-	_refused(r, 9, "End turn during Nice shot")
+	_refused(r, 11, "End turn during Nice shot", "Finish this step first.")
 	_idle(1.0)
-	assert_eq(g.index, 9)
+	assert_eq(g.index, 11)
 	_idle(0.6)
 
-	# 9: End turn refreshes cooldowns
-	assert_eq(g.index, 10)
+	# End turn refreshes cooldowns
+	assert_eq(g.index, 12)
 	c.end_round()
 	_idle()
 
-	# 10: quick cast Shoot; End turn only while nothing is in range
-	assert_eq(g.index, 11)
+	# quick cast Shoot; End turn only while nothing is in range
+	assert_eq(g.index, 13)
 	turns = 0
-	while g.index == 11 and turns < 30:
+	while g.index == 13 and turns < 30:
 		c.select(archer.id)
 		if c.input_allowed("end_turn"):
 			assert_false(g.can_hit(_ability("Shoot"), false) and c.session.can_cast(archer, _ability("Shoot")), "End turn only while Shoot has nothing to hit")
@@ -229,14 +238,15 @@ func test_the_whole_tutorial_step_by_step() -> void:
 		else:
 			r = g.refusals
 			c.end_round()
-			_refused(r, 11, "End turn while the Runner can be shot")
+			_refused(r, 13, "End turn while the Runner can be shot", "Not now: Shift-click Shoot first.")
 			assert_eq(g.display_line().ui_element, "@ability:attack")
 			c.quick_cast(_ability("Shoot"))
 		_idle()
 		turns += 1
-	assert_eq(g.index, 12, "a quick cast moved it on")
+	assert_eq(g.index, 14, "a quick cast moved it on")
 
-	# 11: free play until the win
+	# free play until the win
+	assert_false(g.hides_card)
 	assert_true(c.input_allowed("end_turn") and c.input_allowed("sell", "x") and c.input_allowed("tile", Vector2i(0, 0)))
 	turns = 0
 	while not c.session.is_over and turns < 40:
@@ -254,6 +264,9 @@ func test_the_whole_tutorial_step_by_step() -> void:
 func test_the_walk_tile_follows_the_archers_row() -> void:
 	_to_walk(Vector2i(10, 3))
 	assert_eq(g.index, 6)
+	c.toggle_aim(_ability("Tower Walk"))
+	_idle()
+	assert_eq(g.index, 7)
 	assert_eq(g.walk_tile(), Vector2i(8, 3))
 	assert_eq(g.aim_tiles(), [Vector2i(8, 3)])
 
@@ -272,6 +285,9 @@ func test_a_cancelled_step_points_back_and_allows_its_first_click() -> void:
 	c.click_tile(g.archer().pos)
 	_idle()
 	assert_eq(g.index, 6)
+	c.toggle_aim(_ability("Tower Walk"))
+	_idle()
+	assert_eq(g.index, 7)
 	c.select(-1) # right-click deselect always works
 	assert_eq(g.display_line().point_at, SequencePointAt.FirstTower, "the archer again")
 	assert_true(c.input_allowed("select", g.archer().id))

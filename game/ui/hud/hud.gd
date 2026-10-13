@@ -223,6 +223,8 @@ func _hint() -> void:
 	var text := hint_text(controller.hint, aim != null and not aim.targeting.is_movement, threat)
 	var refusal: bool = controller.hint_is_refusal
 	if controller.ui_panel_open: text = ""
+	# one voice: while the guided tutorial speaks, its bubble says what to do and what was wrong
+	if controller.guided != null and not controller.guided.finished: text = ""
 	hint_pill.visible = text != ""
 	if text == "": return
 	hint_label.text = text

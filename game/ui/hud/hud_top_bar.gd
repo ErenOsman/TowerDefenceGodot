@@ -331,7 +331,10 @@ func _show_end_turn(f: ViewFrame) -> void:
 	controller.preview_enemy_phase = can_end and end_turn.hovered
 	if not can_end: _can_end_since = -1.0
 	elif _can_end_since < 0.0: _can_end_since = _clock
-	var attention := can_end and _nothing_left and _clock - _can_end_since >= 0.6
+	# the guided tutorial: End turn steps back (60 %, no attention pulse) on lines that do not allow it
+	var guided_ok: bool = controller.input_allowed("end_turn") or controller.guided == null or controller.guided.finished
+	end_turn.modulate.a = 1.0 if guided_ok else 0.6
+	var attention := can_end and guided_ok and _nothing_left and _clock - _can_end_since >= 0.6
 	if attention != end_turn.has_attention(): end_turn.set_attention(attention)
 
 ## Names players can tell apart: [[id, name], …] -> {id: label}; a name two units share is numbered in order

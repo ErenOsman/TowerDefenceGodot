@@ -695,6 +695,7 @@ func toggle_aim(ability: AbilityDef) -> void:
 		_say("No valid target")
 		_aiming = null
 		_route = null
+	else: _guided_event("aiming")
 	version += 1
 
 ## Quick cast: casts the selected unit's ability at once, at its only valid aim or where its instinct says;
@@ -893,10 +894,12 @@ func _setup_coop(info: Dictionary, lib: ContentLibrary) -> bool:
 	coop.command_applied.connect(_on_coop_command)
 	coop.desynced.connect(func(_r, reason): _coop_end(reason))
 	coop.match_lost.connect(func(reason): _coop_end(reason))
-	coop.player_gone.connect(func(_p, n):
+	coop.player_gone.connect(func(p, n):
 		_set_coop_notice("%s left the match." % n, COOP_NOTICE_SECONDS, NEUTRAL_LINE)
-		chat_lines.append({"name": "", "text": NEUTRAL_LINE, "color": Color.WHITE, "system": true, "at": Time.get_ticks_msec()})
-		chat_changed.emit())
+		var line := neutral_towers_line(p)
+		if line != "":
+			chat_lines.append({"name": "", "text": line, "color": Color.WHITE, "system": true, "at": Time.get_ticks_msec()})
+			chat_changed.emit())
 	coop.chat_line.connect(func(from_name, text, color):
 		chat_lines.append({"name": from_name, "text": text, "color": color, "system": from_name == "", "at": Time.get_ticks_msec()})
 		if chat_lines.size() > 50: chat_lines.pop_front()
@@ -923,6 +926,18 @@ func _on_pool_energy(slot: int, amount: int, energy: int) -> void:
 	energy_ticked.emit(amount, energy)
 
 const NEUTRAL_LINE := "Their towers are neutral now; anyone can use them."
+
+## The chat's line for a leaver's towers on the board: "Şule's Archer is neutral now." / "Şule's Archer and Priest
+## are neutral now."; "" when none of theirs is on the board.
+func neutral_towers_line(player: String) -> String:
+	if coop == null: return ""
+	var names: Array = []
+	for t in coop.coop.hand_of(player):
+		var e: Entity = session.placed_tower(t.id)
+		if e != null and e.alive: names.append(t.name)
+	if names.is_empty(): return ""
+	var list: String = names[0] if names.size() == 1 else ", ".join(names.slice(0, names.size() - 1)) + " and " + names.back()
+	return "%s's %s %s neutral now." % [coop.name_of(player), list, "is" if names.size() == 1 else "are"]
 
 func _set_coop_notice(text: String, seconds: float, sub := "") -> void:
 	coop_notice = text

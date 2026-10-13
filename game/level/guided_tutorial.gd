@@ -4,7 +4,7 @@ extends RefCounted
 ## tutorial as a plain SequenceRun). Owned by the LevelController while the tutorial level plays; reads
 ## res://data/tutorial.json: lines in the Sequences.json line format plus
 ##   allow   — the only actions the player may take while the line shows (tokens below; [] = talk only)
-##   advance — "click" | "seconds:<s>" | "event:<placing|placed|selected|cast|round_ended|in_range|won>"
+##   advance — "click" | "seconds:<s>" | "event:<placing|placed|selected|aiming|cast|round_ended|in_range|won>"
 ## Allow tokens: "piece:<tower type id>", "tile:x,y" (a placement tile), "select:archer" (the player's first tower),
 ## "ability:<ability id>", "aim_tile:x,y", "aim_tile:toward_enemy:<n>" (n tiles from the archer along its row toward
 ## the first enemy, the nearest valid aim when that one is not), "aim_unit:first_enemy", "aim_unit:enemy",
@@ -13,8 +13,9 @@ extends RefCounted
 ## being placed; the archer while an ability line's tower is not selected.
 ##
 ## The HUD shows `run` (a SequenceRun whose index this class sets; it never ticks it) through controller.sequence and
-## asks display_line() where to point (the ring and the Princess's bubble follow it) and ring_tiles() for extra board
-## rings; a refused action calls host.refuse(hint) and bumps `refusals` (the HUD shakes the ringed target).
+## asks display_line() where to point (one ring per line, on what the Princess's bubble points at); a refused action
+## calls host.refuse(text) with what was wrong ("Not now: click the slime first.") and bumps `refusals` (the HUD shakes
+## the ringed target and shows the text in the bubble). An optional per-line "hint" replaces that text.
 ## Never changes the game itself except clearing the selection when a line asks the player to select.
 
 const PATH := "res://data/tutorial.json"
@@ -36,6 +37,7 @@ var last_hint := ""
 var _seen := {}
 var _shown_for := 0.0
 var _display_key := ""
+var _quick_click := "Shift-click"
 
 ## Loads the lines (null when the file is missing or empty). `fill` turns a line's text into what is shown
 ## ({player}, {key:Id}, {click:Id}); null = a plain fallback.
@@ -48,6 +50,7 @@ static func load_file(p_host, path: String = PATH, fill = null) -> GuidedTutoria
 func _init(p_host, lines: Array, fill = null) -> void:
 	host = p_host
 	var shown := []
+	_quick_click = fill.call("{click:QuickCast}") if fill is Callable and fill.is_valid() else "Shift-click"
 	for d in lines:
 		if not (d is Dictionary): continue
 		var text: String = str(d.get("text", ""))
@@ -73,7 +76,6 @@ func _init(p_host, lines: Array, fill = null) -> void:
 		var allow: Array = []
 		for t in d.get("allow", []): allow.append(str(t))
 		var hint: String = str(d.get("hint", ""))
-		if hint == "" and l.continue_on == SequenceContinue.Event: hint = text
 		steps.append({"line": l, "allow": allow, "advance": advance, "seconds": seconds, "hint": hint})
 		shown.append(l)
 	run = SequenceRun.new(shown)
@@ -264,7 +266,7 @@ func allows(kind: String, payload = null) -> bool:
 			if aiming == null or not _tokens("ability:").has(aiming.name): return false
 			var tiles := aim_tiles()
 			var units := _tokens("aim_unit:")
-			if tiles.is_empty() and units.is_empty(): return true
+			if tiles.is_empty() and units.is_empty(): return str(step.get("advance", "")) != "event:aiming" # "click X" lines stop at aiming
 			if tiles.has(payload): return true
 			var at: Entity = s.state.entity_at(payload) if payload is Vector2i else null
 			if at == null or not at.alive: return false
@@ -280,12 +282,37 @@ func allows(kind: String, payload = null) -> bool:
 			return _end_turn_ok()
 	return false
 
+## What was wrong, in the Princess's words: "Not now: click the slime first." (what the line needs next), or
+## "Finish this step first." on a talk line.
+func refusal_text() -> String:
+	if finished or talking: return "Finish this step first."
+	var need := ""
+	var l := display_line()
+	match l.point_at:
+		SequencePointAt.UI:
+			if l.ui_element == "@piece": need = "click the %s piece" % _tower_name()
+			elif l.ui_element == "EndTurnButton": need = "click End turn"
+			elif l.ui_element.begins_with("@ability:"):
+				var a := line_ability()
+				var verb := _quick_click if _has("quick_cast") else "click"
+				need = "%s %s" % [verb, a.display_name if a != null else "the ability"]
+		SequencePointAt.Tile: need = "click the lit tile"
+		SequencePointAt.FirstTower: need = "click your %s" % _tower_name()
+		SequencePointAt.FirstEnemy:
+			var e := first_enemy()
+			need = "click the %s" % (e.def.display_name.to_lower() if e != null else "enemy")
+	return "Finish this step first." if need == "" else "Not now: %s first." % need
+
+func _tower_name() -> String:
+	var a := archer()
+	if a != null: return a.def.display_name
+	var s: LevelSession = host.session
+	return s.hand[0].name if s != null and s.hand.size() > 0 else "tower"
+
 ## A refused action: the hint on the hint line (the line's own words, or how a talk line goes on) and a shake.
 func refuse() -> void:
 	var hint := str(step.get("hint", ""))
-	if hint == "":
-		var key: String = host._key_first("Skip") if host.has_method("_key_first") else "Space"
-		hint = "Click the bubble or press %s to go on." % key
+	if hint == "": hint = refusal_text()
 	last_hint = hint
 	refusals += 1
 	host.refuse(hint)
@@ -293,7 +320,7 @@ func refuse() -> void:
 
 # ------------------------------------------------------------------ progress
 
-## A game event happened (placing, placed, selected, cast, round_ended, won).
+## A game event happened (placing, placed, selected, aiming, cast, round_ended, won).
 func notify(event: String) -> void:
 	if not finished: _seen[event] = true
 
@@ -391,15 +418,6 @@ func display_line() -> SequenceLine:
 			else:
 				out.point_at = SequencePointAt.FirstEnemy
 	return out
-
-## Board tiles that get a ring besides the one the bubble points at: every lit placement tile while placing, the
-## walk's tile while it is aimed.
-func ring_tiles() -> Array:
-	if finished or talking: return []
-	if not place_tiles().is_empty(): return place_tiles() if host.placing != null else []
-	var a := line_ability()
-	if a != null and host.aiming == a: return aim_tiles()
-	return []
 
 ## Changes whenever display_line() would point somewhere else (the HUD redraws on run.version).
 func _refresh_display() -> void:
