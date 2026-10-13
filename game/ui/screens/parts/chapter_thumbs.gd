@@ -47,8 +47,8 @@ static func _next() -> void:
 	if _busy: return
 	while not _queue.is_empty():
 		var j: Dictionary = _queue.pop_front()
-		var host: Node = j.host
-		if not is_instance_valid(host) or not host.is_inside_tree(): continue
+		var host = j.host   # untyped on purpose: a typed Node var throws on a freed instance
+		if not is_instance_valid(host) or not (host as Node).is_inside_tree(): continue
 		_busy = true
 		var r := ChapterThumbs.new()
 		r._job = j

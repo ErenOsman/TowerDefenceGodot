@@ -78,6 +78,8 @@ func _run() -> void:
 	await _frames(4)
 	lobby.select_room(sule.room_id)
 	await _frames(8)
+	await _until(func(): return _boards_ready(lobby), 300.0)
+	await _frames(6)
 	await _shot("list")
 	# --- join with a wrong password
 	lobby.join_selected()
@@ -125,7 +127,8 @@ func _run() -> void:
 	await _frames(12)
 	net.rtt_ms = 42 # the fake relay answers in-process: a typical round trip for the picture
 	room.refresh()
-	await _frames(4)
+	await _until(func(): return _boards_ready(room), 300.0)
+	await _frames(6)
 	await _shot("room_host")
 	if not only.is_empty() and not only.has("room_changed"): quit(0); return
 	# --- the level changes (banner + everyone not ready)
@@ -183,3 +186,9 @@ func _shot(label: String) -> void:
 	var p := "%s/coop_%02d_%s.png" % [out_dir, _n, label]
 	root.get_viewport().get_texture().get_image().save_png(p)
 	print("saved ", ProjectSettings.globalize_path(p), " t=", Time.get_ticks_msec())
+
+## Every board picture under a node has its rendered board up (not the minimap).
+func _boards_ready(n: Node) -> bool:
+	for p in n.find_children("*", "CoopBoardPic", true, false):
+		if p.is_visible_in_tree() and not p.is_board_shown(): return false
+	return true

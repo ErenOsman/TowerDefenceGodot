@@ -85,7 +85,7 @@ func _run() -> void:
 	await _frames(20)
 	# Pass hovered: its tooltip (order after passing)
 	var dial: Control = hud.coop_hud.dial
-	_move(dial.get_global_rect().position + Vector2(HudCoop.PASS_R - 10, HudCoop.PASS_R - 10))
+	_move(dial.get_global_rect().position + dial.coin())
 	await _frames(30)
 	net.chat_received.emit(OTHER, "Şule", "I'll take the left road!") # fresh: lines fade after a few seconds
 	await _frames(2)

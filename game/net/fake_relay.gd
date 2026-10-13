@@ -335,7 +335,8 @@ func _rooms_msg(l: Link) -> Dictionary:
 		if room.version != l.version: continue # other versions are never listed
 		var host = _player(room, room.host)
 		out.append({"id": room.id, "name": room.name, "level": room.level, "count": room.count, "players": room.players.size(),
-			"locked": room.password != "", "started": room.started, "host_name": host.name if host != null else ""})
+			"locked": room.password != "", "started": room.started, "host_name": host.name if host != null else "",
+			"host_hand": host.hand.duplicate() if host != null else []})
 	return {"t": "rooms", "rooms": out}
 
 func _push_room(room: Dictionary) -> void:

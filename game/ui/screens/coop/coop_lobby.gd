@@ -294,7 +294,12 @@ func _room_row(r: Dictionary) -> PanelContainer:
 	host_box.custom_minimum_size = Vector2(220, 0)
 	host_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var host_name := str(r.get("host_name", ""))
-	if host_name != "": host_box.add_child(CoopUi.initial_medal(host_name, 44, CoopMode.COLORS[0]))
+	var host_hand: Array = r.get("host_hand", []) if r.get("host_hand") is Array else []
+	if not host_hand.is_empty():
+		var medal := CoopUi.player_medal(host_hand, 44)
+		medal.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		host_box.add_child(medal)
+	elif host_name != "": host_box.add_child(CoopUi.initial_medal(host_name, 44, CoopMode.COLORS[0]))
 	var host := TdMenu.label(host_name, "body", TdTheme.color("cream.100"), 24)
 	host.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	host.clip_text = true

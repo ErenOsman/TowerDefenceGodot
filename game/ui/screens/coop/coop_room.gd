@@ -32,6 +32,8 @@ var _chat_in: LineEdit
 var _wait: Label
 var _ready_btn: TdButton
 var _start: TdButton
+var _ready_ring: PanelContainer
+var _start_reason := ""
 var _popups: Control
 
 func _init() -> void:
@@ -103,7 +105,8 @@ func _build() -> void:
 	var right := TdMenu.vbox(16)
 	right.custom_minimum_size = Vector2(560, 0)
 	body.add_child(right)
-	_card = CoopUi.level_card(560, 84)
+	_card = CoopUi.level_card(560, 116)
+	(_card.map as CoopBoardPic).pitch = 66.0
 	right.add_child(_card.panel)
 	_change_level = CoopUi.paper_action("icon_edit", "Change level", func(): open_settings())
 	_card.extra.add_child(_change_level)
@@ -144,10 +147,15 @@ func _build() -> void:
 	_ready_btn = TdMenu.button(TdButton.Style.SECONDARY, "Ready up", Vector2(220, 66), TdTheme.texture("icon_check"))
 	_ready_btn.font_size = 30
 	_ready_btn.clicked.connect(toggle_ready)
-	bottom.add_child(_ready_btn)
+	_ready_ring = PanelContainer.new() # the green outline while you are Ready
+	_ready_ring.mouse_filter = MOUSE_FILTER_IGNORE
+	_ready_ring.size_flags_vertical = SIZE_SHRINK_CENTER
+	_ready_ring.add_child(_ready_btn)
+	bottom.add_child(_ready_ring)
 	_start = TdMenu.button(TdButton.Style.PRIMARY, "Start", Vector2(200, 66), TdTheme.texture("icon_play"))
 	_start.font_size = 30
 	_start.clicked.connect(start)
+	_start.bleed_mode = TdButton.Bleed.OFF
 	bottom.add_child(_start)
 	_popups = Control.new()
 	_popups.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -229,7 +237,7 @@ func _draw_chat_line(line: Dictionary) -> void:
 	if _chat_box == null: return
 	var t: String
 	if line.system: t = "[i][color=#%s]%s[/color][/i]" % [TdTheme.color("cream.300").to_html(false), _esc(line.text)]
-	else: t = "[b][color=#%s]%s[/color][/b] %s" % [line.color.lightened(0.25).to_html(false), _esc(line.name), _esc(line.text)]
+	else: t = "[b][color=#%s]%s[/color][/b] %s" % [TdTheme.color("accent.light").to_html(false), _esc(line.name), _esc(line.text)]
 	_chat_box.add_child(TdMenu.rich(t, "body", TdTheme.color("cream.100"), 21))
 	while _chat_box.get_child_count() > 60: _chat_box.get_child(0).free()
 	_scroll_chat.call_deferred()
@@ -273,7 +281,7 @@ func refresh() -> void:
 	_sub.text = "%s · co-op · %d of %d player%s" % [CoopLevels.level_name(level), players.size(), count, "" if count == 1 else "s"]
 	_code.text = "Room: [b][color=#%s]%s[/color][/b]  ·  Password: [b]%s[/b]" % [TdTheme.color("cream.100").to_html(false),
 		_esc(str(room.get("name", ""))), "•".repeat(6) if locked else "none"]
-	CoopUi.fill_level_card(_card, level, count)
+	CoopUi.fill_level_card(_card, level, count, true)
 	_change_level.visible = net.is_host
 	_draw_slots(room, players, count, level)
 	var me = NetProtocol.find_player(room, net.player_id)
@@ -282,13 +290,17 @@ func refresh() -> void:
 	_ready_btn.style = TdButton.Style.SECONDARY if net.is_host else TdButton.Style.PRIMARY
 	_ready_btn.text = "Ready" if am_ready or not net.is_host else "Ready up"
 	_ready_btn.set_selected(am_ready)
-	_ready_btn.modulate = Color(0.78, 1.0, 0.78) if am_ready else Color.WHITE
+	_ready_ring.add_theme_stylebox_override("panel", CoopUi.box(Color(0, 0, 0, 0), 14, CoopUi.GOOD if am_ready else Color(0, 0, 0, 0), 3, Vector4(3, 3, 3, 3)))
 	_ready_btn.tooltip_text = "Click again to stop being ready." if am_ready else "Tell the others you are ready."
 	var waiting := NetProtocol.not_ready_names(room)
 	var host_name := NetProtocol.player_name(room, str(room.get("host", "")))
 	if net.is_host:
 		_start.visible = true
-		_start.set_interactable(waiting.is_empty(), "Everyone in the room must be Ready")
+		# not ready yet: a dimmed cobalt Start whose click (and hover) says why, never the grey disabled look
+		_start_reason = "" if waiting.is_empty() else "Waiting for %s to be ready." % NetProtocol.join_names(waiting)
+		_start.modulate = Color(1, 1, 1, 1.0 if _start_reason == "" else 0.5)
+		_start.denied_reason = _start_reason
+		_start.tooltip_text = _start_reason
 		_wait.text = "Everyone is ready. Start when you like." if waiting.is_empty() else "Waiting for %s to be ready." % NetProtocol.join_names(waiting)
 	else:
 		_start.visible = false
@@ -333,7 +345,7 @@ func _slot_row(i: int, p, room: Dictionary, cap: int, h: float) -> Control:
 	var medal := CoopUi.player_medal(hand, 54)
 	medal.size_flags_vertical = SIZE_SHRINK_CENTER
 	row.add_child(medal)
-	var nm := TdMenu.label(str(p.get("name", "?")), "h2", CoopMode.COLORS[i % CoopMode.COLORS.size()].lightened(0.2), 32)
+	var nm := TdMenu.label(str(p.get("name", "?")), "h2", TdTheme.color("accent.light"), 32) # one colour for every name
 	nm.size_flags_vertical = SIZE_SHRINK_CENTER
 	row.add_child(nm)
 	row.add_child(CoopUi.ping_label(net.ping_of(pid) if net.has_method("ping_of") else -1))
@@ -391,8 +403,15 @@ func toggle_ready() -> void:
 	var me = NetProtocol.find_player(net.room, net.player_id)
 	net.set_ready(not (me != null and bool(me.get("ready", false))))
 
+## The host's Start: refused with its reason (shake + tooltip) while someone is not Ready.
+func can_start() -> bool:
+	return net != null and net.is_host and NetProtocol.all_ready(net.room)
+
 func start() -> void:
-	if net != null and net.is_host: net.start_match()
+	if not can_start():
+		if _start_reason != "": _start._deny()
+		return
+	net.start_match()
 
 func leave_room() -> void:
 	if net == null: return

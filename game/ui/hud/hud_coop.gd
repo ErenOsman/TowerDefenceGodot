@@ -2,10 +2,10 @@ class_name HudCoop
 extends Control
 ## The co-op parts of the battle HUD (Multiplayer — Design, co-op; UI/UX mockups screens-b/co-op-pass and
 ## lobby-match-left), added by Hud only when controller.is_coop:
-##  - the turn order INSIDE the tracker: one medallion per player in this round's order (the acting one in a cobalt
-##    ring, ✓ = ended their turn, ↻ = passed), joined by "›"; no per-player colours;
-##  - Pass: a smaller wood circle tucked behind End turn at its upper-left, joined to it by a wood band, with its key
-##    cap (KeyBinds "Pass", Tab). Disabled = solid dark wood, dimmed label, the reason in its tooltip;
+##  - the turn order INSIDE the tracker: each player's initial on a wood disc in this round's order (the acting one
+##    in a cobalt ring, ✓ = ended their turn, ↻ = passed), joined by "›", the name in a tooltip; no per-player colours;
+##  - Pass (v2): a small wood coin at End turn's lower-left, joined by a thin neck, key chip (KeyBinds "Pass", Tab);
+##    disabled = solid dark wood, dimmed label, the reason in its tooltip; hidden with one player left;
 ##  - while someone else acts, End turn is covered by a solid dark wood face with their medallion and "Şule's turn";
 ##    once you ended your turn, a green "Done · Waiting for N" face;
 ##  - the toast under the tracker (a player left: leave icon + "Their towers are neutral now…"; a desync);
@@ -17,8 +17,6 @@ const CHAT_LINES := 3
 const CHAT_W := 560.0
 const CHAT_SHOW := 6.0
 const CHAT_FADE := 1.0
-const PASS_R := 63.0
-const END_R := 84.0
 const TOAST_SECONDS := 4.0
 
 var controller: LevelController
@@ -207,35 +205,22 @@ func _medal(player: String, state: String) -> Control:
 	holder.custom_minimum_size = Vector2(44, 44)
 	holder.mouse_filter = MOUSE_FILTER_PASS
 	holder.size_flags_vertical = SIZE_SHRINK_CENTER
-	if state == "acting":
-		var glow := Panel.new()
-		glow.mouse_filter = MOUSE_FILTER_IGNORE
-		var gs := StyleBoxFlat.new()
-		gs.bg_color = Color(0, 0, 0, 0)
-		gs.border_color = TdTheme.color("accent.light")
-		gs.set_border_width_all(3)
-		gs.set_corner_radius_all(26)
-		gs.shadow_color = Color(TdTheme.color("accent.light"), 0.6)
-		gs.shadow_size = 8
-		glow.add_theme_stylebox_override("panel", gs)
-		glow.position = Vector2(-3, -3)
-		glow.size = Vector2(50, 50)
-		holder.add_child(glow)
-	var m := HudArt.medallion(40, "medallion_ring", 3.0)
-	m.position = Vector2(2, 2)
-	HudArt.set_medallion(m, c.player_portrait(player))
-	if state == "ended": m.modulate.a = 0.55
-	holder.add_child(m)
+	var disc := InitialDisc.new()
+	disc.letter = c.player_name(player).left(1).to_upper()
+	disc.current = state == "acting"
+	disc.position = Vector2(2, 2)
+	if state == "ended": disc.modulate.a = 0.55
+	holder.add_child(disc)
 	if state == "ended" or state == "passed":
 		var badge := TurnBadge.new()
 		badge.kind = state
 		badge.position = Vector2(28, 28)
 		holder.add_child(badge)
 	var me := player == c.local_player
-	var who := "You" if me else c.player_name(player)
+	var who := c.player_name(player) + (" (you)" if me else "")
 	var what: String = {"acting": "Acting now", "wait": "Waiting for their turn", "passed": "Passed: acts again after the others",
 		"ended": "Ended their turn this round"}[state]
-	TdTooltipTrigger.attach(holder, TooltipText.title(who, TooltipText.neutral_color()), what).set_placement(TdTooltipPlacement.Side.BELOW)
+	TdTooltipTrigger.attach(holder, TooltipText.title(who, TdTheme.rich("ink")), what).set_placement(TdTooltipPlacement.Side.BELOW)
 	return holder
 
 # ------------------------------------------------------------------ chat feed
@@ -261,7 +246,7 @@ func _chat() -> void:
 		r.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 		r.add_theme_constant_override("outline_size", 6)
 		var t := str(line.text).replace("[", "[lb]")
-		if line.system: r.text = "[i][color=#%s]%s[/color][/i]" % [TdTheme.color("cream.200").to_html(false), t]
+		if line.system: r.text = "[i][color=#%s]%s[/color][/i]" % [TdTheme.color("cream.300").to_html(false), t] # text.muted
 		else: r.text = "[b][color=#%s]%s[/color][/b] %s" % [TdTheme.color("accent.light").to_html(false), str(line.name).replace("[", "[lb]"), t]
 		r.modulate.a = alphas[i]
 		chat_feed.add_child(r)
@@ -305,7 +290,7 @@ func pass_tip() -> Array:
 		order.remove_at(0)
 		order.append(c.local_player)
 		for p in order: after.append("you" if p == c.local_player else c.player_name(p))
-		return [TooltipText.title("Pass", TooltipText.neutral_color(), sub),
+		return [TooltipText.title("Pass", TdTheme.rich("ink"), sub),
 			"Let the others go first. You act again after them this round.", "Order after passing", " → ".join(after)]
 	var why := ""
 	var cs: CoopSession = c.coop.coop
@@ -314,7 +299,7 @@ func pass_tip() -> Array:
 	elif c.wait_reason != "": why = c.wait_reason + "."
 	elif cs.turn_order.size() <= 1: why = "Nobody else is left to act this round."
 	else: why = "Not now."
-	return [TooltipText.title("Pass", TooltipText.neutral_color(), TooltipText.colored(TooltipText.harmful_color(), "Not available")), why, "", ""]
+	return [TooltipText.title("Pass", TdTheme.rich("ink"), TooltipText.colored(TooltipText.harmful_color(), "Not available")), why, "", ""]
 
 # ------------------------------------------------------------------ parts
 
@@ -336,8 +321,37 @@ class TurnBadge extends Control:
 			var tip := ctr + Vector2(cos(deg_to_rad(-60)), sin(deg_to_rad(-60))) * 5.0
 			draw_colored_polygon(PackedVector2Array([tip + Vector2(-3.5, -2.5), tip + Vector2(3.0, -1.0), tip + Vector2(-0.5, 3.5)]), TdTheme.color("cream.100"))
 
-## The Pass circle behind End turn's upper-left with the wood band to it; draws, hit-tests and clicks itself.
+## A player's initial on a wood disc (players have no avatars); the acting player's disc gets the cobalt ring.
+class InitialDisc extends Control:
+	var letter := "?"
+	var current := false
+	var diameter := 40.0
+	func _init() -> void:
+		mouse_filter = MOUSE_FILTER_IGNORE
+	func _ready() -> void:
+		size = Vector2(diameter, diameter)
+		custom_minimum_size = size
+	func _draw() -> void:
+		var r := diameter / 2.0
+		var ctr := Vector2(r, r)
+		if current:
+			draw_circle(ctr, r + 7.0, Color(TdTheme.color("accent.light"), 0.25))
+			draw_circle(ctr, r + 5.0, TdTheme.color("accent.light"))
+		draw_circle(ctr, r + 2.0, TdTheme.color("rim"))
+		draw_circle(ctr, r, Color("5A4636"))
+		draw_circle(ctr + Vector2(0, -r * 0.18), r * 0.78, Color("6B5443", 0.6))
+		var font: Font = TdTheme.font("plinth")
+		var fs := int(diameter * 0.55)
+		var w := font.get_string_size(letter, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		draw_string(font, ctr + Vector2(-w / 2.0, fs * 0.36), letter, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, TdTheme.color("cream.100"))
+
+## Pass v2: a small wood coin at End turn's lower-left (8 o'clock), tucked behind it and joined by a thin wood neck;
+## ↻ over "Pass", the key chip on its lower-left edge. Draws, hit-tests and clicks itself (only the coin takes the
+## pointer). Hidden outside the player phase and when you are the only player left (like single player).
 class PassDial extends Control:
+	const R := 36.0                         # coin radius (72 px)
+	const OFFSET := Vector2(-100, 45)       # coin centre from End turn's centre (rim 20 px above the screen edge)
+	const NECK := 16.0
 	var hud: HudCoop
 	var end_turn: Control
 	var hovered := false
@@ -347,15 +361,26 @@ class PassDial extends Control:
 	func _init() -> void:
 		name = "PassButton"
 		mouse_filter = MOUSE_FILTER_STOP
-		size = Vector2(290, 236)
+		# wide to the left on purpose: the tooltip opens ABOVE starting at this control's left edge, so it ends just
+		# left of End turn (never over it); only the coin takes the pointer (_has_point)
+		size = Vector2(340.0 + 4.0 + 84.0 + 30.0, 160) # battle tooltip 340 + gap + End turn radius + 30
 		mouse_entered.connect(func(): hovered = true; queue_redraw())
 		mouse_exited.connect(func(): hovered = false; pressed_in = false; queue_redraw())
 	func _ready() -> void:
+		# the tooltip opens above the coin itself (not the whole control)
+		var anchor := Control.new()
+		anchor.name = "CoinAnchor"
+		anchor.mouse_filter = MOUSE_FILTER_IGNORE
+		anchor.position = coin() - Vector2(R, R)
+		anchor.size = Vector2(R, R) * 2.0
+		add_child(anchor)
 		_trigger = TdTooltipTrigger.attach(self)
-		_trigger.set_placement(TdTooltipPlacement.Side.ABOVE)
-	## Only the Pass circle takes the pointer (the band and End turn's corner do not).
+		_trigger.set_placement(TdTooltipPlacement.Side.ABOVE, anchor)
+	## The coin's centre in this control; End turn's centre is (size.x - 30, 50).
+	func coin() -> Vector2: return end_centre() + OFFSET
+	func end_centre() -> Vector2: return Vector2(size.x - 30.0, 50.0)
 	func _has_point(p: Vector2) -> bool:
-		return p.distance_to(Vector2(HudCoop.PASS_R, HudCoop.PASS_R)) <= HudCoop.PASS_R
+		return p.distance_to(coin()) <= R + 3.0
 	func _gui_input(e: InputEvent) -> void:
 		if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
 			if e.pressed: pressed_in = true
@@ -367,10 +392,9 @@ class PassDial extends Control:
 	func _process(_d: float) -> void:
 		var c: LevelController = hud.controller if hud != null else null
 		if c == null or c.coop == null or end_turn == null: return
-		var er := Rect2(end_turn.position, end_turn.size)
-		position = er.end - size
-		var show: bool = c.session.phase == Phase.Player and not c.session.is_over
-		visible = show
+		var ec: Vector2 = end_turn.position + end_turn.size / 2.0
+		position = ec - end_centre()
+		visible = c.session.phase == Phase.Player and not c.session.is_over and c.coop.coop.players.size() > 1
 		var tip := hud.pass_tip()
 		var keys = get_tree().root.get_node_or_null("KeyBinds")
 		var k: String = keys.first("Pass") if keys != null else "Tab"
@@ -383,59 +407,52 @@ class PassDial extends Control:
 		var c: LevelController = hud.controller if hud != null else null
 		if c == null: return
 		var on: bool = c.can_pass
-		var p := Vector2(HudCoop.PASS_R, HudCoop.PASS_R)
-		var e := size - Vector2(HudCoop.END_R, HudCoop.END_R)
+		var p := coin() + (Vector2(0, -3) if on and hovered and not pressed_in else Vector2.ZERO)
+		var e := end_centre()
 		var rim := TdTheme.color("rim")
-		# the band: the hull between the two circles, rim first
-		# the band keeps the Pass circle's width all the way (rim lines top and bottom), End turn covers its end
-		_band(p, HudCoop.PASS_R + 3.0, e, HudCoop.PASS_R + 3.0, rim)
-		_band(p, HudCoop.PASS_R, e, HudCoop.PASS_R, Color("43342A") if on else Color("2A211B"))
-		if on: _band(p, HudCoop.PASS_R * 0.55, e, HudCoop.PASS_R * 0.55, Color("4B3A2E"))
-		# the circle
-		draw_circle(p, HudCoop.PASS_R + 3.0, rim)
+		# the neck (End turn covers its far end)
+		draw_line(p, e, rim, NECK + 4.0)
+		draw_line(p, e, Color("3A2D24") if on else Color("1C1510"), NECK)
+		draw_line(p + Vector2(0, -NECK * 0.2), e + Vector2(0, -NECK * 0.2), Color("4A3A2E") if on else Color("2E241C"), NECK * 0.35)
+		# the coin
+		draw_circle(p + Vector2(0, 4), R + 3.0, Color(0, 0, 0, 0.3))
+		if on and hovered: draw_circle(p, R + 6.0, TdTheme.color("accent.light"))
+		draw_circle(p, R + 3.0, rim)
 		var fill := Color("5A4636")
 		if on and hovered: fill = Color("7A6250")
-		if not on: fill = Color("2C221B")
 		if on and pressed_in: fill = Color("46372B")
-		draw_circle(p, HudCoop.PASS_R, fill)
-		if on: draw_arc(p, HudCoop.PASS_R - 3.0, deg_to_rad(200), deg_to_rad(340), 24, Color(1.0, 0.86, 0.67, 0.18), 3.0, true)
-		if on and hovered: draw_arc(p, HudCoop.PASS_R + 5.0, 0, TAU, 64, TdTheme.color("accent.light"), 3.0, true)
-		# label + key cap (offset up-left like the mockup: the band takes the lower right)
-		var font: Font = TdTheme.font("plinth")
+		if not on: fill = Color("2E241C")
+		draw_circle(p, R, fill)
+		draw_circle(p + Vector2(0, -R * 0.15), R * 0.8, Color(fill.lightened(0.08), 0.6) if on else Color(fill, 0.0))
 		var lc := TdTheme.color("cream.100") if on else Color(TdTheme.color("cream.100"), 0.45)
-		var centre := p - Vector2(8, 10)
-		var tw := font.get_string_size("Pass", HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x
-		draw_string(font, centre + Vector2(-tw / 2.0, 2), "Pass", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, lc)
+		# ↻ above "Pass"
+		var ic := p + Vector2(0, -9)
+		draw_arc(ic, 7.0, deg_to_rad(-50), deg_to_rad(240), 20, lc, 2.4, true)
+		var tip := ic + Vector2.from_angle(deg_to_rad(-50)) * 7.0
+		draw_colored_polygon(PackedVector2Array([tip + Vector2(-4.5, -3.0), tip + Vector2(3.5, -2.0), tip + Vector2(-0.5, 4.0)]), lc)
+		var font: Font = TdTheme.font("plinth")
+		var tw := font.get_string_size("Pass", HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
+		draw_string(font, p + Vector2(-tw / 2.0, 16), "Pass", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, lc)
+		# the key chip on the coin's lower-left edge
 		var keys = get_tree().root.get_node_or_null("KeyBinds")
 		var k: String = keys.first("Pass") if keys != null else "Tab"
 		if k != "":
-			var kw := maxf(28.0, font.get_string_size(k, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x + 18.0)
-			var kr := Rect2(centre + Vector2(-kw / 2.0, 12), Vector2(kw, 26))
+			var kw := font.get_string_size(k, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x + 12.0
+			var kr := Rect2(p + Vector2(-R - 12.0, R - 20.0), Vector2(kw, 20))
 			var box := StyleBoxFlat.new()
 			box.bg_color = TdTheme.color("paper") if on else Color("6E6253")
-			box.set_corner_radius_all(6)
+			box.set_corner_radius_all(5)
 			box.border_color = rim
 			box.set_border_width_all(2)
 			draw_style_box(box, kr)
-			draw_string(font, Vector2(kr.position.x + (kw - font.get_string_size(k, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x) / 2.0, kr.position.y + 20),
-				k, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, TdTheme.color("ink") if on else Color("2A211B"))
-	func _band(c1: Vector2, r1: float, c2: Vector2, r2: float, col: Color) -> void:
-		var d := c2 - c1
-		var l := d.length()
-		if l <= absf(r1 - r2): return
-		var base := d.angle()
-		var a := acos((r1 - r2) / l)
-		var pts := PackedVector2Array([
-			c1 + Vector2.from_angle(base + a) * r1, c2 + Vector2.from_angle(base + a) * r2,
-			c2 + Vector2.from_angle(base - a) * r2, c1 + Vector2.from_angle(base - a) * r1])
-		draw_colored_polygon(pts, col)
+			draw_string(font, kr.position + Vector2(6, 15), k, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, TdTheme.color("ink") if on else Color("2A211B"))
 
 ## Over End turn while someone else acts (their medallion + "Şule's turn"), or "Done · Waiting for N" after yours.
 class EndFace extends Control:
 	var hud: HudCoop
 	var end_turn: Control
 	var _mode := ""
-	var _medal: Control
+	var _medal: InitialDisc
 	var _title: Label
 	var _sub: Label
 	var _trigger: TdTooltipTrigger
@@ -446,7 +463,8 @@ class EndFace extends Control:
 		size = Vector2(168, 168)
 		visible = false
 	func _ready() -> void:
-		_medal = HudArt.medallion(44, "medallion_ring", 3.0)
+		_medal = InitialDisc.new()
+		_medal.diameter = 44.0
 		_medal.pivot_offset = Vector2(22, 22)
 		add_child(_medal)
 		_title = HudArt.label("", "h3", TdTheme.color("cream.100"), 20)
@@ -481,14 +499,15 @@ class EndFace extends Control:
 		var who := c.current_player
 		if mode.begins_with("other"):
 			_medal.visible = true
-			HudArt.set_medallion(_medal, c.player_portrait(who))
+			_medal.letter = c.player_name(who).left(1).to_upper()
+			_medal.queue_redraw()
 			_medal.position = Vector2((size.x - 44) / 2.0, 42)
 			_title.text = "%s's turn" % c.player_name(who)
 			_title.add_theme_font_size_override("font_size", 20)
 			_title.size = Vector2(size.x - 16, 28)
 			_title.position = Vector2(8, 96)
 			_sub.visible = false
-			_trigger.set_content(TooltipText.title("%s's turn" % c.player_name(who), TooltipText.neutral_color()),
+			_trigger.set_content(TooltipText.title("%s's turn" % c.player_name(who), TdTheme.rich("ink")),
 				"Wait for %s to finish. You can look around and select units meanwhile." % c.player_name(who))
 		else:
 			var n := int(mode.split(":")[1])
@@ -501,7 +520,7 @@ class EndFace extends Control:
 			_sub.text = "Waiting\nfor %d" % n
 			_sub.size = Vector2(size.x - 16, 48)
 			_sub.position = Vector2(8, 88)
-			_trigger.set_content(TooltipText.title("Turn ended", TooltipText.neutral_color()),
+			_trigger.set_content(TooltipText.title("Turn ended", TdTheme.rich("ink")),
 				"You ended your turn for this round. The enemies move once everyone has ended.")
 	func _draw() -> void:
 		var ctr := size / 2.0

@@ -98,12 +98,16 @@ static func thumb(level_id: String, pixels := 6) -> Texture2D:
 	_thumbs[key] = t
 	return t
 
-static func thumb_rect(level_id: String, size: Vector2, pixels := 6) -> Control:
-	var frame := flat_panel(Color(0.07, 0.055, 0.045), 8, Color(0.25, 0.19, 0.14), Vector4(3, 3, 3, 3))
+## A level's small picture: its 3D board rendered to fill the box (CoopBoardPic); the minimap until it is ready.
+static func thumb_rect(level_id: String, size: Vector2, _pixels := 6) -> Control:
+	var frame := flat_panel(Color("1a130f"), 8, Color(0.25, 0.19, 0.14), Vector4(2, 2, 2, 2))
 	frame.custom_minimum_size = size
-	var r := TdMenu.picture(thumb(level_id, pixels), size - Vector2(6, 6))
-	r.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	frame.add_child(r)
+	frame.clip_contents = true
+	var pic := CoopBoardPic.new()
+	pic.custom_minimum_size = size - Vector2(4, 4)
+	pic.pitch = 68.0 # steeper: the long board fills a wide thumbnail better
+	frame.add_child(pic)
+	pic.show_level(level_id)
 	return frame
 
 static func waves_of(level_id: String) -> int:
@@ -146,13 +150,11 @@ static func level_card(width: float, map_h: float, with_desc := false) -> Dictio
 	p.custom_minimum_size = Vector2(width, 0)
 	var v := TdMenu.vbox(10)
 	p.add_child(v)
-	var map_frame := flat_panel(Color(0.12, 0.09, 0.07), 12, Color(0, 0, 0, 0), Vector4(8, 8, 8, 8))
+	var map_frame := flat_panel(Color("1a130f"), 12, Color(0, 0, 0, 0), Vector4(0, 0, 0, 0))
 	map_frame.custom_minimum_size = Vector2(0, map_h)
+	map_frame.clip_contents = true
 	v.add_child(map_frame)
-	var map := TextureRect.new()
-	map.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	map.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	map.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var map := CoopBoardPic.new() # the 3D board rendered to fill the box (the minimap until then)
 	map_frame.add_child(map)
 	var title := TdMenu.label("", "h2", TdTheme.color("ink"), 34)
 	v.add_child(title)
@@ -170,9 +172,10 @@ static func level_card(width: float, map_h: float, with_desc := false) -> Dictio
 	return {"panel": p, "map": map, "title": title, "desc": desc, "facts": facts, "energy": energy, "turns": turns, "extra": extra}
 
 ## Fills a level card for a level and a player count.
-static func fill_level_card(card: Dictionary, level_id: String, players: int) -> void:
+## short: the energy rule without "(set by the level)" (the room, where height is tight).
+static func fill_level_card(card: Dictionary, level_id: String, players: int, short := false) -> void:
 	var a := CoopLevels.level_asset(level_id)
-	card.map.texture = thumb(level_id, 12)
+	(card.map as CoopBoardPic).show_level(level_id)
 	card.title.text = CoopLevels.level_name(level_id)
 	card.desc.text = a.description if a != null else ""
 	for c in card.facts.get_children(): c.queue_free()
@@ -181,7 +184,7 @@ static func fill_level_card(card: Dictionary, level_id: String, players: int) ->
 	var e := CoopLevels.energy_text(level_id, players)
 	var parts := e.split(" · ", true, 1)
 	var rich: RichTextLabel = card.energy.get_child(0).get_child(card.energy.get_child(0).get_child_count() - 1)
-	rich.text = "[b]%s[/b] · %s (set by the level)" % [parts[0], parts[1]] if parts.size() > 1 else e
+	rich.text = ("[b]%s[/b] · %s" + ("" if short else " (set by the level)")) % [parts[0], parts[1]] if parts.size() > 1 else e
 
 ## A level row (thumb, name, "3 waves", optional tag); selectable. Returns the TdButton-like PanelContainer.
 static func level_row(level_id: String, width: float, selected: bool, tag := "") -> PanelContainer:

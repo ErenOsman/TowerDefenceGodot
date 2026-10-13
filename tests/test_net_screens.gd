@@ -91,11 +91,11 @@ func test_room_slots_host_controls_and_settings() -> void:
 	for c in room.chat_log: lines.append(c.text)
 	assert_contains(lines, "Şule joined the room.")
 	assert_true(room._start.visible, "the host sees Start")
-	assert_false(room._start.interactable, "not everyone is ready")
+	assert_false(room.can_start(), "not everyone is ready")
 	room.toggle_ready()
 	bot.send_text(NetProtocol.encode(NetProtocol.ready(true)))
 	me.poll()
-	assert_true(room._start.interactable)
+	assert_true(room.can_start())
 	var s := room.open_settings()
 	s.count = 1
 	assert_seq(s.removed_names(), ["Şule"])
@@ -106,7 +106,7 @@ func test_room_slots_host_controls_and_settings() -> void:
 	s.apply()
 	me.poll()
 	assert_true(room._banner.visible, "level changed banner")
-	assert_false(room._start.interactable, "Ready reset")
+	assert_false(room.can_start(), "Ready reset")
 
 func test_match_start_hands_off() -> void:
 	var got := []
