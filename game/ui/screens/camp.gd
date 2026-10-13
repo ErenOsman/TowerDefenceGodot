@@ -93,12 +93,17 @@ func _prop(root: Node3D, prop: String, at: Vector2, scale_by: float, yaw: float)
 	m.rotation_degrees.y = yaw
 	root.add_child(m)
 	TdDiorama._idle(m)
+	var top := 0.5
+	for n in m.find_children("*", "MeshInstance3D", true, false):
+		var mi: MeshInstance3D = n
+		top = maxf(top, (mi.global_transform * mi.get_aabb()).end.y)
+	m.set_meta("top", top)
 	return m
 
 ## A prop's top in canvas coordinates (where its station button goes).
-func _screen_of(n: Node3D, lift := 1.25) -> Vector2:
+func _screen_of(n: Node3D) -> Vector2:
 	if n == null or _cam == null: return Vector2.ZERO
-	var p := _cam.unproject_position(n.global_position + Vector3(0, lift * n.scale.y, 0))
+	var p := _cam.unproject_position(n.global_position + Vector3(0, float(n.get_meta("top", 1.0)) + 0.15, 0))
 	return p * (size / Vector2(_vp.size)) if _vp.size.x > 0 else p
 
 # ------------------------------------------------------------------ the UI

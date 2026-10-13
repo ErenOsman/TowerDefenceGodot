@@ -45,7 +45,7 @@ func _build(owned: OwnedTower, type: TowerAsset, index: int) -> void:
 	if type != null:
 		var cost := Label.new()
 		cost.text = str(type.cost)
-		TdTheme.apply_type(cost, "micro", TdTheme.color("gold.ink"), 18)
+		TdTheme.apply_type(cost, "micro", TdTheme.color("gold"), 20)
 		cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		cost.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		var badge := PanelContainer.new()

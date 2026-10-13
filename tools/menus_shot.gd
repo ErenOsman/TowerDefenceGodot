@@ -52,8 +52,17 @@ func _run() -> void:
 		var c = menu.open_popup("credits")
 		await _frames(25)
 		await _shot("credits")
-		c.close()
-		await _frames(15)
+		# Esc closes the top popup (Back semantics), and only that one
+		var s2 = menu.open_popup("settings")
+		await _frames(10)
+		var esc := InputEventKey.new()
+		esc.keycode = KEY_ESCAPE; esc.pressed = true
+		Input.parse_input_event(esc)
+		await _frames(20)
+		print("esc: settings open=", is_instance_valid(s2) and s2.is_open, " credits open=", is_instance_valid(c) and c.is_open)
+		Input.parse_input_event(esc)
+		await _frames(20)
+		print("esc again: credits open=", is_instance_valid(c) and c.is_open, " keys blocked=", root.get_node("KeyBinds").block_keys)
 	if _want("settings"):
 		var s = menu.open_popup("settings")
 		await _frames(25)
