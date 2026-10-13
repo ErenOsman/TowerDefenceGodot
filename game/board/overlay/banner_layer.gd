@@ -93,3 +93,10 @@ func _start(message: String, seconds: float, stick: bool, kind) -> void:
 	_sticky = stick
 	_kind = kind
 	_showing = true
+
+## Hides everything, sticky banners too (the end window is opening).
+func clear_all() -> void:
+	_queue.clear()
+	_sticky = false
+	_showing = false
+	_label.visible = false

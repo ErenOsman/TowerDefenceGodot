@@ -94,7 +94,7 @@ func refresh() -> void:
 		if _caster != null:
 			var combo: String = keys.combo("Aim", HudText.ability_key(i)) if keys != null and i < 9 else ""
 			note = TooltipText.note(HudText.key_note(combo, keys.click_text("QuickCast") if keys != null else "Shift-click"))
-		var content := TooltipText.ability(a.display_name, a.description, " · ".join(a.tags),
+		var content := TooltipText.ability(a.display_name, HudText.fill_stats(a.description, HudText.stat_values(self_entity, c.session.state.vocab)), " · ".join(a.tags),
 			AbilityText.tags(a, self_entity, c.session.state.vocab) if self_entity != null else [],
 			a.cooldown, a.cooldown_until_reset, Entity.HeldCooldown if held else left, [note], a.start_cooldown)
 		var trig := TdTooltipTrigger.find_on(b)
@@ -175,3 +175,10 @@ func _process(_delta: float) -> void:
 ## The button for ability i (tools and tests), or null.
 func button(i: int) -> TdButton:
 	return _buttons[i] if i < _buttons.size() else null
+
+## The button of the first movement ability ("move") or the first other one ("attack"), or null.
+func button_for(kind: String) -> TdButton:
+	for i in mini(_abilities.size(), _buttons.size()):
+		var walk: bool = _abilities[i].targeting.is_movement
+		if walk == (kind == "move"): return _buttons[i]
+	return null

@@ -11,7 +11,8 @@ extends Camera3D
 ## Pixels from the screen edge that scroll the camera (0 = off, the default).
 @export var edge_size: float = 0.0
 @export var zoom_step: float = 0.12
-## Pitch above the ground, in degrees.
+## Pitch above the ground, in degrees: the low, miniature-like angle of the Unity Welcome diorama (user, 2026-10-13;
+## Unity's gameplay camera used 50).
 @export var pitch: float = 50.0
 @export var smoothing: float = 10.0
 @export var glide_speed: float = 3.0
@@ -147,8 +148,16 @@ func free_centre() -> Vector2:
 	var size := _view_size()
 	return Vector2(f.get_center().x * size.x, f.get_center().y * size.y)
 
+## Keeps the focus where the board is never cropped at the default framing: at (or beyond) the fit distance the
+## focus stays on the board's centre; zoomed in, it may move away from the centre in proportion to the zoom, up to
+## the board's edges at the closest zoom. Selection, aiming and follow-the-action glides go through it too, so
+## they pan only as far as the zoom allows (UI/UX review: the board is never cropped by a glide).
 func clamp_focus(p: Vector3) -> Vector3:
-	return Vector3(clampf(p.x, bounds.position.x, bounds.end.x), 0.0, clampf(p.z, -bounds.end.y, -bounds.position.y))
+	var centre := Vector3(bounds.get_center().x, 0.0, -bounds.get_center().y)
+	var fit := max_distance / 1.6
+	var t := clampf((fit - distance_target) / maxf(0.01, fit - min_distance), 0.0, 1.0)
+	var half := Vector3(bounds.size.x * 0.5, 0.0, bounds.size.y * 0.5) * t
+	return Vector3(clampf(p.x, centre.x - half.x, centre.x + half.x), 0.0, clampf(p.z, centre.z - half.z, centre.z + half.z))
 
 # ------------------------------------------------------------------ frame
 
@@ -229,6 +238,7 @@ func step(dt: float) -> void:
 		if keys.pressed("RotateLeft"): yaw_target -= 90.0
 		if keys.pressed("RotateRight"): yaw_target += 90.0
 
+	focus_target = clamp_focus(focus_target) # zooming out pulls the focus back so the board stays whole
 	var k := 1.0 - exp(-smoothing * dt)
 	focus = focus.lerp(focus_target, 1.0 - exp(-glide_speed * dt) if gliding else k)
 	if gliding and focus.distance_squared_to(focus_target) < 0.0004: gliding = false

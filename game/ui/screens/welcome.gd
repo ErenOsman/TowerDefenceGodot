@@ -28,12 +28,13 @@ func _ready() -> void:
 	name_edit.grab_focus()
 
 func _build() -> void:
-	var title := TdMenu.label(TdMenu.GAME_TITLE, "display", TdTheme.color("cream.100"), 84)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.set_anchors_preset(PRESET_CENTER_TOP)
-	title.offset_left = -500; title.offset_right = 500; title.offset_top = 64; title.offset_bottom = 180
-	_shadow(title)
-	add_child(title)
+	var top := CenterContainer.new()
+	top.set_anchors_and_offsets_preset(PRESET_TOP_WIDE)
+	top.offset_top = 40
+	top.offset_bottom = 190
+	top.mouse_filter = MOUSE_FILTER_IGNORE
+	add_child(top)
+	top.add_child(TdMenu.logo_slot(80, Vector2(760, 140)))
 
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(PRESET_FULL_RECT)

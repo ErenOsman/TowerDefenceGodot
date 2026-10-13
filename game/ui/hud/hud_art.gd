@@ -135,3 +135,32 @@ static func rich(role: String, col := Color(0, 0, 0, 0), size := 0) -> RichTextL
 	TdTheme.apply_type(r, role, col, size)
 	r.add_theme_font_override("bold_font", TdTheme.font("nunito_extrabold"))
 	return r
+
+## The icon a stat or result tag shows (kit sprite name), "" when none.
+static func tag_icon(name: String) -> String:
+	match name:
+		"MaxHp", "HP", "Heal": return "icon_heart"
+		"Power", "Damage": return "icon_power"
+		"Range", "Area", "Radius": return "icon_range"
+		"Speed": return "icon_speed"
+		"Move": return "icon_walk"
+		"Duration", "Potency": return "icon_clock"
+		"Hits": return "icon_shoot"
+		"Jumps": return "icon_volley"
+	return ""
+
+## Tags as one BBCode line, each "icon [b]value[/b] name" ([[stat_or_tag, value, label], …] or [[value, name], …]),
+## icons in ink.2 for paper.
+static func tag_line(tags: Array, size := 20, tint := "") -> String:
+	var parts: PackedStringArray = []
+	var col := tint if tint != "" else TdTheme.rich("ink.2")
+	for t in tags:
+		var key: String = str(t[0]) if t.size() >= 3 else str(t[1])
+		var value: String = str(t[1]) if t.size() >= 3 else str(t[0])
+		var label: String = str(t[2]) if t.size() >= 3 else str(t[1])
+		var icon_name := tag_icon(key)
+		var img := ""
+		if icon_name != "" and TdTheme.has_sprite(icon_name):
+			img = "[img=%dx%d color=%s]%s[/img] " % [size, size, col, TdTokens.SPRITES[icon_name][0]]
+		parts.append("%s[b]%s[/b]\u00a0%s" % [img.replace("[/img] ", "[/img]\u00a0"), value, label.replace(" ", "\u00a0")])
+	return "   ".join(parts)

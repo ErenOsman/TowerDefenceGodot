@@ -9,7 +9,7 @@ signal chapter_opened(chapter: int)
 var cards: Array = []   # TdButton per chapter card
 var _main_row: HBoxContainer
 var _side_row: HBoxContainer
-var _side_label: Label
+var _side_label: Control
 
 func _build() -> void:
 	var center := CenterContainer.new()
@@ -33,10 +33,10 @@ func _build() -> void:
 	var x := TdMenu.close_button()
 	x.clicked.connect(close)
 	head.add_child(x)
-	col.add_child(TdMenu.label("Story", "h2", TdTheme.color("gold"), 30))
+	col.add_child(TdMenu.section_heading("Story", 30))
 	_main_row = TdMenu.hbox(24)
 	col.add_child(_main_row)
-	_side_label = TdMenu.label("Side chapters", "h2", TdTheme.color("gold"), 30)
+	_side_label = TdMenu.section_heading("Side chapters", 30)
 	col.add_child(_side_label)
 	_side_row = TdMenu.hbox(24)
 	col.add_child(_side_row)

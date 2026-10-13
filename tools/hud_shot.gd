@@ -185,6 +185,11 @@ func _tutorial() -> void:
 	await _settle()
 	await _frames(60)
 	await _shot("t4_enemy_line")
+	var archer: Entity = level.session.placed_tower(hand[0].id)
+	if archer != null:
+		level.select(archer.id)
+		await _frames(30)
+		await _shot("t5_ability_line")
 	quit(0)
 
 func _frames(n: int) -> void:

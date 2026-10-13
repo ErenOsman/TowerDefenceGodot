@@ -88,3 +88,25 @@ func test_sequence_hints() -> void:
 	assert_eq(HudText.how_it_goes_on(SequenceContinue.Click, 0, ""), "Click to go on")
 	assert_eq(HudText.how_it_goes_on(SequenceContinue.Seconds, 0, "Space"), "")
 	assert_eq(HudText.how_it_goes_on(SequenceContinue.Event, SequenceEvent.RoundEnded, "Space"), "Click to hide. Goes on when you end the round")
+
+func test_fill_stats_in_descriptions() -> void:
+	var v := {"Speed": 2.0, "Range": 3.0}
+	assert_eq(HudText.fill_stats("Walks along its path, up to Speed tiles.", v), "Walks along its path, up to [b]2[/b] tiles.")
+	assert_eq(HudText.fill_stats("Speed is how far it walks.", v), "Speed is how far it walks.")
+	assert_eq(HudText.fill_stats("Hits anything within Range.", v), "Hits anything within [b]3[/b].")
+	assert_eq(HudText.fill_stats("Moves up to Speed tiles.", {}), "Moves up to Speed tiles.")
+
+func test_hint_wording() -> void:
+	assert_eq(Hud.hint_text("Click a green tile. Right-click cancels.", true, ""), "Click a marked enemy. Right-click cancels.")
+	assert_eq(Hud.hint_text("Click a green tile. Right-click cancels.", false, ""), "Click a green tile. Right-click cancels.")
+	assert_eq(Hud.hint_text("No damage this turn", false, "No damage this turn"), "")
+	assert_eq(Hud.hint_text("Click a free tile off the path. Right-click cancels.", false, ""), "Click a free tile off the path. Right-click cancels.")
+
+func test_grouped_entries() -> void:
+	assert_eq(HudTopBar.grouped(["Archer · Shoot", "Archer · Shoot", "Mage · Fireball"]), "Archer · Shoot (2), Mage · Fireball")
+	assert_eq(HudTopBar.grouped([]), "")
+
+func test_piece_key() -> void:
+	assert_eq(HudText.piece_key("4", "Ctrl"), "4")
+	assert_eq(HudText.piece_key("4", ""), "4")
+	assert_eq(HudText.piece_key("", "Ctrl"), "")

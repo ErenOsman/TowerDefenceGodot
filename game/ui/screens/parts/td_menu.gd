@@ -210,3 +210,83 @@ static func tabs(parent: Container, names: Array, icons: Array, size: Vector2, o
 		parent.add_child(b)
 		out.append(b)
 	return out
+
+## A section heading: cream h3 text and a thin divider filling the rest of the row (gold is kept for values).
+static func section_heading(text: String, size := 28) -> HBoxContainer:
+	var h := hbox(14)
+	var l := label(text, "h3", TdTheme.color("cream.100"), size)
+	h.add_child(l)
+	var sep := HSeparator.new()
+	sep.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sep.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var ls := StyleBoxLine.new()
+	ls.color = Color(TdTheme.color("cream.300"), 0.35)
+	ls.thickness = 2
+	sep.add_theme_stylebox_override("separator", ls)
+	h.add_child(sep)
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return h
+
+## The logo slot (the game's name is not decided): a marked container named "LogoSlot" holding the placeholder
+## title; swap its child for the logo later. Thin cream outline, rounded, no fill.
+static func logo_slot(font_size := 76, slot_size := Vector2.ZERO) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.name = "LogoSlot"
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0, 0, 0, 0)
+	sb.border_color = Color(TdTheme.color("cream.300"), 0.45)
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(16)
+	sb.content_margin_left = 28; sb.content_margin_right = 28
+	sb.content_margin_top = 6; sb.content_margin_bottom = 10
+	p.add_theme_stylebox_override("panel", sb)
+	p.custom_minimum_size = slot_size
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.tooltip_text = "Logo slot (placeholder title)"
+	var t := label(GAME_TITLE, "display", TdTheme.color("cream.100"), font_size)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	t.add_theme_color_override("font_shadow_color", TdTheme.color("rim"))
+	t.add_theme_constant_override("shadow_offset_y", 4)
+	p.add_child(t)
+	return p
+
+## A rounded pill (result tags, "2 new"): rich text on a flat fill.
+static func pill(bbcode: String, bg: Color, fg: Color, size := 20, border := Color(0, 0, 0, 0)) -> PanelContainer:
+	var p := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = bg
+	sb.set_corner_radius_all(14)
+	if border.a > 0.0:
+		sb.border_color = border
+		sb.set_border_width_all(2)
+	sb.content_margin_left = 10; sb.content_margin_right = 12
+	sb.content_margin_top = 1; sb.content_margin_bottom = 2
+	p.add_theme_stylebox_override("panel", sb)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var r := rich(bbcode, "body", fg, size)
+	r.autowrap_mode = TextServer.AUTOWRAP_OFF
+	r.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	p.add_child(r)
+	return p
+
+static var _warn: Texture2D = null
+
+## A small warning triangle (bad.ink with a cream "!"), 20 px; the fonts have no ⚠.
+static func warn_icon() -> Texture2D:
+	if _warn != null: return _warn
+	var n := 40
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	var red := TdTheme.color("bad.ink")
+	var cream := TdTheme.color("cream.100")
+	for y in n:
+		for x in n:
+			var t := float(y - 3) / float(n - 7)  # 0 at the apex, 1 at the base
+			var half := t * (n - 4) / 2.0
+			if t >= 0.0 and t <= 1.0 and absf(x - n / 2.0 + 0.5) <= half: img.set_pixel(x, y, red)
+	for y in range(13, 27):
+		for x in range(18, 22): img.set_pixel(x, y, cream)
+	for y in range(29, 33):
+		for x in range(18, 22): img.set_pixel(x, y, cream)
+	_warn = ImageTexture.create_from_image(img)
+	return _warn

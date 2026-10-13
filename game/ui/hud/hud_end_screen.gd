@@ -40,8 +40,10 @@ func show_outcome(outcome: int) -> void:
 	title_label.text = "Victory" if won else "Defeat"
 	title_label.add_theme_color_override("font_color", TdTheme.color("gold") if won else TdTheme.color("bad"))
 	var cleared := 0
-	for w in s.waves:
-		if w.finished: cleared += 1
+	if "waves_finished" in c: cleared = c.waves_finished
+	else:
+		for w in s.waves:
+			if w.finished: cleared += 1
 	var hp := 0
 	var max_hp := 0
 	for id in s.bases:
@@ -58,4 +60,6 @@ func show_outcome(outcome: int) -> void:
 	leave_button.text = c.leave_label
 	leave_button.fit_to_content(210)
 	next_button.visible = won and c.next_level_asset != null
+	# one primary: Next level when there is one, else Retry; the leave button is wood
+	retry_button.style = TdButton.Style.SECONDARY if next_button.visible else TdButton.Style.PRIMARY
 	open()

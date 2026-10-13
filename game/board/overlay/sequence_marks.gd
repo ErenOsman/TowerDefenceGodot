@@ -32,7 +32,7 @@ uniform vec2 view_size = vec2(1920.0, 1080.0);
 void fragment() {
 	vec2 p = UV * view_size;
 	float d = length((p - hole) * vec2(1.0, 1.6));
-	float k = smoothstep(radius, radius * 1.8, d);
+	float k = smoothstep(radius * 0.8, radius * 2.2, d); // a soft edge round the target
 	COLOR = vec4(COLOR.rgb, COLOR.a * k);
 }"""
 	mat.shader = sh
@@ -86,5 +86,6 @@ func _draw_ring() -> void:
 	for i in 49:
 		var a := i * TAU / 48.0
 		pts.append(c + Vector2(cos(a) * c.x, sin(a) * c.y))
-	_ring.draw_polyline(pts, Color(1.0, 0.92, 0.6, 0.35 * _fade), 10.0, true)
-	_ring.draw_polyline(pts, Color(1.0, 0.95, 0.75, 0.9 * _fade), 3.0, true)
+	# a soft light ring: a wide faint glow fading in to a thin warm line
+	for k in [[22.0, 0.07], [15.0, 0.12], [9.0, 0.2], [4.0, 0.35], [2.0, 0.55]]:
+		_ring.draw_polyline(pts, Color(1.0, 0.94, 0.72, k[1] * _fade), k[0], true)

@@ -84,3 +84,10 @@ func test_portrait_cover_uv() -> void:
 	var tall := HudPortrait.cover_uv(Vector2(100, 200), -1.0)
 	assert_num(tall.position.y, 0.0)
 	assert_num(tall.size.y, 0.5)
+
+func test_hint_never_crosses_the_tray() -> void:
+	var tray_end := HudLayout.tray_rect(SCREEN, 4).end.x
+	# a centred hint that would reach over the tray moves right of it, left-aligned with a bar in the row
+	assert_num(HudLayout.hint_left(560.0, 500.0, SCREEN, 4, true, 640.0), 640.0)
+	assert_num(HudLayout.hint_left(560.0, 500.0, SCREEN, 4, false, 0.0), tray_end + 24.0)
+	assert_num(HudLayout.hint_left(700.0, 300.0, SCREEN, 4, true, 650.0), 700.0)

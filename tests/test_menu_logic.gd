@@ -216,3 +216,12 @@ func test_codex_entries_skip_hidden_statuses() -> void:
 	assert_eq(e.size(), 1)
 	assert_eq(e[0].name, "Burn")
 	assert_eq(MenuLogic.codex_entries(codex, CodexSection.Tips)[0].name, "Rounds")
+
+func test_stat_words_become_numbers() -> void:
+	var v := {"Speed": "2", "Power": "10"}
+	assert_eq(MenuLogic.fill_stat_words("Moves the tower up to Speed tiles.", v), "Moves the tower up to 2 tiles.")
+	assert_eq(MenuLogic.fill_stat_words("Bashes an enemy for Power.", v), "Bashes an enemy for 10.")
+	assert_eq(MenuLogic.fill_stat_words("Gains Speed when hit.", v), "Gains Speed when hit.", "a stat named as a stat stays")
+	assert_eq(MenuLogic.result_name("Move"), "Range")
+	assert_eq(MenuLogic.stacking_shown(Stacking.Stack, 9999), "adds a stack and starts its time over")
+	assert_eq(MenuLogic.stacking_shown(Stacking.Stack, 3), "adds a stack (up to 3) and starts its time over")

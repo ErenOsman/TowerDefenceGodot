@@ -311,7 +311,7 @@ func _show_list(e: Entity, f: EntityFrame, self_entity, abilities: Array, passiv
 		var state := HudText.row_state(0 if held else left, held)
 		var ready := state == "Ready"
 		var row := _row(HudArt.ability_chip(c.converter, a), a.display_name, state, TdTheme.color("good") if ready else TdTheme.color("cream.200"))
-		var content := TooltipText.ability(a.display_name, a.description, " · ".join(a.tags),
+		var content := TooltipText.ability(a.display_name, HudText.fill_stats(a.description, HudText.stat_values(self_entity, c.session.state.vocab)), " · ".join(a.tags),
 			AbilityText.tags(a, self_entity, c.session.state.vocab) if self_entity != null else [], a.cooldown, a.cooldown_until_reset,
 			left, [], a.start_cooldown)
 		TdTooltipTrigger.attach(row).set_tooltip(content)

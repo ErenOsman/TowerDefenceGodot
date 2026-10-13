@@ -17,17 +17,23 @@ var _health: Label
 var _desc: RichTextLabel
 var _stats: GridContainer
 var _right: VBoxContainer
+var _values := {}
 
 func _ready() -> void:
 	make("", 960, true)
-	var head := HudArt.hbox(18)
-	body.add_child(head)
-	body.move_child(head, 0)
+	# the name row is the window's title row, level with the ×
+	var head: HBoxContainer = title_label.get_parent()
+	head.add_theme_constant_override("separation", 18)
+	title_label.visible = false
 	_portrait = HudArt.medallion(96, "medallion_ring", 6)
 	head.add_child(_portrait)
+	head.move_child(_portrait, 0)
 	var names := HudArt.vbox(2)
 	names.alignment = BoxContainer.ALIGNMENT_CENTER
+	names.size_flags_horizontal = SIZE_EXPAND_FILL
 	head.add_child(names)
+	head.move_child(names, 1)
+	if close_button != null: close_button.size_flags_vertical = SIZE_SHRINK_BEGIN
 	_name = HudArt.label("", "h2")
 	names.add_child(_name)
 	_sub = HudArt.label("", "body", TdTheme.color("cream.300"), 20)
@@ -70,14 +76,14 @@ func show_entity(id: int) -> void:
 	var enemy := session.state.effective_team(e) == Teams.Enemy
 	var tower_id = session.tower_id_of(e)
 	var tdef: TowerDef = session.tower(tower_id) if tower_id != null else null
-	panel.add_theme_stylebox_override("panel", TdTheme.stylebox("panel_wood_enemy" if enemy else "window_frame", Color.WHITE, [32, 32, 32, 32]))
 	HudArt.set_medallion(_portrait, HudArt.portrait(c.converter, e.def), "portrait_ring_enemy" if enemy else "medallion_ring")
 	_name.text = f.name
 	_name.add_theme_color_override("font_color", TdTheme.color("bad") if enemy else TdTheme.color("accent.light"))
 	_sub.text = "Tower · on the board" if tower_id != null else ("Enemy" if enemy else ("Yours" if session.is_commanded(e) else "Neutral"))
 	_health.text = "Health  %d / %d" % [f.hp, f.max_hp] + ("   +%d shield" % f.shield if f.shield > 0 else "") if f.has_hp else ""
 	var desc: String = tdef.type.description if tdef != null and tdef.type != null and tdef.type.description != "" else e.def.description
-	_desc.text = TooltipText.from_rich(desc)
+	_values = HudText.stat_values(e, session.state.vocab)
+	_desc.text = TooltipText.describe(HudText.fill_stats(TooltipText.from_rich(desc), _values))
 	for ch in _stats.get_children():
 		_stats.remove_child(ch)
 		ch.queue_free()
@@ -91,7 +97,7 @@ func show_entity(id: int) -> void:
 		_right.add_child(_ability_row(a, e, left))
 	for p in f.passives:
 		_right.add_child(_row(HudArt.passive_icon(c.converter, p.def), p.name, "Passive",
-			TooltipText.describe(p.def.description if p.def != null else ""), "", "Always on" if p.active else "Off", p.active))
+			TooltipText.describe(HudText.fill_stats(p.def.description if p.def != null else "", _values)), [], "Always on" if p.active else "Off", "", p.active))
 	# The "Next turn" forecast line is kept out of the Info window too (UI/UX agent, 2026-10-13, pending the user's answer).
 	_right.add_child(HudArt.label("Statuses", "header", TdTheme.color("cream.100")))
 	var any := false
@@ -107,32 +113,37 @@ func _ability_row(a: AbilityDef, e: Entity, left: int) -> Control:
 	var c := controller
 	var held := left == Entity.HeldCooldown
 	var state := TooltipText.ready_in(left, held)
-	var tags := TooltipText.tag_line(AbilityText.tags(a, e, c.session.state.vocab))
+	var tags: Array = AbilityText.tags(a, e, c.session.state.vocab)
 	var sub := " · ".join(a.tags)
 	var words := TooltipText.cooldown_words(a.cooldown, a.cooldown_until_reset)
-	var row := _row(HudArt.ability_chip(c.converter, a), a.display_name, sub, TooltipText.describe(a.description), tags,
-		state + "\n" + words, left == 0)
-	var tip := TooltipText.ability(a.display_name, a.description, sub, AbilityText.tags(a, e, c.session.state.vocab),
+	var desc := TooltipText.describe(HudText.fill_stats(a.description, _values))
+	var row := _row(HudArt.ability_chip(c.converter, a), a.display_name, sub, desc, tags, state, words, left == 0)
+	var tip := TooltipText.ability(a.display_name, HudText.fill_stats(a.description, _values), sub, tags,
 		a.cooldown, a.cooldown_until_reset, left, [], a.start_cooldown)
 	TdTooltipTrigger.attach(row).set_tooltip(tip)
 	row.mouse_entered.connect(func(): c.preview_ability(e, a))
 	row.mouse_exited.connect(func(): c.preview_ability(null, null))
 	return row
 
-## A Codex-style row: icon (64) with the state under it in a 110 px column; name + type line, description, tags.
-func _row(icon: Texture2D, title: String, sub: String, desc: String, tags: String, state: String, good: bool) -> Control:
+## A Codex-style row (ability-rows mockup): the 88 px icon with its state under it ("Ready" green, else cream) and
+## the cooldown words muted, in a 110 px column; name + type line, the full description, the tags as pills.
+func _row(icon: Texture2D, title: String, sub: String, desc: String, tags: Array, state: String, words: String, good: bool) -> Control:
 	var row := HudArt.hbox(16)
 	row.mouse_filter = MOUSE_FILTER_PASS
-	var col := HudArt.vbox(6)
+	var col := HudArt.vbox(4)
 	col.custom_minimum_size = Vector2(110, 0)
 	row.add_child(col)
-	var ic := TdTheme.sprite_rect(icon, Vector2(64, 64))
+	var ic := TdTheme.sprite_rect(icon, Vector2(88, 88))
 	ic.size_flags_horizontal = SIZE_SHRINK_CENTER
 	col.add_child(ic)
-	var st := HudArt.label(state, "small", TdTheme.color("good") if good else TdTheme.color("cream.300"))
+	var st := HudArt.label(state, "small", TdTheme.color("good") if good else TdTheme.color("cream.100"))
 	st.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(st)
-	var text := HudArt.vbox(4)
+	if words != "":
+		var w := HudArt.label(words, "small", TdTheme.color("cream.300"), 18)
+		w.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		col.add_child(w)
+	var text := HudArt.vbox(6)
 	text.custom_minimum_size = Vector2(ROW_W - 126, 0)
 	row.add_child(text)
 	var head := HudArt.rich("body", TdTheme.color("cream.100"))
@@ -141,11 +152,31 @@ func _row(icon: Texture2D, title: String, sub: String, desc: String, tags: Strin
 	var d := HudArt.rich("body", TdTheme.color("cream.200"))
 	d.text = desc
 	text.add_child(d)
-	if tags != "":
-		var t := HudArt.rich("small", TdTheme.color("cream.100"))
-		t.text = tags
-		text.add_child(t)
+	if not tags.is_empty():
+		var flow := HFlowContainer.new()
+		flow.add_theme_constant_override("h_separation", 6)
+		flow.add_theme_constant_override("v_separation", 6)
+		flow.mouse_filter = MOUSE_FILTER_IGNORE
+		text.add_child(flow)
+		for t in tags: flow.add_child(_pill(str(t[0]), str(t[1])))
 	return row
+
+## One result tag pill: icon + bold number + name.
+func _pill(value: String, label: String) -> Control:
+	var p := HudArt.panel("badge_key_dark", [10, 3, 12, 3])
+	p.mouse_filter = MOUSE_FILTER_IGNORE
+	var h := HudArt.hbox(6)
+	p.add_child(h)
+	var icon_name := HudArt.tag_icon(label)
+	if icon_name != "":
+		var ic := HudArt.sprite(icon_name, Vector2(18, 18), TdTheme.color("cream.300"))
+		ic.size_flags_vertical = SIZE_SHRINK_CENTER
+		h.add_child(ic)
+	h.add_child(HudArt.label(value, "micro", TdTheme.color("cream.100"), 20))
+	var n := HudArt.label(label, "small", TdTheme.color("cream.200"), 18)
+	n.size_flags_vertical = SIZE_SHRINK_CENTER
+	h.add_child(n)
+	return p
 
 func _status_row(st: StatusView) -> Control:
 	var chip := TdIconChip.new()

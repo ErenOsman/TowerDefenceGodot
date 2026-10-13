@@ -81,3 +81,10 @@ func _new_label() -> Label:
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(l)
 	return l
+
+## Ends every floater at once.
+func clear_all() -> void:
+	for f in _live:
+		f.label.visible = false
+		_pool.append(f.label)
+	_live.clear()

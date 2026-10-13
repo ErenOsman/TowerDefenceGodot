@@ -10,13 +10,13 @@ extends Control
 const SCREENS := "res://game/ui/screens/"
 ## [id, label, icon, prop, tile position (x, depth), prop scale, locked]
 const STATIONS := [
-	["Chapters", "Chapters", "icon_castle", "War Table", Vector2(2.2, 2.0), 1.7, false],
-	["Towers", "Towers", "icon_cards", "Miniature Shelf", Vector2(0.9, 3.4), 1.5, false],
-	["Codex", "Codex", "icon_codex", "Codex Lectern", Vector2(3.9, 3.5), 1.7, false],
-	["Workshop", "Workshop", "icon_edit", "Tower Workshop", Vector2(6.0, 3.1), 1.6, true],
-	["Multiplayer", "Multiplayer", "icon_onboard", "Signal Post", Vector2(6.6, 1.1), 1.4, true],
+	["Towers", "Towers", "icon_cards", "Miniature Shelf", Vector2(0.7, 3.5), 1.5, false],
+	["Chapters", "Chapters", "icon_castle", "War Table", Vector2(2.3, 3.2), 1.6, false],
+	["Codex", "Codex", "icon_codex", "Codex Lectern", Vector2(3.8, 3.5), 1.7, false],
+	["Workshop", "Workshop", "icon_edit", "Tower Workshop", Vector2(5.3, 3.3), 1.5, true],
+	["Multiplayer", "Multiplayer", "icon_onboard", "Signal Post", Vector2(6.7, 3.4), 1.3, true],
 ]
-const DECOR := [["Campfire", Vector2(4.1, 1.5), 1.6, 0.0], ["Tent", Vector2(0.4, 1.0), 1.6, 35.0], ["Supplies", Vector2(5.3, 0.3), 1.5, -20.0]]
+const DECOR := [["Campfire", Vector2(3.6, 1.2), 1.6, 0.0], ["Tent", Vector2(0.6, 1.0), 1.6, 35.0], ["Supplies", Vector2(6.2, 0.8), 1.5, -20.0]]
 const TOUR := [
 	["Chapters", "Chapters: pick a chapter, then a level. Side chapters appear here as you open them."],
 	["Towers", "Towers: every tower you own. Choose which ones you bring in your hand."],
@@ -120,12 +120,13 @@ func _build_ui() -> void:
 	for s in STATIONS:
 		var b := TdMenuButton.new()
 		b.style = TdButton.Style.MENU_PRIMARY if s[0] == "Chapters" else TdButton.Style.MENU_WOOD
-		b.custom_minimum_size = Vector2(290, 72 if s[6] else 64)
+		b.custom_minimum_size = Vector2(236, 72 if s[6] else 60)
 		b.size = b.custom_minimum_size
 		b.text = s[1]
 		b.icon = TdTheme.texture(s[2])
 		b.selectable = true
-		b.left_pad = 24
+		b.left_pad = 20
+		b.font_size = 26
 		add_child(b)
 		buttons[s[0]] = b
 		if s[6]:
@@ -154,17 +155,38 @@ func _build_ui() -> void:
 	add_child(bubble)
 	bubble.letters_per_second = 60.0
 	bubble.hide_bubble()
+	# the speaker's plate in teal (cobalt means "active" in style B)
+	var plate := StyleBoxFlat.new()
+	plate.bg_color = TdTheme.color("teal")
+	plate.set_corner_radius_all(10)
+	bubble._plate.add_theme_stylebox_override("panel", plate)
+	bubble._name.add_theme_color_override("font_color", TdTheme.color("ink"))
 	bubble.clicked.connect(func(): show_tour_step(tour_step + 1))
 	bubble.skip_clicked.connect(end_tour)
 	_build_welcome()
 	resized.connect(_place_buttons)
 	_place_buttons.call_deferred()
 
+## Each station's button sits just above its prop (re-placed every frame: the 3D view's size settles late), with a
+## short stem down to the prop.
 func _place_buttons() -> void:
 	for s in STATIONS:
 		var b: TdButton = buttons[s[0]]
 		var p := _screen_of(props.get(s[0]))
-		b.position = p - Vector2(b.size.x / 2.0, b.size.y)
+		b.position = p - Vector2(b.size.x / 2.0, b.size.y + 18.0)
+		var stem: ColorRect = b.get_meta("stem") if b.has_meta("stem") else null
+		if stem == null:
+			stem = ColorRect.new()
+			stem.color = Color(TdTheme.color("cream.100"), 0.7)
+			stem.mouse_filter = MOUSE_FILTER_IGNORE
+			add_child(stem)
+			move_child(stem, b.get_index())
+			b.set_meta("stem", stem)
+		stem.position = Vector2(p.x - 1.5, p.y - 20.0)
+		stem.size = Vector2(3, 18)
+
+func _process(_delta: float) -> void:
+	_place_buttons()
 
 func _build_welcome() -> void:
 	welcome_card = Control.new()
@@ -233,7 +255,10 @@ func show_tour_step(index: int) -> void:
 		b.selected = true
 		bubble.show_line(TOUR_SPEAKER, TOUR[index][1], true, GameApp.portrait_texture("Princess"))
 		bubble.set_hint("Tour · %d/%d" % [index + 1, TOUR.size()], "Click or [b]%s[/b]" % KeyBinds.first(KeyBinds.Skip))
-		bubble.point_at(b.get_global_rect().get_center() + Vector2(0, b.size.y * 0.5))
+		# below the station row (the stations line the back of the camp), so the bubble never covers another station
+		# the bubble's area starts under the station row, so it opens below the station and covers no other one
+		bubble.offset_top = b.get_global_rect().end.y - 30.0
+		bubble.point_at(Vector2(b.get_global_rect().get_center().x, b.get_global_rect().end.y - 4.0))
 		return
 	end_tour()
 

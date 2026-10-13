@@ -65,20 +65,31 @@ func _placed_frame(f: ViewFrame, tower_id: String) -> EntityFrame:
 			if x.tower_id == tower_id: fr = x
 	return fr if fr != null and fr.life == LifeState.Alive and fr.position != null else null
 
+## The piece's tooltip (ability-rows style): "Tower · key Ctrl+1" (the same key text as the tray badge), the
+## description, one tag line of stats (icon + bold number + name), footer = cost (red when short) or the refund.
 func _tooltip(t: TowerDef, i: int, frame: EntityFrame, affordable: bool, keys) -> Dictionary:
 	var c := controller
 	var vocab = c.session.state.vocab
-	var rows := []
+	var tags := []
 	if t.entity != null:
 		var stats := DefStats.new(t.entity)
-		rows.append(["HP", "%d/%d" % [frame.hp, frame.max_hp] if frame != null else HudText.num(stats.stat("MaxHp"))])
+		tags.append(["MaxHp", "%d/%d" % [frame.hp, frame.max_hp] if frame != null else HudText.num(stats.stat("MaxHp")), "HP"])
 		for st in HudText.SHOWN_STATS:
 			var v = AbilityText.speed(stats, vocab) if st == "Speed" else AbilityText.own_stat(stats, st, vocab)
-			if v != null: rows.append([st, HudText.num(v)])
-	var key: String = keys.combo("Hand", HudText.ability_key(i)) if keys != null and i < 9 else ""
+			if v != null: tags.append([st, HudText.num(v), st])
+	var key: String = HudText.piece_key(keys.first(HudText.ability_key(i)), keys.modifier_name(keys.get_modifier("Hand"))) if keys != null and i < 9 else ""
 	var desc: String = t.type.description if t.type != null else ""
-	var sell := c.session.sell_value(t.id) if frame != null else 0
-	return TooltipText.tower(t.name, desc, key, rows, frame != null, affordable, t.cost, sell)
+	var sub := "Tower · key " + key if key != "" else "Tower"
+	if frame != null: sub = "Tower · on the board"
+	var body := TooltipText.describe(TooltipText.from_rich(desc))
+	var line := HudArt.tag_line(tags)
+	if line != "": body += ("\n" if body != "" else "") + line
+	var header := TooltipText.title(t.name, TooltipText.tower_color(), sub)
+	if frame != null:
+		return TooltipText.content(header, body, "Click to select it", "Sell +%d" % c.session.sell_value(t.id))
+	var cost := "%d energy" % t.cost
+	return TooltipText.content(header, body, "Click, then a lit tile",
+		TooltipText.colored(TooltipText.value_color() if affordable else TooltipText.harmful_color(), cost))
 
 func _on_pressed(p: HudHandPiece) -> void:
 	var c := controller
@@ -102,3 +113,10 @@ func _on_hover(p: HudHandPiece, on: bool) -> void:
 	var frame := _placed_frame(c.shown, p.tower_id)
 	if on and frame != null: c.preview_tower(frame.id)
 	elif not on: c.preview_tower(-1)
+
+## The first piece whose tower is still in the hand (not on the board), or null.
+func first_in_hand() -> HudHandPiece:
+	if controller == null or controller.session == null: return null
+	for p in _pieces:
+		if _placed_frame(controller.shown, p.tower_id) == null: return p
+	return null

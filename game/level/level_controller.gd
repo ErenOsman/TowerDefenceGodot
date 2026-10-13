@@ -201,6 +201,23 @@ var hint: String:
 var hint_is_refusal: bool:
 	get: return _message != null and setup_error == null and not (director != null and director.busy)
 
+## Waves finished as shown now (the shown frame's waves; the level's own count once nothing plays), for the HUD's
+## "Waves cleared: N of M" and the top bar.
+var waves_finished: int:
+	get:
+		var n := 0
+		var f := shown
+		if f != null and not f.waves.is_empty() and director.busy:
+			for w in f.waves: n += 1 if w.finished else 0
+			return n
+		if session == null: return 0
+		for w in session.waves: n += 1 if w.finished else 0
+		return n
+
+## How many waves the level has.
+var waves_total: int:
+	get: return session.waves.size() if session != null else 0
+
 ## The playing level is the tutorial.
 var is_tutorial: bool:
 	get:
@@ -352,12 +369,14 @@ func _add_hud() -> void:
 
 ## The lights and sky of the diorama.
 func _build_world() -> void:
+	# matched to the Unity build (reference/unity-build/hud-idle-lighting): the palette colours shown about as
+	# authored (muted olive grass), soft shadows, a grey-brown backdrop. Neutral light, no tonemap curve.
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.13, 0.11, 0.1)
+	env.background_color = Color8(100, 94, 89)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.85, 0.82, 0.78)
-	env.ambient_light_energy = 0.4
+	env.ambient_light_color = Color(1.0, 1.0, 1.0)
+	env.ambient_light_energy = 0.17
 	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
 	var we := WorldEnvironment.new()
 	we.name = "Environment"
@@ -365,9 +384,11 @@ func _build_world() -> void:
 	add_child(we)
 	var sun := DirectionalLight3D.new()
 	sun.name = "Sun"
-	sun.light_energy = 0.8
-	sun.light_color = Color(1.0, 0.96, 0.9)
+	sun.light_energy = 0.31
+	sun.light_color = Color(1.0, 0.99, 0.97)
 	sun.shadow_enabled = true
+	sun.shadow_opacity = 0.55
+	sun.shadow_blur = 2.0
 	sun.directional_shadow_max_distance = 40.0
 	sun.rotation_degrees = Vector3(-55.0, -35.0, 0.0)
 	add_child(sun)
@@ -409,6 +430,8 @@ func _process(delta: float) -> void:
 	if session.is_over and not director.busy and not _end_shown and not reading:
 		_end_shown = true
 		_cancel_modes()
+		overlay.clear_transients() # the Victory / Defeat banner and the last numbers go before the end window
+		overlay.set_markers(null)
 		version += 1
 		level_ended.emit(session.outcome)
 	# after the camera moved this frame (it processes first): plates, markers and floaters follow it
@@ -913,8 +936,18 @@ func _mark(p: Vector2i, kind: int, yaw: float = 0.0) -> void:
 			if decal == null: decal = fallback
 		Preview.ENEMY_LINE: flat = Color(1, 0.25, 0.2, 0.8); size = 0.25; lift = 0.05
 		_: decal = fallback; tint = Color(1, 0.5, 0.45, _pulse_alpha()); flat = BLOCKED_COLOR; lift = 0.025
+	if kind == Preview.TARGET or kind == Preview.ENEMY_TARGET:
+		# valid targets pulse red (UI rules, board previews): a red wash under the kit's outline decal
+		board.highlight(p, Color(1.0, 0.3, 0.25, 0.32 * tint.a), size, lift - 0.002)
 	if decal != null: board.highlight(p, tint, size, lift, decal, GridSpace.decal_yaw(yaw))
 	elif flat.a > 0.0: board.highlight(p, flat, size, lift)
+
+## The hatched area decal on an attack's area / splash tiles only: not on the aimed tile itself (a valid target
+## keeps its red pulse) and not for a single-tile attack.
+func _mark_area(preview: AimPreview, aimed: Vector2i) -> void:
+	if preview.area.size() <= 1: return
+	for t in preview.area:
+		if t != aimed: _mark(t, Preview.AREA)
 
 ## A valid target's mark: green (heals, buffs) on someone on the caster's side, else the target decal.
 func _target_kind(caster: Entity, tile: Vector2i) -> int:
@@ -1002,7 +1035,7 @@ func _draw_highlights() -> void:
 			var quick: Aim = Instinct.quick_cast(session.state, _preview_caster, _preview_ability)
 			if quick != null:
 				var preview := AimPreview.for_aim(session.state, _preview_caster.id, _preview_ability, quick)
-				for t in preview.area: _mark(t, Preview.AREA)
+				_mark_area(preview, quick.tile)
 				for t in preview.line: _mark(t, Preview.LINE)
 				_attack_lines(_preview_caster.pos, _preview_ability, quick, preview, false)
 				if quick.path != null: _mark_route(_preview_caster.pos, quick.path)
@@ -1036,7 +1069,7 @@ func _draw_highlights() -> void:
 					break
 		if _route == null and shown_aim != null:
 			var preview := AimPreview.for_aim(session.state, caster.id, _aiming, shown_aim)
-			for t in preview.area: _mark(t, Preview.AREA)
+			_mark_area(preview, shown_aim.tile)
 			for t in preview.line: _mark(t, Preview.LINE)
 			_attack_lines(caster.pos, _aiming, shown_aim, preview, false)
 	if _hover != null: _mark(_hover, Preview.HOVER)

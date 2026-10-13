@@ -67,7 +67,7 @@ func _build() -> void:
 	# the detail
 	var detail := TdMenu.panel(TdPanel.Kind.WINDOW, 32)
 	detail.position = Vector2(618, 132)
-	detail.custom_minimum_size = Vector2(1242, 590)
+	detail.custom_minimum_size = Vector2(1242, 580)
 	detail.size = detail.custom_minimum_size
 	add_child(detail)
 	var dcols := TdMenu.hbox(36)
@@ -107,7 +107,7 @@ func _build() -> void:
 	play_row.size_flags_vertical = SIZE_EXPAND_FILL
 	right.add_child(play_row)
 	_play = TdMenuButton.new()
-	_play.style = TdButton.Style.MENU_PRIMARY
+	_play.style = TdButton.Style.PRIMARY # flat: depth is for the main menu and Welcome only
 	_play.custom_minimum_size = Vector2(270, 72)
 	_play.size = Vector2(270, 72)
 	_play.text = "Play"
@@ -119,8 +119,8 @@ func _build() -> void:
 	play_row.add_child(_play)
 	# the hand strip
 	var hand := TdMenu.panel(TdPanel.Kind.WINDOW, 22)
-	hand.position = Vector2(618, 748)
-	hand.custom_minimum_size = Vector2(1242, 200)
+	hand.position = Vector2(618, 736)
+	hand.custom_minimum_size = Vector2(1242, 216)
 	hand.size = hand.custom_minimum_size
 	add_child(hand)
 	var hrow := TdMenu.hbox(24)
@@ -130,7 +130,7 @@ func _build() -> void:
 	hrow.add_child(hcol)
 	var hhead := TdMenu.hbox(12)
 	hcol.add_child(hhead)
-	var ht := TdMenu.label("Your hand", "h2", TdTheme.color("gold"), 30)
+	var ht := TdMenu.section_heading("Your hand", 30)
 	ht.size_flags_horizontal = SIZE_EXPAND_FILL
 	hhead.add_child(ht)
 	_note = TdMenu.label("", "body", TdTheme.color("cream.200"), 22)
@@ -193,8 +193,8 @@ func _draw_list(pop: bool) -> void:
 	_rows.clear()
 	for item in MenuLogic.list_items(_asset, visible_rows):
 		if item.has("heading"):
-			var h := TdMenu.label(item.heading, "h2", TdTheme.color("gold"), 30)
-			_list.add_child(h)
+			if _list.get_child_count() > 0: _list.add_child(TdMenu.spacer(8))
+			_list.add_child(TdMenu.section_heading(item.heading, 30))
 			continue
 		var level := _asset.find_level(item.level_id)
 		var b := TdButton.new()
@@ -206,10 +206,12 @@ func _draw_list(pop: bool) -> void:
 		b.selectable = true
 		b.selected = item.level_id == selected
 		if not item.unlocked:
-			b.set_extra_state("Locked")
-			var lock := TdMenu.picture(TdTheme.texture("icon_lock"), Vector2(22, 22))
-			lock.position = Vector2(440, 14)
-			lock.modulate = TdTheme.color("cream.300")
+			# locked: 60 % with a 24 px lock; the viewed row stays selected (cobalt) even when locked
+			if not b.selected: b.set_extra_state("Locked")
+			b.modulate.a = 1.0 if b.selected else 0.6
+			var lock := TdMenu.picture(TdTheme.texture("icon_lock"), Vector2(24, 24))
+			lock.position = Vector2(438, 13)
+			lock.modulate = TdTheme.color("cream.100")
 			b.add_child(lock)
 		var id: String = item.level_id
 		b.clicked.connect(func(): select(id)) # a locked row shows what opens it

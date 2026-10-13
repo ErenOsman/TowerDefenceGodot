@@ -1,12 +1,16 @@
 class_name TdModelPreview
 extends SubViewportContainer
 ## A unit's model turning slowly in a UI frame (CodexModelPreview.cs): its own small world (a SubViewport with its
-## own World3D, a key and a fill light, a flat ambient), the model playing Idle, spinning spin_speed degrees a
-## second on unscaled time (so it turns over a paused game too); drag left / right to turn it. Models face +Z after
-## import, toward this camera; the preview starts at a three-quarter turn.
+## own World3D, a key and a fill light, a flat ambient), the model playing Idle, swaying around a three-quarter
+## front view on unscaled time (so it moves over a paused game too); drag left / right to turn it.
 ##   var p := TdModelPreview.new(); p.custom_minimum_size = Vector2(275, 300); add_child(p); p.show_model(scene)
 
-@export var spin_speed := 25.0
+## The model faces this camera at yaw 0: 30 degrees shows a 3/4 front view. It sways ±SWAY degrees around its
+## facing (so the front stays in view) instead of spinning all the way round; a drag turns it freely.
+const START_YAW := 30.0
+const SWAY := 40.0
+
+@export var spin_speed := 12.0
 @export var drag_speed := 0.5
 @export var camera_pitch := 18.0
 @export var field_of_view := 30.0
@@ -16,7 +20,8 @@ var _root: Node3D
 var _pivot: Node3D
 var _cam: Camera3D
 var _model: Node3D
-var _yaw := -30.0
+var _yaw := START_YAW
+var _t := 0.0
 var _dragging := false
 var _height := 1.0
 
@@ -80,7 +85,8 @@ func show_model(scene: PackedScene) -> void:
 		aabb = box if first else aabb.merge(box)
 		first = false
 	if not first: _height = clampf(aabb.end.y, 0.5, 4.0)
-	_yaw = -30.0
+	_yaw = START_YAW
+	_t = 0.0
 	_frame()
 
 func clear() -> void:
@@ -100,8 +106,8 @@ func _frame() -> void:
 
 func _process(delta: float) -> void:
 	if _pivot == null or not is_visible_in_tree(): return
-	if not _dragging: _yaw += spin_speed * TdTheme.unscaled(delta)
-	_pivot.rotation_degrees.y = _yaw
+	if not _dragging: _t += TdTheme.unscaled(delta) * spin_speed / 40.0
+	_pivot.rotation_degrees.y = _yaw + SWAY * sin(_t)
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:

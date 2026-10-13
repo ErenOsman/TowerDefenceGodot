@@ -94,3 +94,13 @@ static func inspector_rect(screen: Vector2, height: float) -> Rect2:
 
 static func end_turn_rect(screen: Vector2) -> Rect2:
 	return Rect2(screen.x - MARGIN - END_TURN, screen.y - END_TURN_BOTTOM - END_TURN, END_TURN, END_TURN)
+
+## The hint pill's left edge: never over the tray (from its end + 24); next to a bar in the bottom row, never left
+## of the bar either (left-aligned with it once it would cross the tray); always inside the screen.
+static func hint_left(left: float, width: float, screen: Vector2, pieces: int, bar_in_row: bool, bar_x: float) -> float:
+	var tray := tray_rect(screen, pieces)
+	var x := left
+	if x < tray.end.x + BAR_GAP:
+		x = bar_x if bar_in_row else tray.end.x + BAR_GAP
+		x = maxf(x, tray.end.x + BAR_GAP)
+	return clampf(x, MARGIN, maxf(MARGIN, screen.x - MARGIN - END_TURN - BAR_GAP - width))

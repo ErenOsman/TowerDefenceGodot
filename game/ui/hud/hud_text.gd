@@ -188,3 +188,32 @@ static func waited(e: int) -> String:
 ## The KeyBinds id of the i-th ability key (0-based): "Ability1"…
 static func ability_key(index: int) -> String:
 	return "Ability%d" % (index + 1)
+
+## A description with stat names written where their value belongs filled in for the caster: "up to Speed tiles"
+## → "up to [b]2[/b] tiles" (a stat name mid-sentence after a lowercase word; never at a sentence start).
+## values: stat name -> number.
+static func fill_stats(description: String, values: Dictionary) -> String:
+	if description == "" or values.is_empty(): return description
+	var names: PackedStringArray = []
+	for k in values: names.append(str(k))
+	var re := RegEx.create_from_string("(?<=[a-z,] )(" + "|".join(names) + ")\\b")
+	var out := ""
+	var at := 0
+	for m in re.search_all(description):
+		out += description.substr(at, m.get_start() - at) + "[b]%s[/b]" % num(values[m.get_string(1)])
+		at = m.get_end()
+	return out + description.substr(at)
+
+## The caster's stats for fill_stats (the stats it has: Power, Speed, Range…). self_entity: an Entity or DefStats.
+static func stat_values(self_entity, vocab) -> Dictionary:
+	var out := {}
+	if self_entity == null: return out
+	for stat in SHOWN_STATS:
+		var v = AbilityText.speed(self_entity, vocab) if stat == "Speed" else AbilityText.own_stat(self_entity, stat, vocab)
+		if v != null: out[stat] = v
+	return out
+
+## A hand piece's key as its tooltip names it: just the badge's number ("1"), never "Ctrl+1" or "(hold Ctrl)"
+## (user decision 2026-10-13). The modifier parameter is kept for the call sites.
+static func piece_key(key: String, _modifier: String) -> String:
+	return key

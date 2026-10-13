@@ -12,14 +12,12 @@ extends TdPopup
 const TABS := ["Audio", "Display", "Gameplay", "Controls"]
 const TAB_ICONS := ["icon_sound", "icon_monitor", "icon_sliders", "icon_keyboard"]
 const WIDTH := 900.0
-const HEIGHT := 700.0
 const CONTROL_W := 520.0
 
 var tab_buttons: Array = []
 var pages: Array = []
 var current_tab := 0
 var reset_button: Button
-var back_button: Button
 ## [id, slot, Button] for every key slot on the Controls page.
 var key_slots: Array = []
 ## [id, OptionButton] for every modifier row.
@@ -33,7 +31,7 @@ var _resolution: OptionButton
 var _fullscreen: CheckButton
 var _speed: HSlider
 var _speed_value: Label
-var _conflict_note: Label
+var _key_notes: Array = []   # [action id, note Label under its row], in list order
 
 func _build() -> void:
 	var center := CenterContainer.new()
@@ -41,38 +39,59 @@ func _build() -> void:
 	center.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(center)
 	var p := TdMenu.panel(TdPanel.Kind.WINDOW, 24)
-	p.custom_minimum_size = Vector2(WIDTH, HEIGHT)
+	p.custom_minimum_size = Vector2(WIDTH, 0)
 	center.add_child(p)
 	window = p
 	var col := TdMenu.vbox(16)
 	p.add_child(col)
+	var head := TdMenu.hbox(16)
+	col.add_child(head)
+	var title := TdMenu.label("Settings", "h2", TdTheme.color("cream.100"), 40)
+	title.size_flags_horizontal = SIZE_EXPAND_FILL
+	head.add_child(title)
+	var x := TdMenu.close_button()
+	x.clicked.connect(close)
+	head.add_child(x)
 	var tabs_row := TdMenu.hbox(10)
 	col.add_child(tabs_row)
 	tab_buttons = TdMenu.tabs(tabs_row, TABS, [], Vector2((WIDTH - 48 - 30) / 4.0, 56), show_tab)
 	if OS.has_feature("web"): tab_buttons[1].visible = false
 	var well := TdMenu.panel(TdPanel.Kind.WELL, 18)
-	well.size_flags_vertical = SIZE_EXPAND_FILL
 	col.add_child(well)
-	var stack := Control.new()
-	stack.size_flags_vertical = SIZE_EXPAND_FILL
+	var stack := VBoxContainer.new() # hidden pages take no room: the window hugs the shown page
 	well.add_child(stack)
 	for page in [_audio_page(), _display_page(), _gameplay_page(), _controls_page()]:
-		page.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 		stack.add_child(page)
 		pages.append(page)
 	var bottom := TdMenu.hbox(16)
-	bottom.alignment = BoxContainer.ALIGNMENT_CENTER
+	bottom.alignment = BoxContainer.ALIGNMENT_END
 	col.add_child(bottom)
-	reset_button = TdMenu.wood_button("Reset all", Vector2(240, 56))
-	reset_button.pressed.connect(func():
-		KeyBinds.reset_all()
-		_stop_listening()
-		refresh_controls())
+	reset_button = Button.new()
+	reset_button.theme_type_variation = "DangerButton"
+	reset_button.text = "Reset to defaults"
+	reset_button.custom_minimum_size = Vector2(300, 56)
+	reset_button.focus_mode = FOCUS_NONE
+	reset_button.pressed.connect(_on_reset)
 	bottom.add_child(reset_button)
-	back_button = TdMenu.wood_button("Back", Vector2(360, 56))
-	back_button.pressed.connect(close)
-	bottom.add_child(back_button)
 	show_tab(0)
+
+var _reset_armed := false
+
+## Reset to defaults asks once ("Click again to reset"), then resets every key.
+func _on_reset() -> void:
+	if not _reset_armed:
+		_reset_armed = true
+		reset_button.text = "Click again to reset"
+		get_tree().create_timer(3.0, true, false, true).timeout.connect(func():
+			if is_instance_valid(reset_button):
+				_reset_armed = false
+				reset_button.text = "Reset to defaults")
+		return
+	_reset_armed = false
+	reset_button.text = "Reset to defaults"
+	KeyBinds.reset_all()
+	_stop_listening()
+	refresh_controls()
 
 func _on_open() -> void:
 	refresh_all()
@@ -85,7 +104,7 @@ func show_tab(i: int) -> void:
 	for k in pages.size():
 		pages[k].visible = k == i
 		tab_buttons[k].selected = k == i
-	reset_button.visible = i == 3
+	reset_button.get_parent().visible = i == 3
 	if i == 3: refresh_controls()
 
 ## Reads every control back from the settings.
@@ -154,10 +173,10 @@ func _toggle_row(page: Container, text: String, setting: String, setter: Callabl
 
 func _audio_page() -> Control:
 	var p := _page()
-	_slider_row(p, "Master Volume", "master_volume", func(v): SettingsMgr.set_master_volume(v))
-	_slider_row(p, "Music Volume", "music_volume", func(v): SettingsMgr.set_music_volume(v))
-	_slider_row(p, "SFX Volume", "sfx_volume", func(v): SettingsMgr.set_sfx_volume(v))
-	_slider_row(p, "Other Volume", "other_volume", func(v): SettingsMgr.set_other_volume(v))
+	_slider_row(p, "Master volume", "master_volume", func(v): SettingsMgr.set_master_volume(v))
+	_slider_row(p, "Music volume", "music_volume", func(v): SettingsMgr.set_music_volume(v))
+	_slider_row(p, "Sound effects", "sfx_volume", func(v): SettingsMgr.set_sfx_volume(v))
+	_slider_row(p, "Other volume", "other_volume", func(v): SettingsMgr.set_other_volume(v))
 	return p
 
 func _display_page() -> Control:
@@ -168,7 +187,7 @@ func _display_page() -> Control:
 	_resolution.item_selected.connect(func(i):
 		var r: Vector2i = _resolution.get_item_metadata(i)
 		SettingsMgr.set_resolution(r.x, r.y, SaveData.settings.is_fullscreen))
-	_row(p, "Resolution", _resolution, "The window's size when not fullscreen")
+	_row(p, "Window size", _resolution)
 	_fullscreen = CheckButton.new()
 	_fullscreen.focus_mode = FOCUS_NONE
 	_fullscreen.toggled.connect(func(on):
@@ -208,12 +227,12 @@ func _gameplay_page() -> Control:
 		var speed: float = MenuLogic.GAME_SPEEDS[clampi(int(v), 0, MenuLogic.GAME_SPEEDS.size() - 1)]
 		_speed_value.text = "%.2f" % speed
 		SettingsMgr.set_game_speed(speed))
-	_row(p, "Game Speed", h)
-	_toggle_row(p, "Follow Action", "follow_action", func(v): SettingsMgr.set_follow_action(v))
-	_toggle_row(p, "Camera Follows Selection", "follow_selection", func(v): SettingsMgr.set_follow_selection(v))
-	_toggle_row(p, "Drag with Mouse", "drag_to_pan", func(v): SettingsMgr.set_drag_to_pan(v))
-	_toggle_row(p, "Instant Play", "instant_playback", func(v): SettingsMgr.set_instant_playback(v))
-	_toggle_row(p, "Always Show Health", "always_show_health", func(v): SettingsMgr.set_always_show_health(v))
+	_row(p, "Game speed", h)
+	_toggle_row(p, "Follow action", "follow_action", func(v): SettingsMgr.set_follow_action(v))
+	_toggle_row(p, "Camera follows selection", "follow_selection", func(v): SettingsMgr.set_follow_selection(v))
+	_toggle_row(p, "Drag with the mouse", "drag_to_pan", func(v): SettingsMgr.set_drag_to_pan(v))
+	_toggle_row(p, "Instant playback", "instant_playback", func(v): SettingsMgr.set_instant_playback(v))
+	_toggle_row(p, "Always show health", "always_show_health", func(v): SettingsMgr.set_always_show_health(v))
 	return p
 
 # ------------------------------------------------------------------ controls
@@ -232,7 +251,7 @@ func _controls_page() -> Control:
 	head.add_child(TdMenu.spacer(0, 14))
 	outer.add_child(head)
 	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = SIZE_EXPAND_FILL
+	scroll.custom_minimum_size = Vector2(0, 520)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	outer.add_child(scroll)
 	var list := TdMenu.vbox(6)
@@ -241,10 +260,8 @@ func _controls_page() -> Control:
 	for r in MenuLogic.controls_rows(KeyBinds.actions, KeyBinds.modifier_actions):
 		match r.kind:
 			"header":
-				var hl := TdMenu.label(r.label, "header", TdTheme.color("gold"))
-				hl.custom_minimum_size = Vector2(0, 44)
-				hl.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-				list.add_child(hl)
+				if list.get_child_count() > 0: list.add_child(TdMenu.spacer(6))
+				list.add_child(TdMenu.section_heading(r.label, 26))
 			"modifier":
 				var ob := OptionButton.new()
 				ob.focus_mode = FOCUS_NONE
@@ -262,9 +279,10 @@ func _controls_page() -> Control:
 					var b := _slot_button(r.id, slot)
 					h.add_child(b)
 				list.add_child(_control_row(r.label, h))
-	_conflict_note = TdMenu.wrap_label("", "small", TdTheme.color("bad"))
-	_conflict_note.visible = false
-	outer.add_child(_conflict_note)
+				var note := TdMenu.wrap_label("", "small", TdTheme.color("bad"), 20)
+				note.visible = false
+				list.add_child(note)
+				_key_notes.append([r.id, note])
 	return outer
 
 func _control_row(text: String, control: Control) -> Control:
@@ -325,7 +343,6 @@ func close() -> void:
 
 ## Every slot's key (red when bound twice, "Press a key..." while listening) and every dropdown's combination.
 func refresh_controls() -> void:
-	var clashes := []
 	for k in key_slots:
 		var id: String = k[0]
 		var slot: int = k[1]
@@ -341,12 +358,20 @@ func refresh_controls() -> void:
 			b.add_theme_stylebox_override(st, TdTheme.stylebox(spr, Color.WHITE, [8, 4, 8, 4]))
 		for c in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color"]:
 			b.add_theme_color_override(c, col)
-		if conflict:
-			var kname := KeyBinds.combo_text(combo)
-			if not clashes.has(kname): clashes.append(kname)
+		b.icon = TdMenu.warn_icon() if conflict else null
+		b.expand_icon = false
+		b.add_theme_constant_override("icon_max_width", 20)
 	for m in modifier_rows:
 		m[1].select(Modifiers.ALL.find(KeyBinds.get_modifier(m[0])))
-	if _conflict_note != null:
-		_conflict_note.visible = not clashes.is_empty()
-		_conflict_note.text = "%s %s bound twice: both actions would happen. Click a red key to change it." % [
-			", ".join(PackedStringArray(clashes)), "is" if clashes.size() == 1 else "are"]
+	# the message under the last row holding each key that is bound twice
+	var last := {}   # key name -> note index
+	for i in _key_notes.size():
+		var id: String = _key_notes[i][0]
+		for slot in 2:
+			if KeyBinds.conflicts(id, slot): last[KeyBinds.combo_text(KeyBinds.get_bind(id, slot))] = i
+	for n in _key_notes: n[1].visible = false
+	for k in last:
+		var note: Label = _key_notes[last[k]][1]
+		var line := "%s is bound twice: both actions would happen. Click a red key to change it." % k
+		note.text = line if not note.visible else note.text + "\n" + line
+		note.visible = true

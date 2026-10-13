@@ -15,6 +15,8 @@ signal pressed(piece: HudHandPiece)
 signal hover_changed(piece: HudHandPiece, hovered: bool)
 
 const SLOT := Vector2(124, 160)
+## Every name plate's top (one baseline across the tray).
+const PLATE_Y := 118.0
 ## Mini cooldown pips on placed pieces. Off: the 2026-10-09 build review removed them (the Unity build shows none).
 static var show_pips := false
 ## The arrow over the selected piece. Off: selection is colour only (2026-10-09 review, Unity build).
@@ -30,7 +32,7 @@ var _render: TextureRect
 var _plinth: TextureRect
 var _medal: Control
 var _plate: TdButton
-var _onboard: TextureRect
+var _tag: PanelContainer
 var _cost: Panel
 var _cost_label: Label
 var _key: Label
@@ -56,7 +58,7 @@ func _init() -> void:
 
 func _ready() -> void:
 	_shadow = HudArt.sprite("piece_shadow", Vector2(104, 30))
-	_shadow.position = Vector2((SLOT.x - 104) / 2.0, SLOT.y - 30 - 30)
+	_shadow.position = Vector2((SLOT.x - 104) / 2.0, PLATE_Y - 24)
 	_shadow.pivot_offset = Vector2(52, 15)
 	add_child(_shadow)
 	_glow = HudArt.sprite("piece_glow", Vector2(150, 150), Color(TdTheme.color("gold"), 0.7))
@@ -64,7 +66,7 @@ func _ready() -> void:
 	_glow.visible = false
 	add_child(_glow)
 	_plinth = HudArt.sprite("piece_plinth_empty", Vector2(108, 52))
-	_plinth.position = Vector2((SLOT.x - 108) / 2.0, SLOT.y - 52 - 44)
+	_plinth.position = Vector2((SLOT.x - 108) / 2.0, PLATE_Y - 48)
 	add_child(_plinth)
 	_render = TextureRect.new()
 	_render.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -83,8 +85,18 @@ func _ready() -> void:
 	_plate.size = Vector2(108, 28)
 	add_child(_plate)
 	_plate.mouse_filter = MOUSE_FILTER_IGNORE
-	_onboard = HudArt.sprite("icon_onboard", Vector2(16, 16))
-	_onboard.visible = false
+	# the "✓ on board" tag over a placed piece (wood, not cobalt: cobalt is the selected piece's)
+	_tag = PanelContainer.new()
+	_tag.mouse_filter = MOUSE_FILTER_IGNORE
+	_tag.add_theme_stylebox_override("panel", TdTheme.stylebox("badge_key_dark", Color.WHITE, [8, 1, 10, 1]))
+	var tag_row := HudArt.hbox(4)
+	_tag.add_child(tag_row)
+	var check := HudArt.sprite("icon_check", Vector2(16, 16), TdTheme.color("good"))
+	check.size_flags_vertical = SIZE_SHRINK_CENTER
+	tag_row.add_child(check)
+	tag_row.add_child(HudArt.label("on board", "plate", TdTheme.color("cream.100")))
+	_tag.visible = false
+	add_child(_tag)
 	_cost = Panel.new()
 	_cost.mouse_filter = MOUSE_FILTER_IGNORE
 	_cost.position = Vector2(4, 6)
@@ -98,8 +110,8 @@ func _ready() -> void:
 	_cost.add_child(_cost_label)
 	_key = HudArt.label("", "micro", TdTheme.color("cream.200"))
 	_key.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_key.position = Vector2(SLOT.x - 44, 6)
-	_key.size = Vector2(36, 24)
+	_key.position = Vector2(SLOT.x - 66, 6)
+	_key.size = Vector2(60, 24)
 	TdTheme.outline(_key, 4)
 	add_child(_key)
 	_hp = TdHealthBar.new()
@@ -196,9 +208,14 @@ func _restyle() -> void:
 	_plate.set_extra_state(extra)
 	_plate.set_interactable(not _poor)
 	_plate.force_state(hovered and not _poor, false)
-	var plate_y := SLOT.y - 28 - (26.0 if _placed else 10.0)
-	_plate.position = Vector2((SLOT.x - 108) / 2.0, plate_y)
-	_hp.position.y = SLOT.y - 14
+	# one baseline for every plate (placed or not); the HP bar under a placed one
+	_plate.position = Vector2((SLOT.x - 108) / 2.0, PLATE_Y)
+	_hp.position.y = PLATE_Y + 28 + 4
+	_tag.visible = _placed and not _selected
+	_key.visible = not _placed
+	if _tag.visible:
+		_tag.size = _tag.get_combined_minimum_size()
+		_tag.position = Vector2((SLOT.x - _tag.size.x) / 2.0, -4)
 
 func _process(delta: float) -> void:
 	if _plate == null: return
@@ -223,12 +240,12 @@ func _process(delta: float) -> void:
 	if _shake_t < 1.0:
 		_shake_t = minf(1.0, _shake_t + dt / 0.32)
 		shake = sin(_shake_t * TAU * 4.0) * 7.0 * (1.0 - _shake_t)
-	_render.position = Vector2((SLOT.x - 112) / 2.0 + shake, SLOT.y - 112 - 34 - _lift)
+	_render.position = Vector2((SLOT.x - 112) / 2.0 + shake, PLATE_Y + 2 - 112 - _lift)
 	_render.scale = Vector2.ONE * _scale
 	var lifted := clampf(_lift / 30.0, 0.0, 1.0)
 	_shadow.scale = Vector2.ONE * lerpf(1.0, 0.6, lifted)
 	_shadow.modulate.a = lerpf(1.0, 0.4, lifted)
-	_medal.position = Vector2((SLOT.x - 64) / 2.0 + shake, 26 - _lift)
+	_medal.position = Vector2((SLOT.x - 64) / 2.0 + shake, PLATE_Y - 86 - _lift)
 	_medal.scale = Vector2.ONE * _scale
 	_glow.position.y = -4 - _lift
 	if _poor: _plate.position.x = (SLOT.x - 108) / 2.0 + shake

@@ -9,7 +9,6 @@ extends TdPopup
 
 const SECTIONS := [CodexSection.Towers, CodexSection.Enemies, CodexSection.Statuses, CodexSection.Tips]
 const TAB_NAMES := ["Towers", "Enemies", "Statuses", "Tips"]
-const TAB_ICONS := ["icon_castle", "icon_wave", "icon_eye", "icon_info"]
 const WIDTH := 1530.0
 const HEIGHT := 900.0
 const STAT_ICONS := {"MaxHp": "icon_heart", "Power": "icon_power", "Potency": "icon_power", "Duration": "icon_clock",
@@ -62,9 +61,7 @@ func _build() -> void:
 	tabs.size_flags_horizontal = SIZE_EXPAND_FILL
 	tabs.alignment = BoxContainer.ALIGNMENT_BEGIN
 	head.add_child(tabs)
-	var icons := []
-	for n in TAB_ICONS: icons.append(TdTheme.texture(n))
-	tab_buttons = TdMenu.tabs(tabs, TAB_NAMES, icons, Vector2(196, 64), func(i): show_section(SECTIONS[i]))
+	tab_buttons = TdMenu.tabs(tabs, TAB_NAMES, [], Vector2(206, 64), func(i): show_section(SECTIONS[i]))
 	var prog := TdMenu.vbox(6)
 	prog.custom_minimum_size = Vector2(250, 0)
 	prog.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -97,6 +94,7 @@ func _build() -> void:
 	body.add_child(well)
 	_list_scroll = ScrollContainer.new()
 	_list_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_list_scroll.get_v_scroll_bar().custom_minimum_size = Vector2(12, 0)
 	well.add_child(_list_scroll)
 	_list = TdMenu.vbox(16)
 	_list.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -213,7 +211,7 @@ func show_section(s: int) -> void:
 	for i in SECTIONS.size():
 		tab_buttons[i].selected = SECTIONS[i] == s
 		var n := _new_count(SECTIONS[i])
-		tab_buttons[i].set_tag("%d new" % n if n > 0 else "")
+		_tab_new(i, n)
 	entries = MenuLogic.codex_entries(GameApp.catalog.codex if GameApp.catalog != null else null, s)
 	for r in rows: r.queue_free()
 	rows.clear()
@@ -232,6 +230,28 @@ func show_section(s: int) -> void:
 			break
 	select(first)
 
+## "Enemies [2 new]": an inline pill after the tab's label (the label moves left to make room).
+func _tab_new(i: int, n: int) -> void:
+	var b: TdButton = tab_buttons[i]
+	var old = b.get_meta("new_pill") if b.has_meta("new_pill") else null
+	if old != null and is_instance_valid(old): old.queue_free()
+	b.remove_meta("new_pill")
+	var f: Font = TdTheme.font("plinth")
+	var p := TdMenu.pill("[b]%d new[/b]" % n, TdTheme.color("accent.fill"), Color.WHITE, 18)
+	var room := 10.0 + 22.0 + TdTheme.font("nunito_extrabold").get_string_size("%d new" % n, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
+	b.text = TAB_NAMES[i] + (" ".repeat(ceili(room / f.get_string_size(" ", HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x)) if n > 0 else "")
+	if n <= 0:
+		p.free()
+		return
+	p.mouse_filter = MOUSE_FILTER_IGNORE
+	b.add_child(p)
+	b.set_meta("new_pill", p)
+	var place := func() -> void:
+		if not is_instance_valid(p): return
+		var w := f.get_string_size(TAB_NAMES[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x
+		p.position = Vector2(b._label.position.x + w + 10.0, (b.size.y - p.size.y) / 2.0)
+	place.call_deferred()
+
 func _new_count(s: int) -> int:
 	var n := 0
 	for e in MenuLogic.codex_entries(GameApp.catalog.codex if GameApp.catalog != null else null, s):
@@ -241,8 +261,8 @@ func _new_count(s: int) -> int:
 func _make_row(e: Dictionary) -> TdButton:
 	var b := TdButton.new()
 	b.style = TdButton.Style.ROW
-	b.custom_minimum_size = Vector2(300, 60)
-	b.size = Vector2(300, 60)
+	b.custom_minimum_size = Vector2(290, 60)
+	b.size = Vector2(290, 60)
 	b.selectable = true
 	b.clicked.connect(func(): select(e))
 	_list.add_child(b)
@@ -268,7 +288,7 @@ func _draw_row(b: TdButton, e: Dictionary) -> void:
 	var l := TdMenu.label(e.name if known else "???", "header", TdTheme.color("cream.100"), 26)
 	var dot := known and SaveData.codex.is_new(e.section, e.id)
 	l.position = Vector2(66, 0)
-	l.size = Vector2(170 if dot else 226, 60)
+	l.size = Vector2(160 if dot else 216, 60)
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.clip_text = true
 	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -277,7 +297,7 @@ func _draw_row(b: TdButton, e: Dictionary) -> void:
 	b.add_child(l)
 	if dot:
 		var n := TdMenu.label("• New", "small", TdTheme.color("accent.light"), 20)
-		n.position = Vector2(236, 0)
+		n.position = Vector2(226, 0)
 		n.size = Vector2(60, 60)
 		n.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		n.mouse_filter = MOUSE_FILTER_IGNORE
@@ -297,7 +317,7 @@ func select(e: Dictionary) -> void:
 	if not e.is_empty() and _known(e) and SaveData.codex.mark_viewed(e.section, e.id):
 		SaveData.save()
 		var n := _new_count(e.section)
-		tab_buttons[SECTIONS.find(e.section)].set_tag("%d new" % n if n > 0 else "")
+		_tab_new(SECTIONS.find(e.section), n)
 	for i in entries.size(): _draw_row(rows[i], entries[i])
 	_show_page(e)
 	_page_scroll.scroll_vertical = 0
@@ -316,6 +336,10 @@ func _show_page(e: Dictionary) -> void:
 	_hint.visible = false
 	_left.visible = true
 	_preview_card.visible = true
+	_small_card(false)
+	_subtitle.visible = true
+	_description.size_flags_horizontal = SIZE_EXPAND_FILL
+	_description.custom_minimum_size = Vector2.ZERO
 	_title.add_theme_color_override("font_color", TdTheme.color("accent.ink"))
 	if e.is_empty():
 		_title.text = ""
@@ -346,17 +370,23 @@ func _show_page(e: Dictionary) -> void:
 		_title.add_theme_color_override("font_color", TdTheme.color("bad.ink") if d.tags.has(Tags.Debuff) else (TdTheme.color("good.ink") if d.tags.has(Tags.Buff) else TdTheme.color("status.ink")))
 		_subtitle.text = MenuLogic.status_kind(d.tags)
 		var desc := MenuLogic.status_description(d.description, 1, d.duration, TdTheme.rich("gold.ink")) if d.description != "" else "No description."
-		_description.text = TooltipText.from_rich(desc)
-		_body.text = "%s\n%s" % [TooltipText.row("Lasts", MenuLogic.lasts_text(d.duration, d.duration_unit == DurationUnit.Rounds)),
-			TooltipText.row("Again", MenuLogic.stacking_text(d.stacking, d.max_stacks))]
+		_description.text = TooltipText.describe(TooltipText.from_rich(desc))
+		var rows := []
+		if d.duration >= 0: rows.append(TooltipText.row("Lasts", MenuLogic.lasts_text(d.duration, d.duration_unit == DurationUnit.Rounds)))
+		rows.append(TooltipText.row("Again", MenuLogic.stacking_shown(d.stacking, d.max_stacks)))
+		_body.text = "\n".join(PackedStringArray(rows))
 		_picture.texture = GameApp.icon_texture(a.icon) if a.icon != "" else null
 		_picture.visible = _picture.texture != null
 		_preview_card.visible = _picture.visible
+		_small_card(true)
 	else:
 		var tip: CodexTip = e.tip
 		_title.text = tip.title
-		_subtitle.text = "Tip"
-		_description.text = TooltipText.describe(KeyBinds.fill_keys(tip.text))
+		_subtitle.text = ""
+		_subtitle.visible = false
+		_description.text = TooltipText.describe(KeyBinds.fill_keys(tip.text).replace("End Turn", "End turn"))
+		_description.size_flags_horizontal = SIZE_SHRINK_BEGIN
+		_description.custom_minimum_size = Vector2(760, 0) # ~60 characters a line
 		var img: Texture2D = GameApp.icon_texture(tip.image) if tip.image != "" else null
 		_picture.texture = img
 		_picture.visible = img != null
@@ -375,7 +405,10 @@ func _unit_page(entity: EntityAsset, description: String) -> void:
 		_picture.visible = _picture.texture != null
 	var me := DefStats.new(d)
 	var vocab: Vocabulary = GameApp.rules.vocabulary if GameApp.rules != null else CombatVocabulary.create()
-	for tile in stat_tiles(me, vocab): _stats.add_child(_stat_tile(tile[0], tile[1], tile[2]))
+	var values := {}
+	for tile in stat_tiles(me, vocab):
+		_stats.add_child(_stat_tile(tile[0], tile[1], tile[2]))
+		if tile[0] != "MaxHp": values[tile[0]] = tile[2]
 	var passives := PassiveView.of(d)
 	_abilities_head.visible = d.abilities.size() + passives.size() > 0
 	for ab in d.abilities:
@@ -383,12 +416,12 @@ func _unit_page(entity: EntityAsset, description: String) -> void:
 		var icon: Texture2D = TdTheme.ability_face(MenuLogic.icon_name(asset.icon)) if asset != null and asset.icon != "" else null
 		var pips := 0 if ab.cooldown_until_reset else maxi(1, ab.cooldown)
 		_abilities.add_child(_ability_row(icon, ab.display_name, " · ".join(PackedStringArray(ab.tags)),
-			TooltipText.describe(ab.description), TooltipText.cooldown_words(ab.cooldown, ab.cooldown_until_reset), pips,
+			TooltipText.describe(MenuLogic.fill_stat_words(ab.description, values)), TooltipText.cooldown_words(ab.cooldown, ab.cooldown_until_reset), pips,
 			AbilityText.tags(ab, me, vocab), false))
 	for pv in passives:
 		var asset = GameApp.convert.asset_of(pv.def, "PassiveAsset")
 		var icon: Texture2D = GameApp.icon_texture(asset.icon) if asset != null and asset.icon != "" else null
-		_abilities.add_child(_ability_row(icon, pv.name, "Passive", TooltipText.describe(pv.def.description), "Always on", 0, [], true))
+		_abilities.add_child(_ability_row(icon, pv.name, "Passive", TooltipText.describe(MenuLogic.fill_stat_words(pv.def.description, values)), "Always on", 0, [], true))
 
 ## The stat tiles (EntityText.StatTiles): Max HP first, then Power, Potency, Duration, Speed, Range, Radius the unit
 ## has. Array of [stat, label, value text].
@@ -434,9 +467,9 @@ func _ability_row(icon: Texture2D, name_text: String, tags: String, description:
 	var icon_box := CenterContainer.new()
 	left.add_child(icon_box)
 	if passive:
-		icon_box.add_child(TdMenu.medallion(icon, 60, false))
+		icon_box.add_child(TdMenu.medallion(icon, 80, false))
 	else:
-		var ic := TdMenu.picture(icon, Vector2(62, 62))
+		var ic := TdMenu.picture(icon, Vector2(88, 88))
 		icon_box.add_child(ic)
 	if pips > 0:
 		var pr := TdMenu.hbox(4)
@@ -450,8 +483,13 @@ func _ability_row(icon: Texture2D, name_text: String, tags: String, description:
 	var right := TdMenu.vbox(4)
 	right.size_flags_horizontal = SIZE_EXPAND_FILL
 	h.add_child(right)
-	right.add_child(TdMenu.label(name_text, "h3", TdTheme.color("status.ink") if passive else TdTheme.color("gold.ink"), 30))
-	if tags != "": right.add_child(TdMenu.label(tags, "small", TdTheme.color("ink.2"), 20))
+	var name_row := TdMenu.hbox(12)
+	right.add_child(name_row)
+	name_row.add_child(TdMenu.label(name_text, "h3", TdTheme.color("status.ink") if passive else TdTheme.color("gold.ink"), 30))
+	if tags != "":
+		var tl := TdMenu.label(tags, "small", TdTheme.color("ink.2"), 20)
+		tl.size_flags_vertical = SIZE_SHRINK_CENTER
+		name_row.add_child(tl)
 	right.add_child(TdMenu.rich(description, "body", TdTheme.color("ink"), 22))
 	if not results.is_empty():
 		var chips := HFlowContainer.new()
@@ -471,10 +509,22 @@ func _ability_row(icon: Texture2D, name_text: String, tags: String, description:
 	return box
 
 func _chip(value: String, label: String) -> Control:
-	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", TdTheme.stylebox("paper_stat", Color(1, 0.93, 0.8), [12, 2, 14, 2]))
-	var r := TdMenu.rich("[b]%s[/b] [color=%s]%s[/color]" % [value, TdTheme.rich("ink.2"), label], "body", TdTheme.color("ink"), 20)
-	r.autowrap_mode = TextServer.AUTOWRAP_OFF
-	r.size_flags_horizontal = SIZE_SHRINK_BEGIN
-	p.add_child(r)
-	return p
+	var n := MenuLogic.result_name(label)
+	var icon_name: String = CHIP_ICONS.get(n, "")
+	var img := "[img=20x20 color=%s]%s[/img] " % [TdTheme.rich("ink.2"), TdTheme.texture(icon_name).resource_path] if icon_name != "" else ""
+	return TdMenu.pill("%s[b]%s[/b] [color=%s]%s[/color]" % [img, value, TdTheme.rich("ink.2"), n],
+		TdTheme.color("paper.2"), TdTheme.color("ink"), 20, TdTheme.color("paper.edge"))
+
+const CHIP_ICONS := {"Damage": "icon_power", "Heal": "icon_heart", "Range": "icon_range", "Area": "icon_range",
+	"Hits": "icon_volley", "Jumps": "icon_next", "Duration": "icon_clock", "Pushback": "icon_move", "Pull": "icon_move"}
+
+## The picture card: full size for models, a small chip box for status icons.
+func _small_card(small: bool) -> void:
+	_preview_card.custom_minimum_size = Vector2(160, 160) if small else Vector2(276, 364)
+	_preview_card.get_child(0).custom_minimum_size = _preview_card.custom_minimum_size
+	_preview_card.size_flags_horizontal = SIZE_SHRINK_BEGIN
+	_picture.offset_left = -56 if small else -80
+	_picture.offset_right = 56 if small else 80
+	_picture.offset_top = -56 if small else -100
+	_picture.offset_bottom = 56 if small else 60
+	_preview_card.reset_size()

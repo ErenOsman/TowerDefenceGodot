@@ -285,29 +285,40 @@ func _show_end_turn(f: ViewFrame) -> void:
 	elif _can_end_since < 0.0: _can_end_since = _clock
 	end_turn.set_attention(can_end and _nothing_left and _clock - _can_end_since >= 0.6)
 
-## End turn's tooltip: what is still usable, what is ready next turn, and what the enemy turn would do to you.
+## "Archer · Shoot" entries grouped: the same unit and ability twice reads "Archer · Shoot (2)".
+static func grouped(entries: Array) -> String:
+	var counts := {}
+	var order: Array = []
+	for e in entries:
+		if not counts.has(e):
+			counts[e] = 0
+			order.append(e)
+		counts[e] += 1
+	var out: Array[String] = []
+	for e in order: out.append(e if counts[e] == 1 else "%s (%d)" % [e, counts[e]])
+	return ", ".join(out)
+
+## End turn's tooltip: what is still usable, what is ready next turn, and what the enemy turn would do to you
+## (the controller's threat summary: "Base −4 · Archer −6" / "No damage this turn").
 func _end_turn_tip() -> void:
 	var session := controller.session
-	var usable: Array[String] = []
-	var next: Array[String] = []
+	var usable: Array = []
+	var next: Array = []
 	var reason := session.last_reason
 	for unit in session.player_units:
+		if not unit.on_board: continue
 		for a in unit.abilities:
 			if a.targeting.is_movement: continue
 			if session.can_cast(unit, a): usable.append("%s · %s" % [unit.def.display_name, a.display_name])
 			elif unit.cooldown(a) == 1: next.append("%s · %s" % [unit.def.display_name, a.display_name])
 	session.last_reason = reason
-	var threat: Array[String] = []
-	var forecast := controller.enemy_forecast
-	if forecast != null:
-		for id in forecast.loss:
-			var hurt: Entity = session.state.get_entity(id)
-			if hurt != null and session.is_commanded(hurt):
-				threat.append("%s dies" % hurt.def.display_name if forecast.killed.has(id) else "%s -%d" % [hurt.def.display_name, int(forecast.loss[id])])
+	var threat: String = controller.threat_summary if "threat_summary" in controller else ""
 	var lines: Array[String] = ["Ends your turn: the enemies move and attack, then a new round starts."]
-	if usable.size() > 0: lines.append(TooltipText.colored(TooltipText.helpful_color(), "Usable now: " + ", ".join(usable)))
-	if next.size() > 0: lines.append(TooltipText.colored(TooltipText.neutral_color(), "Ready next turn: " + ", ".join(next)))
-	if threat.size() > 0: lines.append(TooltipText.colored(TooltipText.harmful_color(), "Enemy turn: " + " · ".join(threat)))
+	if usable.size() > 0: lines.append(TooltipText.colored(TooltipText.helpful_color(), "Usable now: " + grouped(usable)))
+	if next.size() > 0: lines.append(TooltipText.colored(TooltipText.neutral_color(), "Ready next turn: " + grouped(next)))
+	if threat != "":
+		var safe := threat == "No damage this turn"
+		lines.append(TooltipText.colored(TooltipText.helpful_color() if safe else TooltipText.harmful_color(), ("" if safe else "Enemy turn: ") + threat))
 	var keys = _keys()
 	var key: String = keys.describe("EndRound") if keys != null else ""
 	TdTooltipTrigger.find_on(end_turn).set_content(TooltipText.title("End turn anyway?" if usable.size() > 0 else "End turn", TooltipText.neutral_color()),

@@ -12,3 +12,5 @@ Not in these shots (described in chat earlier): loading screen, main menu, HUD w
 - tutorial-dialogue.webp: a tutorial line in the level: the Princess 3D model stands in front of the board (left of centre), a wide dark wood dialogue box at the bottom (name plate "Princess" top-left, Skip button top-right, body text, "Click or press Space" bottom-left, "Tutorial · 1/12" + bobbing triangle bottom-right); the hand tray holds the single Archer.
   NOTE from the user: the tutorial may be re-interpreted freely in the Godot version (not a 1:1 copy of the Unity one).
 - credits.png: wood window "Credits" with × over the dimmed main menu; paper card: "Game by" small, "EREN OSMAN" big cobalt, "Music by", "EMRE OSMAN", "Fonts" heading, Nunito copyright + OFL line. Nothing else.
+- welcome-camera-angle.webp: Unity Welcome; the USER PREFERS THIS CAMERA ANGLE for the board (lower pitch, more perspective, the miniatures seen more from the side) over the gameplay one.
+- hud-idle-lighting.webp: Unity HUD idle; reference for the LEVEL LIGHTING: muted olive greens, soft shadows, grey-brown backdrop (#4b4541-ish), no saturated lime; the user finds the Godot levels too bright.

@@ -59,7 +59,14 @@ func test_facing_yaw_turns_the_model_front() -> void:
 func test_camera_bounds_and_free_area() -> void:
 	var cam := BoardCamera.new()
 	cam.bounds = Rect2(-0.5, -0.5, 10, 5)
-	assert_eq(cam.clamp_focus(Vector3(20, 3, 4)), Vector3(9.5, 0, 0.5), "the focus stays over the board")
+	cam.max_distance = 16.0  # fit 10
+	cam.min_distance = 3.0
+	cam.distance_target = 10.0
+	assert_eq(cam.clamp_focus(Vector3(20, 3, 4)), Vector3(4.5, 0, -2), "at the default framing the board stays whole: no pan")
+	cam.distance_target = 14.0
+	assert_eq(cam.clamp_focus(Vector3(0, 0, 0)), Vector3(4.5, 0, -2), "zoomed out: still centred")
+	cam.distance_target = 3.0
+	assert_eq(cam.clamp_focus(Vector3(20, 3, 4)), Vector3(9.5, 0, 0.5), "zoomed all the way in: up to the board's edges")
 	assert_eq(cam.clamp_focus(Vector3(-3, 0, -9)), Vector3(-0.5, 0, -4.5))
 	var free := cam.free_area()
 	assert_num(snappedf(free.position.y, 0.0001), snappedf(96.0 / 1080.0, 0.0001), "under the top bar")

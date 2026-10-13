@@ -66,11 +66,15 @@ func _build() -> void:
 	inspector.info_pressed.connect(func(): if controller != null and controller.selected >= 0: open_info(controller.selected))
 	sequence = HudSequence.new()
 	sequence.find_ui = find_ui
+	sequence.find_piece = func(): return tray.first_in_hand()
+	sequence.find_ability = func(kind): return action_bar.button_for(kind) if action_bar.visible else null
 	root.add_child(sequence)
 	pause = HudPause.new()
 	pause.name = "Pause"
 	root.add_child(pause)
-	pause.closed.connect(_panels_changed)
+	pause.closed.connect(func():
+		_panels_changed()
+		_dirty = true)
 	end_screen = HudEndScreen.new()
 	end_screen.name = "EndScreen"
 	root.add_child(end_screen)
@@ -113,6 +117,7 @@ func find_ui(element: String) -> Control:
 func open_pause() -> void:
 	if controller == null or pause.is_open() or end_screen.visible: return
 	TdTooltip.hide_immediate()
+	inspector.visible = false
 	pause.open()
 	_panels_changed()
 
@@ -162,7 +167,7 @@ func _refresh() -> void:
 	if subject != null:
 		inspector.refresh()
 		if not inspector.visible or key != _inspector_subject: inspector.play_open()
-	inspector.visible = subject != null
+	inspector.visible = subject != null and not pause.is_open() and not end_screen.visible
 	_inspector_subject = key
 
 func _layout() -> void:
@@ -190,15 +195,18 @@ func _send_insets(top: float, bottom: float, right: float) -> void:
 		var h: Vector4 = controller.camera.hud_insets
 		controller.camera.hud_insets = Vector4(h.x, right, top, bottom)
 
+## The hint line's text (the controller's hint, worded for the HUD): a target aim says "a marked enemy" (walks and
+## placing keep the tile wording); the End turn threat summary is the End turn tooltip's, never the hint's.
+static func hint_text(hint: String, aiming_target: bool, threat: String) -> String:
+	if threat != "" and hint == threat: return ""
+	if aiming_target and hint.begins_with("Click a green tile"): return "Click a marked enemy. Right-click cancels."
+	return hint
+
 func _hint() -> void:
-	var text: String = controller.hint
+	var aim: AbilityDef = controller.aiming
+	var threat: String = controller.threat_summary if controller.preview_enemy_phase and "threat_summary" in controller else ""
+	var text := hint_text(controller.hint, aim != null and not aim.targeting.is_movement, threat)
 	var refusal: bool = controller.hint_is_refusal
-	if controller.preview_enemy_phase and "threat_summary" in controller:
-		var t = controller.get("threat_summary")
-		if t is String and t != "":
-			text = t
-			var f = controller.enemy_forecast
-			refusal = f != null and not f.loss.is_empty()
 	if controller.ui_panel_open: text = ""
 	hint_pill.visible = text != ""
 	if text == "": return
@@ -215,7 +223,8 @@ func _hint() -> void:
 	else:
 		var h := HudLayout.hint_without_bar(screen, tray.piece_count(), w)
 		x = h["x"]; y = h["y"]; centred = h["centred"]
-	hint_pill.position = Vector2(x - w / 2.0 if centred else x, y)
+	var left := x - w / 2.0 if centred else x
+	hint_pill.position = Vector2(HudLayout.hint_left(left, w, screen, tray.piece_count(), action_bar.visible and not layout.get("raised", false), action_bar.position.x), y)
 
 # ------------------------------------------------------------------ board double-click → Info
 

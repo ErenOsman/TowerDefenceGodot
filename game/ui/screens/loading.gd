@@ -1,7 +1,7 @@
 extends CanvasLayer
 ## The loading screen before a level (UI_Loading.cs; the Unity build's look): the last menu diorama blurred behind
-## (TdDiorama.snapshot; dark wood with a vignette and a plaque when there is none), the game's name (a logo slot
-## until there is one), a status line with the percentage, a cobalt bar and one random Codex tip with the player's
+## (TdDiorama.snapshot; dark wood with a vignette when there is none), a wood plaque holding the logo slot
+## (the placeholder name), a status line with the percentage, a cobalt bar and one random Codex tip with the player's
 ## keys. The contract with SceneFlow: layer 100, SceneFlow.load_pending(self) loads the pending level and opens it
 ## under this screen; the first 80 % of the bar follows the read, then it eases on while the level holds the screen
 ## (SceneFlow.loading_screen_held), shows "Complete!", fades out on unscaled time and calls
@@ -53,23 +53,17 @@ func _build() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(center)
+	# a wood plaque (92 %) behind the title, the bar and the tip, so they read over the board
+	var plaque := TdMenu.panel(TdPanel.Kind.MENU, 44)
+	plaque.self_modulate.a = 0.92
+	center.add_child(plaque)
 	var col := TdMenu.vbox(18)
 	col.custom_minimum_size = Vector2(_bar_w, 0)
-	center.add_child(col)
-	title = TdMenu.label(TdMenu.GAME_TITLE, "display", TdTheme.color("cream.100"), 76)
-	title.add_theme_color_override("font_shadow_color", TdTheme.color("rim"))
-	title.add_theme_constant_override("shadow_offset_y", 4)
-	if has_dio:
-		col.add_child(title)
-	else:
-		# no diorama: the title on a dark plaque, centred
-		var plaque := TdMenu.panel(TdPanel.Kind.MENU, 28)
-		plaque.custom_minimum_size = Vector2(700, 135)
-		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		plaque.add_child(title)
-		col.add_child(plaque)
-	col.add_child(TdMenu.spacer(40))
+	plaque.add_child(col)
+	var logo := TdMenu.logo_slot(72, Vector2(_bar_w, 130))
+	title = logo.get_child(0)
+	col.add_child(logo)
+	col.add_child(TdMenu.spacer(16))
 	var row := TdMenu.hbox(12)
 	col.add_child(row)
 	status = TdMenu.label(STATUS, "header", TdTheme.color("cream.200"), 28)

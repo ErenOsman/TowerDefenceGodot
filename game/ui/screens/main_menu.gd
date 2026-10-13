@@ -2,9 +2,9 @@ extends Control
 ## The main menu (UI_MainMenu.cs; hud-menu-spec §5; the Unity build): the game's name top-left, "Welcome back,
 ## {name}", a vertical list of menu buttons — Continue "Continue: {level}" (only when GameApp.continue_level()
 ## exists; it is then the one cobalt button), Play (→ GameApp.go_home(): the Camp once unlocked, else level select),
-## Codex, Settings, Credits, a gap, Quit — the version bottom-left, the Miscellaneous icon top-right, and behind it
+## Codex, Settings, Credits, a gap, Quit — the version bottom-left, and behind it
 ## the blurred level diorama with three miniatures (Archer, Guardian, Mage) sharp in the bottom right.
-## Codex / Settings / Credits open as popups (Esc or right click closes the top one). Up/Down move the focus
+## No Miscellaneous button (Unity's was an empty placeholder). Codex / Settings / Credits open as popups (Esc or right click closes the top one). Up/Down move the focus
 ## through the list, Enter presses. Menu music comes from SceneFlow (AudioMgr.play_scene_music).
 
 const SCREENS := "res://game/ui/screens/"
@@ -37,14 +37,13 @@ func _ready() -> void:
 
 func _build() -> void:
 	var col := TdMenu.vbox(0)
-	col.position = Vector2(120, 104)
+	col.position = Vector2(120, 72)
 	col.custom_minimum_size = Vector2(560, 0)
 	add_child(col)
-	var title := TdMenu.label(TdMenu.GAME_TITLE, "display", TdTheme.color("cream.100"), 76)
-	title.add_theme_color_override("font_shadow_color", TdTheme.color("rim"))
-	title.add_theme_constant_override("shadow_offset_y", 4)
-	col.add_child(title)
-	col.add_child(TdMenu.spacer(70))
+	var logo := TdMenu.logo_slot(72, Vector2(560, 150))
+	logo.size_flags_horizontal = SIZE_SHRINK_BEGIN
+	col.add_child(logo)
+	col.add_child(TdMenu.spacer(30))
 	greeting = TdMenu.rich("", "body", TdTheme.color("cream.200"), 26)
 	greeting.custom_minimum_size = Vector2(560, 0)
 	col.add_child(greeting)
@@ -66,11 +65,6 @@ func _build() -> void:
 	version.offset_left = 120; version.offset_top = -72; version.offset_bottom = -40
 	add_child(version)
 
-	var misc := TdMenu.button(TdButton.Style.ICON, "", Vector2(56, 56), TdTheme.texture("icon_misc"))
-	misc.set_anchors_preset(PRESET_TOP_RIGHT)
-	misc.offset_left = -88; misc.offset_right = -32; misc.offset_top = 32; misc.offset_bottom = 88
-	misc.set_interactable(false, "Miscellaneous: nothing here yet")
-	add_child(misc)
 	refresh()
 
 func _add(id: String, text: String, icon: String, fn: Callable) -> void:

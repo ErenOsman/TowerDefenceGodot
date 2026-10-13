@@ -81,3 +81,9 @@ func set_health_preview(hp: Dictionary) -> void:
 ## Hides the banner and the waiting ones (not a sticky one).
 func hide_banner() -> void:
 	if banners != null: banners.hide_banner()
+
+## Clears what floats over the board (every banner, sticky ones too, and the floating numbers): the end window
+## opens on a clean board.
+func clear_transients() -> void:
+	if banners != null: banners.clear_all()
+	if floaters != null: floaters.clear_all()

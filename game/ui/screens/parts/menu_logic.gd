@@ -325,3 +325,22 @@ static func portrait_name(view_path: String) -> String:
 ## A sprite reference's name ("Assets/Art/Icons/Abilities/Shoot.png#Shoot" → "Shoot").
 static func icon_name(unity_path: String) -> String:
 	return ArtPaths.strip(unity_path).get_file().get_basename()
+
+## A description with a stat's name replaced by its value where a number belongs ("up to Speed tiles" →
+## "up to 2 tiles", "for Power" → "for 10"); values: {stat name: value text}. Other uses of the word stay.
+static func fill_stat_words(description: String, values: Dictionary) -> String:
+	var out := description
+	for stat in values:
+		var re := RegEx.create_from_string("\\b(up to|for|within|by|deals|heals) %s\\b" % stat)
+		out = re.sub(out, "$1 " + str(values[stat]), true)
+		out = RegEx.create_from_string("\\b%s (tiles?|damage|HP)\\b" % stat).sub(out, str(values[stat]) + " $1", true)
+	return out
+
+## A result tag's name as shown: a walk's "Move" is its range.
+static func result_name(n: String) -> String:
+	return "Range" if n == "Move" else n
+
+## How applying a status again reads: no stack limit shown when it is effectively unlimited (99 or more).
+static func stacking_shown(stacking: int, max_stacks: int) -> String:
+	if stacking == Stacking.Stack and max_stacks >= 99: return "adds a stack and starts its time over"
+	return stacking_text(stacking, max_stacks)
