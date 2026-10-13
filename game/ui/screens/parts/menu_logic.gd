@@ -171,6 +171,99 @@ static func hand_note(hand_count: int, cap: int) -> String:
 	if hand_count > cap: return "This level takes the first %d of your %d towers." % [cap, hand_count]
 	return "This level takes up to %d towers." % cap
 
+# ------------------------------------------------------------------ level select (mockup screens-b/level-select.html)
+
+## A chapter heading's right-hand tag: "new" while none of its levels has been played, else "4 levels" (all of the
+## chapter's levels in the catalog, shown or not).
+static func chapter_tag(catalog: LevelCatalog, progress: LevelProgress, chapter: int) -> String:
+	if catalog == null: return ""
+	var total := 0
+	var played := false
+	for e in catalog.entries:
+		if e.chapter != chapter: continue
+		total += 1
+		if progress != null and progress.find(e.level_id) != null: played = true
+	if not played: return "new"
+	return "1 level" if total == 1 else "%d levels" % total
+
+## A level's place in its chapter, from 1 (0 when it is not in the catalog).
+static func level_number(catalog: LevelCatalog, level_id: String) -> int:
+	if catalog == null: return 0
+	var entry := catalog.find(level_id)
+	if entry == null: return 0
+	var n := 0
+	for e in catalog.entries:
+		if e.chapter != entry.chapter: continue
+		n += 1
+		if e.level_id == level_id: return n
+	return 0
+
+## A list row's right-hand state: "won" (a win recorded), "new" (unlocked, never played), "locked", or "" (played,
+## not won yet).
+static func row_state(progress: LevelProgress, level_id: String, unlocked: bool) -> String:
+	if not unlocked: return "locked"
+	if progress != null and progress.is_won(level_id): return "won"
+	if progress == null or progress.find(level_id) == null: return "new"
+	return ""
+
+## What opens a locked level, short (the row's second line and the detail's kicker): "Win Rock Garden first",
+## "Win A and B first", "Win A or B first"; "" when nothing is missing.
+static func requirement_line(catalog: LevelCatalog, asset: GameCatalogAsset, level_id: String, progress: LevelProgress) -> String:
+	var t := requirement_text(catalog, asset, level_id, progress)
+	if t == "": return ""
+	return t.trim_suffix(" to open it.") + " first"
+
+## The detail's kicker: "Chapter 1 · level 3".
+static func kicker_text(chapter: String, number: int) -> String:
+	return "%s · level %d" % [chapter, number] if number > 0 else chapter
+
+## The four fact tiles: {waves, enemies (total count), hand (the cap), energy, per_round}.
+static func level_facts(level: LevelAsset) -> Dictionary:
+	if level == null: return {"waves": 0, "enemies": 0, "hand": 0, "energy": 0, "per_round": 0}
+	var total := 0
+	for pair in enemy_counts(level): total += pair[1]
+	return {"waves": level.waves.size(), "enemies": total, "hand": level.hand_cap, "energy": level.start_energy,
+		"per_round": level.energy_per_round}
+
+## "wave"/"waves" and the like for the fact tiles.
+static func plural(n: int, word: String, words := "") -> String:
+	return word if n == 1 else (words if words != "" else word + "s")
+
+## The hand strip's note: "Two Roads takes the first 4 towers; the rest wait on the bench." (more towers than the
+## cap), "Two Roads takes up to 4 towers." (they all come), or what to do with an empty hand.
+static func hand_strip_note(level_name: String, hand_count: int, cap: int) -> String:
+	if hand_count == 0: return "Your hand is empty: add towers with Change hand."
+	var who := level_name if level_name != "" else "This level"
+	if hand_count > cap: return "%s takes the first %d %s; the rest wait on the bench." % [who, cap, plural(cap, "tower")]
+	return "%s takes up to %d %s." % [who, cap, plural(cap, "tower")]
+
+## "5 of 8 slots used".
+static func slots_used_text(used: int, slots := TowerCollection.MaxHand) -> String:
+	return "%d of %d slots used" % [used, slots]
+
+## The first-win reward card: [title, line]. Won: "First win reward: Priest" / "Already yours: replays give no
+## reward."; not won yet: "Win it to earn: Priest" / "A new tower for your collection."; ["", ""] for no reward.
+static func reward_lines(reward_name: String, won: bool) -> Array:
+	if reward_name == "": return ["", ""]
+	if won: return ["First win reward: " + reward_name, "Already yours: replays give no reward."]
+	return ["Win it to earn: " + reward_name, "A new tower for your collection."]
+
+## The Shield an enemy arrives with: the stacks its passives' OnSpawned reactions give it of a shield status (a
+## plain number), 0 when none (Shield Slime: 10).
+static func spawn_shield(entity: EntityAsset) -> int:
+	var total := 0
+	if entity == null: return 0
+	for p in entity.passives:
+		if p == null: continue
+		for r in p.reactions:
+			if r == null or r.trigger != Trigger.OnSpawned or r.response == null: continue
+			for step in r.response.items:
+				if not (step is ApplyStatusStepData) or step.status == null: continue
+				if step.status.get_id().to_lower() != "shield" and step.status.display_name.to_lower() != "shield": continue
+				var expr: String = step.stacks.expression.strip_edges() if step.stacks != null else ""
+				if expr.is_valid_int(): total += int(expr)
+	return total
+
 ## A tower's name for the player: its custom name, else its type's name.
 static func tower_name(owned: OwnedTower, type: TowerAsset) -> String:
 	if owned == null: return "Missing tower"
@@ -179,23 +272,63 @@ static func tower_name(owned: OwnedTower, type: TowerAsset) -> String:
 
 # ------------------------------------------------------------------ chapters (UI_ChapterSelect.cs)
 
-## One card per chapter of a kind (ChapterKind.Main / Side): {chapter, name, open, status, won, total}.
+## One card per chapter of a kind (ChapterKind.Main / Side): {chapter, name, open, status, won, total, plus the
+## card's details: complete (every level won), active (holds the next main level to play: the one cobalt card),
+## progress ("4 / 4 won ✓ Complete", "2 / 4 won"), reason (a locked chapter: "Finish Chapter 1 first" / "Win A2";
+## "" when open), levels (per level {level_id, name, state: "won" | "open" | "locked"}), first_level (LevelAsset
+## for the thumbnail), reward (the last level's first_clear_reward TowerAsset or null) and reward_name}.
 static func chapter_cards(asset: GameCatalogAsset, catalog: LevelCatalog, progress: LevelProgress, kind: int) -> Array:
 	var out := []
 	if asset == null or catalog == null: return out
+	var next := catalog.next_main_level(progress)
 	for c in asset.chapters.size():
 		var data: ChapterData = asset.chapters[c]
 		if data == null or data.kind != kind: continue
 		var open := catalog.is_chapter_unlocked(c, progress)
 		var total := 0
 		var won := 0
+		var levels := []
 		for e in catalog.entries:
 			if e.chapter != c: continue
 			total += 1
-			if progress.is_won(e.level_id): won += 1
+			var state := "locked"
+			if progress.is_won(e.level_id):
+				won += 1
+				state = "won"
+			elif open and catalog.is_unlocked(e, progress): state = "open"
+			var l := asset.find_level(e.level_id)
+			levels.append({"level_id": e.level_id, "name": l.get_display_name() if l != null else e.level_id, "state": state})
+		var first: LevelAsset = null
+		var reward: TowerAsset = null
+		for d in data.levels:
+			if d == null: continue
+			if first == null: first = d.level
+			reward = d.first_clear_reward
 		out.append({"chapter": c, "name": chapter_name(asset, c), "open": open, "won": won, "total": total,
-			"status": "%d / %d won" % [won, total] if open else chapter_opens_text(catalog, asset, c)})
+			"status": "%d / %d won" % [won, total] if open else chapter_opens_text(catalog, asset, c),
+			"complete": chapter_complete(won, total), "active": open and next != null and next.chapter == c,
+			"progress": chapter_progress_text(won, total), "reason": "" if open else chapter_locked_reason(catalog, asset, c),
+			"levels": levels, "first_level": first, "reward": reward,
+			"reward_name": reward.get_display_name() if reward != null else ""})
 	return out
+
+## Every level of the chapter is won (a chapter without levels is never complete).
+static func chapter_complete(won: int, total: int) -> bool:
+	return total > 0 and won >= total
+
+## A chapter card's progress line: "2 / 4 won", "4 / 4 won ✓ Complete".
+static func chapter_progress_text(won: int, total: int) -> String:
+	var s := "%d / %d won" % [won, total]
+	return s + " ✓ Complete" if chapter_complete(won, total) else s
+
+## Why a chapter is still locked: a main chapter waits for the main chapter before it ("Finish Chapter 1 first");
+## a side chapter names its levels ("Win The Slime King", "Win one of A, B"). "" when nothing opens it.
+static func chapter_locked_reason(catalog: LevelCatalog, asset: GameCatalogAsset, chapter: int) -> String:
+	if catalog == null: return ""
+	if catalog.chapter(chapter).kind != ChapterKind.Side:
+		for k in range(chapter - 1, -1, -1):
+			if catalog.chapter(k).kind == ChapterKind.Main: return "Finish %s first" % chapter_name(asset, k)
+	return chapter_opens_text(catalog, asset, chapter)
 
 ## What a locked chapter needs: "Win The Slime King", "Win one of A, B".
 static func chapter_opens_text(catalog: LevelCatalog, asset: GameCatalogAsset, chapter: int) -> String:

@@ -183,8 +183,8 @@ The base does not talk; that was only an early idea. Dialogue works like a visua
 ### Codex and the Tower / Enemy Info window (2026-10-09)
 
 - **Ability and passive rows:** the icon sits next to the name, top-aligned with the name line and left of the name and description, about 88 px at 1080p (the kit's two-tone icons; the 24 px icons in the current build are too small, user 2026-10-09). The column under the icon is not left empty: the cooldown state sits there, the pips plus "Ready" / "In 1 turn" (passives: "Always on"), in a column about 110 px wide so nothing wraps. The text column on the right holds the name + type line, the description, and the numbers as one short line of tags ("Range 2 · Damage 10"). The row is as tall as its taller column. Not an icon centred in the row.
-- **Tower Info** (the inspector's (i) button) is a sibling of the Codex page, not a different layout: a flat wood window with × and no extra icon in the top-left corner; header = name + subtitle ("Tower · on the board") + the HP row; left = the rotating model box with the 2×2 stat tiles under it; right = one **Abilities** list (Codex rows with the live cooldown state: "Ready", "Ready in 1 turn"; passives at the end of the same list, no separate heading) and **Statuses**.
-- **Statuses section:** every status on the unit with its icon chip (stacks badge and duration ring), its name, its description with the live values ("Takes 3 fire damage at the start of each of its turns") and a line "2 turns left · applied by Slime Archer". Empty state: "No statuses".
+- **Tower Info** (the inspector's (i) button) is a sibling of the Codex page, not a different layout: a flat wood window with × and no extra icon in the top-left corner; header (on the wood) = name + subtitle ("Tower · on the board") on the left, then a "Codex" button (opens this unit's Codex page), the Health label + number + bar, and × on the right; below it one paper card (reference: Eren's Unity screenshot, 2026-10-13): left = the rotating model box ("Drag to turn") with the 2×2 stat tiles under it; right = the unit's description, then one **Abilities** list (Codex rows with the live cooldown state: "Ready", "Ready in 1 turn"; passives at the end of the same list, no separate heading) and **Statuses**.
+- **Statuses section:** every status on the unit with its 48 px chip (time pill top-left, stacks pill bottom-right), its name, its description with the live values ("Takes 3 fire damage at the start of each of its turns") and a line "2 turns left · applied by Slime Archer". Empty state: "No statuses".
 - **Enemy Info:** the same window with the red accent; abilities as read-only rows with their cooldowns, plus a "Next turn: walks 1 tile, then rams the base for 2" line.
 
 **Ability text and tags (user, 2026-10-09).** [Mockup](http://92.5.94.11/art/ui/screens-b/ability-rows.html).
@@ -294,6 +294,18 @@ The bottom row reads left to right: what I have (tray), what I do (action bar), 
 - **Hint line under the action bar:** centred on the bar (left-aligned with it when the bar has slid right), in the strip between the bar and the bottom edge, `type.small` 20, cream with a dark outline (red `bad` for a refused action). Every tooltip opens upward, so nothing can ever cover the hint. Example: pressing Tower Walk while its tooltip is open and it is cooling down shakes the button, flashes the tooltip's cooldown line red ("Ready in 1 turn") and shows "Tower Walk is ready in 1 turn." under the bar, all visible at once.
 - **When the tray and the bar don't fit side by side** (at 1920: 130 × pieces + 110 × abilities > 1372, e.g. 8 pieces with 4+ abilities, 7 with 5+, 6 with 6+): the action bar and its hint line move up to a row above the tray's right part, centred on the screen. The tray never shrinks. The camera framing counts that raised row, so the board's front row is never hidden under it.
 - **Right bar ability list:** up to 6 rows fit above Sell; from 7 abilities on, the list scrolls.
+
+### Hand select (user, 2026-10-13)
+
+Replaces the old hand editor. Large window (76% × 80%) titled "Your hand", × only; changes save as you go. Interactive reference: [hand-select](http://92.5.94.11/art/ui/screens-b/hand-select.html) (before a level: `?from=level`).
+
+- **Towers are individuals.** Every tower has its own tower ID, so two Archers are two cards with their own numbers; nothing is ever stacked as "×2". There are no locked or unknown towers: the game is about collecting them.
+- **Hand row (top):** up to 8 tray pieces in order (miniature, cost coin, key number); empty slots are dashed sockets; drag to reorder (the key follows), × on hover removes. From the Camp all 8 slots look the same; before a level a divider sits after that level's cap ("Two Roads takes the first 4") and the slots after it are slightly dimmed.
+- **Layouts:** four fixed tabs beside the hand row (Eren, 2026-10-13). Layout 1 holds the starting hand, 2–4 start empty ("Empty 0/8"); each keeps its own 8 slots; rename only (24 characters), no add or delete. The active layout (cobalt outline) is the one levels use.
+- **Filters (left):** search, role chips (Attack, Spell, Support, Control, Movement, derived from the tower's abilities), delivery chips, a cost slider with ≤100 / ≤200 / 200+, toggles (Can move, Heals, Applies statuses, Hide my hand), a result count and Clear filters. Sort: Number (default, the release order), Name, Cost.
+- **Collection grid (centre):** compact cards: portrait, name, cost coin, and the key badge when the tower is in the hand. No stats on the cards.
+- **Detail (right):** no model image; name, number, cost, description, stat tiles, compact ability rows, passives; "Add to hand" (first empty slot), disabled with a reason when the hand is full.
+- **Adding:** Add to hand, double-click, or drag a card onto a slot (onto a filled slot it replaces that tower).
 
 ### Board previews: intents and damage (decided 2026-10-08)
 

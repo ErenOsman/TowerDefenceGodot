@@ -37,7 +37,7 @@ Status: **co-op designed, not built** (2026-10-07; lobby and room rules updated 
 - **1 to 6 players.** The room's creator picks the player count (1 to 6, default 2).
 - **Levels:** the Multiplayer station has its own list of levels in the game catalog, kept like a chapter, and any level in it can be played co-op.
 - **Lobby and rooms.** The server keeps a lobby of open rooms. The room's creator picks the level, a room name, the player count and an optional password; a room without a password is open and anyone can join it, otherwise players join with the password. Room names have a length limit (24 characters) and pass a swear filter. The lobby only lists rooms whose game version (the content hash from the technical outline) matches yours; rooms from other versions are never shown.
-- **In the room:** every player, the host too, presses Ready. Only the host starts the match, once everyone in the room is Ready; empty slots don't block the start. The host may change the level; that resets everyone's Ready. The host may remove a player. The room has a chat. Each player can change their own hand (up to the cap) until the match starts.
+- **In the room:** every player, the host too, presses Ready. Only the host starts the match, once everyone in the room is Ready; empty slots don't block the start. The host may change the level and the player count (1 to 6) at any time before the match; either change resets everyone's Ready. Lowering the count below the number of players in the room removes the players who joined last (the host is warned and confirms). The host may remove a player. The room has a chat. Each player can change their own hand (up to the cap) until the match starts.
 - **No level locks** in the co-op list for now: every level in it can be picked.
 - **No progress for now:** co-op gives nothing back to single player (no rewards, no records).
 
@@ -48,6 +48,7 @@ Status: **co-op designed, not built** (2026-10-07; lobby and room rules updated 
 
 | Date | Decision |
 | --- | --- |
+| 2026-10-13 | The room's player count can be changed after creation; going below the number of players in the room removes the last joined (user) |
 | 2026-10-13 | Lobby and rooms (user): 1 to 6 players; open rooms without a password allowed; room-name length limit and swear filter; everyone, the host too, presses Ready and the host starts when all are Ready; changing the level resets Ready; room chat; the lobby hides rooms from other game versions; no level locks for now. Separate energy is split 1/N; the energy rule is level data, set by the developers, not by the host. A player leaving the room or the match breaks nothing: the room waits for someone new, the match goes on. Replaces "two players" and "a player leaving ends the match". UI mockups: http://92.5.94.11/art/ui/screens-b/ (Online co-op) |
 | 2026-10-07 | Correction: Pass never ends a turn. End turn is final for the round, and the enemy phase starts when every player has ended their turn. A player leaving ends the match and closes the room (reconnecting later). The multiplayer levels are a chapter-like catalog list |
 | 2026-10-07 | (replaced) Pass can be used more than once a round; two passes in a row end the turn. The multiplayer levels are a chapter-like list in the game catalog |

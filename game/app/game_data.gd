@@ -14,16 +14,27 @@ var profile: PlayerProfile = PlayerProfile.new()
 ## What the Codex shows as discovered and what is still new.
 var codex: CodexProgress = CodexProgress.new()
 
+## The saved hand layouts (Godot-only: the Unity GameData has no such field; see docs/GODOT-NOTES.md): LAYOUTS fixed
+## entries {"name": String, "hand": [owned tower ids]}; the active one is the hand levels use (towers.hand mirrors it).
+## Saved under "handLayouts" as {"active": n, "layouts": [{"name", "hand"}, …]}.
+const LAYOUTS := 4
+var hand_layouts: Array = []
+var active_layout: int = 0
+
 ## Set by from_dict: the save had a "profile" (a save from before profiles is adopted as past the tutorial).
 var had_profile: bool = true
 
 func to_dict() -> Dictionary:
+	ensure_layouts()
+	var layouts := []
+	for l in hand_layouts: layouts.append({"name": l.name, "hand": l.hand.duplicate()})
 	return {
 		"settings": settings.to_dict(),
 		"towers": towers_to_dict(towers),
 		"progress": progress_to_dict(progress),
 		"profile": profile_to_dict(profile),
 		"codex": {"discovered": codex.discovered.duplicate(), "viewed": codex.viewed.duplicate()},
+		"handLayouts": {"active": active_layout, "layouts": layouts},
 	}
 
 func to_json() -> String:
@@ -41,7 +52,23 @@ static func from_dict(d) -> GameData:
 	if c is Dictionary:
 		g.codex.discovered = _strings(c.get("discovered"))
 		g.codex.viewed = _strings(c.get("viewed"))
+	var hl = d.get("handLayouts")
+	if hl is Dictionary:
+		g.active_layout = int(hl.get("active", 0))
+		for o in hl.get("layouts", []):
+			if o is Dictionary: g.hand_layouts.append({"name": _str(o.get("name")), "hand": _strings(o.get("hand"))})
+	g.ensure_layouts()
 	return g
+
+## Makes the layouts whole: exactly LAYOUTS entries (missing ones "Layout n", empty), a valid active index, and the
+## active one holding the current hand (a save without layouts: Layout 1 takes the hand).
+func ensure_layouts() -> void:
+	while hand_layouts.size() < LAYOUTS: hand_layouts.append({"name": "", "hand": []})
+	if hand_layouts.size() > LAYOUTS: hand_layouts.resize(LAYOUTS)
+	for i in LAYOUTS:
+		if str(hand_layouts[i].name).strip_edges() == "": hand_layouts[i].name = "Layout %d" % (i + 1)
+	active_layout = clampi(active_layout, 0, LAYOUTS - 1)
+	hand_layouts[active_layout].hand = towers.hand.duplicate()
 
 ## Parses a save; null when the text is not a JSON object.
 static func from_json(text: String) -> GameData:

@@ -26,3 +26,11 @@ See `docs/Decisions.md` (2026-10-13 rows) — they are logged in the Unity repo 
   only the local player's pool). GiveEnergy level events are split 1/N like income; a closed (leaver's) share is lost.
 - A leaver's towers can be cast with by anyone but not sold (a sold tower would go back to a hand nobody plays).
 - `pass` is a GDScript keyword: the method is `pass_turn(player)`; the protocol command stays `{"k": "pass"}`.
+
+## Hand layouts (save) — Godot-only for now
+- `GameData.hand_layouts` / `active_layout` (saved as `"handLayouts": {"active": n, "layouts": [{"name", "hand": [tower ids]}]}`):
+  the hand editor's 4 fixed, renamable layouts (UI Design Rules § Hand select). **The Unity GameData lacks this field**;
+  it should be added there (and to the save docs) when Unity gets the Hand select screen. The active layout always
+  mirrors `towers.hand` (the hand levels use); a save without the key gets Layout 1 = the hand, 2–4 empty.
+- Tower roles / delivery in the hand editor's filters are derived from the abilities (`HandLogic.traits`), not authored:
+  every tower has Tower Walk, so every tower counts as "Movement" / "Can move" until the content marks it otherwise.

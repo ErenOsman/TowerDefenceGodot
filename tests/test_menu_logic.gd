@@ -252,3 +252,128 @@ func test_camp_layout_reads_the_stations() -> void:
 	for s in layout.slots:
 		if s.get("station") != null: names.append(s.station)
 	for st in camp.STATIONS: assert_contains(names, st.id, "every station has a slot in layout.json")
+
+func test_level_select_chapter_tag_new_until_played() -> void:
+	var cat := _catalog()
+	var p := LevelProgress.new()
+	assert_eq(MenuLogic.chapter_tag(cat, p, 0), "new", "nothing played in it yet")
+	_won(p, "a1")
+	assert_eq(MenuLogic.chapter_tag(cat, p, 0), "3 levels", "played: every level of the chapter counted")
+	assert_eq(MenuLogic.chapter_tag(cat, p, 1), "new")
+	var lost := LevelResult.new()
+	lost.level_id = "b1"
+	p.record(lost)
+	assert_eq(MenuLogic.chapter_tag(cat, p, 1), "2 levels", "a lost attempt counts as played")
+
+func test_level_select_row_state_and_number() -> void:
+	var cat := _catalog()
+	var p := LevelProgress.new()
+	assert_eq(MenuLogic.row_state(p, "a1", true), "new", "unlocked, never played")
+	assert_eq(MenuLogic.row_state(p, "a2", false), "locked")
+	var lost := LevelResult.new()
+	lost.level_id = "a1"
+	p.record(lost)
+	assert_eq(MenuLogic.row_state(p, "a1", true), "", "played, not won: no mark")
+	_won(p, "a1")
+	assert_eq(MenuLogic.row_state(p, "a1", true), "won")
+	assert_eq(MenuLogic.level_number(cat, "a3"), 3)
+	assert_eq(MenuLogic.level_number(cat, "b2"), 2, "counted inside its chapter")
+	assert_eq(MenuLogic.level_number(cat, "zz"), 0)
+	assert_eq(MenuLogic.kicker_text("Chapter 1", 3), "Chapter 1 · level 3")
+	assert_eq(MenuLogic.requirement_line(cat, null, "a2", LevelProgress.new()), "Win a1 first")
+	assert_eq(MenuLogic.requirement_line(cat, null, "a1", LevelProgress.new()), "")
+
+func test_level_select_hand_texts_and_facts() -> void:
+	assert_eq(MenuLogic.slots_used_text(5), "5 of 8 slots used")
+	assert_eq(MenuLogic.hand_strip_note("Two Roads", 5, 4), "Two Roads takes the first 4 towers; the rest wait on the bench.")
+	assert_eq(MenuLogic.hand_strip_note("Two Roads", 3, 4), "Two Roads takes up to 4 towers.")
+	assert_eq(MenuLogic.hand_strip_note("Two Roads", 0, 4), "Your hand is empty: add towers with Change hand.")
+	assert_eq(MenuLogic.reward_lines("Priest", true), ["First win reward: Priest", "Already yours: replays give no reward."])
+	assert_eq(MenuLogic.reward_lines("Priest", false)[0], "Win it to earn: Priest")
+	assert_eq(MenuLogic.reward_lines("", false), ["", ""])
+	var l := LevelAsset.new()
+	var slime := EntityAsset.new(); slime.display_name = "Slime"
+	var w := WaveData.new()
+	for i in 3:
+		var s := SpawnData.new(); s.enemy = slime
+		w.spawns.append(s)
+	l.waves = [w, WaveData.new()]
+	l.hand_cap = 4; l.start_energy = 200; l.energy_per_round = 25
+	assert_eq(MenuLogic.level_facts(l), {"waves": 2, "enemies": 3, "hand": 4, "energy": 200, "per_round": 25})
+	assert_eq(MenuLogic.plural(1, "enemy", "enemies"), "enemy")
+	assert_eq(MenuLogic.plural(3, "enemy", "enemies"), "enemies")
+
+func test_level_select_spawn_shield() -> void:
+	var shield := StatusAsset.new(); shield.id = "shield"
+	var step := ApplyStatusStepData.new(); step.status = shield; step.stacks = Formula.new("10")
+	var r := ReactionAsset.new(); r.trigger = Trigger.OnSpawned; r.response = StepList.new(); r.response.items = [step]
+	var refill := ReactionAsset.new(); refill.trigger = Trigger.OnTurnStart; refill.response = StepList.new(); refill.response.items = [step]
+	var pas := PassiveAsset.new(); pas.reactions = [r, refill]
+	var e := EntityAsset.new(); e.passives = [pas]
+	assert_eq(MenuLogic.spawn_shield(e), 10, "only what it arrives with")
+	assert_eq(MenuLogic.spawn_shield(EntityAsset.new()), 0)
+
+func _card_asset() -> GameCatalogAsset:
+	# Meadow (a1, a2; a2 gives "Wisp Tower"), Chapter 2 (b1), side chapter Mill (m1; opens with a1)
+	var asset := GameCatalogAsset.new()
+	var a := ChapterData.new(); a.display_name = "Meadow"
+	var b := ChapterData.new()
+	var m := ChapterData.new(); m.display_name = "Mill"; m.kind = ChapterKind.Side
+	for c in [[a, ["a1", "a2"]], [b, ["b1"]], [m, ["m1"]]]:
+		for id in c[1]:
+			var d := CatalogLevelData.new()
+			d.level = LevelAsset.new()
+			d.level.id = id
+			d.level.display_name = id.to_upper()
+			c[0].levels.append(d)
+	var wisp := TowerAsset.new(); wisp.display_name = "Wisp Tower"
+	a.levels[1].first_clear_reward = wisp
+	m.requires = [a.levels[0].level]
+	asset.chapters = [a, b, m]
+	return asset
+
+func test_chapter_card_texts_count_won_levels() -> void:
+	var asset := _card_asset()
+	var cat := asset.to_catalog()
+	var p := LevelProgress.new()
+	_won(p, "a1")
+	var cards := MenuLogic.chapter_cards(asset, cat, p, ChapterKind.Main)
+	assert_eq(cards[0].progress, "1 / 2 won")
+	assert_false(cards[0].complete)
+	assert_true(cards[0].active, "holds the next level to play")
+	assert_eq(cards[0].reason, "", "an open chapter has no reason")
+	var states := []
+	for l in cards[0].levels: states.append(l.state)
+	assert_eq(states, ["won", "open"], "one dot per level: won, then the next one open")
+	assert_eq(cards[0].reward_name, "Wisp Tower", "the last level's first-clear reward")
+	assert_eq(cards[0].first_level.id, "a1", "the thumbnail shows the first level")
+	assert_eq(cards[1].reward, null)
+	assert_eq(cards[1].reward_name, "")
+
+func test_chapter_card_complete_and_locked_reason() -> void:
+	var asset := _card_asset()
+	var cat := asset.to_catalog()
+	var p := LevelProgress.new()
+	var cards := MenuLogic.chapter_cards(asset, cat, p, ChapterKind.Main)
+	assert_false(cards[1].open)
+	assert_eq(cards[1].reason, "Finish Meadow first", "a locked main chapter waits for the one before it")
+	assert_eq(cards[1].levels[0].state, "locked")
+	assert_false(cards[1].active)
+	var side := MenuLogic.chapter_cards(asset, cat, p, ChapterKind.Side)
+	assert_eq(side.size(), 1)
+	assert_eq(side[0].reason, "Win A1", "a locked side chapter names its levels")
+	_won(p, "a1")
+	_won(p, "a2")
+	cards = MenuLogic.chapter_cards(asset, cat, p, ChapterKind.Main)
+	assert_eq(cards[0].progress, "2 / 2 won ✓ Complete")
+	assert_true(cards[0].complete)
+	assert_false(cards[0].active, "a complete chapter is not the active one")
+	assert_true(cards[1].active, "the next chapter is")
+	assert_eq(cards[1].progress, "0 / 1 won")
+	assert_true(MenuLogic.chapter_cards(asset, cat, p, ChapterKind.Side)[0].open)
+
+func test_chapter_progress_text() -> void:
+	assert_eq(MenuLogic.chapter_progress_text(2, 4), "2 / 4 won")
+	assert_eq(MenuLogic.chapter_progress_text(4, 4), "4 / 4 won ✓ Complete")
+	assert_eq(MenuLogic.chapter_progress_text(0, 0), "0 / 0 won", "no levels: never complete")
+	assert_false(MenuLogic.chapter_complete(0, 0))
