@@ -74,6 +74,7 @@ func open() -> void:
 	_on_open()
 	if use_scrim: scrim.fade_in()
 	if window != null:
+		window.modulate.a = 0.0 # hidden until its transition starts (no full-size flash on the first frame)
 		await get_tree().process_frame # the window's size is known after a frame
 		if is_open and is_instance_valid(window): TdPanelTransition.open(window)
 

@@ -2,11 +2,13 @@ class_name HudLayout
 extends RefCounted
 ## The battle HUD's bottom row and screen zones as pure math (UI Design Rules, Bottom row layout; hud-menu-spec §6),
 ## in canvas pixels at the 1920×1080 reference (the canvas grows with the window's aspect, so `screen` may be wider
-## or taller). Left to right: the hand tray (bottom-left, from the 32 px margin), the action bar (bottom-centre of the
-## free board area, the screen minus the right bar, ~62 px above the bottom; slid right to sit 24 px past the tray
-## when it would touch it), End turn (bottom-right, never moved). When the tray and the bar don't fit side by side
-## (at 1920: 130 × pieces + 110 × abilities > 1372) the bar and its hint move up to a row above the tray, centred
-## on the free area. The hint line sits under the bar (centred on it, left-aligned once the bar has slid right).
+## or taller). Left to right: the hand tray (bottom-left, from the 32 px margin), the action bar (centred on the
+## SCREEN, ~62 px above the bottom; a wide hand pushes it right until it clears the tray by 24 px, never left: user
+## decision 2026-10-13), End turn (bottom-right, never moved). When the pushed bar would reach End turn, the bar and
+## its hint move up to a row above the tray, centred on the screen. bar_raised() is the doc's count rule
+## (130 × pieces + 147 × abilities > 1372; 147 = one ability button with its bleed room and gap), kept as a quick
+## estimate; bottom_row() decides from the real widths. The hint sits under the bar (centred on it, left-aligned once
+## the bar has been pushed right).
 
 const MARGIN := 32.0
 const TOP_BAR := 96.0
@@ -24,12 +26,18 @@ const END_TURN_BOTTOM := 20.0
 const BAR_BOTTOM := 62.0
 const BAR_H := 112.0
 const BAR_GAP := 24.0
+## How far a slid action bar stays right of the tray.
+const TRAY_CLEAR := 24.0
 const RAISED_GAP := 12.0
 const HINT_H := 44.0
 ## The fit rule's budget at 1920 wide: 130 px per piece + 110 px per ability must stay within this.
 const ROW_BUDGET := 1372.0
 const PIECE_COST := 130.0
-const ABILITY_COST := 110.0
+## One ability button in the bar: the 84 face plus the kit's bleed room (ring, key badge, cooldown badge: 29 + 30),
+## and the gap between buttons; the fit rule counts this per ability.
+const ABILITY_W := 143.0
+const ABILITY_GAP := 4.0
+const ABILITY_COST := ABILITY_W + ABILITY_GAP
 
 ## The tray's width for n pieces (pieces × 124 + gaps + 44 padding); an empty hand keeps one slot's width.
 static func tray_width(pieces: int) -> float:
@@ -47,7 +55,7 @@ static func bar_raised(pieces: int, abilities: int, screen_w := 1920.0) -> bool:
 static func bar_width(buttons: int, who_w := 110.0) -> float:
 	var n := maxi(0, buttons)
 	var w := 16.0 * 2.0 + maxf(110.0, who_w)
-	if n > 0: w += 26.0 + 2.0 + 26.0 + n * 84.0 + (n - 1) * 26.0
+	if n > 0: w += 26.0 + 2.0 + 26.0 + n * ABILITY_W + (n - 1) * ABILITY_GAP
 	return w
 
 ## The free board area's horizontal centre (the screen minus the right bar).
@@ -58,16 +66,18 @@ static func free_centre_x(screen: Vector2) -> float:
 ## "hint_x": float (left edge when slid, else the centre), "hint_y": float (top), "hint_centred": bool,
 ## "bottom_inset": float (what the HUD covers at the bottom)}.
 static func bottom_row(screen: Vector2, pieces: int, abilities: int, bar_w: float) -> Dictionary:
+	# user decision 2026-10-13: centred on the SCREEN; a wide hand pushes it right until it clears the tray by 24 px
+	# (never left); if it would then reach End turn, it goes up a row above the tray, centred again
 	var tray := tray_rect(screen, pieces)
-	var raised := bar_raised(pieces, abilities, screen.x)
-	var cx := free_centre_x(screen)
+	var cx := screen.x / 2.0
 	var x := cx - bar_w / 2.0
 	var slid := false
+	var raised := false
 	var end_left := screen.x - MARGIN - END_TURN - BAR_GAP
-	if not raised and x < tray.end.x + BAR_GAP:
-		x = tray.end.x + BAR_GAP
+	if x < tray.end.x + TRAY_CLEAR:
+		x = tray.end.x + TRAY_CLEAR
 		slid = true
-		if x + bar_w > end_left: raised = true
+	if x + bar_w > end_left: raised = true
 	var y := screen.y - BAR_BOTTOM - BAR_H
 	if raised:
 		slid = false

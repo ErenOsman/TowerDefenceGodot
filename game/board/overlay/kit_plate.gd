@@ -51,7 +51,10 @@ func show_frame(f: EntityFrame) -> void:
 	_align()
 
 func set_form(full: bool, width: float, p_scale: float, dimmed: bool) -> void:
-	if status.full != full: status.full = full
+	if status.full != full:
+		# the kit plate keeps its last size as its minimum: let it shrink back to the compact width
+		status.custom_minimum_size = Vector2.ZERO
+		status.full = full
 	if not full and absf(status.plate_width - width) > 0.5: status.plate_width = width
 	scale = Vector2.ONE * p_scale
 	modulate.a = 0.5 if dimmed else 1.0
@@ -71,7 +74,11 @@ func tick(_dt: float) -> void:
 
 ## Hangs the kit plate above the origin (its bar's bottom edge on it, centred).
 func _align() -> void:
-	status.position = Vector2(-status.size.x * 0.5, -status.size.y)
+	# centred on the unit for both widths: from the form's own width and the bar's bottom, never a stale size
+	var w := 164.0 if status.full else status.plate_width
+	var bottom := status.size.y
+	if status.health_bar != null: bottom = status.health_bar.position.y + status.health_bar.size.y
+	status.position = Vector2(-w * 0.5, -bottom)
 	_backing.visible = status.full
 	if status.full:
 		_backing.position = status.position - Vector2(10, 8)

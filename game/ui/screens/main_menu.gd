@@ -30,12 +30,29 @@ func _ready() -> void:
 	popups.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	popups.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(popups)
-	await get_tree().process_frame
-	TdMenu.slide_in(list.get_children())
+	_enter()
 	_first_button().grab_focus()
+
+## Entry motion without a flash: everything starts hidden in _build (before the first frame is drawn); the column
+## slides in from x -24 as a whole (moving buttons inside a container fights its layout, which made them jitter)
+## and the buttons fade in one after another (0.04 s apart). Unscaled time.
+func _enter() -> void:
+	var to := _col.position
+	_col.position = to + Vector2(-24, 0)
+	var tw := TdTheme.tween(_col)
+	TdTheme.ease_tweener(tw.tween_property(_col, "position", to, TdTheme.motion("normal")), "out")
+	var i := 0
+	for c in list.get_children():
+		var t := TdTheme.tween(c)
+		t.tween_interval(0.04 * i)
+		t.tween_property(c, "modulate:a", 1.0, TdTheme.motion("normal"))
+		i += 1
+
+var _col: Control
 
 func _build() -> void:
 	var col := TdMenu.vbox(0)
+	_col = col
 	col.position = Vector2(120, 72)
 	col.custom_minimum_size = Vector2(560, 0)
 	add_child(col)
@@ -76,6 +93,7 @@ func _add(id: String, text: String, icon: String, fn: Callable) -> void:
 	b.keyboard_focus = true
 	b.size_flags_horizontal = SIZE_SHRINK_BEGIN
 	b.clicked.connect(fn)
+	b.modulate.a = 0.0 # faded in by _enter()
 	list.add_child(b)
 	buttons[id] = b
 

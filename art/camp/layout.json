@@ -1,98 +1,118 @@
 {
  "board": {
   "tiles": [
-   18,
-   9
+   14,
+   10
   ],
-  "note": "tile x 0..17 left->right, depth 0..8 front->back (Godot: position = Vector3(x, 0, -depth)); the ground FBX 'Camp Ground' has its origin at its centre: place it at Vector3(8.5, 0, -4.0)",
-  "yaw_note": "face_yaw / yaw: degrees about the up axis, positive = counter-clockwise seen from above (Godot rotation_degrees.y). face_yaw turns a station prop halfway toward the campfire so it still shows its front to the camera."
+  "ground": "map kit (BoardView ground pieces + frame)",
+  "note": "tile x 0..13 left->right, depth 0..9 front->back (Godot: position = Vector3(x, 0, -depth)). Stations stand on a ring (ellipse) round the campfire; every prop faces the camera (face_yaw 0). row: back = button above the prop, front = button below it."
+ },
+ "ring": {
+  "centre": [
+   6.5,
+   4.6
+  ],
+  "radius": [
+   5.2,
+   3.3
+  ],
+  "slots": 7,
+  "first_angle_deg": 90,
+  "note": "slot k at angle 90 + k*360/7 degrees (90 = straight behind the fire), counter-clockwise seen from above"
  },
  "centre": {
   "prop": "Campfire",
   "tile": [
-   8.5,
-   2.2
+   6.5,
+   4.6
   ],
-  "scale": 1.6,
+  "scale": 3.0,
   "yaw": 0
  },
  "slots": [
   {
    "slot": 0,
    "tile": [
-    1.1,
-    1.3
+    6.5,
+    7.9
    ],
-   "face_yaw": -48.5,
-   "station": null,
-   "prop": null,
-   "note": "free slot for a future station"
+   "face_yaw": 0.0,
+   "row": "back",
+   "station": "Chapters",
+   "prop": "War Table",
+   "scale": 3.2
   },
   {
    "slot": 1,
    "tile": [
-    2.42,
-    4.26
+    2.43,
+    6.66
    ],
-   "face_yaw": -35.6,
+   "face_yaw": 0.0,
+   "row": "back",
    "station": "Towers",
    "prop": "Miniature Shelf",
-   "scale": 1.5
+   "scale": 3.4
   },
   {
    "slot": 2,
    "tile": [
-    5.23,
-    5.96
+    1.43,
+    3.87
    ],
-   "face_yaw": -20.5,
-   "station": "Chapters",
-   "prop": "War Table",
-   "scale": 1.6
+   "face_yaw": 0.0,
+   "row": "front",
+   "station": "Workshop",
+   "prop": "Tower Workshop",
+   "scale": 3.2
   },
   {
    "slot": 3,
    "tile": [
-    8.5,
-    6.5
+    4.24,
+    1.63
    ],
    "face_yaw": 0.0,
-   "station": "Codex",
-   "prop": "Codex Lectern",
-   "scale": 1.7
+   "row": "front",
+   "station": null,
+   "prop": null,
+   "note": "free slot for a future station"
   },
   {
    "slot": 4,
    "tile": [
-    11.77,
-    5.96
+    8.76,
+    1.63
    ],
-   "face_yaw": 20.5,
-   "station": "Workshop",
-   "prop": "Tower Workshop",
-   "scale": 1.5
+   "face_yaw": 0.0,
+   "row": "front",
+   "station": null,
+   "prop": null,
+   "note": "free slot for a future station"
   },
   {
    "slot": 5,
    "tile": [
-    14.58,
-    4.26
+    11.57,
+    3.87
    ],
-   "face_yaw": 35.6,
+   "face_yaw": 0.0,
+   "row": "front",
    "station": "Multiplayer",
    "prop": "Signal Post",
-   "scale": 1.3
+   "scale": 2.4
   },
   {
    "slot": 6,
    "tile": [
-    15.9,
-    1.3
+    10.57,
+    6.66
    ],
-   "face_yaw": 48.5,
-   "station": null,
-   "prop": null,
-   "note": "free slot for a future station"
+   "face_yaw": 0.0,
+   "row": "back",
+   "station": "Codex",
+   "prop": "Codex Lectern",
+   "scale": 3.2
   }
  ],
  "decor": [
@@ -100,26 +120,20 @@
    "prop": "Tent",
    "tile": [
     0.9,
-    8.0
+    8.9
    ],
-   "scale": 1.6,
-   "yaw": 25,
-   "note": "back-left corner, behind the arc, clear of every slot"
+   "scale": 2.6,
+   "yaw": 15
   },
   {
    "prop": "Supplies",
    "tile": [
-    16.2,
-    8.0
+    12.2,
+    8.9
    ],
-   "scale": 1.5,
-   "yaw": -20,
-   "note": "back-right corner, behind the arc, clear of every slot"
+   "scale": 2.6,
+   "yaw": -15
   }
  ],
- "spacing": {
-  "min_centre_distance_tiles": 3.24,
-  "rule": "keep station props on the arc slots; centres >= 3.2 tiles apart (about 2 tiles of clear ground between ~1.2-tile props)",
-  "more_stations": "use the free end slots 0 and 6 first; after that add a second, outer arc (a+2, b+1.5) and widen the board by 4 tiles, or move decor"
- }
+ "spacing": "menus agent ring layout 2026-10-13 (replaces the Blender horseshoe; the previous file is kept in the menus agent's scratchpad)"
 }

@@ -1,7 +1,7 @@
 extends Control
 ## The Camp (UI_Camp.cs; Camp & Chapters — Design): the home between levels once Chapter 1 is won. A 3D camp
-## laid out from res://art/camp/layout.json (Camp Ground, the station props on an arc round the Campfire, Tent and
-## Supplies) with a station button over each prop: Chapters (the chapter picker, then a chapter's
+## laid out from res://art/camp/layout.json (map-kit ground with its frame, the station props on a ring round the
+## Campfire, all facing the camera; Tent and Supplies) with a station button over each prop: Chapters (the chapter picker, then a chapter's
 ## levels), Towers (the hand editor over every owned tower), Codex, and Main menu; Workshop and Multiplayer are
 ## locked ("Coming later"). The first visit (PlayerProfile.camp_seen) shows a welcome card, then a tour: the
 ## Princess's speech bubble (TdTextBubble) points at each station in turn, the station highlighted; a click goes on,
@@ -20,19 +20,23 @@ const STATIONS := [
 	{"id": "Workshop", "label": "Workshop", "icon": "icon_edit", "action": "", "locked": true},
 	{"id": "Multiplayer", "label": "Multiplayer", "icon": "icon_onboard", "action": "", "locked": true},
 ]
-## Used when layout.json cannot be read (same values as the Blender layout of 2026-10-13).
+## Used when layout.json cannot be read (same values as layout.json, the ring layout of 2026-10-13).
 const FALLBACK_LAYOUT := {
-	"centre": {"prop": "Campfire", "tile": [8.5, 2.2], "scale": 1.6, "yaw": 0},
+	"board": {"tiles": [14, 10], "ground": "map kit (BoardView ground pieces + frame)"},
+	"ring": {"centre": [6.5, 4.6], "radius": [5.2, 3.3], "slots": 7, "first_angle_deg": 90},
+	"centre": {"prop": "Campfire", "tile": [6.5, 4.6], "scale": 3.0, "yaw": 0},
 	"slots": [
-		{"tile": [2.42, 4.26], "face_yaw": -35.6, "station": "Towers", "prop": "Miniature Shelf", "scale": 1.5},
-		{"tile": [5.23, 5.96], "face_yaw": -20.5, "station": "Chapters", "prop": "War Table", "scale": 1.6},
-		{"tile": [8.5, 6.5], "face_yaw": 0.0, "station": "Codex", "prop": "Codex Lectern", "scale": 1.7},
-		{"tile": [11.77, 5.96], "face_yaw": 20.5, "station": "Workshop", "prop": "Tower Workshop", "scale": 1.5},
-		{"tile": [14.58, 4.26], "face_yaw": 35.6, "station": "Multiplayer", "prop": "Signal Post", "scale": 1.3},
+		{"slot": 0, "tile": [6.5, 7.9], "face_yaw": 0.0, "row": "back", "station": "Chapters", "prop": "War Table", "scale": 3.2},
+		{"slot": 1, "tile": [2.43, 6.66], "face_yaw": 0.0, "row": "back", "station": "Towers", "prop": "Miniature Shelf", "scale": 3.4},
+		{"slot": 2, "tile": [1.43, 3.87], "face_yaw": 0.0, "row": "front", "station": "Workshop", "prop": "Tower Workshop", "scale": 3.2},
+		{"slot": 3, "tile": [4.24, 1.63], "face_yaw": 0.0, "row": "front", "station": null, "prop": null},
+		{"slot": 4, "tile": [8.76, 1.63], "face_yaw": 0.0, "row": "front", "station": null, "prop": null},
+		{"slot": 5, "tile": [11.57, 3.87], "face_yaw": 0.0, "row": "front", "station": "Multiplayer", "prop": "Signal Post", "scale": 2.4},
+		{"slot": 6, "tile": [10.57, 6.66], "face_yaw": 0.0, "row": "back", "station": "Codex", "prop": "Codex Lectern", "scale": 3.2},
 	],
-	"decor": [{"prop": "Tent", "tile": [0.9, 8.0], "scale": 1.6, "yaw": 25}, {"prop": "Supplies", "tile": [16.2, 8.0], "scale": 1.5, "yaw": -20}],
+	"decor": [{"prop": "Tent", "tile": [0.9, 8.9], "scale": 2.6, "yaw": 15}, {"prop": "Supplies", "tile": [12.2, 8.9], "scale": 2.6, "yaw": -15}],
 }
-const BOARD := Vector2(18, 9)
+const BOARD := Vector2(14, 10)
 ## Station buttons: the gap kept between them, and how far above its prop's top a button sits.
 const BUTTON_GAP := 16.0
 const BUTTON_LIFT := 28.0
@@ -47,6 +51,8 @@ const TOUR_SPEAKER := "Princess"
 
 var buttons := {}       # station id → TdMenuButton
 var props := {}         # station id → Node3D
+var _front := {}        # station id → true when its slot is on the front of the ring (button below the prop)
+var _board := BOARD
 var tour_step := -1
 var bubble: TdTextBubble
 var welcome_card: Control
@@ -84,13 +90,20 @@ func _build_world() -> void:
 	_vp.add_child(root)
 	TdDiorama._add_light(root, TdTheme.color("wood.900"))
 	var layout := load_layout()
-	var ground_scene: PackedScene = GameApp.camp_scene("Camp Ground")
-	if ground_scene != null:
-		var g: Node3D = ground_scene.instantiate()
-		g.position = Vector3(BOARD.x / 2.0 - 0.5, 0.0, -(BOARD.y / 2.0 - 0.5))
-		root.add_child(g)
+	# the ground: the map kit's ground pieces with its frame (BoardView over an empty map of the layout's size)
+	var bt = layout.get("board", {}).get("tiles", [BOARD.x, BOARD.y])
+	_board = Vector2(float(bt[0]), float(bt[1]))
+	var level := LevelAsset.new()
+	var rows: Array[String] = []
+	for y in int(_board.y): rows.append(".".repeat(int(_board.x)))
+	level.terrain = rows
+	var board := BoardView.new()
+	root.add_child(board)
+	var kit: Array = GameApp.lib.rules.tiles if GameApp.lib.rules != null else []
+	board.build(BattleGrid.new(int(_board.x), int(_board.y)), level, kit, func(p): return GameApp.model_scene(p))
 	for slot in layout.get("slots", []):
 		if slot.get("prop") == null or slot.get("station") == null: continue
+		_front[str(slot.station)] = str(slot.get("row", "back")) == "front"
 		props[str(slot.station)] = _prop(root, str(slot.prop), _tile(slot.tile), float(slot.get("scale", 1.0)), float(slot.get("face_yaw", 0.0)))
 	var centre: Dictionary = layout.get("centre", {})
 	if not centre.is_empty(): _prop(root, str(centre.prop), _tile(centre.tile), float(centre.get("scale", 1.0)), float(centre.get("yaw", 0.0)))
@@ -99,9 +112,12 @@ func _build_world() -> void:
 	_cam.fov = 34.0
 	root.add_child(_cam)
 	_cam.current = true
-	var c := Vector3(BOARD.x / 2.0 - 0.5, 0.0, -(BOARD.y / 2.0 - 0.5))
-	_cam.position = c + Vector3(0, 13.5, 15.0)
-	_cam.look_at(c + Vector3(0, 0, -0.4), Vector3.UP)
+	# framed on the ring round the fire (not the whole board)
+	var ring: Dictionary = layout.get("ring", {})
+	var fire := _tile(ring.get("centre", centre.get("tile", [_board.x / 2.0 - 0.5, _board.y / 2.0 - 0.5])))
+	var c := Vector3(fire.x, 0.0, -fire.y - 0.6)
+	_cam.position = c + Vector3(0, 14.5, 17.0)
+	_cam.look_at(c, Vector3.UP)
 
 ## The camp layout (layout.json), or the built-in copy when it cannot be read.
 static func load_layout() -> Dictionary:
@@ -143,6 +159,12 @@ func _prop_rect(n: Node3D) -> Rect2:
 			else: r = r.expand(p)
 			first = false
 	return r
+
+## A prop's foot (its position on the ground, a little in front) in canvas coordinates.
+func _screen_base(n: Node3D) -> Vector2:
+	if n == null or _cam == null: return Vector2.ZERO
+	var p := _cam.unproject_position(n.global_position + Vector3(0, 0, 0.5))
+	return p * (size / Vector2(_vp.size)) if _vp.size.x > 0 else p
 
 ## A prop's top in canvas coordinates (where its station button goes).
 func _screen_of(n: Node3D) -> Vector2:
@@ -219,8 +241,16 @@ func _place_buttons() -> void:
 	for st in STATIONS:
 		var b: TdButton = buttons[st.id]
 		if not b.visible or not props.has(st.id): continue
-		items.append({"b": b, "anchor": _screen_of(props[st.id])})
-	var rects := layout_buttons(items.map(func(i): return [i.anchor, i.b.size]), size.x, BUTTON_GAP, BUTTON_LIFT)
+		var front: bool = _front.get(st.id, false)
+		items.append({"b": b, "front": front, "anchor": _screen_base(props[st.id]) if front else _screen_of(props[st.id])})
+	# back-row buttons above their props, front-row ones below (mirrored: the same layout with y flipped)
+	var back := items.filter(func(i): return not i.front)
+	var front_items := items.filter(func(i): return i.front)
+	var rb := layout_buttons(back.map(func(i): return [i.anchor, i.b.size]), size.x, BUTTON_GAP, BUTTON_LIFT)
+	var rf := layout_buttons(front_items.map(func(i): return [Vector2(i.anchor.x, -i.anchor.y), i.b.size]), size.x, BUTTON_GAP, BUTTON_LIFT)
+	for k in rf.size(): rf[k] = Rect2(Vector2(rf[k].position.x, -rf[k].end.y), rf[k].size)
+	items = back + front_items
+	var rects := rb + rf
 	for k in items.size():
 		var b: TdButton = items[k].b
 		var r: Rect2 = rects[k]
@@ -234,7 +264,8 @@ func _place_buttons() -> void:
 			move_child(line, b.get_index())
 			b.set_meta("leader", line)
 		var a: Vector2 = items[k].anchor
-		line.points = PackedVector2Array([Vector2(r.get_center().x, r.end.y), a])
+		var from := Vector2(r.get_center().x, r.position.y if items[k].front else r.end.y)
+		line.points = PackedVector2Array([from, a])
 
 ## Places buttons (each [anchor point, size]) centred above their anchors, `lift` px up, without overlaps: sorted by
 ## x and pushed right to keep `gap`; the row is then shifted back inside [gap, width - gap]; a button that still
@@ -347,10 +378,20 @@ func show_tour_step(index: int) -> void:
 		var pr := _prop_rect(props.get(TOUR[index][0]))
 		var row_bottom := b.get_global_rect().end.y
 		var right_side := pr.get_center().x < size.x * 0.6
-		bubble.offset_top = row_bottom - 30.0
-		bubble.offset_left = pr.end.x + 8.0 if right_side else 0.0
-		bubble.offset_right = 0.0 if right_side else -(size.x - pr.position.x + 8.0)
-		var tip := Vector2(pr.end.x - 6.0 if right_side else pr.position.x + 6.0, maxf(row_bottom - 4.0, pr.position.y))
+		var centre := absf(pr.get_center().x - size.x / 2.0) < size.x * 0.12
+		var front: bool = _front.get(TOUR[index][0], false)
+		var tip: Vector2
+		if centre:
+			# a station in the middle (props on both sides): the bubble opens under it, over the open ground
+			bubble.offset_left = 0.0
+			bubble.offset_right = 0.0
+			bubble.offset_top = pr.end.y - 30.0
+			tip = Vector2(pr.get_center().x, pr.end.y - 4.0)
+		else:
+			bubble.offset_top = (pr.position.y - 30.0) if front else (row_bottom - 30.0)
+			bubble.offset_left = pr.end.x + 8.0 if right_side else 0.0
+			bubble.offset_right = 0.0 if right_side else -(size.x - pr.position.x + 8.0)
+			tip = Vector2(pr.end.x - 6.0 if right_side else pr.position.x + 6.0, maxf(row_bottom - 4.0, pr.position.y) if not front else pr.position.y + 6.0)
 		bubble.point_at(tip)
 		return
 	end_tour()

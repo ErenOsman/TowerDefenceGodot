@@ -106,6 +106,8 @@ var _last_ticks := 0
 var _loading_held := false
 var _frames_drawn := 0
 
+## Tile previews get a clear border over the kit's thin one (off: the plain kit decals).
+var reinforce_outlines := true
 ## Tools and tests: forces the tile under the pointer (Vector2i; out of bounds = none), null = the real pointer.
 var hover_override = null
 ## A panel (pause, settings, end screen) is open over the level: its keys are its own (the HUD sets it).
@@ -1001,7 +1003,7 @@ func _mark(p: Vector2i, kind: int, yaw: float = 0.0) -> void:
 			if decal == null: decal = fallback; tint = Color(1, 0.82, 0.4, 0.8)
 		Preview.LINE: flat = Color(1, 0.25, 0.2, 0.8); size = 0.25; lift = 0.05
 		Preview.ROUTE:
-			decal = _decal("board/decal_move_step"); lift = 0.04
+			decal = _decal("board/decal_move_step"); lift = 0.04; tint = Color(1, 1, 1, 1)
 			if decal == null: flat = Color(1, 1, 1, 0.7); size = 0.3
 		Preview.MOVE: decal = _decal("board/decal_move"); tint = Color(1, 1, 1, 0.9); flat = RANGE_COLOR
 		Preview.DEST: decal = _decal("board/decal_move_dest"); flat = AIM_COLOR; lift = 0.045
@@ -1012,7 +1014,7 @@ func _mark(p: Vector2i, kind: int, yaw: float = 0.0) -> void:
 		Preview.BLOCKED: flat = BLOCKED_COLOR
 		Preview.PLACE: decal = _decal("board/decal_place"); tint = Color(1, 1, 1, 0.9); flat = PLACE_COLOR
 		Preview.HOVER: flat = HOVER_COLOR; lift = 0.035
-		Preview.ENEMY_PATH: decal = _decal("board/decal_enemy_path"); tint = Color(1, 1, 1, 0.9); flat = Color(1, 1, 1, 0.7); lift = 0.04
+		Preview.ENEMY_PATH: decal = _decal("board/decal_enemy_path"); tint = Color(1, 1, 1, 1); flat = Color(1, 1, 1, 0.7); lift = 0.04
 		Preview.ENEMY_STOP: decal = _decal("board/decal_enemy_stop"); flat = STOP_COLOR; lift = 0.045
 		Preview.ENEMY_AREA:
 			decal = _decal("board/decal_enemy_stop"); tint = Color(1, 0.45, 0.4, 0.75); flat = AREA_COLOR; lift = 0.03
@@ -1022,7 +1024,15 @@ func _mark(p: Vector2i, kind: int, yaw: float = 0.0) -> void:
 	if kind == Preview.TARGET or kind == Preview.ENEMY_TARGET:
 		# valid targets pulse red (UI rules, board previews): a red wash under the kit's outline decal
 		board.highlight(p, Color(1.0, 0.3, 0.25, 0.32 * tint.a), size, lift - 0.002)
-	if decal != null: board.highlight(p, tint, size, lift, decal, GridSpace.decal_yaw(yaw))
+	if decal != null:
+		board.highlight(p, tint, size, lift, decal, GridSpace.decal_yaw(yaw))
+		# a clear border over the kit's thin one (the user: "a bit more visible"), in the decal's own border colour
+		# (a walk's reach and an enemy's path keep dashes: dashed = path); the route's step dots stay as they are
+		if reinforce_outlines and kind in [Preview.RANGE, Preview.TARGET, Preview.AREA, Preview.MOVE, Preview.DEST, Preview.PLACE,
+				Preview.PLACE_BLOCKED, Preview.HEAL, Preview.ENEMY_STOP, Preview.ENEMY_AREA, Preview.ENEMY_TARGET, Preview.ENEMY_PATH]:
+			var bc := BoardMaterials.border_color(decal)
+			var dashed := kind == Preview.MOVE or kind == Preview.ENEMY_PATH
+			board.highlight(p, Color(bc.r, bc.g, bc.b, minf(1.0, 0.95 * maxf(tint.a, 0.75))), size, lift + 0.001, BoardMaterials.outline_texture(dashed))
 	elif flat.a > 0.0: board.highlight(p, flat, size, lift)
 
 ## The hatched area decal on an attack's area / splash tiles only: not on the aimed tile itself (a valid target

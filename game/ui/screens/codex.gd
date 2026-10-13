@@ -12,7 +12,7 @@ const TAB_NAMES := ["Towers", "Enemies", "Statuses", "Tips"]
 const TAB_WIDTHS := [200.0, 236.0, 236.0, 190.0] # faces; TdButton adds its bleed room
 const WIDTH := 1600.0
 const HEIGHT := 900.0
-const STAT_ICONS := {"MaxHp": "icon_heart", "Power": "icon_power", "Potency": "icon_power", "Duration": "icon_clock",
+const STAT_ICONS := {"MaxHp": "icon_heart", "Power": "icon_power", "Potency": "icon_del-spark", "Duration": "icon_clock",
 	"Speed": "icon_speed", "Range": "icon_range", "Radius": "icon_range"}
 
 var section := CodexSection.Towers
@@ -115,7 +115,12 @@ func _build() -> void:
 	var cols := TdMenu.hbox(30)
 	cols.size_flags_horizontal = SIZE_EXPAND_FILL
 	cols.size_flags_vertical = SIZE_EXPAND_FILL
-	_page_scroll.add_child(cols)
+	# room for the tiles' and cards' rims (sprite outsets): the scroll area clips what hangs past its edge
+	var pad := MarginContainer.new()
+	pad.size_flags_horizontal = SIZE_EXPAND_FILL
+	for side in ["left", "top", "right", "bottom"]: pad.add_theme_constant_override("margin_" + side, 6)
+	_page_scroll.add_child(pad)
+	pad.add_child(cols)
 	_left = TdMenu.vbox(16)
 	_left.custom_minimum_size = Vector2(276, 0)
 	cols.add_child(_left)
@@ -156,8 +161,9 @@ func _build() -> void:
 	stage.add_child(_hint)
 	_stats = GridContainer.new()
 	_stats.columns = 2
-	_stats.add_theme_constant_override("h_separation", 14)
-	_stats.add_theme_constant_override("v_separation", 14)
+	_stats.add_theme_constant_override("h_separation", int(TILE_GAP))
+	_stats.add_theme_constant_override("v_separation", int(TILE_GAP))
+	_stats.size_flags_horizontal = SIZE_SHRINK_BEGIN
 	_left.add_child(_stats)
 	var right := TdMenu.vbox(10)
 	right.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -449,7 +455,7 @@ func _unit_page(entity: EntityAsset, description: String) -> void:
 	_abilities_head.visible = d.abilities.size() + passives.size() > 0
 	for ab in d.abilities:
 		var asset = GameApp.convert.asset_of(ab, "AbilityAsset")
-		var icon: Texture2D = TdTheme.ability_face(MenuLogic.icon_name(asset.icon)) if asset != null and asset.icon != "" else null
+		var icon: Texture2D = TdTheme.ability_icon(MenuLogic.icon_name(asset.icon)) if asset != null and asset.icon != "" else null
 		var pips := 0 if ab.cooldown_until_reset else maxi(1, ab.cooldown)
 		_abilities.add_child(_ability_row(icon, ab.display_name, " · ".join(PackedStringArray(ab.tags)),
 			TooltipText.describe(MenuLogic.fill_stat_words(ab.description, values)), TooltipText.cooldown_words(ab.cooldown, ab.cooldown_until_reset), pips,
@@ -474,20 +480,34 @@ static func _num(v) -> String:
 	var f := float(v)
 	return str(int(f)) if is_equal_approx(f, roundf(f)) else str(snappedf(f, 0.01))
 
+## One stat tile: a fixed size (two columns of TILE_W with TILE_GAP between them span the model box exactly), its
+## content placed by hand (the label clips its text), so a long label never widens a column.
+const TILE_W := (276.0 - TILE_GAP) / 2.0
+const TILE_H := 68.0
+const TILE_GAP := 12.0
+
 func _stat_tile(stat: String, label: String, value: String) -> Control:
-	var p := TdMenu.panel(TdPanel.Kind.STAT, 10)
-	p.custom_minimum_size = Vector2(131, 64)
-	var v := TdMenu.vbox(0)
-	p.add_child(v)
-	var top := TdMenu.hbox(6)
-	v.add_child(top)
+	var root := Control.new()
+	root.custom_minimum_size = Vector2(TILE_W, TILE_H)
+	root.mouse_filter = MOUSE_FILTER_IGNORE # not clipped: the sprite's rim hangs 2 px outside the tile (its outset)
+	var bg := Panel.new()
+	bg.add_theme_stylebox_override("panel", TdTheme.stylebox("paper_stat"))
+	bg.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	bg.mouse_filter = MOUSE_FILTER_IGNORE
+	root.add_child(bg)
 	var icon := TdMenu.picture(TdTheme.texture(STAT_ICONS.get(stat, "icon_power")), Vector2(20, 20))
 	icon.modulate = TdTheme.color("ink.2")
-	icon.size_flags_vertical = SIZE_SHRINK_CENTER
-	top.add_child(icon)
-	top.add_child(TdMenu.label(value, "header", TdTheme.color("ink"), 28))
-	v.add_child(TdMenu.label(label, "small", TdTheme.color("ink.2"), 20))
-	return p
+	icon.position = Vector2(10, 12)
+	root.add_child(icon)
+	var v := TdMenu.label(value, "header", TdTheme.color("ink"), 28)
+	v.position = Vector2(36, 2)
+	root.add_child(v)
+	var l := TdMenu.label(label, "small", TdTheme.color("ink.2"), 20)
+	l.position = Vector2(10, 38)
+	l.size = Vector2(TILE_W - 16, 26)
+	l.clip_text = true
+	root.add_child(l)
+	return root
 
 func _ability_row(icon: Texture2D, name_text: String, tags: String, description: String, cd: String, pips: int,
 		results: Array, passive: bool) -> Control:

@@ -116,3 +116,6 @@ func test_unit_labels() -> void:
 	assert_eq(l[5], "Archer 1")
 	assert_eq(l[9], "Archer 2")
 	assert_eq(l[7], "Base")
+
+func test_aiming_label() -> void:
+	assert_eq(HudText.aiming_label("Shoot"), "Shoot: pick a target")

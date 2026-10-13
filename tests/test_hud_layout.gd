@@ -13,42 +13,41 @@ func test_tray_width_grows_with_pieces() -> void:
 	assert_num(r.end.y, 1080.0)
 
 func test_raise_rule_at_1920() -> void:
-	assert_false(HudLayout.bar_raised(4, 2))
-	assert_false(HudLayout.bar_raised(8, 3))   # 1040 + 330 = 1370
-	assert_true(HudLayout.bar_raised(8, 4))    # 1040 + 440
-	assert_true(HudLayout.bar_raised(7, 5))
-	assert_true(HudLayout.bar_raised(6, 6))
-	assert_false(HudLayout.bar_raised(6, 5))   # 780 + 550 = 1330
-	# a wider canvas has more room
-	assert_false(HudLayout.bar_raised(8, 4, 2560.0))
+	# the doc's count rule with the bled ability width (147 per ability)
+	assert_num(HudLayout.ABILITY_COST, 147.0)
+	assert_false(HudLayout.bar_raised(4, 2))   # 520 + 294
+	assert_false(HudLayout.bar_raised(6, 3))   # 780 + 441 = 1221
+	assert_true(HudLayout.bar_raised(8, 3))    # 1040 + 441 = 1481
+	assert_true(HudLayout.bar_raised(6, 5))
+	assert_false(HudLayout.bar_raised(8, 3, 2560.0))
 
 func test_bar_width() -> void:
 	assert_num(HudLayout.bar_width(0), 32.0 + 110.0)
-	assert_num(HudLayout.bar_width(2), 32.0 + 110.0 + 54.0 + 168.0 + 26.0)
-	assert_num(HudLayout.bar_width(1, 150.0), 32.0 + 150.0 + 54.0 + 84.0)
+	assert_num(HudLayout.bar_width(2), 32.0 + 110.0 + 54.0 + 2.0 * 143.0 + 4.0)
+	assert_num(HudLayout.bar_width(1, 150.0), 32.0 + 150.0 + 54.0 + 143.0)
 
-func test_bar_centred_on_free_area() -> void:
+func test_bar_centred_on_the_screen() -> void:
 	var w := HudLayout.bar_width(2)
-	var row := HudLayout.bottom_row(SCREEN, 4, 2, w)
+	var row := HudLayout.bottom_row(SCREEN, 2, 2, w)
 	var bar: Rect2 = row["bar"]
 	assert_false(row["raised"])
 	assert_false(row["slid"])
-	assert_num(bar.get_center().x, (1920.0 - 300.0) / 2.0)
+	assert_num(bar.get_center().x, 960.0)
 	assert_num(bar.end.y, 1080.0 - 62.0)
 	assert_true(row["hint_centred"])
 	assert_num(row["hint_x"], bar.get_center().x)
 	assert_true(row["hint_y"] >= bar.end.y)
 	assert_num(row["bottom_inset"], 168.0)
 
-func test_bar_slides_right_of_a_long_tray() -> void:
+func test_bar_pushed_right_of_a_wide_tray() -> void:
 	var w := HudLayout.bar_width(2)
 	var row := HudLayout.bottom_row(SCREEN, 5, 2, w)
 	var bar: Rect2 = row["bar"]
 	assert_true(row["slid"])
 	assert_num(bar.position.x, HudLayout.tray_rect(SCREEN, 5).end.x + 24.0)
+	assert_true(bar.get_center().x > 960.0) # never left of centre
 	assert_false(row["hint_centred"])
 	assert_num(row["hint_x"], bar.position.x)
-	# never under End turn
 	assert_true(bar.end.x <= HudLayout.end_turn_rect(SCREEN).position.x)
 
 func test_bar_raises_above_the_tray() -> void:
@@ -57,11 +56,8 @@ func test_bar_raises_above_the_tray() -> void:
 	var bar: Rect2 = row["bar"]
 	assert_true(row["raised"])
 	assert_true(bar.end.y + HudLayout.HINT_H <= HudLayout.tray_rect(SCREEN, 6).position.y)
-	assert_num(bar.get_center().x, (1920.0 - 300.0) / 2.0)
+	assert_num(bar.get_center().x, 960.0)
 	assert_true(row["bottom_inset"] > 168.0)
-	# a slid bar that would reach End turn goes up too
-	var wide := HudLayout.bottom_row(SCREEN, 7, 4, 700.0)
-	assert_true(wide["raised"])
 
 func test_hint_without_bar() -> void:
 	var h := HudLayout.hint_without_bar(SCREEN, 2, 300.0)

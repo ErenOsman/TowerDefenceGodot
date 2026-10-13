@@ -190,7 +190,9 @@ func refresh(pop := false) -> void:
 		"Locked" if not unlocked else "Your hand is empty: add towers with Change hand")
 
 func _draw_list(pop: bool) -> void:
-	for c in _list.get_children(): c.queue_free()
+	for c in _list.get_children(): # removed at once: a queued child would still count below (the 22 px jump)
+		_list.remove_child(c)
+		c.queue_free()
 	_rows.clear()
 	for item in MenuLogic.list_items(_asset, visible_rows):
 		if item.has("heading"):

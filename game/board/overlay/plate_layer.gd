@@ -3,9 +3,11 @@ extends Control
 ## The plates over the board (PlateLayer.cs): one plate per entity with HP, following it on screen and scaled with
 ## the zoom. Compact by default (as wide as its tile on screen minus 8, 3 chip slots); the hovered or selected
 ## unit's plate is full (164 px bar, 4 slots with pills) on a dark backing and on top, the others dimmed to half.
-## Every unit with HP always shows at least its compact plate (bar and statuses, idle too: UI/UX review
-## 2026-10-13); a dead unit's plate stays a moment, draining to zero. Status slots: defensive buffs → control →
-## damage over time → the rest, newest first (OverlayStyle.ordered_statuses).
+## Statuses always show; the HP bar (Unity's rule, PlateLayer.cs) shows only with always_show_health, while the
+## entity is hovered or selected, for health_bar_after_hit seconds after a hit (its HP + shield went down, also when
+## the shield took it all, or hurt() from the damage presenter), while a health preview is on it, and while it dies
+## (draining to zero for health_bar_after_death seconds, also for a unit killed from full HP). A plate with neither
+## statuses nor a bar is empty. Status slots: defensive buffs → control → damage over time → the rest, newest first.
 
 var cam: Camera3D = null
 ## StatusDef → Texture2D.
@@ -27,6 +29,7 @@ var _last_alive := {}   # id → [hp, max_hp]
 var _last_toughness := {}
 var _since_hit := {}
 var _any_full := false
+var _bars := {}         # id → whether its bar showed at the last refresh
 
 ## A frame's statuses in plate slot order — defensive buffs → control → damage over time → the rest, newest first
 ## within each group. The one rule for every status row (board plates and the HUD's inspector).
@@ -114,10 +117,20 @@ func _show(id: int, view: EntityView, f: EntityFrame, dt: float, t: Presentation
 	plate.show_frame(f)
 	var previewed := f.life == LifeState.Alive and health_preview.has(id)
 	plate.set_health_preview(health_preview[id] if previewed else null)
-	# every unit always shows at least its compact plate, HP bar included (UI/UX review 2026-10-13); the full one is
-	# the hovered or selected unit's. (always_show_health and the after-hit timer no longer change what shows.)
-	plate.set_health_visible(true)
+	var bar := _bar_visible(id, f, t)
+	_bars[id] = bar
+	plate.set_health_visible(bar)
 	if plate.has_method("tick"): plate.tick(dt)
+
+## Whether the entity's HP bar shows now (Unity's rule, see the class summary).
+func _bar_visible(id: int, f: EntityFrame, t: PresentationTimings) -> bool:
+	if f.life != LifeState.Alive: return true
+	if always_show_health or focused.has(id) or health_preview.has(id): return true
+	return _since_hit.has(id) and _since_hit[id] <= t.health_bar_after_hit
+
+## Whether an entity's HP bar showed at the last refresh (tests and tools).
+func bar_shown(id: int) -> bool:
+	return _plates.has(id) and _bars.get(id, false)
 
 ## Compact or full: the bar's width, the scale with the zoom, the draw order and the dimming of the others.
 func _form(plate, view: EntityView, full: bool) -> void:

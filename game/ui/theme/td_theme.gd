@@ -186,6 +186,29 @@ static func stylebox(name: String, tint := Color.WHITE, padding: Array = []) -> 
 	_boxes[key] = box
 	return box
 
+## A kit 9-slice with its top `cut_px` texture rows left out (the top border and outset shrink with it), e.g. the deep
+## menu buttons' pressed sprites, whose lighter side band was drawn above the sunk face (it read as flipped).
+static func stylebox_cut_top(name: String, cut_px: int) -> StyleBox:
+	var key := "%s|cut%d" % [name, cut_px]
+	if _boxes.has(key): return _boxes[key]
+	var base := stylebox(name)
+	if not (base is TdSliceBox): return base
+	var b: TdSliceBox = base.duplicate()
+	var ts := b.texture.get_size()
+	b.region = Rect2(0, cut_px, ts.x, ts.y - cut_px)
+	b.border_top = maxi(0, b.border_top - cut_px)
+	b.outset_top = b.outset_top - cut_px * SPRITE_SCALE
+	_boxes[key] = b
+	return b
+
+## An ability's icon with its chip and dark rim (kit abilities/<Name>), for rows, lists and tooltips: the Codex, Info
+## and inspector rows. (ability_face() is the bare full-face picture for under the action bar's overlay frame.)
+static func ability_icon(icon_name: String) -> Texture2D:
+	var t := kit("abilities/" + icon_name)
+	if t != null: return t
+	var p := "res://art/icons/Abilities/%s.png" % icon_name
+	return load(p) if ResourceLoader.exists(p) else null
+
 ## A plain texture shown at reference size: a TextureRect sized to the sprite (or `size`), filtered smoothly.
 static func sprite_rect(tex: Texture2D, size := Vector2.ZERO, tint := Color.WHITE) -> TextureRect:
 	var r := TextureRect.new()
@@ -206,7 +229,8 @@ static func sprite_rect(tex: Texture2D, size := Vector2.ZERO, tint := Color.WHIT
 static func role_sprite(role: String) -> String:
 	return TdTokens.ROLES.get(role, "")
 
-## An ability's full-face picture (kit abilities_face/<Name>), else its icon (the same name under abilities/).
+## An ability's full-face picture (kit abilities_face/<Name>), else its icon (the same name under abilities/). Only for
+## the ability BUTTON, whose overlay sprite draws the rim around it; elsewhere use ability_icon().
 static func ability_face(icon_name: String) -> Texture2D:
 	var t := kit("abilities_face/" + icon_name)
 	return t if t != null else kit("abilities/" + icon_name)

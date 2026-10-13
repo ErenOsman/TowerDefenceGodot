@@ -70,6 +70,10 @@ static func shortfall(cost: int, energy: int) -> String:
 
 # ------------------------------------------------------------------ action bar
 
+## The action bar's label while an ability is aimed: "Shoot: pick a target".
+static func aiming_label(ability_name: String) -> String:
+	return "%s: pick a target" % ability_name
+
 ## How many of the flags are true (abilities castable now).
 static func ready_count(castable: Array) -> int:
 	var n := 0

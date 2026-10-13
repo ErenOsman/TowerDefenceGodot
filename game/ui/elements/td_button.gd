@@ -500,7 +500,10 @@ func _redraw() -> void:
 	var st := _style()
 	var sprite := _sprite_now()
 	if sprite != "":
-		_bg.add_theme_stylebox_override("panel", TdTheme.stylebox(sprite))
+		# the deep menu sprites' pressed variants draw a lighter side band ABOVE the sunk face (8 px rows in the PNG):
+		# leave it out so the face simply sits 4 px lower under its rim
+		var menu_pressed := (style == Style.MENU_PRIMARY or style == Style.MENU_WOOD) and sprite.ends_with("_pressed")
+		_bg.add_theme_stylebox_override("panel", TdTheme.stylebox_cut_top(sprite, 8) if menu_pressed else TdTheme.stylebox(sprite))
 	var col: Color = st.get("label", Color.WHITE) if interactable else st.get("label_disabled", TdTheme.color("cream.300"))
 	if style == Style.END_TURN and not interactable: col = TdTheme.color("cream.300")
 	_label.add_theme_color_override("font_color", col)
@@ -664,6 +667,9 @@ func _has_point(point: Vector2) -> bool:
 	return face_rect().has_point(point)
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_PARENTED and is_node_ready():
+	# the bleed room depends only on the style, the face size, keyboard_focus and the parent kind (never on hover,
+	# press, selection or focus state), so it is settled the moment the button gets a parent: the container lays it
+	# out at its final size from the first frame
+	if what == NOTIFICATION_PARENTED or what == NOTIFICATION_UNPARENTED:
 		update_minimum_size()
-		_layout()
+		if _built: _layout()

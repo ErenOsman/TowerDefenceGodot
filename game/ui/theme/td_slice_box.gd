@@ -40,6 +40,9 @@ extends StyleBox
 	set(v): modulate_color = v; emit_changed()
 @export var draw_center := true:
 	set(v): draw_center = v; emit_changed()
+## Part of the texture to use (texture px); a zero size = the whole texture.
+@export var region := Rect2():
+	set(v): region = v; emit_changed()
 ## Tile the middle instead of stretching it (wood grain).
 @export var tile_center := false:
 	set(v): tile_center = v; emit_changed()
@@ -80,9 +83,9 @@ func _draw(to_canvas_item: RID, rect: Rect2) -> void:
 	var bh := float(border_top + border_bottom) * s
 	if bw > r.size.x and bw > 0.0: s = minf(s, r.size.x / float(border_left + border_right))
 	if bh > r.size.y and bh > 0.0: s = minf(s, r.size.y / float(border_top + border_bottom))
-	var tex_size := texture.get_size()
+	var src := region if region.size != Vector2.ZERO else Rect2(Vector2.ZERO, texture.get_size())
 	var mode := RenderingServer.NINE_PATCH_TILE_FIT if tile_center else RenderingServer.NINE_PATCH_STRETCH
 	RenderingServer.canvas_item_add_set_transform(to_canvas_item, Transform2D(0.0, Vector2(s, s), 0.0, r.position))
-	RenderingServer.canvas_item_add_nine_patch(to_canvas_item, Rect2(Vector2.ZERO, r.size / s), Rect2(Vector2.ZERO, tex_size),
+	RenderingServer.canvas_item_add_nine_patch(to_canvas_item, Rect2(Vector2.ZERO, r.size / s), src,
 		texture.get_rid(), Vector2(border_left, border_top), Vector2(border_right, border_bottom), mode, mode, draw_center, modulate_color)
 	RenderingServer.canvas_item_add_set_transform(to_canvas_item, Transform2D.IDENTITY)

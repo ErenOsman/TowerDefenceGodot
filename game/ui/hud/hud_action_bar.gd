@@ -20,12 +20,16 @@ var _passives: Array = []    # TdIconChip per passive
 var _owner_key := ""
 var _caster: Entity = null
 var casting := false
+## The aiming button's lift and how far the others dim.
+const AIM_LIFT := 5.0
+const AIM_DIM := 0.6
 var buttons_shown := 0
 
 func _init() -> void:
 	name = "ActionBar"
 	mouse_filter = MOUSE_FILTER_STOP
-	add_theme_stylebox_override("panel", TdTheme.stylebox("panel_wood", Color.WHITE, [16, 14, 16, 14]))
+	# the buttons' bleed room gives the vertical padding
+	add_theme_stylebox_override("panel", TdTheme.stylebox("panel_wood", Color.WHITE, [16, 2, 16, 0]))
 	var h := HudArt.hbox(26)
 	add_child(h)
 	var who := HudArt.vbox(0)
@@ -42,7 +46,7 @@ func _init() -> void:
 	_divider.size_flags_vertical = SIZE_SHRINK_CENTER
 	_divider.mouse_filter = MOUSE_FILTER_IGNORE
 	h.add_child(_divider)
-	_row = HudArt.hbox(26)
+	_row = HudArt.hbox(int(HudLayout.ABILITY_GAP))
 	h.add_child(_row)
 
 ## The unit whose abilities show (a commanded selection), or null.
@@ -110,11 +114,32 @@ func refresh() -> void:
 		trig.set_tooltip(TooltipText.passive(pv.name, desc, pv.active))
 		trig.set_placement(TdTooltipPlacement.Side.ABOVE_CENTRED, self)
 	_ready.text = HudText.ready_line(HudText.ready_count(castable_flags), -1 if _caster != null else hand.cost)
+	_show_aiming(list, c.aiming if _caster != null else null)
 	buttons_shown = list.size() + passives.size()
 	_divider.visible = buttons_shown > 0
 
+## While one ability is aimed (UI/UX rule, 2026-10-13): its button shows the kit's Aiming look, lifted 5 px with a slow
+## gold glow pulse (pulse.attention) and a gold key badge; the unit's other buttons dim to 60 %; the label reads
+## "Shoot: pick a target". Cancelling (right click, Esc, the same key) restores all of it.
+func _show_aiming(list: Array, aiming: AbilityDef) -> void:
+	for i in mini(list.size(), _buttons.size()):
+		var b: TdButton = _buttons[i]
+		var holder: Control = b.get_parent()
+		var on: bool = aiming != null and list[i] == aiming
+		b.position.y = -AIM_LIFT if on else 0.0
+		b.set_attention(on)
+		holder.modulate.a = 1.0 if aiming == null or on else AIM_DIM
+		var key_badge = b.get("_key")
+		if key_badge is Panel:
+			key_badge.add_theme_stylebox_override("panel", TdTheme.stylebox("badge_key", TdTheme.color("gold")) if on else TdTheme.stylebox("badge_key"))
+	if aiming != null:
+		_who.text = HudText.aiming_label(aiming.display_name)
+		_ready.visible = false
+	else:
+		_ready.visible = true
+
 func _rebuild(list: Array, passives: Array) -> void:
-	for b in _buttons: b.queue_free()
+	for b in _buttons: b.get_parent().queue_free()
 	for p in _passives: p.queue_free()
 	_buttons.clear()
 	_passives.clear()
@@ -127,7 +152,16 @@ func _rebuild(list: Array, passives: Array) -> void:
 		b.size = Vector2(84, 84)
 		b.size_flags_vertical = SIZE_SHRINK_CENTER
 		b.icon = HudArt.ability_face(controller.converter, a)
-		_row.add_child(b)
+		# the kit's bleed room keeps the clock ring, key badge and cooldown badge inside the control, so a neighbour
+		# never covers them; a plain holder lets the aiming button lift without fighting the row's layout
+		b.bleed_mode = TdButton.Bleed.ON
+		var holder := Control.new()
+		holder.mouse_filter = MOUSE_FILTER_IGNORE
+		holder.size_flags_vertical = SIZE_SHRINK_CENTER
+		_row.add_child(holder)
+		holder.add_child(b)
+		holder.custom_minimum_size = b.get_combined_minimum_size()
+		b.size = holder.custom_minimum_size
 		TdTooltipTrigger.attach(b)
 		b.clicked.connect(_on_click.bind(i))
 		b.denied.connect(_on_denied.bind(i))

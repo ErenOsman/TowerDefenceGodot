@@ -111,6 +111,23 @@ func _run() -> void:
 	await _frames(10)
 	await _shot("5_aiming")
 	level.toggle_aim(shoot)
+	# two abilities on cooldown: cast both, then look at the bar
+	level.select(archer.id)
+	level.quick_cast(shoot)
+	await _settle()
+	for ab in archer.abilities:
+		if ab.targeting.is_movement:
+			level.select(archer.id)
+			var walks: Array = Targeting.valid_aims(level.session.state, archer.id, ab)
+			if walks.size() > 0:
+				level.toggle_aim(ab)
+				level.click_tile(walks[walks.size() - 1].tile)
+				await _settle()
+	level.select(archer.id)
+	_hover_tile(Vector2i(-5, -5))
+	level.hover_override = null
+	await _frames(10)
+	await _shot("5b_cooldowns")
 	_hover_tile(Vector2i(-5, -5))
 	level.hover_override = null
 

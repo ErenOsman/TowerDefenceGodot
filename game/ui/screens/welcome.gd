@@ -22,6 +22,7 @@ func _ready() -> void:
 	dio.add_mini("Assets/Art/Models/Archer/Archer Blender.prefab", Vector2(340, 715), 270.0, 18.0)
 	dio.add_mini("Assets/Art/Models/Guardian/Guardian Blender.prefab", Vector2(-340, 720), 270.0, -18.0)
 	_build()
+	plaque.modulate.a = 0.0 # hidden until its transition starts (no full-size flash on the first frame)
 	await get_tree().process_frame
 	TdPanelTransition.open(plaque)
 	name_edit.grab_focus()

@@ -47,6 +47,7 @@ var max_distance := 20.0
 var yaw := 0.0                # degrees, Godot sense (counter-clockwise from above)
 var yaw_target := 0.0
 var gliding := false
+var _free_pan := false        # the player panned: their focus is kept until a glide
 
 var _drag_anchor = null       # Vector3 or null
 var _drag_button := MOUSE_BUTTON_NONE
@@ -87,6 +88,7 @@ func init(width: int, height: int) -> void:
 
 ## Glides to centre the point (follow the action, select and show); the player's input cancels it.
 func glide(point: Vector3) -> void:
+	_free_pan = false
 	focus_target = clamp_focus(Vector3(point.x, 0.0, point.z))
 	gliding = true
 
@@ -156,11 +158,33 @@ func free_centre() -> Vector2:
 	var size := _view_size()
 	return Vector2(f.get_center().x * size.x, f.get_center().y * size.y)
 
-## Keeps the focus where the board is never cropped at the default framing: at (or beyond) the fit distance the
+## The focus limits. Moves the game makes (glides: selection, aiming, follow the action) keep the board whole —
+## clamp_strict; the player's own pans (drag with the left or middle button, keys, edge scroll) may go anywhere
+## over the board — clamp_to_board. A glide returns to the strict rule.
+##
+## clamp_strict keeps the focus where the board is never cropped at the default framing: at (or beyond) the fit distance the
 ## focus stays on the board's centre; zoomed in, it may move away from the centre in proportion to the zoom, up to
 ## the board's edges at the closest zoom. Selection, aiming and follow-the-action glides go through it too, so
 ## they pan only as far as the zoom allows (UI/UX review: the board is never cropped by a glide).
 func clamp_focus(p: Vector3) -> Vector3:
+	if _free_pan: return clamp_to_board(p)
+	return clamp_strict(p)
+
+## The player's own pans (drag, keys): at the default framing the board may slide up to PAN_SLACK tiles off its
+## centred place (its edge leaves the free area by at most about a tile); zoomed in, up to the board's edges.
+## Zoomed out past the fit, it re-centres.
+const PAN_SLACK := 1.0
+
+func clamp_to_board(p: Vector3) -> Vector3:
+	var centre := Vector3(bounds.get_center().x, 0.0, -bounds.get_center().y)
+	var fit := max_distance / 1.6
+	if distance_target > fit + 0.01: return centre
+	var t := clampf((fit - distance_target) / maxf(0.01, fit - min_distance), 0.0, 1.0)
+	var board := Vector3(bounds.size.x * 0.5, 0.0, bounds.size.y * 0.5)
+	var half := Vector3(minf(board.x, maxf(board.x * t, PAN_SLACK)), 0.0, minf(board.z, maxf(board.z * t, PAN_SLACK)))
+	return Vector3(clampf(p.x, centre.x - half.x, centre.x + half.x), 0.0, clampf(p.z, centre.z - half.z, centre.z + half.z))
+
+func clamp_strict(p: Vector3) -> Vector3:
 	var centre := Vector3(bounds.get_center().x, 0.0, -bounds.get_center().y)
 	var fit := max_distance / 1.6
 	var t := clampf((fit - distance_target) / maxf(0.01, fit - min_distance), 0.0, 1.0)
@@ -203,6 +227,7 @@ func step(dt: float) -> void:
 		if mouse.y > size.y - edge_size: move.y -= 1
 	if move != Vector2.ZERO:
 		gliding = false
+		_free_pan = true
 		var b := Basis(Vector3.UP, deg_to_rad(yaw_target))
 		var right := b * Vector3.RIGHT
 		var forward := b * Vector3.FORWARD
@@ -232,6 +257,7 @@ func step(dt: float) -> void:
 		var now_ground = GridSpace.ground_under(self, mouse)
 		if now_ground != null:
 			gliding = false
+			_free_pan = true
 			focus = clamp_focus(focus + (_drag_anchor - now_ground))
 			focus_target = focus
 			apply()

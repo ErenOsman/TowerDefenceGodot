@@ -111,6 +111,12 @@ func _run() -> void:
 		cx._page_scroll.scroll_vertical = 200
 		await _frames(6)
 		await _shot("codex_guardian_scrolled")
+		save.codex.discover(CodexSection.Towers, "priest")
+		cx.show_section(CodexSection.Towers)
+		for e in cx.entries:
+			if e.id == "priest": cx.select(e)
+		await _frames(10)
+		await _shot("codex_priest")
 		cx.show_section(CodexSection.Enemies)
 		await _frames(10)
 		await _shot("codex_enemies")
