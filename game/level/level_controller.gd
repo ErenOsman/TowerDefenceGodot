@@ -273,6 +273,8 @@ func _ready() -> void:
 func _setup() -> void:
 	var app = _auto("GameApp")
 	var lib: ContentLibrary = app.lib if app != null else ContentLibrary.load("res://data/content")
+	var dev = DevLaunch.take() # dev tools only (Level Playtester / F1 panel): null in normal play
+	if dev != null: _apply_dev_launch(dev, lib)
 	if LevelLaunch.has_request():
 		level = LevelLaunch.level
 		LevelLaunch.clear()
@@ -294,7 +296,7 @@ func _setup() -> void:
 	if level.fixed_hand != null:
 		for t in level.fixed_hand:
 			if t != null: hand.append(converter.tower(t, TowerIds.new_id()))
-	if hand.is_empty(): hand = _saved_hand(app)
+	if hand.is_empty() and not _dev_hand: hand = _saved_hand(app)
 	if hand.is_empty(): hand = _test_hand(lib)
 	var rules := converter.rules(_rules_asset)
 	session = LevelSession.new(converter.level(level), rules, hand, maxi(1, level_seed))
@@ -683,6 +685,31 @@ func skip() -> void:
 	if director == null or not director.busy: return
 	director.skip()
 	version += 1
+
+# ------------------------------------------------------------------ dev hooks (game/dev; unused in normal play)
+
+var _dev_hand := false
+
+## A DevLaunch request: its level (by id) instead of the launch request, its hand (when it names one) instead of
+## the saved hand, its seed, instant playback and whether the result is saved.
+func _apply_dev_launch(dev: Dictionary, lib: ContentLibrary) -> void:
+	for l in lib.all_of("LevelAsset"):
+		if l.get_id() == str(dev.get("level_id", "")): level = l
+	if level != null: LevelLaunch.clear()
+	var ids: Array = dev.get("hand", [])
+	if not ids.is_empty():
+		test_hand = PackedStringArray(ids)
+		_dev_hand = true
+	level_seed = maxi(1, int(dev.get("seed", level_seed)))
+	if dev.get("instant") != null: instant_override = bool(dev.get("instant"))
+	if not bool(dev.get("record", true)): _recorded = true # nothing written to the save
+
+## Dev only (F1 panel): gives energy through the session's own EnergyChanged event, shown like income.
+func dev_add_energy(amount: int) -> bool:
+	if session == null or session.is_over: return false
+	session._add_energy(amount, "dev")
+	version += 1
+	return true
 
 ## Plays the level again from the start (asking for the same level).
 func retry() -> void:
@@ -1211,8 +1238,10 @@ func _attack_lines(from: Vector2i, ability: AbilityDef, aim: Aim, preview: AimPr
 		for end in ends:
 			var d: Vector2i = end - from
 			var at := GridSpace.to_world(from).lerp(GridSpace.to_world(end), 0.55) + Vector3.UP * 0.06
+			# the kit's chevron points along +x of its sprite (east at yaw 0): turned from east to the world
+			# direction attacker → target (world space, so a rotated camera changes nothing)
 			board.decal_at(at, _decal("attack/atk_melee_chevron_" + side), Color.WHITE, 0.42,
-				GridSpace.decal_yaw(rad_to_deg(atan2(float(d.x), float(d.y)))), true)
+				GridSpace.decal_yaw(rad_to_deg(atan2(float(d.x), float(d.y))) - 90.0), true)
 		return
 	if ability.tags.has(Tags.Lobbed):
 		var land := aimed_tile
@@ -1337,8 +1366,7 @@ func _build_markers(health_preview: Dictionary) -> Array:
 				m.text = "Kills"
 				m.text_color = Color.WHITE
 			elif forecast.loss.has(id):
-				# a base reads "Base −4" (its HP is the level's), anyone else a bare "−6" over the plate
-				m.text = ("%s −%d" % [target.def.display_name, int(forecast.loss[id])]) if session.bases.has(id) else "−%d" % int(forecast.loss[id])
+				m.text = "−%d" % int(forecast.loss[id]) # just the number over the target (bases too)
 				m.text_color = OverlayStyle.FX_DAMAGE
 			elif forecast.hp.has(id) and int(forecast.hp[id]) > target.hp:
 				m.text = "+%d" % (int(forecast.hp[id]) - target.hp)

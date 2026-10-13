@@ -40,6 +40,8 @@ var _clock := 0.0
 var _tip_version := -1
 var _nothing_left := false
 var _phase_shown := -1
+## End turn's last applied [label, interactable, key chip, phase].
+var _end_state: Array = []
 
 func _init() -> void:
 	mouse_filter = MOUSE_FILTER_IGNORE
@@ -126,6 +128,7 @@ func _build() -> void:
 	# --- tools: Skip, Pause
 	_skip = _icon_button("icon_skip", "SkipButton")
 	_skip.clicked.connect(func(): if controller != null: controller.skip())
+	_skip.denied.connect(_on_skip_denied)
 	_pause = _icon_button("icon_pause", "PauseButton")
 	_pause.clicked.connect(func(): pause_pressed.emit())
 
@@ -168,6 +171,19 @@ func _icon_button(glyph: String, node_name: String) -> TdButton:
 	TdTooltipTrigger.attach(b).set_placement(TdTooltipPlacement.Side.BELOW)
 	return b
 
+## A click on Skip with nothing playing: the reason opens BELOW the button (tail up), inside the screen; the top
+## bar's buttons never open tooltips above (the screen edge would cut them).
+func _on_skip_denied() -> void:
+	TdTooltip.show_beside(_skip, TdTooltipPlacement.Side.BELOW, null,
+		TooltipText.colored(TooltipText.harmful_color(), "Nothing to skip: no action is playing."))
+	TdTooltip.own(_skip)
+	var left := 1.6
+	while left > 0.0 and is_inside_tree():
+		await get_tree().process_frame
+		left -= TdTheme.real_delta()
+		if not _skip.hovered: break
+	TdTooltip.hide(_skip)
+
 func _layout() -> void:
 	if end_turn == null: return
 	var s := size
@@ -177,7 +193,12 @@ func _layout() -> void:
 	_skip.position = Vector2(s.x - 32 - 56 - 8 - 56, 20)
 	end_turn.position = HudLayout.end_turn_rect(s).position
 
-## Tooltips that name keys (after a rebind too).
+## After a rebind: tooltips that name keys, and End turn's chip on its next refresh.
+func keys_changed() -> void:
+	_end_state = []
+	refresh_keys()
+
+## Tooltips that name keys.
 func refresh_keys() -> void:
 	var keys = _keys()
 	var skip_key: String = keys.describe("Skip") if keys != null else "Space"
@@ -185,7 +206,6 @@ func refresh_keys() -> void:
 	var busy := controller != null and controller.director != null and controller.director.busy
 	_shortcut(_skip, "Skip", "Finishes the action that is playing." if busy else "Nothing to skip: no action is playing.", skip_key)
 	_shortcut(_pause, "Pause", "Pauses the game: Settings, or leave the level.", "Esc · " + pause_key if pause_key != "" else "Esc")
-	end_turn.set_key_hint(keys.first("EndRound") if keys != null else "Enter")
 
 func _shortcut(b: TdButton, title: String, body: String, key: String) -> void:
 	TdTooltipTrigger.find_on(b).set_content(TooltipText.title(title, TooltipText.neutral_color()), body, "Key" if key != "" else "", key)
@@ -270,11 +290,19 @@ func _show_hp(f: ViewFrame, dt: float) -> void:
 func _show_end_turn(f: ViewFrame) -> void:
 	var busy: bool = controller.director != null and controller.director.busy
 	var can_end := f.phase == Phase.Player and f.outcome == Outcome.Running and not busy and controller.can_act
-	end_turn.text = HudText.end_turn_label(f.phase, f.outcome)
-	end_turn.set_interactable(can_end, "Enemies are moving" if f.phase != Phase.Player else "Wait for the action to finish")
+	# applied only when it changes: re-applying every frame / beat made the key chip flicker in the enemy phase
 	var keys = _keys()
-	end_turn.set_key_hint((keys.first("EndRound") if keys != null else "Enter") if f.phase == Phase.Player else "")
-	_skip.set_interactable(busy, "Nothing to skip")
+	var label := HudText.end_turn_label(f.phase, f.outcome)
+	var chip: String = (keys.first("EndRound") if keys != null else "Enter") if f.phase == Phase.Player and f.outcome == Outcome.Running else ""
+	var state := [label, can_end, chip, f.phase]
+	if state != _end_state:
+		_end_state = state
+		end_turn.text = label
+		end_turn.set_interactable(can_end, "Enemies are moving" if f.phase != Phase.Player else "Wait for the action to finish")
+		end_turn.set_key_hint(chip)
+	if _skip.interactable != busy:
+		_skip.set_interactable(busy)
+		_skip.denied_reason = "" # the kit opens a denied reason above the button: ours opens below (_on_skip_denied)
 	if _tip_version != controller.version:
 		_tip_version = controller.version
 		_nothing_left = not controller.session.anything_to_do()
@@ -283,7 +311,8 @@ func _show_end_turn(f: ViewFrame) -> void:
 	controller.preview_enemy_phase = can_end and end_turn.hovered
 	if not can_end: _can_end_since = -1.0
 	elif _can_end_since < 0.0: _can_end_since = _clock
-	end_turn.set_attention(can_end and _nothing_left and _clock - _can_end_since >= 0.6)
+	var attention := can_end and _nothing_left and _clock - _can_end_since >= 0.6
+	if attention != end_turn.has_attention(): end_turn.set_attention(attention)
 
 ## Names players can tell apart: [[id, name], …] -> {id: label}; a name two units share is numbered in order
 ## ("Archer 1", "Archer 2"), a unique one stays as it is.

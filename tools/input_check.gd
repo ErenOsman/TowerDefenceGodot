@@ -86,6 +86,24 @@ func _run() -> void:
 	print("plate centre x: before %.1f, hovered %.1f, after %.1f (the unit's plate point %.1f)" % [before_centre.x, during.x, after.x, level.view_of(archer.id).plate_screen_position(cam).x])
 	_check(absf(before_centre.x - after.x) < 0.5 and absf(before_centre.x - during.x) < 0.5, "plate stays centred on the unit (compact → full → compact)")
 
+	# ---- 2a. the fit is the widest view: the wheel out does nothing there; the board fills the free area
+	var d0 := cam.distance_target
+	var f0 := cam.focus
+	var wheel := InputEventMouseButton.new()
+	wheel.button_index = MOUSE_BUTTON_WHEEL_DOWN
+	wheel.pressed = true
+	wheel.position = cam.free_centre()
+	for i in 3:
+		cam._unhandled_input(wheel)
+		await _frames(2)
+	await _frames(10)
+	_check(is_equal_approx(cam.distance_target, d0) and cam.focus.distance_to(f0) < 0.01, "wheel out at the fit: no change (distance %.3f → %.3f)" % [d0, cam.distance_target])
+	var vis := root.get_visible_rect().size
+	var left := cam.unproject_position(Vector3(-0.5, 0, 0.5))
+	var right := cam.unproject_position(Vector3(s.state.grid.width - 0.5, 0, 0.5))
+	var free := cam.free_area()
+	print("board's near edge spans %.0f..%.0f of %.0f canvas px (free area %.0f..%.0f)" % [left.x, right.x, vis.x, free.position.x * vis.x, free.end.x * vis.x])
+	_check((right.x - left.x) / (free.size.x * vis.x) > 0.85, "the board fills the free area's width or height (near edge %.0f %% of its width)" % (100.0 * (right.x - left.x) / (free.size.x * vis.x)))
 	# ---- 2. drag: a press that moves pans; a press that does not is a click (the real pointer picks the tile)
 	level.hover_override = null
 	var focus0 := cam.focus
@@ -104,8 +122,39 @@ func _run() -> void:
 	await _frames(20)
 	var moved := cam.focus.distance_to(focus0)
 	print("drag moved the focus %.3f tiles (%s → %s), left_dragged %s" % [moved, focus0, cam.focus, cam.left_dragged])
-	_check(moved > 0.3, "a left-drag pans the camera at the default zoom")
+	_check(moved > 0.3, "a left-drag pans the camera at the fit (%.2f tiles)" % moved)
 	_check(level.selected < 0, "the drag's release did not click (nothing selected)")
+	# a long drag: the board stops when its far edge reaches the free area's centre (the focus at the board's edge)
+	await _drag(cam.free_centre(), cam.free_centre() + Vector2(-900, -500))
+	await _frames(30)
+	var b := cam.bounds
+	var inside := cam.focus.x >= b.position.x - 0.01 and cam.focus.x <= b.end.x + 0.01 and -cam.focus.z >= b.position.y - 0.01 and -cam.focus.z <= b.end.y + 0.01
+	var on_edge := absf(cam.focus.x - b.end.x) < 0.05 or absf(-cam.focus.z - b.position.y) < 0.05 or absf(-cam.focus.z - b.end.y) < 0.05 or absf(cam.focus.x - b.position.x) < 0.05
+	print("long drag: focus %s, board x %.1f..%.1f, y %.1f..%.1f" % [cam.focus, b.position.x, b.end.x, b.position.y, b.end.y])
+	_check(inside and on_edge, "a long drag stops with the board's edge at the free area's centre")
+	var g = GridSpace.ground_under(cam, cam.free_centre())
+	_check(g != null and Rect2(b.position - Vector2(0.05, 0.05), b.size + Vector2(0.1, 0.1)).has_point(Vector2(g.x, -g.z)), "the free area's centre is on the board's edge, not past it")
+	# rotate a quarter: the board (and a model's height over it) fits the free area at the new angle
+	cam.rotate_step(1)
+	cam.glide(Vector3(b.get_center().x, 0, -b.get_center().y))
+	await _wait_seconds(2.5)
+	var vis2 := root.get_visible_rect().size
+	var fa := cam.free_area()
+	var rect := Rect2(fa.position * vis2, fa.size * vis2).grow(2.0)
+	var all_in := true
+	for cx in [b.position.x, b.end.x]:
+		for cz in [-b.position.y, -b.end.y]:
+			for h in [0.0, 0.8]:
+				var sp := cam.unproject_position(Vector3(cx, h, cz))
+				all_in = all_in and rect.has_point(sp)
+	_check(all_in, "after a 90° turn the whole board fits the free area (yaw %.0f)" % cam.yaw)
+	var f1 := cam.focus
+	await _drag(cam.free_centre(), cam.free_centre() + Vector2(120, 60))
+	await _frames(20)
+	_check(cam.focus.distance_to(f1) > 0.3, "after the turn a drag still pans (%.2f tiles)" % cam.focus.distance_to(f1))
+	cam.rotate_step(-1)
+	cam.glide(Vector3(b.get_center().x, 0, -b.get_center().y))
+	await _wait_seconds(2.5)
 	var at := cam.unproject_position(level.view_of(archer.id).global_position)
 	await _mouse_button(at, true)
 	await _frames(2)
@@ -199,8 +248,21 @@ func _run() -> void:
 
 func _plate_centre(plate) -> Vector2:
 	var c: Control = plate.status if "status" in plate else plate
-	var w: float = 164.0 if ("status" in plate and plate.status.full) else (plate.status.plate_width if "status" in plate else 0.0)
-	return c.global_position + Vector2(w * plate.scale.x * 0.5, 0)
+	var w: float = roundf(164.0 * plate.status.metrics_scale) if plate.status.full else plate.status.plate_width
+	return c.global_position + Vector2(w * 0.5, 0)
+
+func _drag(from: Vector2, to: Vector2) -> void:
+	await _mouse_button(from, true)
+	for k in 16:
+		var p := from.lerp(to, (k + 1) / 16.0)
+		root.warp_mouse(p)
+		var ev := InputEventMouseMotion.new()
+		ev.position = p
+		ev.global_position = p
+		ev.button_mask = MOUSE_BUTTON_MASK_LEFT
+		Input.parse_input_event(ev)
+		await _frames(2)
+	await _mouse_button(to, false)
 
 func _mouse_button(p: Vector2, pressed: bool) -> void:
 	root.warp_mouse(p)

@@ -86,11 +86,27 @@ func _spitters() -> void:
 	level.hover_override = found.pos
 	await _frames(6)
 	await _shot("spitters_hover")
+	await _crop_around(found.pos, "spitters_hover_crop")
+	# the melee case: an enemy about to hit with a melee attack, if one is there now or within a few rounds
+	var melee: Entity = null
+	for r in 8:
+		melee = _best_attacker(true)[0]
+		if melee != null or s.is_over: break
+		level.hover_override = Vector2i(-9, -9)
+		level.instant_override = true
+		level.end_round()
+		await _settle()
+		level.instant_override = false
+	if melee != null:
+		level.hover_override = melee.pos
+		await _frames(6)
+		print("melee: hovering ", melee.name, " at ", melee.pos)
+		await _crop_around(melee.pos, "melee_hover_crop")
 
 ## An enemy whose coming turn walks 2+ tiles and then attacks one of your units.
 ## The enemy whose coming turn shows the most: a walk then a shot at one of your units (Projectile) scores
 ## highest, a 2-tile walk more than one. [entity or null, score].
-func _best_attacker() -> Array:
+func _best_attacker(melee_only := false) -> Array:
 	var s := level.session
 	var best: Entity = null
 	var best_score := 0
@@ -106,6 +122,13 @@ func _best_attacker() -> Array:
 					if s.is_commanded(s.state.get_entity(id)):
 						hits = true
 						shot = shot or st.ability.tags.has(Tags.Projectile)
+		if melee_only:
+			var melee := false
+			for st in steps:
+				if not st.is_movement and st.ability.tags.has(Tags.Melee) and st.preview.targets.size() > 0: melee = true
+			if not melee: continue
+			if best == null: best = e; best_score = 1
+			continue
 		if not hits or walked == 0: continue
 		var score := (2 if shot else 0) + mini(walked, 2)
 		if score > best_score:
@@ -241,6 +264,45 @@ func _statuses() -> void:
 	level.hover_override = unit.pos
 	await _frames(6)
 	await _shot("statuses_full")
+	# a status tooltip on the full plate: the pointer on its first chip (found by position; the plate never takes the
+	# pointer), after the 0.4 s delay
+	var plate = level.overlay.plates.plate_of(unit.id)
+	var key: String = plate.status.status_bar.keys()[0] if plate != null and plate.status.status_bar.keys().size() > 0 else ""
+	if key != "":
+		var chip: Control = plate.status.status_bar.get_icon(key)
+		root.warp_mouse(chip.get_global_rect().get_center())
+		var start := Time.get_ticks_msec()
+		while Time.get_ticks_msec() - start < 1500: await process_frame
+		print("tooltip visible: ", TdTooltip.is_visible(), " over ", key)
+		await RenderingServer.frame_post_draw
+		var img := root.get_texture().get_image()
+		var c := chip.get_global_rect().get_center() * (Vector2(img.get_size()) / root.get_visible_rect().size)
+		var r := Rect2i(Vector2i(c) - Vector2i(250, 160), Vector2i(760, 420)).intersection(Rect2i(Vector2i.ZERO, img.get_size()))
+		var path := out_dir.path_join("%s_statuses_tooltip.png" % prefix)
+		img.get_region(r).save_png(path)
+		print("saved ", path)
+	# the full plate's badges, 4× (nearest), at the default zoom and zoomed in: crisp, not resampled
+	root.warp_mouse(Vector2(5, 5))
+	for zoom in ["default", "zoomed"]:
+		if zoom == "zoomed":
+			var cam := level.camera
+			cam.distance_target = cam.min_distance * 1.4
+			cam.distance = cam.distance_target
+			cam.glide(level.view_of(unit.id).global_position)
+			var t0 := Time.get_ticks_msec()
+			while Time.get_ticks_msec() - t0 < 2500: await process_frame
+		await _frames(4)
+		var pl2 = level.overlay.plates.plate_of(unit.id)
+		await RenderingServer.frame_post_draw
+		var im := root.get_texture().get_image()
+		var k := Vector2(im.get_size()) / root.get_visible_rect().size
+		var pr: Rect2 = pl2.plate_rect()
+		var rr := Rect2i(Vector2i(pr.position * k) - Vector2i(4, 14), Vector2i(pr.size * k) + Vector2i(8, 18)).intersection(Rect2i(Vector2i.ZERO, im.get_size()))
+		var crop := im.get_region(rr)
+		crop.resize(rr.size.x * 4, rr.size.y * 4, Image.INTERPOLATE_NEAREST)
+		var p2 := out_dir.path_join("%s_badges_%s_x4.png" % [prefix, zoom])
+		crop.save_png(p2)
+		print("saved ", p2, " metrics ", pl2.status.metrics_scale, " plate scale ", pl2.scale)
 
 func _tutorial() -> void:
 	await _open("tutorial", ["archer"])
@@ -299,6 +361,18 @@ func _defeat() -> void:
 	await _shot("defeat_end")
 
 # ------------------------------------------------------------------ helpers
+
+## A 3× crop round a tile (the attack preview there).
+func _crop_around(tile: Vector2i, n: String) -> void:
+	await RenderingServer.frame_post_draw
+	var img := root.get_texture().get_image()
+	var c := level.camera.unproject_position(GridSpace.to_world(tile)) * (Vector2(img.get_size()) / root.get_visible_rect().size)
+	var r := Rect2i(Vector2i(c) - Vector2i(260, 170), Vector2i(520, 300)).intersection(Rect2i(Vector2i.ZERO, img.get_size()))
+	var crop := img.get_region(r)
+	crop.resize(r.size.x * 2, r.size.y * 2, Image.INTERPOLATE_NEAREST)
+	var path := out_dir.path_join("%s_%s.png" % [prefix, n])
+	crop.save_png(path)
+	print("saved ", path)
 
 func _frames(n: int) -> void:
 	for i in n: await process_frame

@@ -30,6 +30,12 @@ var _last_toughness := {}
 var _since_hit := {}
 var _any_full := false
 var _bars := {}         # id → whether its bar showed at the last refresh
+var _full_id := -1      # the unit whose full plate shows (its status chips have tooltips)
+var _hold_id := -1      # the pointer is on that full plate: it stays full (the tile behind it is not "hovered")
+var _tip_key := ""      # the status chip under the pointer, and how long it has been there (unscaled)
+var _tip_time := 0.0
+var _tip_open := false
+const TOOLTIP_DELAY := 0.4
 
 ## A frame's statuses in plate slot order — defensive buffs → control → damage over time → the rest, newest first
 ## within each group. The one rule for every status row (board plates and the HUD's inspector).
@@ -56,7 +62,13 @@ func plate_of(id: int):
 func refresh(shown: ViewFrame, views: Dictionary, dt: float) -> void:
 	if shown == null: return
 	var t := timings if timings != null else PresentationTimings.defaults()
+	# the pointer resting on a full plate keeps it full, so its status chips can be read
+	var mouse := get_viewport().get_mouse_position() if get_viewport() != null else Vector2(-1e6, -1e6)
+	if _hold_id >= 0 and _plates.has(_hold_id) and _plates[_hold_id].has_method("plate_rect") and _plates[_hold_id].plate_rect().grow(6).has_point(mouse):
+		focused[_hold_id] = true
+	else: _hold_id = -1
 	_any_full = false
+	_full_id = -1
 	for fid in focused:
 		var ff: EntityFrame = shown.get_frame(fid)
 		if views.has(fid) and ff != null and ff.has_hp and ff.life == LifeState.Alive: _any_full = true
@@ -95,6 +107,7 @@ func refresh(shown: ViewFrame, views: Dictionary, dt: float) -> void:
 		if not seen.has(id):
 			_plates[id].queue_free()
 			_plates.erase(id)
+	_status_tooltip(mouse, dt)
 	for id in _last_alive.keys():
 		if not views.has(id):
 			_last_alive.erase(id)
@@ -113,6 +126,7 @@ func _show(id: int, view: EntityView, f: EntityFrame, dt: float, t: Presentation
 	plate.visible = screen.z > 0.0 and view.visible
 	plate.place_at(Vector2(screen.x, screen.y))
 	var is_focused := f.life == LifeState.Alive and focused.has(id)
+	if is_focused: _full_id = id
 	_form(plate, view, is_focused)
 	plate.show_frame(f)
 	var previewed := f.life == LifeState.Alive and health_preview.has(id)
@@ -121,6 +135,42 @@ func _show(id: int, view: EntityView, f: EntityFrame, dt: float, t: Presentation
 	_bars[id] = bar
 	plate.set_health_visible(bar)
 	if plate.has_method("tick"): plate.tick(dt)
+
+## Status tooltips on the board, on the full plate only: the chip under the pointer (found by position: the plate
+## never takes the pointer) opens its status's tooltip right of the plate after TOOLTIP_DELAY.
+func _status_tooltip(mouse: Vector2, dt: float) -> void:
+	var plate = _plates.get(_full_id) if _full_id >= 0 else null
+	var hit: Array = plate.chip_at(mouse) if plate != null and plate.visible and plate.has_method("chip_at") else []
+	if hit.is_empty():
+		_tip_key = ""
+		_tip_time = 0.0
+		if _tip_open:
+			TdTooltip.hide(self)
+			_tip_open = false
+		return
+	_hold_id = _full_id
+	if hit[0] != _tip_key:
+		_tip_key = hit[0]
+		_tip_time = 0.0
+		if _tip_open:
+			TdTooltip.hide(self)
+			_tip_open = false
+	_tip_time += dt
+	if _tip_open or _tip_time < TOOLTIP_DELAY: return
+	var sv: StatusView = plate.views_by_key.get(_tip_key)
+	if sv == null: return
+	var d: StatusDef = sv.def
+	var harmful := d != null and d.has_tag(Tags.Debuff)
+	var helpful := d != null and d.has_tag(Tags.Buff)
+	var rounds := d != null and d.duration_unit == DurationUnit.Rounds
+	var shield := sv.shield > 0
+	# the description filled in the same way as the HUD inspector's status tooltips ({stacks}, {turns})
+	var desc := HudText.status_description(d.description, sv.stacks, sv.turns_left) if d != null else ""
+	var c := TooltipText.status(sv.name, desc, harmful, helpful, sv.shield if shield else sv.stacks,
+		sv.turns_left, rounds, true, ", ".join(sv.applied_by), "left" if shield else "stacks")
+	TdTooltip.show_content_beside(c, hit[1], TdTooltipPlacement.Side.RIGHT, plate.plate_rect())
+	TdTooltip.own(self)
+	_tip_open = true
 
 ## Whether the entity's HP bar shows now (Unity's rule, see the class summary).
 func _bar_visible(id: int, f: EntityFrame, t: PresentationTimings) -> bool:

@@ -79,12 +79,32 @@ func init(width: int, height: int) -> void:
 	distance = fit
 	distance_target = fit
 	min_distance = 3.0
-	max_distance = fit * 1.6
+	max_distance = fit # the fit is the widest view: the wheel never zooms out past it
 	_initialized = true
 	_last_ticks = Time.get_ticks_usec()
 	apply()
 	# board UI is drawn at its designed size at this framing, whatever the board's size (WorldUi)
 	WorldUi.reference_tile = WorldUi.tile_width(self, focus)
+	var vp := get_viewport()
+	if vp != null and not vp.size_changed.is_connected(refit): vp.size_changed.connect(refit)
+
+## Turns the view a quarter (dir −1 or +1) and frames the board for the new angle (a long board seen lengthwise
+## needs a different distance).
+func rotate_step(dir: int) -> void:
+	yaw_target += 90.0 * signf(dir)
+	refit()
+
+## Frames the board again for the viewport's size now (the window was resized, the editor's embedded game view
+## changed): the fit, the zoom limit and the reference tile follow; the zoom keeps its ratio to the fit.
+func refit() -> void:
+	if not _initialized: return
+	var ratio := distance_target / maxf(0.01, max_distance)
+	var fit := fit_distance()
+	max_distance = fit
+	distance_target = clampf(fit * ratio, min_distance, max_distance)
+	distance = distance_target
+	apply()
+	WorldUi.reference_tile = WorldUi.tile_width(self, Vector3(bounds.get_center().x, 0.0, -bounds.get_center().y))
 
 ## Glides to centre the point (follow the action, select and show); the player's input cancels it.
 func glide(point: Vector3) -> void:
@@ -128,9 +148,9 @@ func set_hud_insets(top: float, bottom: float, right: float) -> void:
 	if v == hud_insets: return
 	hud_insets = v
 	if not _initialized: return
-	var ratio := distance_target / maxf(0.01, max_distance / 1.6)
+	var ratio := distance_target / maxf(0.01, max_distance)
 	var fit := fit_distance()
-	max_distance = fit * 1.6
+	max_distance = fit
 	distance_target = clampf(fit * ratio, min_distance, max_distance)
 	distance = distance_target
 	apply()
@@ -159,8 +179,8 @@ func free_centre() -> Vector2:
 	return Vector2(f.get_center().x * size.x, f.get_center().y * size.y)
 
 ## The focus limits. Moves the game makes (glides: selection, aiming, follow the action) keep the board whole —
-## clamp_strict; the player's own pans (drag with the left or middle button, keys, edge scroll) may go anywhere
-## over the board — clamp_to_board. A glide returns to the strict rule.
+## clamp_strict; the player's own pans (drag with the left or middle button, keys, edge scroll) may move the focus
+## up to the board's edge — clamp_to_board. A glide returns to the strict rule.
 ##
 ## clamp_strict keeps the focus where the board is never cropped at the default framing: at (or beyond) the fit distance the
 ## focus stays on the board's centre; zoomed in, it may move away from the centre in proportion to the zoom, up to
@@ -170,23 +190,15 @@ func clamp_focus(p: Vector3) -> Vector3:
 	if _free_pan: return clamp_to_board(p)
 	return clamp_strict(p)
 
-## The player's own pans (drag, keys): at the default framing the board may slide up to PAN_SLACK tiles off its
-## centred place (its edge leaves the free area by at most about a tile); zoomed in, up to the board's edges.
-## Zoomed out past the fit, it re-centres.
-const PAN_SLACK := 1.0
-
+## The player's own pans (drag, keys, edge scroll), at any zoom: the focus — the free area's centre — may go as far
+## as the board's edge, so the board can be dragged until its far edge reaches the centre of the free area (at least
+## half of it stays in view on each axis), never further (user decision 2026-10-13).
 func clamp_to_board(p: Vector3) -> Vector3:
-	var centre := Vector3(bounds.get_center().x, 0.0, -bounds.get_center().y)
-	var fit := max_distance / 1.6
-	if distance_target > fit + 0.01: return centre
-	var t := clampf((fit - distance_target) / maxf(0.01, fit - min_distance), 0.0, 1.0)
-	var board := Vector3(bounds.size.x * 0.5, 0.0, bounds.size.y * 0.5)
-	var half := Vector3(minf(board.x, maxf(board.x * t, PAN_SLACK)), 0.0, minf(board.z, maxf(board.z * t, PAN_SLACK)))
-	return Vector3(clampf(p.x, centre.x - half.x, centre.x + half.x), 0.0, clampf(p.z, centre.z - half.z, centre.z + half.z))
+	return Vector3(clampf(p.x, bounds.position.x, bounds.end.x), 0.0, clampf(p.z, -bounds.end.y, -bounds.position.y))
 
 func clamp_strict(p: Vector3) -> Vector3:
 	var centre := Vector3(bounds.get_center().x, 0.0, -bounds.get_center().y)
-	var fit := max_distance / 1.6
+	var fit := max_distance
 	var t := clampf((fit - distance_target) / maxf(0.01, fit - min_distance), 0.0, 1.0)
 	var half := Vector3(bounds.size.x * 0.5, 0.0, bounds.size.y * 0.5) * t
 	return Vector3(clampf(p.x, centre.x - half.x, centre.x + half.x), 0.0, clampf(p.z, centre.z - half.z, centre.z + half.z))
@@ -269,8 +281,8 @@ func step(dt: float) -> void:
 		distance_target = clampf(distance_target * (1.0 - _wheel * zoom_step), min_distance, max_distance)
 	_wheel = 0.0
 	if keys != null:
-		if keys.pressed("RotateLeft"): yaw_target -= 90.0
-		if keys.pressed("RotateRight"): yaw_target += 90.0
+		if keys.pressed("RotateLeft"): rotate_step(-1)
+		if keys.pressed("RotateRight"): rotate_step(1)
 
 	focus_target = clamp_focus(focus_target) # zooming out pulls the focus back so the board stays whole
 	var k := 1.0 - exp(-smoothing * dt)
@@ -304,7 +316,8 @@ func fit_distance() -> float:
 	var tan_v := tan(deg_to_rad(fov) * 0.5)
 	var half_w := tan_v * _aspect() * free.size.x
 	var half_h := tan_v * free.size.y
-	var inv := Basis.from_euler(Vector3(deg_to_rad(-pitch), deg_to_rad(yaw), 0.0)).inverse()
+	# at the angle the view is turning to (a rotate step refits before the turn has played)
+	var inv := Basis.from_euler(Vector3(deg_to_rad(-pitch), deg_to_rad(yaw_target), 0.0)).inverse()
 	var corners: Array[Vector3] = []
 	for i in 8:
 		var cx := bounds.position.x if (i & 1) == 0 else bounds.end.x

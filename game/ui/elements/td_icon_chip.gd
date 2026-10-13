@@ -37,6 +37,13 @@ const DEFAULT_CHIPS := {
 @export var badges := true
 ## Buff statuses carry their double rim in the icon art; true adds the separate outer ring to them too.
 @export var outer_rim_on_buffs := false
+## The size the chip is drawn at relative to its design (a board plate scaled with the zoom): chip_size is already the
+## final size; the badges' pill height and number size follow this factor, so they are laid out at their final
+## pixel size (crisp text) instead of the plate being scaled. 1 = the designed metrics.
+var badge_scale := 1.0:
+	set(v):
+		badge_scale = maxf(0.1, v)
+		if is_node_ready(): _layout()
 
 var _content: Control
 var _chip: TextureRect
@@ -307,9 +314,9 @@ func _layout() -> void:
 			p.size = s - Vector2(o, o) * 2.0
 	_glow.position = Vector2.ZERO
 	_glow.size = s
-	var m := badge_metrics(chip_size)
-	var h: float = m[0]
-	var fs: int = m[1]
+	var m := badge_metrics(chip_size / badge_scale)
+	var h: float = roundf(m[0] * badge_scale)
+	var fs: int = maxi(8, roundi(m[1] * badge_scale))
 	for pair in [[_time, _time_label, true], [_stack, _stack_label, false]]:
 		var p: Panel = pair[0]
 		var l: Label = pair[1]

@@ -20,6 +20,10 @@ extends Control
 		full = v
 		if is_node_ready(): _apply_mode()
 
+## The factor the plate is drawn at (the board's zoom): sizes, gaps, the bar, the badges and their numbers are laid
+## out at the final pixel size instead of scaling the control, so text stays crisp. set_metrics(k); 1 = designed.
+var metrics_scale := 1.0
+
 var health_bar: TdHealthBar
 var status_bar: TdIconBar
 var _name: Label
@@ -58,21 +62,33 @@ func _build() -> void:
 func set_full(v: bool) -> void:
 	full = v
 
+## Lays the plate out at k × its designed metrics (chips, gaps, bar, badges); the compact width stays plate_width,
+## which callers give at its final size.
+func set_metrics(k: float) -> void:
+	k = maxf(0.1, k)
+	if is_equal_approx(k, metrics_scale): return
+	metrics_scale = k
+	if is_node_ready(): _apply_mode()
+
 func _apply_mode() -> void:
 	_build()
 	status_bar.badges = full
-	status_bar.configure(32.0 if full else 28.0, 12.0 if full else 6.0, 0)
+	var k := metrics_scale
+	status_bar.configure(roundf((32.0 if full else 28.0) * k), roundf((12.0 if full else 6.0) * k), 0)
 	status_bar.max_icons = 4 if full else 3
-	for k in status_bar.keys():
-		status_bar.get_icon(k).set_badges_visible(full)
+	for key in status_bar.keys():
+		var chip := status_bar.get_icon(key)
+		chip.badge_scale = k
+		chip.set_badges_visible(full)
 	_backing.visible = full
 	_layout()
 
 func _layout() -> void:
 	if not _built: return
 	status_bar.relayout()
-	var w := 164.0 if full else plate_width
-	var bar_h := 8.0 if full else 10.0
+	var k := metrics_scale
+	var w := roundf(164.0 * k) if full else roundf(plate_width)
+	var bar_h := roundf((8.0 if full else 10.0) * k)
 	var y := 0.0
 	if _name.visible:
 		_name.position = Vector2(-40, y)
@@ -81,16 +97,16 @@ func _layout() -> void:
 	var row: Vector2 = status_bar.custom_minimum_size
 	if status_bar.count() > 0:
 		status_bar.size = Vector2(w, row.y)
-		status_bar.position = Vector2(0, y + (9.0 if full else 0.0))
+		status_bar.position = Vector2(0, roundf(y + (9.0 if full else 0.0) * k))
 		status_bar.relayout()
-		y += row.y + (9.0 if full else 0.0) + 6.0 + (9.0 if full else 0.0)
+		y += roundf(row.y + ((9.0 if full else 0.0) + 6.0 + (9.0 if full else 0.0)) * k)
 	health_bar.position = Vector2(0, y)
 	health_bar.size = Vector2(w, bar_h)
 	y += bar_h
 	size = Vector2(w, y)
 	custom_minimum_size = size
-	_backing.position = Vector2(-10, -6 if not _name.visible else 18)
-	_backing.size = Vector2(w + 20, size.y - _backing.position.y + 8)
+	_backing.position = Vector2(roundf(-10 * k), roundf(-6 * k) if not _name.visible else 18)
+	_backing.size = Vector2(w + roundf(20 * k), size.y - _backing.position.y + roundf(8 * k))
 
 # ------------------------------------------------------------------ API
 
@@ -124,6 +140,7 @@ func get_max_health() -> float:
 func add_status(key: String, tex: Texture2D, turns_left := -1, stacks := 0, always_stacks := false, animate := true) -> TdIconChip:
 	_build()
 	var c := status_bar.add_icon(key, tex, "", animate)
+	c.badge_scale = metrics_scale
 	c.set_badges_visible(full)
 	c.set_status(turns_left, stacks, always_stacks)
 	_layout()

@@ -5,7 +5,7 @@ extends SceneTree
 func _initialize() -> void:
 	var bad: Array[String] = []
 	var n := 0
-	for root in ["res://sim", "res://tests", "res://game", "res://tools"]:
+	for root in ["res://sim", "res://tests", "res://game", "res://tools", "res://addons"]:
 		for p in _scripts(root):
 			n += 1
 			var s = ResourceLoader.load(p, "GDScript", ResourceLoader.CACHE_MODE_REPLACE)

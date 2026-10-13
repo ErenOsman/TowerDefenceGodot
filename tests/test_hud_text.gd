@@ -119,3 +119,9 @@ func test_unit_labels() -> void:
 
 func test_aiming_label() -> void:
 	assert_eq(HudText.aiming_label("Shoot"), "Shoot: pick a target")
+
+func test_info_tags_and_pips() -> void:
+	assert_eq(HudText.shown_tags([["2", "Move"], ["10", "Damage"]]), [["2", "Range"], ["10", "Damage"]])
+	assert_eq(HudInfoPopup.pip_names(0, false, 2), ["pip_mini_ready", "pip_mini_ready"])
+	assert_eq(HudInfoPopup.pip_names(1, false, 2), ["pip_mini_ready", "pip_mini_wait"])
+	assert_eq(HudInfoPopup.pip_names(0, true, 1), ["pip_mini_held"])

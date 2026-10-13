@@ -24,3 +24,8 @@ SettingsMgr="*res://game/app/settings_mgr.gd"
 AudioMgr="*res://game/app/audio_mgr.gd"
 KeyBinds="*res://game/app/key_binds.gd"
 SceneFlow="*res://game/app/scene_flow.gd"
+DevPanel="*res://game/dev/dev_panel_autoload.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/td_tools/plugin.cfg")

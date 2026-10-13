@@ -98,7 +98,7 @@ func bind(c: LevelController) -> void:
 	c.level_ended.connect(_on_level_ended)
 	var keys = get_tree().root.get_node_or_null("KeyBinds") if is_inside_tree() else null
 	if keys != null and keys.has_signal("changed"): keys.changed.connect(func():
-		top_bar.refresh_keys()
+		top_bar.keys_changed()
 		_dirty = true)
 	if c.converter != null:
 		var names := []

@@ -230,3 +230,9 @@ static func stat_values(self_entity, vocab) -> Dictionary:
 ## (user decision 2026-10-13). The modifier parameter is kept for the call sites.
 static func piece_key(key: String, _modifier: String) -> String:
 	return key
+
+## Result tags as the Info window names them (doc d013205): a walk's "Move" reads "Range". [[value, name], …].
+static func shown_tags(tags: Array) -> Array:
+	var out := []
+	for t in tags: out.append([t[0], "Range" if str(t[1]) == "Move" else t[1]])
+	return out

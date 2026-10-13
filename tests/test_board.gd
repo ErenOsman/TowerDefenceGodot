@@ -59,12 +59,13 @@ func test_facing_yaw_turns_the_model_front() -> void:
 func test_camera_bounds_and_free_area() -> void:
 	var cam := BoardCamera.new()
 	cam.bounds = Rect2(-0.5, -0.5, 10, 5)
-	cam.max_distance = 16.0  # fit 10
+	cam.max_distance = 10.0  # the fit
 	cam.min_distance = 3.0
 	cam.distance_target = 10.0
 	assert_eq(cam.clamp_focus(Vector3(20, 3, 4)), Vector3(4.5, 0, -2), "at the default framing the board stays whole: no pan")
-	cam.distance_target = 14.0
-	assert_eq(cam.clamp_focus(Vector3(0, 0, 0)), Vector3(4.5, 0, -2), "zoomed out: still centred")
+	cam._free_pan = true
+	assert_eq(cam.clamp_focus(Vector3(20, 3, 4)), Vector3(9.5, 0, 0.5), "the player's pan: the focus up to the board's edge")
+	cam._free_pan = false
 	cam.distance_target = 3.0
 	assert_eq(cam.clamp_focus(Vector3(20, 3, 4)), Vector3(9.5, 0, 0.5), "zoomed all the way in: up to the board's edges")
 	assert_eq(cam.clamp_focus(Vector3(-3, 0, -9)), Vector3(-0.5, 0, -4.5))

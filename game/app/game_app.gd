@@ -78,6 +78,16 @@ func font_file(unity_path: String) -> Font:
 	var p := ArtPaths.font(unity_path)
 	return load(p) as Font if p != "" and ResourceLoader.exists(p) else null
 
+## Keeps a resource loaded ahead of time (the Boot preload) alive and serves it from the caches above, so
+## model_scene / icon_texture / load() of that path never hit the disk again.
+func keep(path: String, res: Resource) -> void:
+	if res == null: return
+	if res is PackedScene: _scene_cache[path] = res
+	elif res is Texture2D: _tex_cache[path] = res
+	_kept[path] = res
+
+var _kept := {}
+
 func _texture(path: String) -> Texture2D:
 	if path == "": return null
 	if _tex_cache.has(path): return _tex_cache[path]

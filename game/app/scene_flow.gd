@@ -31,6 +31,10 @@ var current: int = Boot
 ## The pending target has been opened under the loading screen.
 var target_ready: bool = false
 
+## Timings of the last scene change (diagnostics): loading the PackedScene, and instantiate + add (its _ready).
+var last_load_ms: float = 0.0
+var last_build_ms: float = 0.0
+
 var _holds := 0
 var _loading_screen: Node = null
 
@@ -133,7 +137,9 @@ func _change(id: int, keep: Node = null) -> void:
 	loading_started.emit()
 	loading_progress.emit(0.0)
 	await get_tree().process_frame # let the caller finish (a button's signal) and the screen draw
+	var t_load := Time.get_ticks_usec()
 	var packed := await _load(path)
+	last_load_ms = (Time.get_ticks_usec() - t_load) / 1000.0
 	if packed == null:
 		push_error("[SceneFlow] could not load %s" % path)
 		is_loading = false
@@ -143,9 +149,11 @@ func _change(id: int, keep: Node = null) -> void:
 	if old != null and old != keep:
 		old.get_parent().remove_child(old)
 		old.queue_free()
+	var t_build := Time.get_ticks_usec()
 	var inst := packed.instantiate()
 	current = id
 	tree.root.add_child(inst)
+	last_build_ms = (Time.get_ticks_usec() - t_build) / 1000.0
 	tree.current_scene = inst
 	if keep != null and is_instance_valid(keep) and keep.get_parent() == tree.root:
 		tree.root.move_child(keep, -1)

@@ -152,6 +152,31 @@ func _run() -> void:
 	_park_mouse()
 	await _frames(5)
 
+	# Skip with nothing to skip: the denied reason opens below it
+	_hover_control(hud.top_bar._skip)
+	await _frames(3)
+	hud.top_bar._skip.simulate_click()
+	await _wait(0.5)
+	await _shot("7b_skip_denied")
+	_park_mouse()
+	await _frames(5)
+
+	# the enemy phase: three frames in a row of the End turn button (it must not flicker)
+	level.select(-1)
+	Engine.time_scale = 0.3
+	level.end_round()
+	await _frames(20)
+	var et := hud.top_bar.end_turn.get_global_rect().grow(30)
+	for k in 3:
+		await _frames(1)
+		await RenderingServer.frame_post_draw
+		var img := root.get_texture().get_image()
+		var r := Rect2i(Vector2i(et.position * Vector2(root.size) / root.get_visible_rect().size), Vector2i(et.size * Vector2(root.size) / root.get_visible_rect().size))
+		img.get_region(r).save_png(out_dir.path_join("%s_7c_enemy_end_turn_%d.png" % [prefix, k]))
+		print("enemy frame ", k, " phase ", level.shown.phase, " busy ", level.director.busy, " key ", hud.top_bar.end_turn.get("_key").visible)
+	Engine.time_scale = 1.0
+	await _settle()
+
 	# the tower's Info window
 	if archer.alive:
 		hud.open_info(archer.id)
