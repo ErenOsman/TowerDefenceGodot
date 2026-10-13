@@ -16,7 +16,7 @@ var _last_usec := 0
 
 func _ready() -> void:
 	_build()
-	_set_status("Loading...")
+	_set_status("Loading…")
 	_last_usec = Time.get_ticks_usec()
 	# let the panel draw once, then load the content (synchronous; one long frame)
 	await get_tree().process_frame
@@ -53,38 +53,64 @@ func _build() -> void:
 	# the blurred diorama is for Welcome, Main menu and Loading only.
 	if ClassDB.class_exists("TdMenu") or ResourceLoader.exists("res://game/ui/screens/parts/td_menu.gd"):
 		TdMenu.wood_background(self, true)
+	# the Unity boot: a centred rounded dark plaque (700×135) with the name, "Loading…" above a cobalt bar
+	# (710×35) with the percentage centred in white inside it
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 	var box := VBoxContainer.new()
-	box.custom_minimum_size = Vector2(720, 0)
-	box.add_theme_constant_override("separation", 14)
+	box.custom_minimum_size = Vector2(710, 0)
+	box.add_theme_constant_override("separation", 0)
 	center.add_child(box)
+	var plaque := PanelContainer.new()
+	plaque.custom_minimum_size = Vector2(700, 135)
+	plaque.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	plaque.add_theme_stylebox_override("panel", TdTheme.stylebox("menu_panel", Color.WHITE, [24, 8, 24, 12]))
+	box.add_child(plaque)
 	var title := Label.new()
 	title.text = "Tower Defence"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 64)
-	var display := load("res://art/fonts/Plinth-Bold.ttf") as Font
-	if display != null: title.add_theme_font_override("font", display)
-	title.add_theme_color_override("font_color", Color(0.96, 0.88, 0.70))
-	box.add_child(title)
-	_fill = ProgressBar.new()
-	_fill.max_value = 1.0
-	_fill.show_percentage = false
-	_fill.custom_minimum_size = Vector2(0, 22)
-	box.add_child(_fill)
-	var row := HBoxContainer.new()
-	box.add_child(row)
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	TdTheme.apply_type(title, "display", TdTheme.color("cream.100"), 72)
+	title.add_theme_color_override("font_shadow_color", TdTheme.color("rim"))
+	title.add_theme_constant_override("shadow_offset_y", 4)
+	plaque.add_child(title)
+	var gap := Control.new()
+	gap.custom_minimum_size = Vector2(0, 72)
+	box.add_child(gap)
 	_status = Label.new()
-	_status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_status.add_theme_font_size_override("font_size", 22)
-	row.add_child(_status)
+	TdTheme.apply_type(_status, "small", TdTheme.color("cream.100"), 22)
+	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(_status)
+	var gap2 := Control.new()
+	gap2.custom_minimum_size = Vector2(0, 14)
+	box.add_child(gap2)
+	var bar := Panel.new()
+	bar.custom_minimum_size = Vector2(710, 35)
+	bar.add_theme_stylebox_override("panel", TdTheme.stylebox("loadbar_track"))
+	box.add_child(bar)
+	_fill = ProgressBar.new() # kept as the value holder; drawn by _fill_box
+	_fill.max_value = 1.0
+	_fill.visible = false
+	bar.add_child(_fill)
+	_fill_box = Panel.new()
+	_fill_box.add_theme_stylebox_override("panel", TdTheme.stylebox("loadbar_fill"))
+	_fill_box.size = Vector2(0, 35)
+	bar.add_child(_fill_box)
 	_percent = Label.new()
-	_percent.add_theme_font_size_override("font_size", 22)
-	row.add_child(_percent)
+	TdTheme.apply_type(_percent, "header", Color.WHITE, 22)
+	_percent.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_percent.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_percent.set_anchors_preset(Control.PRESET_FULL_RECT)
+	TdTheme.outline(_percent, 4)
+	bar.add_child(_percent)
+
+var _fill_box: Panel
 
 func _update(p: float) -> void:
 	_fill.value = p
+	_fill_box.size = Vector2(710.0 * clampf(p, 0.0, 1.0), 35)
+	_fill_box.visible = p > 0.01
 	_percent.text = "%d%%" % roundi(p * 100.0)
 
 func _set_status(t: String) -> void:
