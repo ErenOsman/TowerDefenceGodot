@@ -1,0 +1,86 @@
+extends TestCase
+## Battle HUD bottom row (UI Design Rules, Bottom row layout): tray width, the 130 × pieces + 110 × abilities > 1372
+## rule, the bar centred on the free area / slid right of the tray / raised a row, the hint under the bar.
+
+const SCREEN := Vector2(1920, 1080)
+
+func test_tray_width_grows_with_pieces() -> void:
+	assert_num(HudLayout.tray_width(4), 4 * 124 + 3 * 6 + 44)
+	assert_num(HudLayout.tray_width(5), 688.0)
+	assert_num(HudLayout.tray_width(0), HudLayout.tray_width(1))
+	var r := HudLayout.tray_rect(SCREEN, 4)
+	assert_num(r.position.x, 32.0)
+	assert_num(r.end.y, 1080.0)
+
+func test_raise_rule_at_1920() -> void:
+	assert_false(HudLayout.bar_raised(4, 2))
+	assert_false(HudLayout.bar_raised(8, 3))   # 1040 + 330 = 1370
+	assert_true(HudLayout.bar_raised(8, 4))    # 1040 + 440
+	assert_true(HudLayout.bar_raised(7, 5))
+	assert_true(HudLayout.bar_raised(6, 6))
+	assert_false(HudLayout.bar_raised(6, 5))   # 780 + 550 = 1330
+	# a wider canvas has more room
+	assert_false(HudLayout.bar_raised(8, 4, 2560.0))
+
+func test_bar_width() -> void:
+	assert_num(HudLayout.bar_width(0), 32.0 + 110.0)
+	assert_num(HudLayout.bar_width(2), 32.0 + 110.0 + 54.0 + 168.0 + 26.0)
+	assert_num(HudLayout.bar_width(1, 150.0), 32.0 + 150.0 + 54.0 + 84.0)
+
+func test_bar_centred_on_free_area() -> void:
+	var w := HudLayout.bar_width(2)
+	var row := HudLayout.bottom_row(SCREEN, 4, 2, w)
+	var bar: Rect2 = row["bar"]
+	assert_false(row["raised"])
+	assert_false(row["slid"])
+	assert_num(bar.get_center().x, (1920.0 - 300.0) / 2.0)
+	assert_num(bar.end.y, 1080.0 - 62.0)
+	assert_true(row["hint_centred"])
+	assert_num(row["hint_x"], bar.get_center().x)
+	assert_true(row["hint_y"] >= bar.end.y)
+	assert_num(row["bottom_inset"], 168.0)
+
+func test_bar_slides_right_of_a_long_tray() -> void:
+	var w := HudLayout.bar_width(2)
+	var row := HudLayout.bottom_row(SCREEN, 5, 2, w)
+	var bar: Rect2 = row["bar"]
+	assert_true(row["slid"])
+	assert_num(bar.position.x, HudLayout.tray_rect(SCREEN, 5).end.x + 24.0)
+	assert_false(row["hint_centred"])
+	assert_num(row["hint_x"], bar.position.x)
+	# never under End turn
+	assert_true(bar.end.x <= HudLayout.end_turn_rect(SCREEN).position.x)
+
+func test_bar_raises_above_the_tray() -> void:
+	var w := HudLayout.bar_width(6)
+	var row := HudLayout.bottom_row(SCREEN, 6, 6, w)
+	var bar: Rect2 = row["bar"]
+	assert_true(row["raised"])
+	assert_true(bar.end.y + HudLayout.HINT_H <= HudLayout.tray_rect(SCREEN, 6).position.y)
+	assert_num(bar.get_center().x, (1920.0 - 300.0) / 2.0)
+	assert_true(row["bottom_inset"] > 168.0)
+	# a slid bar that would reach End turn goes up too
+	var wide := HudLayout.bottom_row(SCREEN, 7, 4, 700.0)
+	assert_true(wide["raised"])
+
+func test_hint_without_bar() -> void:
+	var h := HudLayout.hint_without_bar(SCREEN, 2, 300.0)
+	assert_true(h["centred"])
+	assert_num(h["x"], 810.0)
+	var long := HudLayout.hint_without_bar(SCREEN, 6, 600.0)
+	assert_false(long["centred"])
+	assert_num(long["x"], HudLayout.tray_rect(SCREEN, 6).end.x + 24.0)
+
+func test_screen_zones() -> void:
+	var e := HudLayout.end_turn_rect(SCREEN)
+	assert_eq(e, Rect2(1920 - 32 - 168, 1080 - 20 - 168, 168, 168))
+	var i := HudLayout.inspector_rect(SCREEN, 500)
+	assert_num(i.end.x, 1920.0 - 32.0)
+	assert_num(i.position.y, 96.0)
+
+func test_portrait_cover_uv() -> void:
+	assert_eq(HudPortrait.cover_uv(Vector2(100, 100)), Rect2(0, 0, 1, 1))
+	assert_eq(HudPortrait.cover_uv(Vector2(200, 100)), Rect2(0.25, 0, 0.5, 1))
+	var tall := HudPortrait.cover_uv(Vector2(100, 200), -1.0)
+	assert_num(tall.position.y, 0.0)
+	assert_num(tall.size.y, 0.5)

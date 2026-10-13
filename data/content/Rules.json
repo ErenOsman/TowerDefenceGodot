@@ -1,0 +1,51 @@
+{
+  "type": "GameRulesAsset",
+  "assets": {
+    "Settings/GameRules": {
+      "stats": ["Per", "Armor", "Evasion", "Exposed"],
+      "library": [],
+      "hitChance": "1 - Target.Evasion",
+      "critChance": "Target.Exposed",
+      "critMultiplier": "1.5",
+      "mitigation": "Damage",
+      "manaRegen": "0",
+      "facingEnabled": false,
+      "relations": [],
+      "reactions": [null],
+      "replacements": [],
+      "modifiers": [],
+      "maxDepth": 16,
+      "tiles": [
+        "Tiles/Ground A",
+        "Tiles/Ground B",
+        "Tiles/Ground C",
+        "Tiles/Ground D",
+        "Tiles/Build Ground A",
+        "Tiles/Build Ground B",
+        "Tiles/Wall A",
+        "Tiles/Wall B",
+        "Tiles/Chasm 0",
+        "Tiles/Chasm 1",
+        "Tiles/Chasm 2 Corner",
+        "Tiles/Chasm 2 Opposite",
+        "Tiles/Chasm 3",
+        "Tiles/Chasm 4",
+        "Tiles/Road Straight",
+        "Tiles/Road Corner",
+        "Tiles/Road T",
+        "Tiles/Road Cross",
+        "Tiles/Road End",
+        "Tiles/Road Single",
+        "Tiles/Bridge",
+        "Tiles/Board Edge Side",
+        "Tiles/Board Edge Corner",
+        "Tiles/Bush",
+        "Tiles/Fence",
+        "Tiles/Signpost",
+        "Tiles/Spawn Burrow",
+        "Tiles/Tree Pine",
+        "Tiles/Tree Round"
+      ]
+    }
+  }
+}

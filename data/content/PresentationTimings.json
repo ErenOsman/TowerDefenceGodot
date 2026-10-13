@@ -1,0 +1,18 @@
+{
+  "type": "PresentationTimings",
+  "assets": {
+    "Settings/Presentation Timings": {
+      "roundBanner": 0.8,
+      "enemyPhaseBanner": 0.8,
+      "waveBanner": 1.2,
+      "messageBanner": 1.6,
+      "floatingText": 0.9,
+      "abilityName": 0.8,
+      "healthBarAfterDeath": 1,
+      "healthBarAfterHit": 1.5,
+      "spawnVfx": "Assets/Art/VFX/Kit/Spawn Pop.prefab",
+      "deathVfx": "Assets/Art/VFX/Kit/Death Poof.prefab",
+      "collisionVfx": "Assets/Art/VFX/Kit/Collision Thud.prefab"
+    }
+  }
+}

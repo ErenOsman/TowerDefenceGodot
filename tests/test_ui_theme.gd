@@ -1,0 +1,110 @@
+extends TestCase
+## UI kit: TdTheme token lookup, type scale, motion curves, feedback profiles, control styles, kit sprites.
+
+func test_color_tokens_by_any_spelling() -> void:
+	assert_eq(TdTheme.color("accent").to_html(false), "4d8fe6")
+	assert_eq(TdTheme.color("wood.900"), TdTheme.color("wood_900"))
+	assert_eq(TdTheme.color("wood900"), TdTokens.WOOD_900)
+	assert_eq(TdTheme.color("accent.fill").to_html(false), "3a6bb0")
+	assert_eq(TdTheme.color("gold.ink").to_html(false), "7a4e00")
+	assert_eq(TdTheme.color("chip.status.bg").to_html(false), "2a1f3a")
+	assert_true(TdTheme.has_color("hp.high"))
+	assert_false(TdTheme.has_color("not.a.token"))
+
+func test_scrim_and_ghost_keep_their_alpha() -> void:
+	assert_num(snappedf(TdTheme.color("scrim").a, 0.01), 0.88)
+	assert_num(snappedf(TdTheme.color("hp.ghost").a, 0.01), 0.55)
+	assert_eq(TdTheme.rich("ink"), "#2e2117")
+
+func test_tokens_from_the_unity_theme_and_the_kit() -> void:
+	# UITheme.json colours plus the kit's extra stops (cream.disabled, primary.*) are all there
+	assert_true(TdTheme.has_color("cream.disabled"))
+	assert_true(TdTheme.has_color("primary.top"))
+	assert_eq(TdTheme.normalize_token("Wood.900"), "wood900")
+
+func test_type_scale() -> void:
+	assert_eq(TdTheme.font_size("display"), 64)
+	assert_eq(TdTheme.font_size("h1"), 44)
+	assert_eq(TdTheme.font_size("h2"), 32)
+	assert_eq(TdTheme.font_size("body"), 22)
+	assert_eq(TdTheme.font_size("small"), 20)
+	assert_eq(TdTheme.font_size("micro"), 18)
+	assert_eq(TdTheme.type_color("h2").to_html(false), "8dbbff")
+	for role in TdTokens.TYPE:
+		assert_true(TdTheme.font_size(role) >= TdTokens.MIN_FONT_SIZE, "%s is under the minimum" % role)
+	assert_eq(TdTheme.font("display").resource_path, "res://art/fonts/Plinth-Bold.ttf")
+	assert_eq(TdTheme.font("body").resource_path, "res://art/fonts/Nunito-Medium.ttf")
+	assert_eq(TdTheme.font("small").resource_path, "res://art/fonts/Nunito-Bold.ttf")
+	assert_eq(TdTheme.font("plate").resource_path, "res://art/fonts/Nunito-ExtraBold.ttf")
+
+func test_motion_tokens() -> void:
+	assert_num(TdTheme.motion("instant"), 0.1)
+	assert_num(TdTheme.motion("quick"), 0.18)
+	assert_num(TdTheme.motion("normal"), 0.25)
+	assert_num(TdTheme.motion("slow"), 0.5)
+	assert_num(TdTheme.motion("tooltip_delay"), 0.4)
+	assert_num(TdTheme.motion("pulse_attention"), 1.6)
+
+func test_easing_curves() -> void:
+	for n in ["out", "lift", "in_out", "in", "linear", "smooth"]:
+		assert_num(TdTheme.eased(n, 0.0), 0.0, n)
+		assert_num(TdTheme.eased(n, 1.0), 1.0, n)
+	# ease.out is fast at the start, ease.lift overshoots (~1.06) before settling
+	assert_true(TdTheme.eased("out", 0.25) > 0.6)
+	var peak := 0.0
+	for i in 101: peak = maxf(peak, TdTheme.eased("lift", i / 100.0))
+	assert_true(peak > 1.03 and peak < 1.1, "lift peak %f" % peak)
+	assert_num(snappedf(TdTheme.eased("in_out", 0.5), 0.01), snappedf(TdTheme.bezier(0.4, 0.0, 0.2, 1.0, 0.5), 0.01))
+	assert_num(snappedf(TdTheme.eased("linear", 0.3), 0.0001), 0.3)
+
+func test_feedback_profiles() -> void:
+	assert_num(TdTheme.feedback("MenuButton")["hover_scale"], 1.03)
+	assert_num(TdTheme.feedback("MenuButton")["press_sink"], 4.0)
+	assert_num(TdTheme.feedback("IconButton")["denied_shake"], 4.0)
+	assert_num(TdTheme.feedback("Button")["denied_time"], 0.32)
+	assert_num(TdTheme.feedback("nope")["denied_shake"], 6.0) # unknown -> Button
+
+func test_control_styles_and_state_priority() -> void:
+	var p := TdTheme.control_style("Primary")
+	assert_eq(p["normal"], "btn_primary_normal")
+	assert_eq(TdTheme.pick_sprite(p, true, false, false, false), "btn_primary_hover")
+	assert_eq(TdTheme.pick_sprite(p, true, true, false, false), "btn_primary_pressed")
+	assert_eq(TdTheme.pick_sprite(p, true, true, false, true), "btn_primary_disabled") # disabled beats pressed
+	var s := TdTheme.control_style("Secondary")
+	assert_eq(TdTheme.pick_sprite(s, false, false, true, false), "btn_primary_normal") # selected = primary look
+	var a := TdTheme.control_style("Ability")
+	assert_eq(TdTheme.pick_sprite(a, false, false, false, true, "Cooldown"), "ability_overlay_cooldown") # extra beats disabled
+	var n := TdTheme.control_style("NamePlate")
+	assert_eq(TdTheme.pick_sprite(n, true, false, false, false, "Placed"), "nameplate_placed_hover")
+	assert_eq(TdTheme.pick_sprite(n, false, true, false, false), "nameplate_normal") # no pressed sprite -> normal
+	assert_eq(TdTheme.pick_sprite(TdTheme.control_style("EndTurn"), false, false, false, false, "Attention"), "endturn_attention")
+
+func test_kit_sprites_slice_at_reference_size() -> void:
+	assert_eq(TdTheme.sprite_size("panel_wood"), Vector2(134, 102))
+	assert_eq(TdTheme.sprite_border("panel_wood"), [38, 38, 38, 38])
+	assert_eq(TdTheme.sprite_outset("menu_btn_primary_normal"), [3.0, 3.0, 3.0, 12.0])
+	assert_eq(TdTheme.logical_size("btn_primary_normal"), Vector2(160, 60))
+	var box := TdTheme.stylebox("btn_primary_normal")
+	assert_true(box is TdSliceBox)
+	assert_eq((box as TdSliceBox).border_left, 38)
+	assert_num((box as TdSliceBox).texture_scale, 0.5)
+	assert_eq((box as TdSliceBox)._get_draw_rect(Rect2(0, 0, 220, 60)), Rect2(-3, -3, 226, 66))
+	assert_true(TdTheme.stylebox("btn_primary_normal") == box, "cached")
+	assert_eq(TdTheme.role_sprite("cd_badge"), "cd_badge")
+	assert_eq(TdTheme.role_sprite("clock_ring.3_1"), "clock_ring_3_1")
+	assert_not_null(TdTheme.kit("abilities/Shoot"))
+	assert_not_null(TdTheme.ability_face("Shoot"))
+
+func test_clock_ring_names() -> void:
+	assert_eq(TdTheme.clock_ring_name(1, 0, false), "clock_ring_1_ready")
+	assert_eq(TdTheme.clock_ring_name(2, 1, false), "clock_ring_2_1")
+	assert_eq(TdTheme.clock_ring_name(3, 3, false), "clock_ring_3_0")
+	assert_eq(TdTheme.clock_ring_name(3, 1, true), "clock_ring_3_0")
+	assert_eq(TdTheme.clock_ring_name(6, 3, false), "clock_ring_3_1") # long cooldowns fill 3 segments proportionally
+
+func test_theme_resource_loads() -> void:
+	var th := TdTheme.theme()
+	assert_not_null(th)
+	assert_true(th.has_stylebox("normal", "PrimaryButton"))
+	assert_true(th.get_stylebox("panel", "WindowPanel") is TdSliceBox)
+	assert_eq(th.get_font_size("font_size", "H1Label"), 44)

@@ -1,0 +1,26 @@
+; Engine configuration file.
+config_version=5
+
+[application]
+config/name="Tower Defence"
+run/main_scene="res://game/boot.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[display]
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+
+[autoload]
+
+SaveData="*res://game/app/save_data.gd"
+GameApp="*res://game/app/game_app.gd"
+SettingsMgr="*res://game/app/settings_mgr.gd"
+AudioMgr="*res://game/app/audio_mgr.gd"
+KeyBinds="*res://game/app/key_binds.gd"
+SceneFlow="*res://game/app/scene_flow.gd"

@@ -1,0 +1,98 @@
+{
+  "type": "PassiveAsset",
+  "assets": {
+    "Passives/Counter-attack": {
+      "number": 1,
+      "displayName": "Counter-attack",
+      "description": "When an adjacent enemy hits it, it hits back for 5 (once per turn). Only while at half HP or more.",
+      "icon": "Assets/Art/Icons/Passives/CounterAttack.png#CounterAttack",
+      "hidden": false,
+      "condition": "Self.Hp * 2 >= Self.MaxHp",
+      "offCondition": "",
+      "modifiers": [],
+      "replacements": [],
+      "reactions": ["Reactions/Counter Strike"],
+      "aura": ""
+    },
+    "Passives/Drum Beat": {
+      "number": 7,
+      "displayName": "War Beat",
+      "description": "Towers within 2 tiles get 3 more Power.",
+      "icon": "Assets/Art/Icons/Passives/WarBeat.png#WarBeat",
+      "hidden": false,
+      "condition": "",
+      "offCondition": "",
+      "modifiers": [
+        { "target": "Power", "kind": "Flat", "amount": "3", "direction": "Outgoing", "requiredTags": [] }
+      ],
+      "replacements": [],
+      "reactions": [],
+      "aura": "Target.IsAlly and Self.DistanceTo(Target) <= 2"
+    },
+    "Passives/Examples/Bloodthirst": {
+      "number": 3,
+      "displayName": "Bloodthirst",
+      "description": "A kill makes Execute ready again.",
+      "icon": "Assets/Art/Icons/Passives/Bloodthirst.png#Bloodthirst",
+      "hidden": false,
+      "condition": "",
+      "offCondition": "",
+      "modifiers": [],
+      "replacements": [],
+      "reactions": ["Reactions/Examples/Execute Reset"],
+      "aura": ""
+    },
+    "Passives/Examples/Fire Tile Rules": {
+      "number": 2,
+      "displayName": "",
+      "description": "",
+      "icon": "Assets/Art/Icons/Passives/FireTile.png#FireTile",
+      "hidden": true,
+      "condition": "",
+      "offCondition": "",
+      "modifiers": [],
+      "replacements": [],
+      "reactions": ["Reactions/Examples/Ignite", "Reactions/Examples/Burn"],
+      "aura": ""
+    },
+    "Passives/Glutton": {
+      "number": 8,
+      "displayName": "Glutton",
+      "description": "When it arrives it eats every other enemy on the field; each kill gives it 20 more max HP.",
+      "icon": "Assets/Art/Icons/Passives/Glutton.png#Glutton",
+      "hidden": false,
+      "condition": "",
+      "offCondition": "",
+      "modifiers": [],
+      "replacements": [],
+      "reactions": ["Reactions/Devour", "Reactions/Gorge"],
+      "aura": ""
+    },
+    "Passives/Rock Eater": {
+      "number": 6,
+      "displayName": "Rock Eater",
+      "description": "At the end of each of its turns it eats a rock next to it and gains 100 Shield.",
+      "icon": "Assets/Art/Icons/Passives/RockEater.png#RockEater",
+      "hidden": false,
+      "condition": "",
+      "offCondition": "",
+      "modifiers": [],
+      "replacements": [],
+      "reactions": ["Reactions/Eat Rock"],
+      "aura": ""
+    },
+    "Passives/Shielded": {
+      "number": 4,
+      "displayName": "Shielded",
+      "description": "Arrives with a Shield that absorbs 10 damage, and refills it to 10 at the start of each of its turns.",
+      "icon": "Assets/Art/Icons/Passives/Shielded.png#Shielded",
+      "hidden": false,
+      "condition": "",
+      "offCondition": "",
+      "modifiers": [],
+      "replacements": [],
+      "reactions": ["Reactions/Shield Up", "Reactions/Shield Refill"],
+      "aura": ""
+    }
+  }
+}

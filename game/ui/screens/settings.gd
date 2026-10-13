@@ -1,0 +1,352 @@
+extends TdPopup
+## The Settings window (UI_Settings.cs; the Unity build's layout; mockups settings-*.html), reusable from the main
+## menu and the level's pause menu:
+##   var s = load("res://game/ui/screens/settings.tscn").instantiate(); add_child(s); s.open(); s.closed.connect(…)
+## Tabs on top — Audio (master / music / SFX / other volume sliders), Display (resolution + fullscreen; the tab is
+## hidden on the web, where the page sets the size), Gameplay (game speed stages, follow action, camera follows
+## selection, drag to pan, instant playback, always show health), Controls (KeyBinds rows: a header per group,
+## modifier dropdowns, two key slots per action; click a slot, then press a key with its combination; red = the
+## key is bound twice; Reset all) — rows label left / control right, Back at the bottom. Every change applies and
+## saves at once (SettingsMgr setters, KeyBinds). Esc / right click: cancels a key capture first, else closes.
+
+const TABS := ["Audio", "Display", "Gameplay", "Controls"]
+const TAB_ICONS := ["icon_sound", "icon_monitor", "icon_sliders", "icon_keyboard"]
+const WIDTH := 900.0
+const HEIGHT := 700.0
+const CONTROL_W := 520.0
+
+var tab_buttons: Array = []
+var pages: Array = []
+var current_tab := 0
+var reset_button: Button
+var back_button: Button
+## [id, slot, Button] for every key slot on the Controls page.
+var key_slots: Array = []
+## [id, OptionButton] for every modifier row.
+var modifier_rows: Array = []
+## The slot waiting for a key ([id, slot]) or empty.
+var listening: Array = []
+
+var _sliders := {}   # name → [HSlider, value Label]
+var _toggles := {}   # name → CheckButton
+var _resolution: OptionButton
+var _fullscreen: CheckButton
+var _speed: HSlider
+var _speed_value: Label
+var _conflict_note: Label
+
+func _build() -> void:
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	center.mouse_filter = MOUSE_FILTER_IGNORE
+	add_child(center)
+	var p := TdMenu.panel(TdPanel.Kind.WINDOW, 24)
+	p.custom_minimum_size = Vector2(WIDTH, HEIGHT)
+	center.add_child(p)
+	window = p
+	var col := TdMenu.vbox(16)
+	p.add_child(col)
+	var tabs_row := TdMenu.hbox(10)
+	col.add_child(tabs_row)
+	tab_buttons = TdMenu.tabs(tabs_row, TABS, [], Vector2((WIDTH - 48 - 30) / 4.0, 56), show_tab)
+	if OS.has_feature("web"): tab_buttons[1].visible = false
+	var well := TdMenu.panel(TdPanel.Kind.WELL, 18)
+	well.size_flags_vertical = SIZE_EXPAND_FILL
+	col.add_child(well)
+	var stack := Control.new()
+	stack.size_flags_vertical = SIZE_EXPAND_FILL
+	well.add_child(stack)
+	for page in [_audio_page(), _display_page(), _gameplay_page(), _controls_page()]:
+		page.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+		stack.add_child(page)
+		pages.append(page)
+	var bottom := TdMenu.hbox(16)
+	bottom.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(bottom)
+	reset_button = TdMenu.wood_button("Reset all", Vector2(240, 56))
+	reset_button.pressed.connect(func():
+		KeyBinds.reset_all()
+		_stop_listening()
+		refresh_controls())
+	bottom.add_child(reset_button)
+	back_button = TdMenu.wood_button("Back", Vector2(360, 56))
+	back_button.pressed.connect(close)
+	bottom.add_child(back_button)
+	show_tab(0)
+
+func _on_open() -> void:
+	refresh_all()
+
+## Shows a tab (0 Audio, 1 Display, 2 Gameplay, 3 Controls).
+func show_tab(i: int) -> void:
+	if OS.has_feature("web") and i == 1: i = 0
+	_stop_listening()
+	current_tab = i
+	for k in pages.size():
+		pages[k].visible = k == i
+		tab_buttons[k].selected = k == i
+	reset_button.visible = i == 3
+	if i == 3: refresh_controls()
+
+## Reads every control back from the settings.
+func refresh_all() -> void:
+	var s := SaveData.settings
+	for n in _sliders:
+		var v: float = s.get(n)
+		_sliders[n][0].set_value_no_signal(roundf(v * 100.0))
+		_sliders[n][1].text = str(int(roundf(v * 100.0)))
+	for n in _toggles: _toggles[n].set_pressed_no_signal(bool(s.get(n)))
+	_speed.set_value_no_signal(MenuLogic.speed_stage(s.game_speed))
+	_speed_value.text = "%.2f" % s.game_speed
+	_fill_resolutions()
+	_fullscreen.set_pressed_no_signal(s.is_fullscreen)
+	refresh_controls()
+
+# ------------------------------------------------------------------ rows
+
+func _page() -> VBoxContainer:
+	var v := TdMenu.vbox(8)
+	return v
+
+func _row(page: Container, text: String, control: Control, sub := "") -> HBoxContainer:
+	var row := TdMenu.hbox(16)
+	row.custom_minimum_size = Vector2(0, 56)
+	var labels := TdMenu.vbox(0)
+	labels.size_flags_horizontal = SIZE_EXPAND_FILL
+	labels.alignment = BoxContainer.ALIGNMENT_CENTER
+	labels.add_child(TdMenu.label(text, "body", TdTheme.color("cream.100"), 24))
+	if sub != "": labels.add_child(TdMenu.label(sub, "small", TdTheme.color("cream.300"), 18))
+	row.add_child(labels)
+	var holder := HBoxContainer.new()
+	holder.custom_minimum_size = Vector2(CONTROL_W, 0)
+	holder.alignment = BoxContainer.ALIGNMENT_END
+	holder.add_child(control)
+	row.add_child(holder)
+	page.add_child(row)
+	return row
+
+func _slider_row(page: Container, text: String, setting: String, setter: Callable) -> void:
+	var h := TdMenu.hbox(16)
+	var sl := HSlider.new()
+	sl.min_value = 0
+	sl.max_value = 100
+	sl.step = 1
+	sl.custom_minimum_size = Vector2(410, 40)
+	sl.size_flags_vertical = SIZE_SHRINK_CENTER
+	sl.focus_mode = FOCUS_NONE
+	h.add_child(sl)
+	var val := TdMenu.label("0", "header", TdTheme.color("cream.100"), 24)
+	val.custom_minimum_size = Vector2(70, 0)
+	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	h.add_child(val)
+	sl.value_changed.connect(func(v):
+		val.text = str(int(v))
+		setter.call(v / 100.0))
+	_sliders[setting] = [sl, val]
+	_row(page, text, h)
+
+func _toggle_row(page: Container, text: String, setting: String, setter: Callable, sub := "") -> void:
+	var t := CheckButton.new()
+	t.focus_mode = FOCUS_NONE
+	t.toggled.connect(func(on): setter.call(on))
+	_toggles[setting] = t
+	_row(page, text, t, sub)
+
+func _audio_page() -> Control:
+	var p := _page()
+	_slider_row(p, "Master Volume", "master_volume", func(v): SettingsMgr.set_master_volume(v))
+	_slider_row(p, "Music Volume", "music_volume", func(v): SettingsMgr.set_music_volume(v))
+	_slider_row(p, "SFX Volume", "sfx_volume", func(v): SettingsMgr.set_sfx_volume(v))
+	_slider_row(p, "Other Volume", "other_volume", func(v): SettingsMgr.set_other_volume(v))
+	return p
+
+func _display_page() -> Control:
+	var p := _page()
+	_resolution = OptionButton.new()
+	_resolution.custom_minimum_size = Vector2(320, 52)
+	_resolution.focus_mode = FOCUS_NONE
+	_resolution.item_selected.connect(func(i):
+		var r: Vector2i = _resolution.get_item_metadata(i)
+		SettingsMgr.set_resolution(r.x, r.y, SaveData.settings.is_fullscreen))
+	_row(p, "Resolution", _resolution, "The window's size when not fullscreen")
+	_fullscreen = CheckButton.new()
+	_fullscreen.focus_mode = FOCUS_NONE
+	_fullscreen.toggled.connect(func(on):
+		var s := SaveData.settings
+		SettingsMgr.set_resolution(s.resolution_width, s.resolution_height, on))
+	_row(p, "Fullscreen", _fullscreen)
+	return p
+
+func _fill_resolutions() -> void:
+	_resolution.clear()
+	var s := SaveData.settings
+	var list: Array = SettingsMgr.resolutions()
+	list.sort_custom(func(a, b): return a.x > b.x or (a.x == b.x and a.y > b.y))
+	for r in list:
+		_resolution.add_item("%d x %d" % [r.x, r.y])
+		_resolution.set_item_metadata(_resolution.item_count - 1, r)
+		if r == Vector2i(s.resolution_width, s.resolution_height): _resolution.select(_resolution.item_count - 1)
+
+func _gameplay_page() -> Control:
+	var p := _page()
+	var h := TdMenu.hbox(16)
+	_speed = HSlider.new()
+	_speed.min_value = 0
+	_speed.max_value = MenuLogic.GAME_SPEEDS.size() - 1
+	_speed.step = 1
+	_speed.tick_count = MenuLogic.GAME_SPEEDS.size()
+	_speed.ticks_on_borders = true
+	_speed.custom_minimum_size = Vector2(410, 40)
+	_speed.size_flags_vertical = SIZE_SHRINK_CENTER
+	_speed.focus_mode = FOCUS_NONE
+	h.add_child(_speed)
+	_speed_value = TdMenu.label("1.00", "header", TdTheme.color("cream.100"), 24)
+	_speed_value.custom_minimum_size = Vector2(70, 0)
+	_speed_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	h.add_child(_speed_value)
+	_speed.value_changed.connect(func(v):
+		var speed: float = MenuLogic.GAME_SPEEDS[clampi(int(v), 0, MenuLogic.GAME_SPEEDS.size() - 1)]
+		_speed_value.text = "%.2f" % speed
+		SettingsMgr.set_game_speed(speed))
+	_row(p, "Game Speed", h)
+	_toggle_row(p, "Follow Action", "follow_action", func(v): SettingsMgr.set_follow_action(v))
+	_toggle_row(p, "Camera Follows Selection", "follow_selection", func(v): SettingsMgr.set_follow_selection(v))
+	_toggle_row(p, "Drag with Mouse", "drag_to_pan", func(v): SettingsMgr.set_drag_to_pan(v))
+	_toggle_row(p, "Instant Play", "instant_playback", func(v): SettingsMgr.set_instant_playback(v))
+	_toggle_row(p, "Always Show Health", "always_show_health", func(v): SettingsMgr.set_always_show_health(v))
+	return p
+
+# ------------------------------------------------------------------ controls
+
+func _controls_page() -> Control:
+	var outer := TdMenu.vbox(8)
+	var head := TdMenu.hbox(16)
+	var a := TdMenu.label("Action", "small", TdTheme.color("cream.300"))
+	a.size_flags_horizontal = SIZE_EXPAND_FILL
+	head.add_child(a)
+	for t in ["Key", "Second key"]:
+		var l := TdMenu.label(t, "small", TdTheme.color("cream.300"))
+		l.custom_minimum_size = Vector2(200, 0)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		head.add_child(l)
+	head.add_child(TdMenu.spacer(0, 14))
+	outer.add_child(head)
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	outer.add_child(scroll)
+	var list := TdMenu.vbox(6)
+	list.size_flags_horizontal = SIZE_EXPAND_FILL
+	scroll.add_child(list)
+	for r in MenuLogic.controls_rows(KeyBinds.actions, KeyBinds.modifier_actions):
+		match r.kind:
+			"header":
+				var hl := TdMenu.label(r.label, "header", TdTheme.color("gold"))
+				hl.custom_minimum_size = Vector2(0, 44)
+				hl.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+				list.add_child(hl)
+			"modifier":
+				var ob := OptionButton.new()
+				ob.focus_mode = FOCUS_NONE
+				ob.custom_minimum_size = Vector2(416, 48)
+				for m in Modifiers.ALL: ob.add_item(MenuLogic.modifier_option(m))
+				var id: String = r.id
+				ob.item_selected.connect(func(i):
+					KeyBinds.set_modifier(id, Modifiers.ALL[i])
+					refresh_controls())
+				modifier_rows.append([id, ob])
+				list.add_child(_control_row(r.label, ob))
+			"key":
+				var h := TdMenu.hbox(16)
+				for slot in 2:
+					var b := _slot_button(r.id, slot)
+					h.add_child(b)
+				list.add_child(_control_row(r.label, h))
+	_conflict_note = TdMenu.wrap_label("", "small", TdTheme.color("bad"))
+	_conflict_note.visible = false
+	outer.add_child(_conflict_note)
+	return outer
+
+func _control_row(text: String, control: Control) -> Control:
+	var row := TdMenu.hbox(16)
+	row.custom_minimum_size = Vector2(0, 52)
+	var l := TdMenu.label(text, "body", TdTheme.color("cream.100"), 22)
+	l.size_flags_horizontal = SIZE_EXPAND_FILL
+	row.add_child(l)
+	row.add_child(control)
+	row.add_child(TdMenu.spacer(0, 6))
+	return row
+
+func _slot_button(id: String, slot: int) -> Button:
+	var b := Button.new()
+	b.custom_minimum_size = Vector2(200, 48)
+	b.focus_mode = FOCUS_NONE
+	b.add_theme_font_override("font", TdTheme.font("plinth"))
+	b.add_theme_font_size_override("font_size", 22)
+	b.pressed.connect(func(): listen(id, slot))
+	key_slots.append([id, slot, b])
+	return b
+
+## Clicking a slot waits for a key (clicking it again cancels).
+func listen(id: String, slot: int) -> void:
+	var same: bool = listening.size() == 2 and listening[0] == id and listening[1] == slot
+	listening = [] if same else [id, slot]
+	TdPopup.settings_capturing = not listening.is_empty()
+	KeyBinds.block_keys = true
+	refresh_controls()
+
+func _stop_listening() -> void:
+	if listening.is_empty(): return
+	listening = []
+	TdPopup.settings_capturing = false
+	refresh_controls()
+
+func _input(event: InputEvent) -> void:
+	if listening.is_empty() or not is_open: return
+	if not (event is InputEventKey) or not event.pressed or event.echo: return
+	get_viewport().set_input_as_handled()
+	if event.keycode == KEY_ESCAPE:
+		_stop_listening()
+		return
+	var combo := KeyBinds.combo_from_event(event)
+	if combo == null: return # a modifier alone: wait for the key
+	KeyBinds.set_bind(listening[0], listening[1], combo)
+	_stop_listening()
+
+func back() -> void:
+	if not listening.is_empty():
+		_stop_listening()
+		return
+	close()
+
+func close() -> void:
+	_stop_listening()
+	super.close()
+
+## Every slot's key (red when bound twice, "Press a key..." while listening) and every dropdown's combination.
+func refresh_controls() -> void:
+	var clashes := []
+	for k in key_slots:
+		var id: String = k[0]
+		var slot: int = k[1]
+		var b: Button = k[2]
+		var is_listening: bool = listening.size() == 2 and listening[0] == id and listening[1] == slot
+		var combo := KeyBinds.get_bind(id, slot)
+		var conflict: bool = not is_listening and KeyBinds.conflicts(id, slot)
+		var sprite := "keyslot_listening" if is_listening else ("keyslot_conflict" if conflict else ("keyslot_empty" if combo.is_none else "keyslot_normal"))
+		b.text = "Press a key..." if is_listening else ("Not set" if combo.is_none else KeyBinds.combo_text(combo))
+		var col := Color.WHITE if is_listening else (TdTheme.color("bad.ink") if conflict else (TdTheme.color("cream.300") if combo.is_none else TdTheme.color("ink")))
+		for st in ["normal", "hover", "pressed", "hover_pressed", "focus"]:
+			var spr := sprite if st != "hover" or is_listening or conflict else "keyslot_hover"
+			b.add_theme_stylebox_override(st, TdTheme.stylebox(spr, Color.WHITE, [8, 4, 8, 4]))
+		for c in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color"]:
+			b.add_theme_color_override(c, col)
+		if conflict:
+			var kname := KeyBinds.combo_text(combo)
+			if not clashes.has(kname): clashes.append(kname)
+	for m in modifier_rows:
+		m[1].select(Modifiers.ALL.find(KeyBinds.get_modifier(m[0])))
+	if _conflict_note != null:
+		_conflict_note.visible = not clashes.is_empty()
+		_conflict_note.text = "%s %s bound twice: both actions would happen. Click a red key to change it." % [
+			", ".join(PackedStringArray(clashes)), "is" if clashes.size() == 1 else "are"]

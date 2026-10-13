@@ -1,0 +1,5976 @@
+{
+ "palette": {
+  "White": "FFFFFF",
+  "Ivory": "EDE5D0",
+  "Cloth": "CDBB97",
+  "Ink": "1E1A1A",
+  "Steel": "AEB6C1",
+  "SteelDark": "6B7380",
+  "Brass": "D2A64A",
+  "Iron": "4E535C",
+  "Wood": "A0703F",
+  "WoodDark": "6D4829",
+  "Bark": "6B4B33",
+  "Dirt": "C4A577",
+  "DirtDark": "A3865C",
+  "Soil": "6E5038",
+  "SoilDark": "4F3928",
+  "Stone": "8E9097",
+  "StoneDark": "62656D",
+  "StoneLight": "B4B5B8",
+  "Cobalt": "3A6FE0",
+  "CobaltDark": "27489E",
+  "CobaltLight": "7FA3F0",
+  "Red": "C2412F",
+  "EnemyEye": "FF3B2F",
+  "Fire": "FF8A2A",
+  "FireHot": "FFD27A",
+  "Smoke": "3A3330",
+  "Holy": "FFE08A",
+  "HolyDeep": "E0A64A",
+  "Spirit": "58DDF2",
+  "SpiritDeep": "2E8FB5",
+  "Acid": "A8FF3A",
+  "AcidDark": "6FB01E",
+  "Slime": "8DAE5C",
+  "SlimeDark": "5F7D3C",
+  "Robe": "5A3E9E",
+  "VoidGlow": "4A3F8A"
+ },
+ "effects": [
+  {
+   "name": "Hit Spark",
+   "kind": "burst",
+   "use": "hitVfx: Shoot, Bolt, Volley, Pinning Shot",
+   "note": "An arrow or bolt bites: steel chips and two bright sparks. Replaces the placeholder Hit Spark.",
+   "layers": [
+    {
+     "sprite": "blob_soft",
+     "blend": "add",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.15,
+      0.15
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.4,
+      0.5
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Ivory",
+      "Ivory"
+     ],
+     "color2": null,
+     "alpha": "flash",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -2
+    },
+    {
+     "sprite": "chip",
+     "blend": "alpha",
+     "count": [
+      5,
+      8
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      2.0,
+      3.5
+     ],
+     "size": [
+      0.07,
+      0.12
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.05
+     },
+     "color": [
+      "Steel",
+      "SteelDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 1.6,
+     "drag": 0.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -540,
+      540
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    },
+    {
+     "sprite": "spark",
+     "blend": "add",
+     "count": [
+      3,
+      4
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.2,
+      0.3
+     ],
+     "speed": [
+      3,
+      5
+     ],
+     "size": [
+      0.1,
+      0.14
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.05
+     },
+     "color": [
+      "FireHot",
+      "Fire"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 0.8,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.25,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ],
+   "shake": 0.1
+  },
+  {
+   "name": "Hit Flash",
+   "kind": "burst",
+   "use": "hitVfx: Bash, Slam, Crush, Ram, Smash, Shield Bash, Execute (any blunt melee hit)",
+   "note": "A chunky white star pops where the blow lands, with ivory chips.",
+   "layers": [
+    {
+     "sprite": "star4",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.18,
+      0.18
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.4,
+      0.5
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "White",
+      "White"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      90
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "blob_soft",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.1,
+      0.1
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.3,
+      0.4
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Ivory",
+      "Ivory"
+     ],
+     "color2": null,
+     "alpha": "flash",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -2
+    },
+    {
+     "sprite": "chip",
+     "blend": "alpha",
+     "count": [
+      4,
+      6
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      1.5,
+      2.5
+     ],
+     "size": [
+      0.07,
+      0.11
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.05
+     },
+     "color": [
+      "Ivory",
+      "Cloth"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 1.6,
+     "drag": 0.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -540,
+      540
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Hit Scratch",
+   "kind": "burst",
+   "use": "hitVfx: Bite, Nibble (enemy teeth and claws)",
+   "note": "Three dark claw marks and a few red drops; the marks stay a moment then shrink.",
+   "layers": [
+    {
+     "sprite": "scratch",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.4
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.45,
+      0.5
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Ink",
+      "Red"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      -30,
+      30
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "drop",
+     "blend": "alpha",
+     "count": [
+      3,
+      5
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.45
+     ],
+     "speed": [
+      1.0,
+      2.0
+     ],
+     "size": [
+      0.05,
+      0.08
+     ],
+     "shape": {
+      "type": "cone",
+      "angle": 60,
+      "radius": 0.05,
+      "dir": "up"
+     },
+     "color": [
+      "Red",
+      "Red"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 1.5,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -180,
+      180
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Smash Dust",
+   "kind": "burst",
+   "use": "impactVfx: Smash, Slam, Crush, Ram (the floor takes the blow)",
+   "note": "A dirt ring on the tile, dust puffs and stone chips. Replaces the placeholder Smash Dust.",
+   "layers": [
+    {
+     "sprite": "ring",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.4
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.5,
+      0.5
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Dirt",
+      "DirtDark"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "ringout",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 2.8,
+     "orient": "horizontal",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.38,
+      0
+     ],
+     "local": false,
+     "sort": 2
+    },
+    {
+     "sprite": "puff",
+     "blend": "alpha",
+     "count": [
+      6,
+      9
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.5,
+      0.8
+     ],
+     "speed": [
+      0.8,
+      1.8
+     ],
+     "size": [
+      0.25,
+      0.45
+     ],
+     "shape": {
+      "type": "hemisphere",
+      "radius": 0.15
+     },
+     "color": [
+      "Dirt",
+      "DirtDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "wobble",
+     "gravity": -0.05,
+     "drag": 2.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -60,
+      60
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.3,
+      0
+     ],
+     "local": false,
+     "sort": 1
+    },
+    {
+     "sprite": "chip",
+     "blend": "alpha",
+     "count": [
+      4,
+      7
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      2.0,
+      3.5
+     ],
+     "size": [
+      0.06,
+      0.11
+     ],
+     "shape": {
+      "type": "hemisphere",
+      "radius": 0.1
+     },
+     "color": [
+      "Stone",
+      "StoneDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 1.6,
+     "drag": 0.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -540,
+      540
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ],
+   "shake": 0.5
+  },
+  {
+   "name": "Bolt Thud",
+   "kind": "burst",
+   "use": "impactVfx: Bolt (ballista bolt lands)",
+   "note": "Smaller dirt ring and wood splinters.",
+   "layers": [
+    {
+     "sprite": "ring",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.3
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.35,
+      0.35
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Dirt",
+      "DirtDark"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "ringout",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 2.5714285714285716,
+     "orient": "horizontal",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.38,
+      0
+     ],
+     "local": false,
+     "sort": 2
+    },
+    {
+     "sprite": "puff",
+     "blend": "alpha",
+     "count": [
+      3,
+      5
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.5,
+      0.8
+     ],
+     "speed": [
+      0.6,
+      1.2
+     ],
+     "size": [
+      0.2,
+      0.3
+     ],
+     "shape": {
+      "type": "hemisphere",
+      "radius": 0.15
+     },
+     "color": [
+      "Dirt",
+      "DirtDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "wobble",
+     "gravity": -0.05,
+     "drag": 2.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -60,
+      60
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.3,
+      0
+     ],
+     "local": false,
+     "sort": 1
+    },
+    {
+     "sprite": "shard",
+     "blend": "alpha",
+     "count": [
+      3,
+      5
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      1.5,
+      3.0
+     ],
+     "size": [
+      0.05,
+      0.1
+     ],
+     "shape": {
+      "type": "cone",
+      "angle": 40,
+      "radius": 0.05,
+      "dir": "up"
+     },
+     "color": [
+      "Wood",
+      "WoodDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 1.6,
+     "drag": 0.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -540,
+      540
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ],
+   "shake": 0.2
+  },
+  {
+   "name": "Cannon Blast",
+   "kind": "burst",
+   "use": "impactVfx: Bombard, Fireball (lobbed shells, big fire spells)",
+   "note": "The big one: fire flash, flame tongues, rolling smoke, a dirt ring, stone chips, sparks.",
+   "layers": [
+    {
+     "sprite": "blob_soft",
+     "blend": "add",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.14,
+      0.14
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.9,
+      1.1
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "FireHot",
+      "FireHot"
+     ],
+     "color2": null,
+     "alpha": "flash",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -2
+    },
+    {
+     "sprite": "blob_soft",
+     "blend": "add",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.22,
+      0.22
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.6,
+      0.7
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Fire",
+      "Fire"
+     ],
+     "color2": null,
+     "alpha": "flash",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.1,
+      0
+     ],
+     "local": false,
+     "sort": -2
+    },
+    {
+     "sprite": "flame",
+     "blend": "alpha",
+     "count": [
+      6,
+      9
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.25,
+      0.4
+     ],
+     "speed": [
+      1.5,
+      3.0
+     ],
+     "size": [
+      0.25,
+      0.4
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.1
+     },
+     "color": [
+      "FireHot",
+      "Fire"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 0.0,
+     "drag": 3,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -120,
+      120
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "puff",
+     "blend": "alpha",
+     "count": [
+      7,
+      10
+     ],
+     "rate": 0,
+     "delay": 0.05,
+     "dur": 0.3,
+     "life": [
+      0.7,
+      1.1
+     ],
+     "speed": [
+      1.0,
+      2.2
+     ],
+     "size": [
+      0.35,
+      0.6
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.15
+     },
+     "color": [
+      "Smoke",
+      "StoneDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "wobble",
+     "gravity": -0.12,
+     "drag": 2.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -60,
+      60
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 1
+    },
+    {
+     "sprite": "ring",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.45,
+      0.45
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.6,
+      0.6
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Dirt",
+      "DirtDark"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "ringout",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 3.0,
+     "orient": "horizontal",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.38,
+      0
+     ],
+     "local": false,
+     "sort": 2
+    },
+    {
+     "sprite": "chip",
+     "blend": "alpha",
+     "count": [
+      6,
+      9
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      2.5,
+      4.5
+     ],
+     "size": [
+      0.06,
+      0.12
+     ],
+     "shape": {
+      "type": "hemisphere",
+      "radius": 0.1
+     },
+     "color": [
+      "Stone",
+      "StoneDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 1.8,
+     "drag": 0.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -540,
+      540
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    },
+    {
+     "sprite": "spark",
+     "blend": "add",
+     "count": [
+      8,
+      12
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      3,
+      6
+     ],
+     "size": [
+      0.06,
+      0.1
+     ],
+     "shape": {
+      "type": "hemisphere",
+      "radius": 0.05
+     },
+     "color": [
+      "FireHot",
+      "Fire"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 1.2,
+     "drag": 1,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.3,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ],
+   "shake": 0.8
+  },
+  {
+   "name": "Cannon Muzzle",
+   "kind": "burst",
+   "use": "castVfx: Bombard (at the Muzzle)",
+   "note": "A short flash and a grey puff. Spawn it at the caster's Muzzle, not its feet (see notes).",
+   "layers": [
+    {
+     "sprite": "blob_soft",
+     "blend": "add",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.12,
+      0.12
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.5,
+      0.6
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "FireHot",
+      "FireHot"
+     ],
+     "color2": null,
+     "alpha": "flash",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -2
+    },
+    {
+     "sprite": "puff",
+     "blend": "alpha",
+     "count": [
+      3,
+      4
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.6
+     ],
+     "speed": [
+      0.8,
+      1.4
+     ],
+     "size": [
+      0.3,
+      0.45
+     ],
+     "shape": {
+      "type": "cone",
+      "angle": 25,
+      "radius": 0.05,
+      "dir": "up"
+     },
+     "color": [
+      "Stone",
+      "StoneDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "wobble",
+     "gravity": -0.05,
+     "drag": 2.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -60,
+      60
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 1
+    }
+   ]
+  },
+  {
+   "name": "Bow Twang",
+   "kind": "burst",
+   "use": "castVfx: Shoot, Volley (optional, tiny)",
+   "note": "Three ivory motion lines at the bow. Spawn at the Muzzle.",
+   "layers": [
+    {
+     "sprite": "streak",
+     "blend": "alpha",
+     "count": [
+      3,
+      3
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.2,
+      0.3
+     ],
+     "speed": [
+      0.5,
+      1.0
+     ],
+     "size": [
+      0.3,
+      0.45
+     ],
+     "shape": {
+      "type": "cone",
+      "angle": 15,
+      "radius": 0.02,
+      "dir": "up"
+     },
+     "color": [
+      "Ivory",
+      "Ivory"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "shrink",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Fire Flare",
+   "kind": "burst",
+   "use": "castVfx: Firebolt, Fireball, Fire Wall (the caster calls fire)",
+   "note": "Flames lick up around the caster's hands with rising embers.",
+   "layers": [
+    {
+     "sprite": "flame",
+     "blend": "alpha",
+     "count": [
+      6,
+      8
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.6
+     ],
+     "speed": [
+      0.8,
+      1.4
+     ],
+     "size": [
+      0.18,
+      0.3
+     ],
+     "shape": {
+      "type": "circle",
+      "radius": 0.22,
+      "up": true
+     },
+     "color": [
+      "FireHot",
+      "Fire"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      -15,
+      15
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.35,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "blob",
+     "blend": "add",
+     "count": [
+      6,
+      10
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.7
+     ],
+     "speed": [
+      0.6,
+      1.2
+     ],
+     "size": [
+      0.03,
+      0.06
+     ],
+     "shape": {
+      "type": "circle",
+      "radius": 0.25,
+      "up": true
+     },
+     "color": [
+      "FireHot",
+      "Fire"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": -0.25,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.4,
+     "offset": [
+      0,
+      0.35,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Fire Burst",
+   "kind": "burst",
+   "use": "impactVfx: Firebolt (the bolt bursts on the tile)",
+   "note": "Orange flash, flame tongues outward, a few embers and small dark puffs.",
+   "layers": [
+    {
+     "sprite": "blob_soft",
+     "blend": "add",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.12,
+      0.12
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.6,
+      0.7
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "FireHot",
+      "FireHot"
+     ],
+     "color2": null,
+     "alpha": "flash",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -2
+    },
+    {
+     "sprite": "flame",
+     "blend": "alpha",
+     "count": [
+      7,
+      10
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.25,
+      0.4
+     ],
+     "speed": [
+      1.5,
+      2.5
+     ],
+     "size": [
+      0.2,
+      0.3
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.08
+     },
+     "color": [
+      "FireHot",
+      "Fire"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 0.0,
+     "drag": 3,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -90,
+      90
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "blob",
+     "blend": "add",
+     "count": [
+      6,
+      9
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.7
+     ],
+     "speed": [
+      0.8,
+      1.6
+     ],
+     "size": [
+      0.03,
+      0.06
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.1
+     },
+     "color": [
+      "FireHot",
+      "Fire"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": -0.2,
+     "drag": 1,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.4,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    },
+    {
+     "sprite": "puff",
+     "blend": "alpha",
+     "count": [
+      3,
+      5
+     ],
+     "rate": 0,
+     "delay": 0.05,
+     "dur": 0.3,
+     "life": [
+      0.5,
+      0.8
+     ],
+     "speed": [
+      0.6,
+      1.2
+     ],
+     "size": [
+      0.2,
+      0.35
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.1
+     },
+     "color": [
+      "Smoke",
+      "StoneDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "wobble",
+     "gravity": -0.05,
+     "drag": 2.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -60,
+      60
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 1
+    }
+   ],
+   "shake": 0.3
+  },
+  {
+   "name": "Ember Hit",
+   "kind": "burst",
+   "use": "hitVfx: Firebolt, Fireball, Fire Wall, Burn ticks (something catches fire)",
+   "note": "A small flash and embers off the body.",
+   "layers": [
+    {
+     "sprite": "blob_soft",
+     "blend": "add",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.12,
+      0.12
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.35,
+      0.45
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Fire",
+      "Fire"
+     ],
+     "color2": null,
+     "alpha": "flash",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -2
+    },
+    {
+     "sprite": "blob",
+     "blend": "add",
+     "count": [
+      5,
+      8
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      0.8,
+      1.5
+     ],
+     "size": [
+      0.04,
+      0.08
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.12
+     },
+     "color": [
+      "FireHot",
+      "Fire"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": -0.2,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.3,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    },
+    {
+     "sprite": "flame",
+     "blend": "alpha",
+     "count": [
+      3,
+      4
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.25,
+      0.35
+     ],
+     "speed": [
+      0.5,
+      1.0
+     ],
+     "size": [
+      0.18,
+      0.26
+     ],
+     "shape": {
+      "type": "cone",
+      "angle": 40,
+      "radius": 0.08,
+      "dir": "up"
+     },
+     "color": [
+      "FireHot",
+      "Fire"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    }
+   ]
+  },
+  {
+   "name": "Spirit Flare",
+   "kind": "burst",
+   "use": "castVfx: Spark, Chain Lightning (wisp magic gathers)",
+   "note": "Cyan glints gather with a soft glow at chest height.",
+   "layers": [
+    {
+     "sprite": "blob_soft",
+     "blend": "add",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.25,
+      0.25
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.45,
+      0.55
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Spirit",
+      "Spirit"
+     ],
+     "color2": null,
+     "alpha": "flash",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.3,
+      0
+     ],
+     "local": false,
+     "sort": -2
+    },
+    {
+     "sprite": "star4",
+     "blend": "add",
+     "count": [
+      6,
+      9
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 1.0,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      -0.8,
+      -0.4
+     ],
+     "size": [
+      0.08,
+      0.14
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.3
+     },
+     "color": [
+      "Spirit",
+      "Spirit"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "pop",
+     "gravity": -0.08,
+     "drag": 0.0,
+     "rot": [
+      0,
+      90
+     ],
+     "spin": [
+      -90,
+      90
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "star4",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.25,
+      0.25
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.3,
+      0.3
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "White",
+      "Spirit"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      45
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.3,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    }
+   ]
+  },
+  {
+   "name": "Spirit Burst",
+   "kind": "burst",
+   "use": "hitVfx: Spark, Chain Lightning (the spark lands)",
+   "note": "A white-cyan star pops, cyan shards shoot out, glints linger.",
+   "layers": [
+    {
+     "sprite": "star4",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.15,
+      0.15
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.45,
+      0.55
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Spirit",
+      "Spirit"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      90
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "blob_soft",
+     "blend": "add",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.1,
+      0.1
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.4,
+      0.5
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Spirit",
+      "Spirit"
+     ],
+     "color2": null,
+     "alpha": "flash",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -2
+    },
+    {
+     "sprite": "shard",
+     "blend": "add",
+     "count": [
+      6,
+      9
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.2,
+      0.35
+     ],
+     "speed": [
+      2.5,
+      4.0
+     ],
+     "size": [
+      0.12,
+      0.2
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.05
+     },
+     "color": [
+      "White",
+      "Spirit"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 0.0,
+     "drag": 2,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.15,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    },
+    {
+     "sprite": "star4",
+     "blend": "add",
+     "count": [
+      4,
+      6
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 1.0,
+     "life": [
+      0.4,
+      0.6
+     ],
+     "speed": [
+      0.3,
+      0.8
+     ],
+     "size": [
+      0.06,
+      0.12
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.2
+     },
+     "color": [
+      "Spirit",
+      "Spirit"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "pop",
+     "gravity": -0.08,
+     "drag": 0.0,
+     "rot": [
+      0,
+      90
+     ],
+     "spin": [
+      -90,
+      90
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    }
+   ],
+   "shake": 0.15
+  },
+  {
+   "name": "Holy Pillar",
+   "kind": "burst",
+   "use": "impactVfx: Smite (light strikes the tile from above)",
+   "note": "A gold ring on the ground, holy shards rising in a column, glints. Tall: reads from the game camera.",
+   "layers": [
+    {
+     "sprite": "blob_soft",
+     "blend": "add",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.2,
+      0.2
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.7,
+      0.8
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Holy",
+      "Holy"
+     ],
+     "color2": null,
+     "alpha": "flash",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.3,
+      0
+     ],
+     "local": false,
+     "sort": -2
+    },
+    {
+     "sprite": "ring",
+     "blend": "add",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.4
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.4,
+      0.4
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Holy",
+      "HolyDeep"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "ringout",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 2.75,
+     "orient": "horizontal",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.38,
+      0
+     ],
+     "local": false,
+     "sort": 2
+    },
+    {
+     "sprite": "shard",
+     "blend": "add",
+     "count": [
+      10,
+      14
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.6
+     ],
+     "speed": [
+      2.0,
+      3.5
+     ],
+     "size": [
+      0.2,
+      0.35
+     ],
+     "shape": {
+      "type": "circle",
+      "radius": 0.18,
+      "up": true
+     },
+     "color": [
+      "White",
+      "Holy"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "shrink",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0,
+     "orient": "vertical",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.35,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "star4",
+     "blend": "add",
+     "count": [
+      8,
+      12
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 1.0,
+     "life": [
+      0.5,
+      0.8
+     ],
+     "speed": [
+      0.1,
+      0.3
+     ],
+     "size": [
+      0.08,
+      0.16
+     ],
+     "shape": {
+      "type": "box",
+      "size": [
+       0.5,
+       1.0,
+       0.5
+      ]
+     },
+     "color": [
+      "Holy",
+      "Holy"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "pop",
+     "gravity": -0.15,
+     "drag": 0.0,
+     "rot": [
+      0,
+      90
+     ],
+     "spin": [
+      -90,
+      90
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    }
+   ],
+   "shake": 0.25
+  },
+  {
+   "name": "Holy Flash",
+   "kind": "burst",
+   "use": "hitVfx: Smite (a struck enemy)",
+   "note": "A gold star pops on the body with a few glints.",
+   "layers": [
+    {
+     "sprite": "star4",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.18,
+      0.18
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.4,
+      0.5
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Holy",
+      "Holy"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      90
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "blob_soft",
+     "blend": "add",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.1,
+      0.1
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.3,
+      0.4
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Holy",
+      "Holy"
+     ],
+     "color2": null,
+     "alpha": "flash",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -2
+    },
+    {
+     "sprite": "star4",
+     "blend": "add",
+     "count": [
+      3,
+      5
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 1.0,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      0.3,
+      0.8
+     ],
+     "size": [
+      0.06,
+      0.12
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.2
+     },
+     "color": [
+      "Holy",
+      "Holy"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "pop",
+     "gravity": -0.08,
+     "drag": 0.0,
+     "rot": [
+      0,
+      90
+     ],
+     "spin": [
+      -90,
+      90
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    }
+   ]
+  },
+  {
+   "name": "Acid Splash",
+   "kind": "burst",
+   "use": "impactVfx: Acid Flask (the flask shatters on the tile)",
+   "note": "Green drops burst out, a puddle ring spreads, bubbles rise. Glass chips in steel grey.",
+   "layers": [
+    {
+     "sprite": "blob_soft",
+     "blend": "add",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.1,
+      0.1
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.4,
+      0.5
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Acid",
+      "Acid"
+     ],
+     "color2": null,
+     "alpha": "flash",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -2
+    },
+    {
+     "sprite": "drop",
+     "blend": "alpha",
+     "count": [
+      9,
+      13
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.35,
+      0.5
+     ],
+     "speed": [
+      1.5,
+      3.0
+     ],
+     "size": [
+      0.07,
+      0.12
+     ],
+     "shape": {
+      "type": "hemisphere",
+      "radius": 0.08
+     },
+     "color": [
+      "Acid",
+      "AcidDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 1.6,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -240,
+      240
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    },
+    {
+     "sprite": "blob",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.5,
+      0.5
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.4,
+      0.4
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Acid",
+      "AcidDark"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "ringout",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 2.9999999999999996,
+     "orient": "horizontal",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.38,
+      0
+     ],
+     "local": false,
+     "sort": 2
+    },
+    {
+     "sprite": "bubble",
+     "blend": "alpha",
+     "count": [
+      4,
+      6
+     ],
+     "rate": 0,
+     "delay": 0.1,
+     "dur": 0.3,
+     "life": [
+      0.5,
+      0.8
+     ],
+     "speed": [
+      0.3,
+      0.6
+     ],
+     "size": [
+      0.06,
+      0.12
+     ],
+     "shape": {
+      "type": "circle",
+      "radius": 0.3,
+      "up": true
+     },
+     "color": [
+      "Acid",
+      "AcidDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "grow",
+     "gravity": -0.05,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.3,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    },
+    {
+     "sprite": "chip",
+     "blend": "alpha",
+     "count": [
+      3,
+      5
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      1.5,
+      2.5
+     ],
+     "size": [
+      0.04,
+      0.07
+     ],
+     "shape": {
+      "type": "hemisphere",
+      "radius": 0.05
+     },
+     "color": [
+      "StoneLight",
+      "Steel"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 1.6,
+     "drag": 0.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -540,
+      540
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ],
+   "shake": 0.2
+  },
+  {
+   "name": "Acid Hit",
+   "kind": "burst",
+   "use": "hitVfx: Acid Flask, Acid ticks (acid eats at a body)",
+   "note": "Green drops off the body and two bubbles.",
+   "layers": [
+    {
+     "sprite": "drop",
+     "blend": "alpha",
+     "count": [
+      4,
+      6
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.45
+     ],
+     "speed": [
+      0.8,
+      1.6
+     ],
+     "size": [
+      0.05,
+      0.09
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.15
+     },
+     "color": [
+      "Acid",
+      "AcidDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 1.2,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -180,
+      180
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    },
+    {
+     "sprite": "bubble",
+     "blend": "alpha",
+     "count": [
+      2,
+      3
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.6
+     ],
+     "speed": [
+      0.3,
+      0.5
+     ],
+     "size": [
+      0.06,
+      0.1
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.15
+     },
+     "color": [
+      "Acid",
+      "AcidDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "grow",
+     "gravity": -0.08,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Spit Splat",
+   "kind": "burst",
+   "use": "hitVfx: Spit (slime spit lands on a tower)",
+   "note": "Slime-green goo drops and a flat splat that shrinks away.",
+   "layers": [
+    {
+     "sprite": "blob",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.4
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.35,
+      0.4
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Slime",
+      "SlimeDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "drop",
+     "blend": "alpha",
+     "count": [
+      6,
+      9
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      1.0,
+      2.0
+     ],
+     "size": [
+      0.05,
+      0.1
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.1
+     },
+     "color": [
+      "Slime",
+      "SlimeDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 1.4,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -180,
+      180
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Heal Rise",
+   "kind": "burst",
+   "use": "hitVfx: Mend, (healing spells on towers)",
+   "note": "Gold crosses and glints float up around the unit; a soft glow at the feet.",
+   "layers": [
+    {
+     "sprite": "cross",
+     "blend": "alpha",
+     "count": [
+      5,
+      7
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.6,
+      0.9
+     ],
+     "speed": [
+      0.6,
+      1.0
+     ],
+     "size": [
+      0.1,
+      0.16
+     ],
+     "shape": {
+      "type": "circle",
+      "radius": 0.3,
+      "up": true
+     },
+     "color": [
+      "Holy",
+      "HolyDeep"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "flat",
+     "gravity": -0.05,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.3,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "star4",
+     "blend": "add",
+     "count": [
+      5,
+      8
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 1.0,
+     "life": [
+      0.5,
+      0.8
+     ],
+     "speed": [
+      0.2,
+      0.4
+     ],
+     "size": [
+      0.06,
+      0.12
+     ],
+     "shape": {
+      "type": "box",
+      "size": [
+       0.5,
+       0.6,
+       0.5
+      ]
+     },
+     "color": [
+      "Holy",
+      "Holy"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "pop",
+     "gravity": -0.1,
+     "drag": 0.0,
+     "rot": [
+      0,
+      90
+     ],
+     "spin": [
+      -90,
+      90
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "blob_soft",
+     "blend": "add",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.6,
+      0.6
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.5,
+      0.5
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Holy",
+      "HolyDeep"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "ringout",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 1.8,
+     "orient": "horizontal",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.38,
+      0
+     ],
+     "local": false,
+     "sort": 2
+    }
+   ]
+  },
+  {
+   "name": "Slime Heal",
+   "kind": "burst",
+   "use": "hitVfx: Slime Mend (slimes mend each other)",
+   "note": "Green goo blobs float up and bubbles pop. Same beat as Heal Rise, enemy colours.",
+   "layers": [
+    {
+     "sprite": "blob",
+     "blend": "alpha",
+     "count": [
+      5,
+      7
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.6,
+      0.9
+     ],
+     "speed": [
+      0.5,
+      0.9
+     ],
+     "size": [
+      0.08,
+      0.14
+     ],
+     "shape": {
+      "type": "circle",
+      "radius": 0.3,
+      "up": true
+     },
+     "color": [
+      "Slime",
+      "SlimeDark"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "wobble",
+     "gravity": -0.05,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.3,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "bubble",
+     "blend": "alpha",
+     "count": [
+      4,
+      6
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.5,
+      0.8
+     ],
+     "speed": [
+      0.3,
+      0.6
+     ],
+     "size": [
+      0.06,
+      0.12
+     ],
+     "shape": {
+      "type": "circle",
+      "radius": 0.3,
+      "up": true
+     },
+     "color": [
+      "Acid",
+      "SlimeDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "grow",
+     "gravity": -0.06,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.3,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Rally Burst",
+   "kind": "burst",
+   "use": "impactVfx or castVfx: Rally (a cry that lifts the line)",
+   "note": "A cobalt ring pulses out and little banners rise with gold glints.",
+   "layers": [
+    {
+     "sprite": "ring",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.45,
+      0.45
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.5,
+      0.5
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Cobalt",
+      "CobaltDark"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "ringout",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 3.2,
+     "orient": "horizontal",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.38,
+      0
+     ],
+     "local": false,
+     "sort": 2
+    },
+    {
+     "sprite": "flag",
+     "blend": "alpha",
+     "count": [
+      5,
+      7
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.6,
+      0.9
+     ],
+     "speed": [
+      0.8,
+      1.2
+     ],
+     "size": [
+      0.12,
+      0.18
+     ],
+     "shape": {
+      "type": "circle",
+      "radius": 0.35,
+      "up": true
+     },
+     "color": [
+      "Cobalt",
+      "CobaltLight"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "flat",
+     "gravity": -0.05,
+     "drag": 0.0,
+     "rot": [
+      -10,
+      10
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.2,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "star4",
+     "blend": "add",
+     "count": [
+      5,
+      8
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 1.0,
+     "life": [
+      0.4,
+      0.7
+     ],
+     "speed": [
+      0.2,
+      0.4
+     ],
+     "size": [
+      0.06,
+      0.12
+     ],
+     "shape": {
+      "type": "box",
+      "size": [
+       0.6,
+       0.6,
+       0.6
+      ]
+     },
+     "color": [
+      "Holy",
+      "Holy"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "pop",
+     "gravity": -0.08,
+     "drag": 0.0,
+     "rot": [
+      0,
+      90
+     ],
+     "spin": [
+      -90,
+      90
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    }
+   ]
+  },
+  {
+   "name": "Quicken Burst",
+   "kind": "burst",
+   "use": "hitVfx: Quicken (haste lands on a unit)",
+   "note": "Cyan motion streaks sweep up through the unit with glints.",
+   "layers": [
+    {
+     "sprite": "streak",
+     "blend": "add",
+     "count": [
+      6,
+      9
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.25,
+      0.4
+     ],
+     "speed": [
+      2.0,
+      3.0
+     ],
+     "size": [
+      0.25,
+      0.4
+     ],
+     "shape": {
+      "type": "circle",
+      "radius": 0.3,
+      "up": true
+     },
+     "color": [
+      "Spirit",
+      "SpiritDeep"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "shrink",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      90,
+      90
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "vertical",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.35,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    },
+    {
+     "sprite": "star4",
+     "blend": "add",
+     "count": [
+      4,
+      6
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 1.0,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      0.2,
+      0.5
+     ],
+     "size": [
+      0.06,
+      0.12
+     ],
+     "shape": {
+      "type": "box",
+      "size": [
+       0.4,
+       0.7,
+       0.4
+      ]
+     },
+     "color": [
+      "Spirit",
+      "Spirit"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "pop",
+     "gravity": -0.08,
+     "drag": 0.0,
+     "rot": [
+      0,
+      90
+     ],
+     "spin": [
+      -90,
+      90
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    }
+   ]
+  },
+  {
+   "name": "Taunt Shout",
+   "kind": "burst",
+   "use": "castVfx: Guardian Taunt, Provoke (a shout that pulls enemies)",
+   "note": "Three red rings pulse out from the chest one after another.",
+   "layers": [
+    {
+     "sprite": "ring",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.4
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.3,
+      0.3
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "EnemyEye",
+      "Red"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "ringout",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 4.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.3,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "ring",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.12,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.4
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.3,
+      0.3
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "EnemyEye",
+      "Red"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "ringout",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 4.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.3,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "ring",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.24,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.4
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.3,
+      0.3
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "EnemyEye",
+      "Red"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "ringout",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 4.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.3,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    }
+   ]
+  },
+  {
+   "name": "Blink Puff",
+   "kind": "burst",
+   "use": "castVfx AND impactVfx: Blink (vanish here, appear there)",
+   "note": "A violet puff and spirit shards; the same prefab at both ends.",
+   "layers": [
+    {
+     "sprite": "blob_soft",
+     "blend": "add",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.12,
+      0.12
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.5,
+      0.6
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Spirit",
+      "Spirit"
+     ],
+     "color2": null,
+     "alpha": "flash",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.3,
+      0
+     ],
+     "local": false,
+     "sort": -2
+    },
+    {
+     "sprite": "puff",
+     "blend": "alpha",
+     "count": [
+      5,
+      7
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.35,
+      0.55
+     ],
+     "speed": [
+      0.6,
+      1.2
+     ],
+     "size": [
+      0.25,
+      0.4
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.15
+     },
+     "color": [
+      "Robe",
+      "VoidGlow"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "wobble",
+     "gravity": -0.05,
+     "drag": 2.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -60,
+      60
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.2,
+      0
+     ],
+     "local": false,
+     "sort": 1
+    },
+    {
+     "sprite": "shard",
+     "blend": "add",
+     "count": [
+      5,
+      8
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.2,
+      0.3
+     ],
+     "speed": [
+      2.0,
+      3.0
+     ],
+     "size": [
+      0.12,
+      0.2
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.05
+     },
+     "color": [
+      "White",
+      "Spirit"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 0.0,
+     "drag": 3,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.15,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.3,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Hop Dust",
+   "kind": "burst",
+   "use": "impactVfx: Hop, (any landing after a jump)",
+   "note": "A small dust ring and three puffs where the feet land.",
+   "layers": [
+    {
+     "sprite": "ring",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.3
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.3,
+      0.3
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Dirt",
+      "DirtDark"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "ringout",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 2.666666666666667,
+     "orient": "horizontal",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.38,
+      0
+     ],
+     "local": false,
+     "sort": 2
+    },
+    {
+     "sprite": "puff",
+     "blend": "alpha",
+     "count": [
+      3,
+      4
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.6
+     ],
+     "speed": [
+      0.5,
+      1.0
+     ],
+     "size": [
+      0.18,
+      0.28
+     ],
+     "shape": {
+      "type": "hemisphere",
+      "radius": 0.15
+     },
+     "color": [
+      "Dirt",
+      "DirtDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "wobble",
+     "gravity": -0.05,
+     "drag": 2.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -60,
+      60
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.3,
+      0
+     ],
+     "local": false,
+     "sort": 1
+    }
+   ]
+  },
+  {
+   "name": "Burn Loop",
+   "kind": "loop",
+   "use": "loopVfx: Burn, Burning",
+   "note": "Flames lick up the body and embers rise. Local space so it follows the unit.",
+   "layers": [
+    {
+     "sprite": "flame",
+     "blend": "alpha",
+     "count": null,
+     "rate": 10,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      0.4,
+      0.8
+     ],
+     "size": [
+      0.12,
+      0.22
+     ],
+     "shape": {
+      "type": "box",
+      "size": [
+       0.3,
+       0.5,
+       0.3
+      ]
+     },
+     "color": [
+      "FireHot",
+      "Fire"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      -15,
+      15
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.3,
+      0
+     ],
+     "local": true,
+     "sort": -1
+    },
+    {
+     "sprite": "blob",
+     "blend": "add",
+     "count": null,
+     "rate": 8,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.5,
+      0.8
+     ],
+     "speed": [
+      0.4,
+      0.8
+     ],
+     "size": [
+      0.03,
+      0.05
+     ],
+     "shape": {
+      "type": "box",
+      "size": [
+       0.3,
+       0.4,
+       0.3
+      ]
+     },
+     "color": [
+      "FireHot",
+      "Fire"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": -0.25,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.4,
+     "offset": [
+      0,
+      0.4,
+      0
+     ],
+     "local": true,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Acid Loop",
+   "kind": "loop",
+   "use": "loopVfx: Acid, Poison",
+   "note": "Green bubbles rise around the body and drips fall off it.",
+   "layers": [
+    {
+     "sprite": "bubble",
+     "blend": "alpha",
+     "count": null,
+     "rate": 7,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.6,
+      0.9
+     ],
+     "speed": [
+      0.2,
+      0.4
+     ],
+     "size": [
+      0.08,
+      0.14
+     ],
+     "shape": {
+      "type": "box",
+      "size": [
+       0.4,
+       0.5,
+       0.4
+      ]
+     },
+     "color": [
+      "Acid",
+      "AcidDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "grow",
+     "gravity": -0.05,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.3,
+      0
+     ],
+     "local": true,
+     "sort": 0
+    },
+    {
+     "sprite": "drop",
+     "blend": "alpha",
+     "count": null,
+     "rate": 4,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.4,
+      0.5
+     ],
+     "speed": [
+      0,
+      0.1
+     ],
+     "size": [
+      0.06,
+      0.09
+     ],
+     "shape": {
+      "type": "box",
+      "size": [
+       0.3,
+       0.3,
+       0.3
+      ]
+     },
+     "color": [
+      "Acid",
+      "AcidDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 0.8,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.4,
+      0
+     ],
+     "local": true,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Shield Loop",
+   "kind": "loop",
+   "use": "loopVfx: Shield",
+   "note": "Cobalt hex plates circle the unit at chest height, fading in and out.",
+   "layers": [
+    {
+     "sprite": "hex",
+     "blend": "alpha",
+     "count": null,
+     "rate": 6,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      1.0,
+      1.4
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.1,
+      0.14
+     ],
+     "shape": {
+      "type": "circle",
+      "radius": 0.42,
+      "up": false
+     },
+     "color": [
+      "CobaltLight",
+      "Cobalt"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "flat",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.3,
+      0
+     ],
+     "local": true,
+     "sort": -1
+    },
+    {
+     "sprite": "star4",
+     "blend": "add",
+     "count": null,
+     "rate": 2,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.5,
+      0.7
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.06,
+      0.1
+     ],
+     "shape": {
+      "type": "circle",
+      "radius": 0.42,
+      "up": false
+     },
+     "color": [
+      "White",
+      "CobaltLight"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.3,
+      0
+     ],
+     "local": true,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Haste Loop",
+   "kind": "loop",
+   "use": "loopVfx: Haste",
+   "note": "Cyan streaks trail off the unit toward the ground, like a sprinter.",
+   "layers": [
+    {
+     "sprite": "streak",
+     "blend": "add",
+     "count": null,
+     "rate": 12,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.25,
+      0.4
+     ],
+     "speed": [
+      0.6,
+      1.2
+     ],
+     "size": [
+      0.3,
+      0.45
+     ],
+     "shape": {
+      "type": "box",
+      "size": [
+       0.35,
+       0.5,
+       0.35
+      ]
+     },
+     "color": [
+      "Spirit",
+      "SpiritDeep"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "shrink",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.25,
+      0
+     ],
+     "local": true,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Rallied Loop",
+   "kind": "loop",
+   "use": "loopVfx: Rallied",
+   "note": "An occasional gold glint over the unit and a slow cobalt ring at the feet.",
+   "layers": [
+    {
+     "sprite": "star4",
+     "blend": "add",
+     "count": null,
+     "rate": 4,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.5,
+      0.8
+     ],
+     "speed": [
+      0.1,
+      0.2
+     ],
+     "size": [
+      0.08,
+      0.14
+     ],
+     "shape": {
+      "type": "box",
+      "size": [
+       0.4,
+       0.3,
+       0.4
+      ]
+     },
+     "color": [
+      "Holy",
+      "Holy"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "pop",
+     "gravity": -0.08,
+     "drag": 0.0,
+     "rot": [
+      0,
+      90
+     ],
+     "spin": [
+      -90,
+      90
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": true,
+     "sort": -1
+    },
+    {
+     "sprite": "ring",
+     "blend": "alpha",
+     "count": null,
+     "rate": 0.6,
+     "delay": 0.0,
+     "dur": 1.7,
+     "life": [
+      1.2,
+      1.2
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.35,
+      0.35
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Cobalt",
+      "CobaltDark"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "ringout",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 2.4,
+     "orient": "horizontal",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.38,
+      0
+     ],
+     "local": true,
+     "sort": 2
+    }
+   ]
+  },
+  {
+   "name": "Taunted Loop",
+   "kind": "loop",
+   "use": "loopVfx: Taunted",
+   "note": "Red eye-motes pulse above the head, drifting toward the taunter's direction is not needed: just angry dots.",
+   "layers": [
+    {
+     "sprite": "blob",
+     "blend": "add",
+     "count": null,
+     "rate": 5,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.5,
+      0.7
+     ],
+     "speed": [
+      0.2,
+      0.4
+     ],
+     "size": [
+      0.06,
+      0.1
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.12
+     },
+     "color": [
+      "EnemyEye",
+      "Red"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "pop",
+     "gravity": -0.05,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.75,
+      0
+     ],
+     "local": true,
+     "sort": 0
+    },
+    {
+     "sprite": "ring",
+     "blend": "alpha",
+     "count": null,
+     "rate": 1.2,
+     "delay": 0.0,
+     "dur": 0.85,
+     "life": [
+      0.5,
+      0.5
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.15,
+      0.15
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "EnemyEye",
+      "Red"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "ringout",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 2.5,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.75,
+      0
+     ],
+     "local": true,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Gorged Loop",
+   "kind": "loop",
+   "use": "loopVfx: Gorged",
+   "note": "Slow fat green bubbles burp up from a fed slime.",
+   "layers": [
+    {
+     "sprite": "bubble",
+     "blend": "alpha",
+     "count": null,
+     "rate": 4,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.8,
+      1.2
+     ],
+     "speed": [
+      0.2,
+      0.3
+     ],
+     "size": [
+      0.14,
+      0.22
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.2
+     },
+     "color": [
+      "Slime",
+      "SlimeDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "grow",
+     "gravity": -0.04,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.3,
+      0
+     ],
+     "local": true,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Rooted Loop",
+   "kind": "loop",
+   "use": "loopVfx: Rooted",
+   "note": "Bark shards stand around the feet with a little dirt; mostly static, so a slow rate and long life.",
+   "layers": [
+    {
+     "sprite": "shard",
+     "blend": "alpha",
+     "count": null,
+     "rate": 4,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      1.5,
+      2.0
+     ],
+     "speed": [
+      0.05,
+      0.1
+     ],
+     "size": [
+      0.18,
+      0.28
+     ],
+     "shape": {
+      "type": "circle",
+      "radius": 0.3,
+      "up": true
+     },
+     "color": [
+      "Bark",
+      "SoilDark"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "flat",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      -20,
+      20
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "vertical",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.35,
+      0
+     ],
+     "local": true,
+     "sort": 0
+    },
+    {
+     "sprite": "blob",
+     "blend": "alpha",
+     "count": null,
+     "rate": 3,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.6,
+      0.9
+     ],
+     "speed": [
+      0.2,
+      0.4
+     ],
+     "size": [
+      0.06,
+      0.09
+     ],
+     "shape": {
+      "type": "circle",
+      "radius": 0.3,
+      "up": true
+     },
+     "color": [
+      "Dirt",
+      "DirtDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 0.3,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.3,
+      0
+     ],
+     "local": true,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Enraged Loop",
+   "kind": "loop",
+   "use": "loopVfx: Enraged",
+   "note": "Red steam puffs rise off the shoulders.",
+   "layers": [
+    {
+     "sprite": "puff",
+     "blend": "alpha",
+     "count": null,
+     "rate": 5,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.5,
+      0.8
+     ],
+     "speed": [
+      0.4,
+      0.7
+     ],
+     "size": [
+      0.16,
+      0.26
+     ],
+     "shape": {
+      "type": "box",
+      "size": [
+       0.35,
+       0.2,
+       0.35
+      ]
+     },
+     "color": [
+      "EnemyEye",
+      "Red"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "grow",
+     "gravity": -0.1,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -40,
+      40
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.55,
+      0
+     ],
+     "local": true,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Spawn Pop",
+   "kind": "burst",
+   "use": "EntitySpawned / EntityResurrected (needs a hook in SpawnPresenter)",
+   "note": "A dust ring and ivory glints as the miniature pops onto the board.",
+   "layers": [
+    {
+     "sprite": "ring",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.35,
+      0.35
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.4,
+      0.4
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Dirt",
+      "DirtDark"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "ringout",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 2.5,
+     "orient": "horizontal",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.38,
+      0
+     ],
+     "local": false,
+     "sort": 2
+    },
+    {
+     "sprite": "puff",
+     "blend": "alpha",
+     "count": [
+      4,
+      6
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.6
+     ],
+     "speed": [
+      0.6,
+      1.2
+     ],
+     "size": [
+      0.2,
+      0.3
+     ],
+     "shape": {
+      "type": "hemisphere",
+      "radius": 0.15
+     },
+     "color": [
+      "Dirt",
+      "DirtDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "wobble",
+     "gravity": -0.05,
+     "drag": 2.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -60,
+      60
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.3,
+      0
+     ],
+     "local": false,
+     "sort": 1
+    },
+    {
+     "sprite": "star4",
+     "blend": "add",
+     "count": [
+      4,
+      6
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 1.0,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      0.3,
+      0.6
+     ],
+     "size": [
+      0.06,
+      0.1
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.3
+     },
+     "color": [
+      "Ivory",
+      "Ivory"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "pop",
+     "gravity": -0.08,
+     "drag": 0.0,
+     "rot": [
+      0,
+      90
+     ],
+     "spin": [
+      -90,
+      90
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    }
+   ]
+  },
+  {
+   "name": "Death Poof",
+   "kind": "burst",
+   "use": "EntityDied (needs a hook in DeathPresenter / the Die clip's end)",
+   "note": "Dark puffs and a ring swallow the model as it shrinks away.",
+   "layers": [
+    {
+     "sprite": "puff",
+     "blend": "alpha",
+     "count": [
+      6,
+      9
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.5,
+      0.8
+     ],
+     "speed": [
+      0.8,
+      1.5
+     ],
+     "size": [
+      0.3,
+      0.5
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.2
+     },
+     "color": [
+      "StoneDark",
+      "Smoke"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "wobble",
+     "gravity": -0.08,
+     "drag": 2.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -60,
+      60
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0.1,
+      0
+     ],
+     "local": false,
+     "sort": 1
+    },
+    {
+     "sprite": "ring",
+     "blend": "alpha",
+     "count": [
+      1,
+      1
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.4,
+      0.4
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.4,
+      0.4
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "SoilDark",
+      "Smoke"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "ringout",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 2.75,
+     "orient": "horizontal",
+     "noise": 0.0,
+     "offset": [
+      0,
+      -0.38,
+      0
+     ],
+     "local": false,
+     "sort": 2
+    },
+    {
+     "sprite": "chip",
+     "blend": "alpha",
+     "count": [
+      4,
+      6
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      1.5,
+      2.5
+     ],
+     "size": [
+      0.05,
+      0.09
+     ],
+     "shape": {
+      "type": "hemisphere",
+      "radius": 0.15
+     },
+     "color": [
+      "StoneDark",
+      "Smoke"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 1.6,
+     "drag": 0.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -540,
+      540
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Collision Thud",
+   "kind": "burst",
+   "use": "Collision (push into a wall or another unit; needs a hook)",
+   "note": "A short dust puff at the contact point.",
+   "layers": [
+    {
+     "sprite": "puff",
+     "blend": "alpha",
+     "count": [
+      3,
+      4
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.45
+     ],
+     "speed": [
+      0.6,
+      1.0
+     ],
+     "size": [
+      0.15,
+      0.25
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.1
+     },
+     "color": [
+      "Dirt",
+      "DirtDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "wobble",
+     "gravity": -0.05,
+     "drag": 2.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -60,
+      60
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 1
+    },
+    {
+     "sprite": "chip",
+     "blend": "alpha",
+     "count": [
+      2,
+      3
+     ],
+     "rate": 0,
+     "delay": 0.0,
+     "dur": 0.3,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      1.0,
+      2.0
+     ],
+     "size": [
+      0.04,
+      0.07
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.05
+     },
+     "color": [
+      "Ivory",
+      "Cloth"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 1.6,
+     "drag": 0.5,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -540,
+      540
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Arrow Trail",
+   "kind": "loop",
+   "use": "trail: Arrow Blender, Ballista Bolt Blender",
+   "note": "A few ivory motion lines behind the shaft. World space so they stay behind.",
+   "layers": [
+    {
+     "sprite": "streak",
+     "blend": "alpha",
+     "count": null,
+     "rate": 24,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.15,
+      0.22
+     ],
+     "speed": [
+      0,
+      0
+     ],
+     "size": [
+      0.18,
+      0.28
+     ],
+     "shape": {
+      "type": "point"
+     },
+     "color": [
+      "Ivory",
+      "Ivory"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "shrink",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.08,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Cannon Trail",
+   "kind": "loop",
+   "use": "trail: Cannon Shell Blender",
+   "note": "Grey smoke puffs that linger in the air.",
+   "layers": [
+    {
+     "sprite": "puff",
+     "blend": "alpha",
+     "count": null,
+     "rate": 20,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.4,
+      0.6
+     ],
+     "speed": [
+      0.1,
+      0.3
+     ],
+     "size": [
+      0.12,
+      0.2
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.03
+     },
+     "color": [
+      "Stone",
+      "StoneDark"
+     ],
+     "color2": null,
+     "alpha": "fade",
+     "grow": "grow",
+     "gravity": -0.05,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -60,
+      60
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Fire Orb Trail",
+   "kind": "loop",
+   "use": "trail: Fire Orb Blender",
+   "note": "Flames and embers stream off the orb.",
+   "layers": [
+    {
+     "sprite": "flame",
+     "blend": "alpha",
+     "count": null,
+     "rate": 24,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.2,
+      0.3
+     ],
+     "speed": [
+      0.1,
+      0.3
+     ],
+     "size": [
+      0.12,
+      0.2
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.04
+     },
+     "color": [
+      "FireHot",
+      "Fire"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": -1
+    },
+    {
+     "sprite": "blob",
+     "blend": "add",
+     "count": null,
+     "rate": 16,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.3,
+      0.5
+     ],
+     "speed": [
+      0.2,
+      0.5
+     ],
+     "size": [
+      0.03,
+      0.05
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.05
+     },
+     "color": [
+      "FireHot",
+      "Fire"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": -0.15,
+     "drag": 0.0,
+     "rot": [
+      0,
+      0
+     ],
+     "spin": [
+      0,
+      0
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.3,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Acid Flask Trail",
+   "kind": "loop",
+   "use": "trail: Acid Flask Blender",
+   "note": "Green drips fall off the flask as it tumbles.",
+   "layers": [
+    {
+     "sprite": "drop",
+     "blend": "alpha",
+     "count": null,
+     "rate": 12,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.3,
+      0.45
+     ],
+     "speed": [
+      0,
+      0.1
+     ],
+     "size": [
+      0.06,
+      0.09
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.04
+     },
+     "color": [
+      "Acid",
+      "AcidDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 0.9,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -120,
+      120
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Spit Trail",
+   "kind": "loop",
+   "use": "trail: Spit Glob Blender",
+   "note": "Slime drops trailing the glob.",
+   "layers": [
+    {
+     "sprite": "drop",
+     "blend": "alpha",
+     "count": null,
+     "rate": 14,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.25,
+      0.4
+     ],
+     "speed": [
+      0,
+      0.1
+     ],
+     "size": [
+      0.06,
+      0.09
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.04
+     },
+     "color": [
+      "Slime",
+      "SlimeDark"
+     ],
+     "color2": null,
+     "alpha": "cut",
+     "grow": "shrink",
+     "gravity": 0.7,
+     "drag": 0.0,
+     "rot": [
+      0,
+      360
+     ],
+     "spin": [
+      -120,
+      120
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  },
+  {
+   "name": "Wisp Spark Trail",
+   "kind": "loop",
+   "use": "trail: Wisp Spark Blender",
+   "note": "Cyan glints sparkle off the spark.",
+   "layers": [
+    {
+     "sprite": "star4",
+     "blend": "add",
+     "count": null,
+     "rate": 20,
+     "delay": 0.0,
+     "dur": 1,
+     "life": [
+      0.25,
+      0.4
+     ],
+     "speed": [
+      0.1,
+      0.4
+     ],
+     "size": [
+      0.04,
+      0.08
+     ],
+     "shape": {
+      "type": "sphere",
+      "radius": 0.05
+     },
+     "color": [
+      "White",
+      "Spirit"
+     ],
+     "color2": null,
+     "alpha": "inout",
+     "grow": "pop",
+     "gravity": 0.0,
+     "drag": 0.0,
+     "rot": [
+      0,
+      90
+     ],
+     "spin": [
+      -120,
+      120
+     ],
+     "stretch": 0.0,
+     "orient": "billboard",
+     "noise": 0.0,
+     "offset": [
+      0,
+      0,
+      0
+     ],
+     "local": false,
+     "sort": 0
+    }
+   ]
+  }
+ ]
+}

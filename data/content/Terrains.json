@@ -1,0 +1,53 @@
+{
+  "type": "TerrainAsset",
+  "assets": {
+    "Terrains/Chasm": {
+      "number": 3,
+      "id": "chasm",
+      "displayName": "Chasm",
+      "description": "Only flyers cross it; shots pass over.",
+      "stand": "Flyers",
+      "blocksProjectiles": false,
+      "blocksSight": false,
+      "tags": [],
+      "whenUnstandable": "Die",
+      "tiles": ["Tiles/Chasm 0"],
+      "buildTiles": [],
+      "edgeTiles": [
+        "Tiles/Chasm 1",
+        "Tiles/Chasm 2 Corner",
+        "Tiles/Chasm 2 Opposite",
+        "Tiles/Chasm 3",
+        "Tiles/Chasm 4"
+      ]
+    },
+    "Terrains/Ground": {
+      "number": 1,
+      "id": "ground",
+      "displayName": "Ground",
+      "description": "Walkable ground: towers stand here, enemies walk their roads over it.",
+      "stand": "Everyone",
+      "blocksProjectiles": false,
+      "blocksSight": false,
+      "tags": ["Solid"],
+      "whenUnstandable": "Die",
+      "tiles": ["Tiles/Ground A", "Tiles/Ground B", "Tiles/Ground C", "Tiles/Ground D"],
+      "buildTiles": ["Tiles/Build Ground A", "Tiles/Build Ground B"],
+      "edgeTiles": []
+    },
+    "Terrains/Wall": {
+      "number": 2,
+      "id": "wall",
+      "displayName": "Wall",
+      "description": "Nobody stands here; it stops shots and line of sight.",
+      "stand": "Nobody",
+      "blocksProjectiles": true,
+      "blocksSight": true,
+      "tags": ["Solid"],
+      "whenUnstandable": "Push",
+      "tiles": ["Tiles/Wall A", "Tiles/Wall B"],
+      "buildTiles": [],
+      "edgeTiles": []
+    }
+  }
+}

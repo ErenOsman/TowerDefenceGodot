@@ -1,0 +1,6 @@
+# Godot
+.godot/
+*.tmp
+# local saves/logs/renders
+*.log
+out/

@@ -1,0 +1,372 @@
+{
+  "type": "ReactionAsset",
+  "assets": {
+    "Reactions/Acid Tick": {
+      "number": 18,
+      "trigger": "OnTurnStart",
+      "condition": "",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "None",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          { "$type": "DamageStepData", "amount": "StatusStacks", "tags": ["Poison"], "on": "Self" }
+        ]
+      }
+    },
+    "Reactions/Burn Tick": {
+      "number": 13,
+      "trigger": "OnTurnStart",
+      "condition": "",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "None",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          { "$type": "DamageStepData", "amount": "StatusStacks", "tags": ["Fire"], "on": "Self" }
+        ]
+      }
+    },
+    "Reactions/Counter Strike": {
+      "number": 9,
+      "trigger": "OnHitTaken",
+      "condition": "Self.DistanceTo(Source) <= 1",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "OncePerTurn",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          { "$type": "DamageStepData", "amount": "5", "tags": ["Reflected"], "on": "EventSource" }
+        ]
+      }
+    },
+    "Reactions/Devour": {
+      "number": 16,
+      "trigger": "OnSpawned",
+      "condition": "",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "None",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          {
+            "$type": "PickStepData",
+            "area": {
+              "shape": "Square",
+              "minRadius": "0",
+              "maxRadius": "40",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "center": "Self",
+            "filter": "Target.IsAlly and Target.IsUnit and not Target.HasTag(Boss)",
+            "count": "99",
+            "instinct": { "preset": "Default", "must": "", "prefer": [] },
+            "steps": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "Target.Hp + Target.Shield", "tags": [], "on": "Target" }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Reactions/Eat Rock": {
+      "number": 15,
+      "trigger": "OnTurnEnd",
+      "condition": "",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "None",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          {
+            "$type": "PickStepData",
+            "area": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "1",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "center": "Self",
+            "filter": "Target.HasTag(Rock)",
+            "count": "1",
+            "instinct": { "preset": "Ahead", "must": "", "prefer": [] },
+            "steps": {
+              "items": [
+                { "$type": "RemoveStepData", "reason": "eaten", "on": "Target" },
+                {
+                  "$type": "ApplyStatusStepData",
+                  "status": "Statuses/Shield",
+                  "stacks": "100",
+                  "duration": "-1",
+                  "on": "Self",
+                  "addTags": []
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "Reactions/Examples/Burn": {
+      "number": 5,
+      "trigger": "OnAnyTurnStart",
+      "condition": "Self.DistanceTo(Target) == 0",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "None",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          { "$type": "DamageStepData", "amount": "10", "tags": ["Fire"], "on": "EventTarget" }
+        ]
+      }
+    },
+    "Reactions/Examples/Burn Out": {
+      "number": 4,
+      "trigger": "OnStatusRemoved",
+      "condition": "",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "None",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          { "$type": "RemoveStepData", "reason": "burned out", "on": "Self" }
+        ]
+      }
+    },
+    "Reactions/Examples/Collision Damage": {
+      "number": 1,
+      "trigger": "OnCollision",
+      "condition": "",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "None",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          { "$type": "DamageStepData", "amount": "10", "tags": [], "on": "EventTarget" }
+        ]
+      }
+    },
+    "Reactions/Examples/Enrage": {
+      "number": 6,
+      "trigger": "OnAllyHitTaken",
+      "condition": "",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "None",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          {
+            "$type": "ApplyStatusStepData",
+            "status": "Statuses/Examples/Enraged",
+            "stacks": "1",
+            "duration": "-1",
+            "on": "Self",
+            "addTags": []
+          }
+        ]
+      }
+    },
+    "Reactions/Examples/Execute Reset": {
+      "number": 10,
+      "trigger": "OnKill",
+      "condition": "",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "None",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          { "$type": "ResetCooldownStepData", "ability": "Abilities/Examples/Execute", "on": "Self", "turns": "" }
+        ]
+      }
+    },
+    "Reactions/Examples/Ignite": {
+      "number": 7,
+      "trigger": "OnSpawned",
+      "condition": "",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "None",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          {
+            "$type": "ApplyStatusStepData",
+            "status": "Statuses/Examples/Burning",
+            "stacks": "1",
+            "duration": "2",
+            "on": "Self",
+            "addTags": []
+          }
+        ]
+      }
+    },
+    "Reactions/Examples/Overwatch": {
+      "number": 8,
+      "trigger": "OnEnterTile",
+      "condition": "Target.IsEnemy and Self.DistanceTo(Target) <= 3 and Self.CanAct",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "OncePerTurn",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          {
+            "$type": "CastAbilityStepData",
+            "ability": "Abilities/Examples/Pinning Shot",
+            "aimAt": "EventTarget",
+            "aimByInstinct": false
+          }
+        ]
+      }
+    },
+    "Reactions/Examples/Poison Tick": {
+      "number": 2,
+      "trigger": "OnTurnStart",
+      "condition": "",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "None",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          { "$type": "DamageStepData", "amount": "StatusStacks * 5", "tags": ["Poison"], "on": "Self" }
+        ]
+      }
+    },
+    "Reactions/Examples/Thorns": {
+      "number": 3,
+      "trigger": "OnHitTaken",
+      "condition": "",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "None",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          { "$type": "DamageStepData", "amount": "FinalDamage * 0.2", "tags": ["Reflected"], "on": "EventSource" }
+        ]
+      }
+    },
+    "Reactions/Gorge": {
+      "number": 17,
+      "trigger": "OnKill",
+      "condition": "",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "None",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          {
+            "$type": "ApplyStatusStepData",
+            "status": "Statuses/Gorged",
+            "stacks": "1",
+            "duration": "-1",
+            "on": "Self",
+            "addTags": []
+          },
+          { "$type": "HealStepData", "amount": "20", "tags": [], "on": "Self" }
+        ]
+      }
+    },
+    "Reactions/Shield Refill": {
+      "number": 12,
+      "trigger": "OnTurnStart",
+      "condition": "Self.Stacks(shield) < 10",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "None",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          {
+            "$type": "ApplyStatusStepData",
+            "status": "Statuses/Shield",
+            "stacks": "10 - Self.Stacks(shield)",
+            "duration": "-1",
+            "on": "Self",
+            "addTags": []
+          }
+        ]
+      }
+    },
+    "Reactions/Shield Up": {
+      "number": 11,
+      "trigger": "OnSpawned",
+      "condition": "",
+      "chance": "1",
+      "rollPer": "Hit",
+      "timing": "AfterItem",
+      "limit": "None",
+      "ignoreTags": ["Reflected"],
+      "worksWhenDead": false,
+      "response": {
+        "items": [
+          {
+            "$type": "ApplyStatusStepData",
+            "status": "Statuses/Shield",
+            "stacks": "10",
+            "duration": "-1",
+            "on": "Self",
+            "addTags": []
+          }
+        ]
+      }
+    }
+  }
+}

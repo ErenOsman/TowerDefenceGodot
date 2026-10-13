@@ -1,0 +1,2160 @@
+{
+  "type": "AbilityAsset",
+  "assets": {
+    "Abilities/Acid Flask": {
+      "number": 32,
+      "id": "acid-flask",
+      "displayName": "Acid Flask",
+      "description": "Throws acid up to 3 tiles away: 4 to every enemy on and around the tile, and 3 Acid that eats them for 3 turns.",
+      "icon": "Assets/Art/Icons/Abilities/AcidFlask.png#AcidFlask",
+      "tags": ["Attack", "Spell"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "Self.Range",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 2,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Circle",
+              "minRadius": "0",
+              "maxRadius": "Self.Radius",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "Target.IsEnemy",
+            "power": "Self.Power",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" },
+                {
+                  "$type": "ApplyStatusStepData",
+                  "status": "Statuses/Acid",
+                  "stacks": "Self.Potency",
+                  "duration": "3",
+                  "on": "Target",
+                  "addTags": []
+                }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Acid Flask Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Bash": {
+      "number": 10,
+      "id": "bash",
+      "displayName": "Bash",
+      "description": "Bashes an adjacent enemy for 5.",
+      "icon": "Assets/Art/Icons/Abilities/Bash.png#Bash",
+      "tags": ["Attack", "Melee"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "1",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsEnemy",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Single",
+              "minRadius": "0",
+              "maxRadius": "0",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "Self.Power",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Bash Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Bite": {
+      "number": 29,
+      "id": "bite",
+      "displayName": "Bite",
+      "description": "Bites a tower or the base next to it.",
+      "icon": "Assets/Art/Icons/Abilities/Bite.png#Bite",
+      "tags": ["Attack", "Melee"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "Self.Range",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsEnemy and not Target.HasTag(Rock)",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Single",
+              "minRadius": "0",
+              "maxRadius": "0",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "Self.Power",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Bite Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Blink": {
+      "number": 26,
+      "id": "blink",
+      "displayName": "Blink",
+      "description": "Teleports to a free tile up to 5 tiles away, over anything in between.",
+      "icon": "Assets/Art/Icons/Abilities/Blink.png#Blink",
+      "tags": ["Movement"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "Self.Range + 2",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": true,
+      "cooldown": 3,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          { "$type": "TeleportStepData", "on": "Self" }
+        ]
+      },
+      "presentation": "Presentation/Blink Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Bolt": {
+      "number": 31,
+      "id": "bolt",
+      "displayName": "Bolt",
+      "description": "Fires a heavy bolt for 25 at an enemy 2 to 4 tiles away.",
+      "icon": "Assets/Art/Icons/Abilities/Bolt.png#Bolt",
+      "tags": ["Attack", "Projectile"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "2",
+        "maxRadius": "Self.Range",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsEnemy",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 2,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Single",
+              "minRadius": "0",
+              "maxRadius": "0",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "Self.Power",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Bolt Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Bombard": {
+      "number": 34,
+      "id": "bombard",
+      "displayName": "Bombard",
+      "description": "Lobs a shell 2 to 3 tiles away: 30 to every enemy on and around the tile.",
+      "icon": "Assets/Art/Icons/Abilities/Bombard.png#Bombard",
+      "tags": ["Attack", "Lobbed"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "2",
+        "maxRadius": "Self.Range",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 3,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Circle",
+              "minRadius": "0",
+              "maxRadius": "Self.Radius",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "Target.IsEnemy",
+            "power": "Self.Power",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Bombard Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Brute Walk": {
+      "number": 13,
+      "id": "Brute Walk",
+      "displayName": "Brute Walk",
+      "description": "Walks up to Speed tiles along its path, stopping where its attack can reach the target it wants.",
+      "icon": "Assets/Art/Icons/Abilities/BruteWalk.png#BruteWalk",
+      "tags": ["Movement"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "PathAhead",
+        "minRadius": "1",
+        "maxRadius": "Self.Speed",
+        "orientation": "TowardTarget",
+        "includeCenter": false,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Engage", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          { "$type": "WalkStepData" }
+        ]
+      },
+      "presentation": null,
+      "faceTargetOnCast": false
+    },
+    "Abilities/Crush": {
+      "number": 15,
+      "id": "crush",
+      "displayName": "Crush",
+      "description": "Crushes the base, or a tower, next to it for its Power. It goes for the base unless taunted.",
+      "icon": "Assets/Art/Icons/Abilities/Crush.png#Crush",
+      "tags": ["Attack", "Melee"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "Self.Range",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsEnemy",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": {
+        "preset": "Custom",
+        "must": "",
+        "prefer": [
+          { "value": "if(Target.HasTag(Base), 1, 0)", "highest": true, "over": "Target", "filter": "" },
+          { "value": "Self.DistanceTo(Target)", "highest": false, "over": "Target", "filter": "" }
+        ]
+      },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Single",
+              "minRadius": "0",
+              "maxRadius": "0",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "Self.Power",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Crush Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Examples/Chain Lightning": {
+      "number": 19,
+      "id": "Chain Lightning",
+      "displayName": "Chain Lightning",
+      "description": "Hits an enemy for 60, then jumps to 2 more enemies nearby.",
+      "icon": "Assets/Art/Icons/Abilities/ChainLightning.png#ChainLightning",
+      "tags": ["Spell"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "6",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsEnemy",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Single",
+              "minRadius": "0",
+              "maxRadius": "0",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "60",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "2",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "Target.IsEnemy",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Examples/Chain Lightning Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Examples/Execute": {
+      "number": 20,
+      "id": "Execute",
+      "displayName": "Execute",
+      "description": "Hits an adjacent enemy for 30. Not ready the turn it arrives; after a cast it waits until its owner kills something.",
+      "icon": "Assets/Art/Icons/Abilities/Execute.png#Execute",
+      "tags": ["Attack", "Melee"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "1",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsEnemy",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": true,
+      "startCooldown": 1,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Single",
+              "minRadius": "0",
+              "maxRadius": "0",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "30",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Examples/Execute Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Examples/Fire Wall": {
+      "number": 11,
+      "id": "Fire Wall",
+      "displayName": "Fire Wall",
+      "description": "Sets a tile on fire for 2 rounds: 10 damage to whoever starts a turn on it.",
+      "icon": "Assets/Art/Icons/Abilities/FireWall.png#FireWall",
+      "tags": ["Spell", "Fire"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "4",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          { "$type": "SpawnStepData", "entity": "Units/Other/Examples/Fire Tile", "at": "AimTile", "summon": false, "team": -1 }
+        ]
+      },
+      "presentation": "Presentation/Examples/Fire Wall Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Examples/Fireball": {
+      "number": 16,
+      "id": "Fireball",
+      "displayName": "Fireball",
+      "description": "Hits everything within 1 tile of the aimed tile for 100.",
+      "icon": "Assets/Art/Icons/Abilities/Fireball.png#Fireball",
+      "tags": ["Attack", "Spell", "Fire"],
+      "costs": [
+        { "resource": "Mana", "amount": 5 }
+      ],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "6",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Circle",
+              "minRadius": "0",
+              "maxRadius": "1",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "100",
+            "canMiss": true,
+            "canCrit": true,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Examples/Fireball Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Examples/Pinning Shot": {
+      "number": 18,
+      "id": "Pinning Shot",
+      "displayName": "Pinning Shot",
+      "description": "Hits for 10 and roots the target.",
+      "icon": "Assets/Art/Icons/Abilities/PinningShot.png#PinningShot",
+      "tags": ["Attack"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "6",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Single",
+              "minRadius": "0",
+              "maxRadius": "0",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "10",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" },
+                {
+                  "$type": "ApplyStatusStepData",
+                  "status": "Statuses/Examples/Rooted",
+                  "stacks": "1",
+                  "duration": "1",
+                  "on": "Target",
+                  "addTags": []
+                }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Examples/Pinning Shot Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Examples/Provoke": {
+      "number": 1,
+      "id": "Provoke",
+      "displayName": "Provoke",
+      "description": "Taunts an enemy up to 3 tiles away for 2 turns: when it can reach this tower, it attacks it.",
+      "icon": "Assets/Art/Icons/Abilities/Provoke.png#Provoke",
+      "tags": [],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "3",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsEnemy",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 3,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "ApplyStatusStepData",
+            "status": "Statuses/Taunted",
+            "stacks": "1",
+            "duration": "2",
+            "on": "Target",
+            "addTags": []
+          }
+        ]
+      },
+      "presentation": "Presentation/Examples/Provoke Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Examples/Raise Skeleton": {
+      "number": 12,
+      "id": "Raise Skeleton",
+      "displayName": "Raise Skeleton",
+      "description": "Raises a Skeleton that falls when its summoner dies.",
+      "icon": "Assets/Art/Icons/Abilities/RaiseSkeleton.png#RaiseSkeleton",
+      "tags": ["Spell"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "2",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          { "$type": "SpawnStepData", "entity": "Units/Other/Examples/Skeleton", "at": "AimTile", "summon": true, "team": -1 }
+        ]
+      },
+      "presentation": null,
+      "faceTargetOnCast": false
+    },
+    "Abilities/Examples/Shield Bash": {
+      "number": 17,
+      "id": "Shield Bash",
+      "displayName": "Shield Bash",
+      "description": "Hits an adjacent enemy for 80 and pushes it 2 tiles.",
+      "icon": "Assets/Art/Icons/Abilities/ShieldBash.png#ShieldBash",
+      "tags": ["Attack"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "1",
+        "maxRadius": "1",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsEnemy",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Single",
+              "minRadius": "0",
+              "maxRadius": "0",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "80",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" },
+                { "$type": "PushStepData", "distance": "2", "pull": false, "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Examples/Shield Bash Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Examples/Volley": {
+      "number": 4,
+      "id": "Volley",
+      "displayName": "Volley",
+      "description": "Hits up to 3 random enemies within 3 tiles for 5 each.",
+      "icon": "Assets/Art/Icons/Abilities/Volley.png#Volley",
+      "tags": ["Attack"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Single",
+        "minRadius": "0",
+        "maxRadius": "0",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 2,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "PickStepData",
+            "area": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "3",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "center": "Self",
+            "filter": "Target.IsEnemy",
+            "count": "3",
+            "instinct": { "preset": "Random", "must": "", "prefer": [] },
+            "steps": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "5", "tags": [], "on": "Target" }
+              ]
+            }
+          }
+        ]
+      },
+      "presentation": "Presentation/Examples/Volley Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Examples/Walk": {
+      "number": 21,
+      "id": "Walk",
+      "displayName": "Walk",
+      "description": "Walks to a tile.",
+      "icon": "Assets/Art/Icons/Abilities/Walk.png#Walk",
+      "tags": ["Movement"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Single",
+        "minRadius": "0",
+        "maxRadius": "0",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          { "$type": "WalkStepData" }
+        ]
+      },
+      "presentation": null,
+      "faceTargetOnCast": false
+    },
+    "Abilities/Firebolt": {
+      "number": 7,
+      "id": "firebolt",
+      "displayName": "Firebolt",
+      "description": "Hurls fire up to 3 tiles away: 8 to everyone on and around the tile it hits, your own towers and base too, and sets them burning (2 a turn for 2 turns).",
+      "icon": "Assets/Art/Icons/Abilities/Firebolt.png#Firebolt",
+      "tags": ["Attack", "Spell", "Fire"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "Self.Range",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 2,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Circle",
+              "minRadius": "0",
+              "maxRadius": "Self.Radius",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "Self.Power",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" },
+                {
+                  "$type": "ApplyStatusStepData",
+                  "status": "Statuses/Burn",
+                  "stacks": "Self.Potency",
+                  "duration": "2",
+                  "on": "Target",
+                  "addTags": []
+                }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Firebolt Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Guardian Taunt": {
+      "number": 3,
+      "id": "guardian-taunt",
+      "displayName": "Taunt",
+      "description": "Taunts an enemy up to 2 tiles away for 2 turns: when it can reach the Guardian, it attacks the Guardian.",
+      "icon": "Assets/Art/Icons/Abilities/Taunt.png#Taunt",
+      "tags": [],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "Self.Range",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsEnemy",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 2,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "ApplyStatusStepData",
+            "status": "Statuses/Taunted",
+            "stacks": "1",
+            "duration": "2",
+            "on": "Target",
+            "addTags": []
+          }
+        ]
+      },
+      "presentation": "Presentation/Guardian Taunt Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Hop": {
+      "number": 27,
+      "id": "hop",
+      "displayName": "Hop",
+      "description": "Hops up to Speed tiles along its road, over anything in its way.",
+      "icon": "Assets/Art/Icons/Abilities/Hop.png#Hop",
+      "tags": ["Movement"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "PathAhead",
+        "minRadius": "1",
+        "maxRadius": "Self.Speed",
+        "orientation": "TowardTarget",
+        "includeCenter": false,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": true,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          { "$type": "JumpStepData" }
+        ]
+      },
+      "presentation": "Presentation/Hop Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Mend": {
+      "number": 2,
+      "id": "mend",
+      "displayName": "Mend",
+      "description": "Heals a hurt tower up to 4 tiles away for 10.",
+      "icon": "Assets/Art/Icons/Abilities/Mend.png#Mend",
+      "tags": ["Spell"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "Self.Range + 1",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsAlly and not Target.HasTag(Base) and Target.Hp < Target.MaxHp",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          { "$type": "HealStepData", "amount": "Self.Potency", "tags": [], "on": "Target" }
+        ]
+      },
+      "presentation": "Presentation/Mend Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Nibble": {
+      "number": 28,
+      "id": "nibble",
+      "displayName": "Nibble",
+      "description": "Nibbles a tower or the base next to it.",
+      "icon": "Assets/Art/Icons/Abilities/Nibble.png#Nibble",
+      "tags": ["Attack", "Melee"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "Self.Range",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsEnemy and not Target.HasTag(Rock)",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Single",
+              "minRadius": "0",
+              "maxRadius": "0",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "Self.Power",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Nibble Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Path Walk": {
+      "number": 14,
+      "id": "Path Walk",
+      "displayName": "Path Walk",
+      "description": "Walks along its path, up to Speed tiles.",
+      "icon": "Assets/Art/Icons/Abilities/PathWalk.png#PathWalk",
+      "tags": ["Movement"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "PathAhead",
+        "minRadius": "1",
+        "maxRadius": "Self.Speed",
+        "orientation": "TowardTarget",
+        "includeCenter": false,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          { "$type": "WalkStepData" }
+        ]
+      },
+      "presentation": null,
+      "faceTargetOnCast": false
+    },
+    "Abilities/Quicken": {
+      "number": 35,
+      "id": "quicken",
+      "displayName": "Quicken",
+      "description": "Speeds itself up: 1 more Speed, twice at most.",
+      "icon": "Assets/Art/Icons/Abilities/Quicken.png#Quicken",
+      "tags": ["Buff"],
+      "costs": [],
+      "castGate": "Self.Stacks(haste) < 2",
+      "targeting": {
+        "shape": "Single",
+        "minRadius": "0",
+        "maxRadius": "0",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 2,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "ApplyStatusStepData",
+            "status": "Statuses/Haste",
+            "stacks": "1",
+            "duration": "-1",
+            "on": "Self",
+            "addTags": []
+          }
+        ]
+      },
+      "presentation": "Presentation/Quicken Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Rally": {
+      "number": 33,
+      "id": "rally",
+      "displayName": "Rally",
+      "description": "Every ally within 2 tiles gets 2 more Power and 1 more Speed for 2 turns.",
+      "icon": "Assets/Art/Icons/Abilities/Rally.png#Rally",
+      "tags": ["Spell"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Single",
+        "minRadius": "0",
+        "maxRadius": "0",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 3,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "PickStepData",
+            "area": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "center": "Self",
+            "filter": "Target.IsAlly and Target.IsUnit",
+            "count": "99",
+            "instinct": { "preset": "Default", "must": "", "prefer": [] },
+            "steps": {
+              "items": [
+                {
+                  "$type": "ApplyStatusStepData",
+                  "status": "Statuses/Rallied",
+                  "stacks": "1",
+                  "duration": "Self.Duration",
+                  "on": "Target",
+                  "addTags": []
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "presentation": "Presentation/Rally Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Ram": {
+      "number": 24,
+      "id": "Ram",
+      "displayName": "Ram",
+      "description": "Rams the base for 5 and dies doing so.",
+      "icon": "Assets/Art/Icons/Abilities/Ram.png#Ram",
+      "tags": ["Attack", "Melee"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "Self.Range",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.HasTag(Base)",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Single",
+              "minRadius": "0",
+              "maxRadius": "0",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "Self.Power",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          },
+          { "$type": "DamageStepData", "amount": "Self.Hp", "tags": [], "on": "Self" }
+        ]
+      },
+      "presentation": "Presentation/Ram Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Shoot": {
+      "number": 22,
+      "id": "Shoot",
+      "displayName": "Shoot",
+      "description": "Shoots an arrow for 10 at an enemy up to 2 tiles away.",
+      "icon": "Assets/Art/Icons/Abilities/Shoot.png#Shoot",
+      "tags": ["Attack", "Projectile"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "Self.Range",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsEnemy",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Single",
+              "minRadius": "0",
+              "maxRadius": "0",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "Self.Power",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Shoot Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Slam": {
+      "number": 6,
+      "id": "slam",
+      "displayName": "Slam",
+      "description": "Slams the ground: twice its Power to every tower next to it.",
+      "icon": "Assets/Art/Icons/Abilities/Slam.png#Slam",
+      "tags": ["Attack", "Melee"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Single",
+        "minRadius": "0",
+        "maxRadius": "0",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "Self.Radius",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "Target.IsEnemy and not Target.HasTag(Base)",
+            "power": "Self.Power * 2",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Slam Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Slime Mend": {
+      "number": 30,
+      "id": "slime-mend",
+      "displayName": "Slime Mend",
+      "description": "Heals a hurt enemy up to 3 tiles away for its Potency.",
+      "icon": "Assets/Art/Icons/Abilities/SlimeMend.png#SlimeMend",
+      "tags": ["Spell"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "Self.Range",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsAlly and Target.IsUnit and Target.Hp < Target.MaxHp",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 2,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          { "$type": "HealStepData", "amount": "Self.Potency", "tags": [], "on": "Target" }
+        ]
+      },
+      "presentation": "Presentation/Slime Mend Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Smash": {
+      "number": 23,
+      "id": "Smash",
+      "displayName": "Smash",
+      "description": "Smashes an adjacent tower or the base for its Power: the one furthest ahead on its path, the nearer on a tie.",
+      "icon": "Assets/Art/Icons/Abilities/Smash.png#Smash",
+      "tags": ["Attack", "Melee"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "Self.Range",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsEnemy",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Ahead", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Single",
+              "minRadius": "0",
+              "maxRadius": "0",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "Self.Power",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Smash Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Smite": {
+      "number": 8,
+      "id": "smite",
+      "displayName": "Smite",
+      "description": "Smites an enemy up to 3 tiles away for 5, or 15 against a boss. The Priest's other abilities wait one more turn.",
+      "icon": "Assets/Art/Icons/Abilities/Smite.png#Smite",
+      "tags": ["Attack", "Spell"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "Self.Range",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsEnemy",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Single",
+              "minRadius": "0",
+              "maxRadius": "0",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "Self.Power",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                {
+                  "$type": "DamageStepData",
+                  "amount": "if(Target.HasTag(Boss), ActionPower * 3, ActionPower)",
+                  "tags": [],
+                  "on": "Target"
+                }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          },
+          { "$type": "AddCooldownStepData", "ability": null, "on": "Self", "turns": "1" }
+        ]
+      },
+      "presentation": "Presentation/Smite Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Spark": {
+      "number": 25,
+      "id": "spark",
+      "displayName": "Spark",
+      "description": "Zaps an enemy up to 3 tiles away for 10.",
+      "icon": "Assets/Art/Icons/Abilities/Spark.png#Spark",
+      "tags": ["Attack", "Spell"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "Self.Range",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsEnemy",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Single",
+              "minRadius": "0",
+              "maxRadius": "0",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "Self.Power",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Spark Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Spit": {
+      "number": 9,
+      "id": "spit",
+      "displayName": "Spit",
+      "description": "Spits at a tower or the base up to 2 tiles away for 5.",
+      "icon": "Assets/Art/Icons/Abilities/Spit.png#Spit",
+      "tags": ["Attack", "Projectile"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Diamond",
+        "minRadius": "0",
+        "maxRadius": "Self.Range",
+        "orientation": "TowardTarget",
+        "includeCenter": true,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "Target.IsEnemy",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 1,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          {
+            "$type": "AttackStepData",
+            "area": {
+              "shape": "Single",
+              "minRadius": "0",
+              "maxRadius": "0",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "areaFilter": "",
+            "power": "Self.Power",
+            "canMiss": false,
+            "canCrit": false,
+            "onHit": {
+              "items": [
+                { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" }
+              ]
+            },
+            "hits": "1",
+            "bounces": "0",
+            "bounceArea": {
+              "shape": "Diamond",
+              "minRadius": "0",
+              "maxRadius": "2",
+              "orientation": "TowardTarget",
+              "includeCenter": true,
+              "requiresLineOfSight": false,
+              "stopAtFirstBlocker": false,
+              "passesAllies": true,
+              "jumpsOverUnits": false,
+              "custom": []
+            },
+            "bounceFilter": "",
+            "bounceInstinct": { "preset": "Default", "must": "", "prefer": [] }
+          }
+        ]
+      },
+      "presentation": "Presentation/Spit Presentation",
+      "faceTargetOnCast": false
+    },
+    "Abilities/Tower Walk": {
+      "number": 5,
+      "id": "Tower Walk",
+      "displayName": "Tower Walk",
+      "description": "Moves the tower up to Speed tiles.",
+      "icon": "Assets/Art/Icons/Abilities/TowerWalk.png#TowerWalk",
+      "tags": ["Movement"],
+      "costs": [],
+      "castGate": "",
+      "targeting": {
+        "shape": "Steps",
+        "minRadius": "1",
+        "maxRadius": "Self.Speed",
+        "orientation": "TowardTarget",
+        "includeCenter": false,
+        "requiresLineOfSight": false,
+        "stopAtFirstBlocker": false,
+        "passesAllies": true,
+        "jumpsOverUnits": false,
+        "custom": []
+      },
+      "targetFilter": "",
+      "targetsDead": false,
+      "needsFreeTile": false,
+      "cooldown": 2,
+      "cooldownUntilReset": false,
+      "startCooldown": 0,
+      "instinct": { "preset": "Default", "must": "", "prefer": [] },
+      "steps": {
+        "items": [
+          { "$type": "WalkStepData" }
+        ]
+      },
+      "presentation": null,
+      "faceTargetOnCast": false
+    }
+  }
+}

@@ -1,0 +1,886 @@
+{
+  "type": "LevelAsset",
+  "assets": {
+    "Levels/Chapter 1/1 First Steps": {
+      "number": 4,
+      "id": "chapter1-1",
+      "displayName": "First Steps",
+      "description": "Slimes walk one road to your base, and a Big Slime takes several arrows. Place archers beside it.",
+      "icon": null,
+      "music": null,
+      "terrain": ["..........", "...#......", "..........", "......#...", ".........."],
+      "terrainKeys": [
+        { "symbol": ".", "terrain": "Terrains/Ground" },
+        { "symbol": "#", "terrain": "Terrains/Wall" }
+      ],
+      "build": [".......+++", ".......+++", "..........", ".......+++", ".......+++"],
+      "road": ["..........", "..........", "────────╴.", "..........", ".........."],
+      "paths": [
+        {
+          "tiles": [
+            [0, 2], [1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [6, 2], [7, 2], [8, 2]
+          ]
+        }
+      ],
+      "bases": [
+        { "tile": [9, 2], "entity": "Units/Bases/Base" }
+      ],
+      "startingUnits": [],
+      "handCap": 4,
+      "fixedHand": [],
+      "intro": null,
+      "startEnergy": 200,
+      "energyPerRound": 20,
+      "waves": [
+        {
+          "name": "The first slimes",
+          "start": "AtRound",
+          "startRound": 1,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "A big one",
+          "start": "AtRound",
+          "startRound": 4,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Big Slime", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "All together",
+          "start": "AtRound",
+          "startRound": 7,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Big Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Big Slime", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        }
+      ]
+    },
+    "Levels/Chapter 1/2 Spitters": {
+      "number": 5,
+      "id": "chapter1-2",
+      "displayName": "Spitters",
+      "description": "Slime Archers stop where they can spit at your towers. Keep your towers healthy.",
+      "icon": null,
+      "music": null,
+      "terrain": ["...#.......", "...........", "..#........", "........#..", "...........", "..........."],
+      "terrainKeys": [
+        { "symbol": ".", "terrain": "Terrains/Ground" },
+        { "symbol": "#", "terrain": "Terrains/Wall" }
+      ],
+      "build": ["........+++", "...........", "........+++", ".........++", "...........", "..........."],
+      "road": ["...........", ".....┌───╴.", ".....│.....", ".....│.....", "─────┘.....", "..........."],
+      "paths": [
+        {
+          "tiles": [
+            [0, 1], [1, 1], [2, 1], [3, 1], [4, 1], [5, 1], [5, 2], [5, 3], [5, 4], [6, 4], [7, 4], [8, 4],
+            [9, 4]
+          ]
+        }
+      ],
+      "bases": [
+        { "tile": [10, 4], "entity": "Units/Bases/Base" }
+      ],
+      "startingUnits": [],
+      "handCap": 4,
+      "fixedHand": [],
+      "intro": null,
+      "startEnergy": 200,
+      "energyPerRound": 20,
+      "waves": [
+        {
+          "name": "Spitters",
+          "start": "AtRound",
+          "startRound": 1,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Big Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Slime Archer", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Runner", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "More spitters",
+          "start": "AtRound",
+          "startRound": 5,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Slime Archer", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Big Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Slime Archer", "path": 0, "facing": "AlongPath" },
+            { "round": 4, "enemy": "Units/Enemies/Runner", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "Cover fire",
+          "start": "AtRound",
+          "startRound": 10,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Runner", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Slime Archer", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Big Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 4, "enemy": "Units/Enemies/Slime Archer", "path": 0, "facing": "AlongPath" },
+            { "round": 5, "enemy": "Units/Enemies/Runner", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        }
+      ]
+    },
+    "Levels/Chapter 1/3 Two Roads": {
+      "number": 3,
+      "id": "chapter1-3",
+      "displayName": "Two Roads",
+      "description": "Two roads meet at the base, and Shield Slimes soak up your first shots.",
+      "icon": null,
+      "music": null,
+      "terrain": ["............", "............", "....#...#...", "............", "............"],
+      "terrainKeys": [
+        { "symbol": ".", "terrain": "Terrains/Ground" },
+        { "symbol": "#", "terrain": "Terrains/Wall" }
+      ],
+      "build": ["............", ".........++.", ".........++.", ".........++.", "............"],
+      "road": ["───────────┐", "...........╵", "............", "...........╷", "───────────┘"],
+      "paths": [
+        {
+          "tiles": [
+            [0, 4], [1, 4], [2, 4], [3, 4], [4, 4], [5, 4], [6, 4], [7, 4], [8, 4], [9, 4], [10, 4], [11, 4],
+            [11, 3]
+          ]
+        },
+        {
+          "tiles": [
+            [0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0], [7, 0], [8, 0], [9, 0], [10, 0], [11, 0],
+            [11, 1]
+          ]
+        }
+      ],
+      "bases": [
+        { "tile": [11, 2], "entity": "Units/Bases/Base" }
+      ],
+      "startingUnits": [],
+      "handCap": 4,
+      "fixedHand": [],
+      "intro": null,
+      "startEnergy": 200,
+      "energyPerRound": 25,
+      "waves": [
+        {
+          "name": "Both roads",
+          "start": "AtRound",
+          "startRound": 1,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Slime", "path": 1, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Shield Slime", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "Shields",
+          "start": "AtRound",
+          "startRound": 5,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Shield Slime", "path": 1, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Runner", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Slime Archer", "path": 1, "facing": "AlongPath" },
+            { "round": 4, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "Pincer",
+          "start": "AtRound",
+          "startRound": 10,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Slime Archer", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Shield Slime", "path": 1, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Runner", "path": 0, "facing": "AlongPath" },
+            { "round": 4, "enemy": "Units/Enemies/Shield Slime", "path": 1, "facing": "AlongPath" },
+            { "round": 5, "enemy": "Units/Enemies/Slime Archer", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        }
+      ]
+    },
+    "Levels/Chapter 1/4 The Slime King": {
+      "number": 6,
+      "id": "chapter1-4",
+      "displayName": "The Slime King",
+      "description": "Brutes smash the towers ahead of them, and then the Slime King arrives.",
+      "icon": null,
+      "music": null,
+      "terrain": ["............", "...........#", "............", "...#..#.....", "............", "............"],
+      "terrainKeys": [
+        { "symbol": ".", "terrain": "Terrains/Ground" },
+        { "symbol": "#", "terrain": "Terrains/Wall" }
+      ],
+      "build": ["............", "............", "..........++", "..........++", "............", ".........+++"],
+      "road": ["............", "─────────┐..", ".........│..", ".........│..", ".........└╴.", "............"],
+      "paths": [
+        {
+          "tiles": [
+            [0, 4], [1, 4], [2, 4], [3, 4], [4, 4], [5, 4], [6, 4], [7, 4], [8, 4], [9, 4], [9, 3], [9, 2],
+            [9, 1], [10, 1]
+          ]
+        }
+      ],
+      "bases": [
+        { "tile": [11, 1], "entity": "Units/Bases/Base" }
+      ],
+      "startingUnits": [],
+      "handCap": 4,
+      "fixedHand": [],
+      "intro": null,
+      "startEnergy": 200,
+      "energyPerRound": 25,
+      "waves": [
+        {
+          "name": "Vanguard",
+          "start": "AtRound",
+          "startRound": 1,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Runner", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Slime Archer", "path": 0, "facing": "AlongPath" },
+            { "round": 4, "enemy": "Units/Enemies/Shield Slime", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "Brutes",
+          "start": "AtRound",
+          "startRound": 6,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Brute", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Shield Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Slime Archer", "path": 0, "facing": "AlongPath" },
+            { "round": 4, "enemy": "Units/Enemies/Brute", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "The Slime King",
+          "start": "AtRound",
+          "startRound": 11,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Shield Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Slime King", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Brute", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        }
+      ]
+    },
+    "Levels/Chapter 2/1 Rock Garden": {
+      "number": 8,
+      "id": "chapter2-1",
+      "displayName": "Rock Garden",
+      "description": "Two rows of rocks cut the field. Rabbits hop over them; Rockjaws eat their way through.",
+      "icon": null,
+      "music": null,
+      "terrain": [
+        "..............",
+        "..............",
+        "..............",
+        "..............",
+        "..............",
+        "..............",
+        ".............."
+      ],
+      "terrainKeys": [
+        { "symbol": ".", "terrain": "Terrains/Ground" }
+      ],
+      "build": [
+        "..............",
+        "...........+++",
+        "...........+++",
+        "..............",
+        "...........+++",
+        "...........+++",
+        ".............."
+      ],
+      "road": [
+        "..............",
+        "..............",
+        "..............",
+        "────────────╴.",
+        "..............",
+        "..............",
+        ".............."
+      ],
+      "paths": [
+        {
+          "tiles": [
+            [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [8, 3], [9, 3], [10, 3], [11, 3],
+            [12, 3]
+          ]
+        }
+      ],
+      "bases": [
+        { "tile": [13, 3], "entity": "Units/Bases/Fortress" }
+      ],
+      "startingUnits": [
+        { "entity": "Units/Other/Rock", "tile": [6, 0], "side": "Neutral", "path": -1, "facing": "AlongPath" },
+        { "entity": "Units/Other/Rock", "tile": [7, 0], "side": "Neutral", "path": -1, "facing": "AlongPath" },
+        { "entity": "Units/Other/Rock", "tile": [6, 1], "side": "Neutral", "path": -1, "facing": "AlongPath" },
+        { "entity": "Units/Other/Rock", "tile": [7, 1], "side": "Neutral", "path": -1, "facing": "AlongPath" },
+        { "entity": "Units/Other/Rock", "tile": [6, 2], "side": "Neutral", "path": -1, "facing": "AlongPath" },
+        { "entity": "Units/Other/Rock", "tile": [7, 2], "side": "Neutral", "path": -1, "facing": "AlongPath" },
+        { "entity": "Units/Other/Rock", "tile": [6, 3], "side": "Neutral", "path": -1, "facing": "AlongPath" },
+        { "entity": "Units/Other/Rock", "tile": [7, 3], "side": "Neutral", "path": -1, "facing": "AlongPath" },
+        { "entity": "Units/Other/Rock", "tile": [6, 4], "side": "Neutral", "path": -1, "facing": "AlongPath" },
+        { "entity": "Units/Other/Rock", "tile": [7, 4], "side": "Neutral", "path": -1, "facing": "AlongPath" },
+        { "entity": "Units/Other/Rock", "tile": [6, 5], "side": "Neutral", "path": -1, "facing": "AlongPath" },
+        { "entity": "Units/Other/Rock", "tile": [7, 5], "side": "Neutral", "path": -1, "facing": "AlongPath" },
+        { "entity": "Units/Other/Rock", "tile": [6, 6], "side": "Neutral", "path": -1, "facing": "AlongPath" },
+        { "entity": "Units/Other/Rock", "tile": [7, 6], "side": "Neutral", "path": -1, "facing": "AlongPath" }
+      ],
+      "handCap": 5,
+      "fixedHand": [],
+      "intro": null,
+      "startEnergy": 400,
+      "energyPerRound": 40,
+      "waves": [
+        {
+          "name": "Hoppers",
+          "start": "AtRound",
+          "startRound": 1,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Rabbit", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Rabbit", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Rabbit", "path": 0, "facing": "AlongPath" },
+            { "round": 4, "enemy": "Units/Enemies/Rabbit", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "Rockjaw",
+          "start": "AtRound",
+          "startRound": 6,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Rockjaw", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Rabbit", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 4, "enemy": "Units/Enemies/Rabbit", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "Jaws and Hops",
+          "start": "AtRound",
+          "startRound": 11,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Rockjaw", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Jackalope", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Rockjaw", "path": 0, "facing": "AlongPath" },
+            { "round": 4, "enemy": "Units/Enemies/Rabbit", "path": 0, "facing": "AlongPath" },
+            { "round": 5, "enemy": "Units/Enemies/Jackalope", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        }
+      ]
+    },
+    "Levels/Chapter 2/2 Three at the Gate": {
+      "number": 9,
+      "id": "chapter2-2",
+      "displayName": "Three at the Gate",
+      "description": "Three Brutes are already halfway down the road when you arrive.",
+      "icon": null,
+      "music": null,
+      "terrain": [
+        "..............",
+        "..............",
+        "..............",
+        "..............",
+        "..............",
+        "..............",
+        ".............."
+      ],
+      "terrainKeys": [
+        { "symbol": ".", "terrain": "Terrains/Ground" }
+      ],
+      "build": [
+        "..............",
+        "...........+++",
+        "...........+++",
+        "..............",
+        "...........+++",
+        "...........+++",
+        ".............."
+      ],
+      "road": [
+        "..............",
+        "..............",
+        "..............",
+        "────────────╴.",
+        "..............",
+        "..............",
+        ".............."
+      ],
+      "paths": [
+        {
+          "tiles": [
+            [0, 3], [1, 3], [2, 3], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [8, 3], [9, 3], [10, 3], [11, 3],
+            [12, 3]
+          ]
+        }
+      ],
+      "bases": [
+        { "tile": [13, 3], "entity": "Units/Bases/Fortress" }
+      ],
+      "startingUnits": [
+        { "entity": "Units/Enemies/Brute", "tile": [7, 3], "side": "Enemy", "path": 0, "facing": "AlongPath" },
+        { "entity": "Units/Enemies/Brute", "tile": [6, 3], "side": "Enemy", "path": 0, "facing": "AlongPath" },
+        { "entity": "Units/Enemies/Brute", "tile": [5, 3], "side": "Enemy", "path": 0, "facing": "AlongPath" }
+      ],
+      "handCap": 5,
+      "fixedHand": [],
+      "intro": null,
+      "startEnergy": 450,
+      "energyPerRound": 40,
+      "waves": [
+        {
+          "name": "Stragglers",
+          "start": "AtRound",
+          "startRound": 1,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Runner", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Slime Archer", "path": 0, "facing": "AlongPath" },
+            { "round": 4, "enemy": "Units/Enemies/Runner", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "Healers",
+          "start": "AtRound",
+          "startRound": 6,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Slime Shaman", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Brute", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Rabbit", "path": 0, "facing": "AlongPath" },
+            { "round": 4, "enemy": "Units/Enemies/Slime Shaman", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "Ironhide",
+          "start": "AtRound",
+          "startRound": 11,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Ironhide", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Rabbit", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Jackalope", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        }
+      ]
+    },
+    "Levels/Chapter 2/3 The Drummer": {
+      "number": 10,
+      "id": "chapter2-3",
+      "displayName": "The Drummer",
+      "description": "A drummer stands on your side: towers near the drum hit harder. Mind the chasm below.",
+      "icon": null,
+      "music": null,
+      "terrain": [
+        "..............",
+        "..............",
+        "..............",
+        "......##......",
+        "......##......",
+        "......##......",
+        "~~~~~~~~~~~~~~",
+        "~~~~~~~~~~~~~~"
+      ],
+      "terrainKeys": [
+        { "symbol": ".", "terrain": "Terrains/Ground" },
+        { "symbol": "#", "terrain": "Terrains/Wall" },
+        { "symbol": "~", "terrain": "Terrains/Chasm" }
+      ],
+      "build": [
+        "..........++++",
+        "..........++++",
+        "..............",
+        "..........+++.",
+        "..........+++.",
+        "..........+++.",
+        "..............",
+        ".............."
+      ],
+      "road": [
+        "..............",
+        "..............",
+        "..┌──────────┐",
+        "..│..........│",
+        "..│..........╵",
+        "──┘...........",
+        ".............╷",
+        "─────────────┘"
+      ],
+      "paths": [
+        {
+          "tiles": [
+            [0, 2], [1, 2], [2, 2], [2, 3], [2, 4], [2, 5], [3, 5], [4, 5], [5, 5], [6, 5], [7, 5], [8, 5],
+            [9, 5], [10, 5], [11, 5], [12, 5], [13, 5], [13, 4], [13, 3]
+          ]
+        },
+        {
+          "tiles": [
+            [0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0], [7, 0], [8, 0], [9, 0], [10, 0], [11, 0],
+            [12, 0], [13, 0], [13, 1]
+          ]
+        }
+      ],
+      "bases": [
+        { "tile": [13, 2], "entity": "Units/Bases/Fortress" }
+      ],
+      "startingUnits": [
+        { "entity": "Units/Towers/Drummer", "tile": [10, 6], "side": "Ally", "path": -1, "facing": "Down" }
+      ],
+      "handCap": 5,
+      "fixedHand": [],
+      "intro": null,
+      "startEnergy": 450,
+      "energyPerRound": 40,
+      "waves": [
+        {
+          "name": "Spitters",
+          "start": "AtRound",
+          "startRound": 1,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Slime Archer", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Slime Archer", "path": 0, "facing": "AlongPath" },
+            { "round": 4, "enemy": "Units/Enemies/Slime Shaman", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "Brutes",
+          "start": "AtRound",
+          "startRound": 6,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Brute", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Shield Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Ironhide", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "From the Chasm",
+          "start": "AtRound",
+          "startRound": 10,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Bat", "path": 1, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Bat", "path": 1, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 4, "enemy": "Units/Enemies/Bat", "path": 1, "facing": "AlongPath" },
+            { "round": 5, "enemy": "Units/Enemies/Jackalope", "path": 0, "facing": "AlongPath" },
+            { "round": 6, "enemy": "Units/Enemies/Bat", "path": 1, "facing": "AlongPath" }
+          ],
+          "events": []
+        }
+      ]
+    },
+    "Levels/Chapter 2/4 The Glutton": {
+      "number": 11,
+      "id": "chapter2-4",
+      "displayName": "The Glutton",
+      "description": "Three roads, one base. The strongest slimes come first, and then something that eats them.",
+      "icon": null,
+      "music": null,
+      "terrain": [
+        "...............",
+        "...............",
+        "...............",
+        "...............",
+        "...............",
+        "...............",
+        "...............",
+        "...............",
+        "..............."
+      ],
+      "terrainKeys": [
+        { "symbol": ".", "terrain": "Terrains/Ground" }
+      ],
+      "build": [
+        "...............",
+        "...............",
+        "............++.",
+        "............++.",
+        "...............",
+        "............++.",
+        "............++.",
+        "...............",
+        "..............."
+      ],
+      "road": [
+        "──────────────┐",
+        "..............│",
+        "..............│",
+        "..............╵",
+        "─────────────╴.",
+        "..............╷",
+        "..............│",
+        "..............│",
+        "──────────────┘"
+      ],
+      "paths": [
+        {
+          "tiles": [
+            [0, 4], [1, 4], [2, 4], [3, 4], [4, 4], [5, 4], [6, 4], [7, 4], [8, 4], [9, 4], [10, 4], [11, 4],
+            [12, 4], [13, 4]
+          ]
+        },
+        {
+          "tiles": [
+            [0, 8], [1, 8], [2, 8], [3, 8], [4, 8], [5, 8], [6, 8], [7, 8], [8, 8], [9, 8], [10, 8], [11, 8],
+            [12, 8], [13, 8], [14, 8], [14, 7], [14, 6], [14, 5]
+          ]
+        },
+        {
+          "tiles": [
+            [0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0], [7, 0], [8, 0], [9, 0], [10, 0], [11, 0],
+            [12, 0], [13, 0], [14, 0], [14, 1], [14, 2], [14, 3]
+          ]
+        }
+      ],
+      "bases": [
+        { "tile": [14, 4], "entity": "Units/Bases/Fortress" }
+      ],
+      "startingUnits": [],
+      "handCap": 5,
+      "fixedHand": [],
+      "intro": null,
+      "startEnergy": 550,
+      "energyPerRound": 45,
+      "waves": [
+        {
+          "name": "Vanguard",
+          "start": "AtRound",
+          "startRound": 1,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Ironhide", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Big Slime", "path": 1, "facing": "AlongPath" },
+            { "round": 3, "enemy": "Units/Enemies/Slime Shaman", "path": 2, "facing": "AlongPath" },
+            { "round": 4, "enemy": "Units/Enemies/Brute", "path": 1, "facing": "AlongPath" },
+            { "round": 5, "enemy": "Units/Enemies/Ironhide", "path": 2, "facing": "AlongPath" },
+            { "round": 6, "enemy": "Units/Enemies/Shield Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 7, "enemy": "Units/Enemies/Brute", "path": 1, "facing": "AlongPath" },
+            { "round": 8, "enemy": "Units/Enemies/Jackalope", "path": 2, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "The Glutton",
+          "start": "AtRound",
+          "startRound": 10,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Slime Glutton", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        }
+      ]
+    },
+    "Levels/Other/Example Level": {
+      "number": 1,
+      "id": "example-level",
+      "displayName": "Example Level",
+      "description": "Two waves of slimes walk one path to your base. Place archers beside the path.",
+      "icon": "Assets/Art/UI/coin.png#coin",
+      "music": null,
+      "terrain": [".........", "...#.....", ".........", "....~....", "........."],
+      "terrainKeys": [
+        { "symbol": ".", "terrain": "Terrains/Ground" },
+        { "symbol": "#", "terrain": "Terrains/Wall" },
+        { "symbol": "~", "terrain": "Terrains/Chasm" }
+      ],
+      "build": [".........", ".........", ".........", ".........", "........."],
+      "road": [".........", ".........", "───────╴.", ".........", "........."],
+      "paths": [
+        {
+          "tiles": [
+            [0, 2], [1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [6, 2], [7, 2]
+          ]
+        }
+      ],
+      "bases": [
+        { "tile": [8, 2], "entity": "Units/Bases/Base" }
+      ],
+      "startingUnits": [],
+      "handCap": 4,
+      "fixedHand": [],
+      "intro": null,
+      "startEnergy": 165,
+      "energyPerRound": 33,
+      "waves": [
+        {
+          "name": "First",
+          "start": "AtRound",
+          "startRound": 1,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": [
+            {
+              "round": 2,
+              "kind": "ShowMessage",
+              "enemy": null,
+              "count": 1,
+              "path": -1,
+              "randomTiles": false,
+              "facing": "AlongPath",
+              "energy": 0,
+              "message": "Another slime!",
+              "terrain": null,
+              "tiles": [],
+              "build": "Keep"
+            }
+          ]
+        },
+        {
+          "name": "Second",
+          "start": "AfterWave",
+          "startRound": 1,
+          "afterWave": 0,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 1, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        }
+      ]
+    },
+    "Levels/Other/Test Level": {
+      "number": 2,
+      "id": "test-level",
+      "displayName": "Test Level",
+      "description": "A throwaway level for checking the Level Editor.",
+      "icon": null,
+      "music": null,
+      "terrain": ["..#....", ".......", ".......", "....#.."],
+      "terrainKeys": [
+        { "symbol": ".", "terrain": "Terrains/Ground" },
+        { "symbol": "#", "terrain": "Terrains/Wall" }
+      ],
+      "build": [".......", ".......", ".......", "......."],
+      "road": [".......", "───┐...", "...└─╴.", "......."],
+      "paths": [
+        {
+          "tiles": [
+            [0, 2], [1, 2], [2, 2], [3, 2], [3, 1], [4, 1], [5, 1]
+          ]
+        }
+      ],
+      "bases": [
+        { "tile": [6, 1], "entity": "Units/Bases/Base" }
+      ],
+      "startingUnits": [],
+      "handCap": 4,
+      "fixedHand": [],
+      "intro": null,
+      "startEnergy": 165,
+      "energyPerRound": 33,
+      "waves": [
+        {
+          "name": "Wave 1",
+          "start": "AtRound",
+          "startRound": 1,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        }
+      ]
+    },
+    "Levels/Tutorial/Tutorial": {
+      "number": 7,
+      "id": "tutorial",
+      "displayName": "First Defence",
+      "description": "Slimes are coming down the road. Place your Archer near the base and stop them.",
+      "icon": null,
+      "music": null,
+      "terrain": ["............", "............", "............", "............", "............"],
+      "terrainKeys": [
+        { "symbol": ".", "terrain": "Terrains/Ground" }
+      ],
+      "build": [".........+++", ".........+++", "............", ".........+++", ".........+++"],
+      "road": ["............", "............", "──────────╴.", "............", "............"],
+      "paths": [
+        {
+          "tiles": [
+            [0, 2], [1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [6, 2], [7, 2], [8, 2], [9, 2], [10, 2]
+          ]
+        }
+      ],
+      "bases": [
+        { "tile": [11, 2], "entity": "Units/Bases/Base" }
+      ],
+      "startingUnits": [],
+      "handCap": 1,
+      "fixedHand": ["Towers/Archer Tower"],
+      "intro": "Sequences/Tutorial Steps",
+      "startEnergy": 100,
+      "energyPerRound": 0,
+      "waves": [
+        {
+          "name": "One Slime",
+          "start": "AtRound",
+          "startRound": 1,
+          "afterWave": -1,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        },
+        {
+          "name": "A Slime and a Runner",
+          "start": "AfterWave",
+          "startRound": 1,
+          "afterWave": 0,
+          "spawns": [
+            { "round": 1, "enemy": "Units/Enemies/Slime", "path": 0, "facing": "AlongPath" },
+            { "round": 2, "enemy": "Units/Enemies/Runner", "path": 0, "facing": "AlongPath" }
+          ],
+          "events": []
+        }
+      ]
+    }
+  }
+}

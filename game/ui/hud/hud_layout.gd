@@ -1,0 +1,96 @@
+class_name HudLayout
+extends RefCounted
+## The battle HUD's bottom row and screen zones as pure math (UI Design Rules, Bottom row layout; hud-menu-spec §6),
+## in canvas pixels at the 1920×1080 reference (the canvas grows with the window's aspect, so `screen` may be wider
+## or taller). Left to right: the hand tray (bottom-left, from the 32 px margin), the action bar (bottom-centre of the
+## free board area, the screen minus the right bar, ~62 px above the bottom; slid right to sit 24 px past the tray
+## when it would touch it), End turn (bottom-right, never moved). When the tray and the bar don't fit side by side
+## (at 1920: 130 × pieces + 110 × abilities > 1372) the bar and its hint move up to a row above the tray, centred
+## on the free area. The hint line sits under the bar (centred on it, left-aligned once the bar has slid right).
+
+const MARGIN := 32.0
+const TOP_BAR := 96.0
+const RIGHT_BAR := 300.0
+const INSPECTOR_W := 340.0
+const INSPECTOR_TOP := 96.0
+const TRAY_H := 168.0
+const PIECE_W := 124.0
+const PIECE_GAP := 6.0
+const TRAY_PAD := 22.0
+const END_TURN := 168.0
+const END_TURN_BOTTOM := 20.0
+const BAR_BOTTOM := 62.0
+const BAR_H := 112.0
+const BAR_GAP := 24.0
+const RAISED_GAP := 12.0
+const HINT_H := 44.0
+## The fit rule's budget at 1920 wide: 130 px per piece + 110 px per ability must stay within this.
+const ROW_BUDGET := 1372.0
+const PIECE_COST := 130.0
+const ABILITY_COST := 110.0
+
+## The tray's width for n pieces (pieces × 124 + gaps + 44 padding); an empty hand keeps one slot's width.
+static func tray_width(pieces: int) -> float:
+	var n := maxi(1, pieces)
+	return n * PIECE_W + (n - 1) * PIECE_GAP + TRAY_PAD * 2.0
+
+static func tray_rect(screen: Vector2, pieces: int) -> Rect2:
+	return Rect2(MARGIN, screen.y - TRAY_H, tray_width(pieces), TRAY_H)
+
+## The tray and the bar don't fit side by side: the bar goes up a row. The budget grows with a wider canvas.
+static func bar_raised(pieces: int, abilities: int, screen_w := 1920.0) -> bool:
+	return PIECE_COST * pieces + ABILITY_COST * abilities > ROW_BUDGET + (screen_w - 1920.0)
+
+## The action bar's width: padding 16 + who column + divider + buttons 84 with 26 between (passives count as buttons).
+static func bar_width(buttons: int, who_w := 110.0) -> float:
+	var n := maxi(0, buttons)
+	var w := 16.0 * 2.0 + maxf(110.0, who_w)
+	if n > 0: w += 26.0 + 2.0 + 26.0 + n * 84.0 + (n - 1) * 26.0
+	return w
+
+## The free board area's horizontal centre (the screen minus the right bar).
+static func free_centre_x(screen: Vector2) -> float:
+	return (screen.x - RIGHT_BAR) / 2.0
+
+## Where the bar, the hint and the camera inset go: {"bar": Rect2, "raised": bool, "slid": bool,
+## "hint_x": float (left edge when slid, else the centre), "hint_y": float (top), "hint_centred": bool,
+## "bottom_inset": float (what the HUD covers at the bottom)}.
+static func bottom_row(screen: Vector2, pieces: int, abilities: int, bar_w: float) -> Dictionary:
+	var tray := tray_rect(screen, pieces)
+	var raised := bar_raised(pieces, abilities, screen.x)
+	var cx := free_centre_x(screen)
+	var x := cx - bar_w / 2.0
+	var slid := false
+	var end_left := screen.x - MARGIN - END_TURN - BAR_GAP
+	if not raised and x < tray.end.x + BAR_GAP:
+		x = tray.end.x + BAR_GAP
+		slid = true
+		if x + bar_w > end_left: raised = true
+	var y := screen.y - BAR_BOTTOM - BAR_H
+	if raised:
+		slid = false
+		x = clampf(cx - bar_w / 2.0, MARGIN, maxf(MARGIN, end_left - bar_w))
+		y = tray.position.y - RAISED_GAP - HINT_H - BAR_H
+	var bar := Rect2(x, y, bar_w, BAR_H)
+	var hint_y := bar.end.y + 4.0
+	return {
+		"bar": bar, "raised": raised, "slid": slid,
+		"hint_x": bar.position.x if slid else bar.get_center().x, "hint_y": hint_y, "hint_centred": not slid,
+		"bottom_inset": (screen.y - bar.position.y) if raised else TRAY_H,
+	}
+
+## Where the hint line goes with no bar shown: the bottom strip between the tray and End turn, centred on the free
+## area unless the tray reaches it ({"x", "y", "centred"}).
+static func hint_without_bar(screen: Vector2, pieces: int, hint_w: float) -> Dictionary:
+	var tray := tray_rect(screen, pieces)
+	var cx := free_centre_x(screen)
+	var y := screen.y - BAR_BOTTOM + 4.0
+	if cx - hint_w / 2.0 < tray.end.x + BAR_GAP:
+		return {"x": tray.end.x + BAR_GAP, "y": y, "centred": false}
+	return {"x": cx, "y": y, "centred": true}
+
+static func inspector_rect(screen: Vector2, height: float) -> Rect2:
+	return Rect2(screen.x - MARGIN - INSPECTOR_W, INSPECTOR_TOP, INSPECTOR_W, height)
+
+static func end_turn_rect(screen: Vector2) -> Rect2:
+	return Rect2(screen.x - MARGIN - END_TURN, screen.y - END_TURN_BOTTOM - END_TURN, END_TURN, END_TURN)

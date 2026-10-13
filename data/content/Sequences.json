@@ -1,0 +1,183 @@
+{
+  "type": "SequenceAsset",
+  "assets": {
+    "Sequences/Slime King Entrance": {
+      "number": 2,
+      "lines": [
+        {
+          "speaker": "Princess",
+          "text": "The Slime King! It has 80 health and slams every tower next to it for 10.",
+          "pointAt": "Subject",
+          "tileX": 0,
+          "tileY": 0,
+          "uiElement": "",
+          "continueOn": "Click",
+          "seconds": 3,
+          "waitFor": "TowerPlaced",
+          "pausesPlay": true
+        },
+        {
+          "speaker": "Princess",
+          "text": "Keep your towers apart and hit it from afar. If it reaches the castle, we are lost.",
+          "pointAt": "Nothing",
+          "tileX": 0,
+          "tileY": 0,
+          "uiElement": "",
+          "continueOn": "Click",
+          "seconds": 3,
+          "waitFor": "TowerPlaced",
+          "pausesPlay": true
+        }
+      ]
+    },
+    "Sequences/Tutorial Steps": {
+      "number": 1,
+      "lines": [
+        {
+          "speaker": "Princess",
+          "text": "Welcome, {player}. Slimes are coming down that road, and the castle is what they want.",
+          "pointAt": "Nothing",
+          "tileX": 0,
+          "tileY": 0,
+          "uiElement": "",
+          "continueOn": "Click",
+          "seconds": 3,
+          "waitFor": "TowerPlaced",
+          "pausesPlay": true
+        },
+        {
+          "speaker": "Princess",
+          "text": "Place your Archer near the castle. Click its piece in the tray at the bottom, and the tiles you can build on light up; pick one.",
+          "pointAt": "Nothing",
+          "tileX": 0,
+          "tileY": 0,
+          "uiElement": "",
+          "continueOn": "Event",
+          "seconds": 3,
+          "waitFor": "TowerPlaced",
+          "pausesPlay": false
+        },
+        {
+          "speaker": "Princess",
+          "text": "The card on the right shows the selected tower: its name and health, its stats and statuses. Its abilities wait on the bar above your hand; the ring around each shows how many turns it must wait.",
+          "pointAt": "Center",
+          "tileX": 0,
+          "tileY": 0,
+          "uiElement": "",
+          "continueOn": "Click",
+          "seconds": 3,
+          "waitFor": "TowerPlaced",
+          "pausesPlay": true
+        },
+        {
+          "speaker": "Princess",
+          "text": "Right-click once to close it.",
+          "pointAt": "Center",
+          "tileX": 0,
+          "tileY": 0,
+          "uiElement": "",
+          "continueOn": "Event",
+          "seconds": 3,
+          "waitFor": "SelectionCleared",
+          "pausesPlay": false
+        },
+        {
+          "speaker": "Princess",
+          "text": "Good. Click End Turn at the bottom right to end the round (or press {key:EndRound}). Then the enemies move.",
+          "pointAt": "UI",
+          "tileX": 0,
+          "tileY": 0,
+          "uiElement": "EndTurnButton",
+          "continueOn": "Event",
+          "seconds": 3,
+          "waitFor": "RoundEnded",
+          "pausesPlay": false
+        },
+        {
+          "speaker": "Princess",
+          "text": "A Slime! It is too far to shoot. Click your Archer, click Tower Walk on the bar above your hand, then a tile on the way to the Slime.",
+          "pointAt": "FirstEnemy",
+          "tileX": 0,
+          "tileY": 0,
+          "uiElement": "",
+          "continueOn": "Event",
+          "seconds": 3,
+          "waitFor": "TowerMoved",
+          "pausesPlay": false
+        },
+        {
+          "speaker": "Princess",
+          "text": "Your Archer shoots 2 tiles. Click End Turn until the Slime comes that close.",
+          "pointAt": "FirstEnemy",
+          "tileX": 0,
+          "tileY": 0,
+          "uiElement": "",
+          "continueOn": "Event",
+          "seconds": 3,
+          "waitFor": "EnemyInRange",
+          "pausesPlay": false
+        },
+        {
+          "speaker": "Princess",
+          "text": "It is in range! Click your Archer, click Shoot, then click the Slime.",
+          "pointAt": "FirstEnemy",
+          "tileX": 0,
+          "tileY": 0,
+          "uiElement": "",
+          "continueOn": "Event",
+          "seconds": 3,
+          "waitFor": "AbilityCast",
+          "pausesPlay": false
+        },
+        {
+          "speaker": "Princess",
+          "text": "Each round: shoot, then click End Turn. Keep it up until the Slime is gone.",
+          "pointAt": "Nothing",
+          "tileX": 0,
+          "tileY": 0,
+          "uiElement": "",
+          "continueOn": "Event",
+          "seconds": 3,
+          "waitFor": "WaveCleared",
+          "pausesPlay": false
+        },
+        {
+          "speaker": "Princess",
+          "text": "Well done! More are coming: keep clicking End Turn until they are here.",
+          "pointAt": "UI",
+          "tileX": 0,
+          "tileY": 0,
+          "uiElement": "EndTurnButton",
+          "continueOn": "Event",
+          "seconds": 3,
+          "waitFor": "WaveArrived",
+          "pausesPlay": false
+        },
+        {
+          "speaker": "Princess",
+          "text": "A Slime and a fast Runner now. When one is in range, {click:QuickCast} Shoot: your Archer picks a target by itself.",
+          "pointAt": "FirstEnemy",
+          "tileX": 0,
+          "tileY": 0,
+          "uiElement": "",
+          "continueOn": "Event",
+          "seconds": 3,
+          "waitFor": "QuickCast",
+          "pausesPlay": false
+        },
+        {
+          "speaker": "Princess",
+          "text": "Hold them off until the wave is over.",
+          "pointAt": "Nothing",
+          "tileX": 0,
+          "tileY": 0,
+          "uiElement": "",
+          "continueOn": "Event",
+          "seconds": 3,
+          "waitFor": "LevelWon",
+          "pausesPlay": false
+        }
+      ]
+    }
+  }
+}

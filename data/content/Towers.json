@@ -1,0 +1,86 @@
+{
+  "type": "TowerAsset",
+  "assets": {
+    "Towers/Alchemist Tower": {
+      "number": 7,
+      "id": "alchemist",
+      "displayName": "Alchemist",
+      "description": "Throws flasks of acid onto groups: the acid keeps eating them for a few turns, stacking.",
+      "icon": "Assets/Art/Icons/Units/Alchemist.png#Alchemist",
+      "entity": "Units/Towers/Alchemist",
+      "cost": 220
+    },
+    "Towers/Archer Tower": {
+      "number": 1,
+      "id": "archer",
+      "displayName": "Archer",
+      "description": "Shoots enemies up to 2 tiles away and can move between shots.",
+      "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
+      "entity": "Units/Towers/Archer",
+      "cost": 100
+    },
+    "Towers/Ballista Tower": {
+      "number": 6,
+      "id": "ballista",
+      "displayName": "Ballista",
+      "description": "A siege bow: it hits hard from far away, but cannot shoot what stands next to it.",
+      "icon": "Assets/Art/Icons/Units/Ballista.png#Ballista",
+      "entity": "Units/Towers/Ballista",
+      "cost": 240
+    },
+    "Towers/Cannon Tower": {
+      "number": 9,
+      "id": "cannon",
+      "displayName": "Cannon",
+      "description": "Slow and heavy: a shell every third turn that wrecks a whole group. It cannot fire at what is next to it.",
+      "icon": "Assets/Art/Icons/Units/Cannon.png#Cannon",
+      "entity": "Units/Towers/Cannon",
+      "cost": 280
+    },
+    "Towers/Drummer Tower": {
+      "number": 8,
+      "id": "drummer",
+      "displayName": "Drummer",
+      "description": "A drummer beating a war drum: towers within 2 tiles of it hit 3 harder, and Rally speeds them up for a while.",
+      "icon": "Assets/Art/Icons/Units/Drummer.png#Drummer",
+      "entity": "Units/Towers/Drummer",
+      "cost": 200
+    },
+    "Towers/Guardian Tower": {
+      "number": 2,
+      "id": "guardian",
+      "displayName": "Guardian",
+      "description": "A sturdy tower that taunts enemies into hitting it instead of the others.",
+      "icon": "Assets/Art/Icons/Units/Guardian.png#Guardian",
+      "entity": "Units/Towers/Guardian",
+      "cost": 100
+    },
+    "Towers/Mage Tower": {
+      "number": 3,
+      "id": "mage",
+      "displayName": "Mage",
+      "description": "Slow but hits groups: Firebolt burns everything around the tile it hits.",
+      "icon": "Assets/Art/Icons/Units/Mage.png#Mage",
+      "entity": "Units/Towers/Mage",
+      "cost": 120
+    },
+    "Towers/Priest Tower": {
+      "number": 4,
+      "id": "priest",
+      "displayName": "Priest",
+      "description": "Keeps the others standing: Mend heals the most hurt tower.",
+      "icon": "Assets/Art/Icons/Units/Priest.png#Priest",
+      "entity": "Units/Towers/Priest",
+      "cost": 100
+    },
+    "Towers/Wisp Tower": {
+      "number": 5,
+      "id": "wisp",
+      "displayName": "Wisp",
+      "description": "A spirit tower: it zaps from afar and blinks across the field, over walls and roads.",
+      "icon": "Assets/Art/Icons/Units/Wisp.png#Wisp",
+      "entity": "Units/Towers/Wisp",
+      "cost": 200
+    }
+  }
+}

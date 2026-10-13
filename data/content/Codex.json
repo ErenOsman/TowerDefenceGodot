@@ -1,0 +1,111 @@
+{
+  "type": "CodexAsset",
+  "assets": {
+    "Settings/Codex": {
+      "towers": [
+        "Towers/Archer Tower",
+        "Towers/Guardian Tower",
+        "Towers/Mage Tower",
+        "Towers/Priest Tower",
+        "Towers/Wisp Tower",
+        "Towers/Ballista Tower",
+        "Towers/Alchemist Tower",
+        "Towers/Drummer Tower",
+        "Towers/Cannon Tower"
+      ],
+      "enemies": [
+        "Units/Enemies/Slime",
+        "Units/Enemies/Runner",
+        "Units/Enemies/Big Slime",
+        "Units/Enemies/Slime Archer",
+        "Units/Enemies/Shield Slime",
+        "Units/Enemies/Brute",
+        "Units/Enemies/Slime King",
+        "Units/Enemies/Rabbit",
+        "Units/Enemies/Rockjaw",
+        "Units/Enemies/Bat",
+        "Units/Enemies/Slime Glutton",
+        "Units/Enemies/Jackalope",
+        "Units/Enemies/Slime Shaman",
+        "Units/Enemies/Ironhide"
+      ],
+      "statuses": [
+        "Statuses/Taunted",
+        "Statuses/Shield",
+        "Statuses/Burn",
+        "Statuses/Haste",
+        "Statuses/Gorged",
+        "Statuses/Acid",
+        "Statuses/Rallied"
+      ],
+      "tips": [
+        {
+          "id": "rounds",
+          "title": "Rounds",
+          "text": "Each round you act first: every tower may use each of its ready abilities. Click End Turn (or press {key:EndRound}) and the enemies move and attack; then new enemies may arrive and the next round starts.",
+          "image": null
+        },
+        {
+          "id": "placing",
+          "title": "Placing towers",
+          "text": "Towers cost energy. Click a card in your hand at the bottom, then a tile: the tiles you can build on light up. Some levels give energy each round, and selling a tower gives some of its cost back.",
+          "image": null
+        },
+        {
+          "id": "cooldowns",
+          "title": "Cooldowns",
+          "text": "A number after an ability's name is how many turns it must wait before it can be used again. An ability without one is ready every turn.",
+          "image": null
+        },
+        {
+          "id": "walking",
+          "title": "Walking",
+          "text": "Towers can walk: pick their walk ability, then a tile. Enemies keep to their roads, and towers never stand on a road.",
+          "image": null
+        },
+        {
+          "id": "quickcast",
+          "title": "Quick cast",
+          "text": "{click:QuickCast} an ability on the tower panel to use it at once: the tower picks the target by itself, the way it would if nobody aimed it.",
+          "image": null
+        },
+        {
+          "id": "statuses",
+          "title": "Statuses",
+          "text": "The small icons over a unit are its statuses: green ones help, red ones harm. Point at them to see what they do and how long they last.",
+          "image": null
+        },
+        {
+          "id": "taunt",
+          "title": "Taunt",
+          "text": "A taunted enemy goes for the tower that taunted it whenever it can reach it. Use it to keep enemies away from your base and your weaker towers.",
+          "image": null
+        },
+        {
+          "id": "bosses",
+          "title": "Bosses",
+          "text": "Bosses are much tougher than other enemies. Some abilities hurt them more: the Priest's Smite hits a boss three times as hard.",
+          "image": null
+        },
+        {
+          "id": "losing",
+          "title": "Losing a level",
+          "text": "When an enemy destroys your base, the level is lost. You keep every tower you own; Retry and try another plan.",
+          "image": null
+        },
+        {
+          "id": "camera",
+          "title": "The camera",
+          "text": "Drag the map with the mouse (hold the left or middle button and move), zoom with the mouse wheel, and rotate it with {key:RotateLeft} and {key:RotateRight}. {key:CameraUp} {key:CameraLeft} {key:CameraDown} {key:CameraRight} or pushing the pointer to the edge of the screen move it too.",
+          "image": null
+        },
+        {
+          "id": "keys",
+          "title": "Keys",
+          "text": "Every key can be changed in Settings > Controls. A key given to two actions shows in red there.",
+          "image": null
+        }
+      ]
+    }
+  }
+}
