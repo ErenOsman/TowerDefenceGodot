@@ -82,10 +82,17 @@ func _run() -> void:
 	await _settle()
 	_check(level.session.placed_tower(mine[0].id) != null, "my placement applied on the echo")
 	_check(net.sent.size() == 1, "sent once (%d)" % net.sent.size())
-	level.chat_lines.append({"name": "Şule", "text": "I'll take the left road!", "color": level.player_color(OTHER), "system": false})
-	level.chat_changed.emit()
 	await _frames(20)
+	# Pass hovered: its tooltip (order after passing)
+	var dial: Control = hud.coop_hud.dial
+	_move(dial.get_global_rect().position + Vector2(HudCoop.PASS_R - 10, HudCoop.PASS_R - 10))
+	await _frames(30)
+	net.chat_received.emit(OTHER, "Şule", "I'll take the left road!") # fresh: lines fade after a few seconds
+	await _frames(2)
+	level.chat_lines.back()["at"] = Time.get_ticks_msec() + 30000 # software rendering is slow: keep the line in its shown time
+	await _frames(4)
 	await _shot("1_your_turn")
+	_park_mouse()
 
 	# pass: Şule acts; she places her archer (a relay command from her), we select it
 	level.pass_turn()
@@ -103,18 +110,19 @@ func _run() -> void:
 	await _frames(20)
 	_check(not hud.action_bar.visible, "no action bar for her tower")
 	_check(not hud.inspector._sell.visible, "no Sell on her tower")
+	_check(hud.coop_hud.face.visible, "End turn shows her turn")
 	await _shot("2_other_turn")
 
-	# chat open + her leaving: the banner, her turn skipped (my turn again)
-	hud.coop_hud.toggle_chat()
+	# her leaving: the toast, her turn skipped (my turn again); the chat input open
 	net.player_left.emit(OTHER)
+	hud.coop_hud.open_chat()
 	await _frames(3)
 	await _settle()
 	level.select(-1)
 	await _frames(20)
 	_check(level.current_player == ME, "my turn again after she left")
 	await _shot("3_chat_player_left")
-	hud.coop_hud.toggle_chat()
+	hud.coop_hud.close_chat()
 	print("COOP SHOT OK" if _problems.is_empty() else "COOP SHOT PROBLEMS " + str(_problems))
 	CoopLaunch.clear()
 	quit(0 if _problems.is_empty() else 1)
@@ -141,9 +149,13 @@ func _shot(n: String) -> void:
 	print("saved ", path, " ", img.get_size())
 
 func _park_mouse() -> void:
-	root.warp_mouse(Vector2(960, 300))
+	_move(Vector2(root.get_visible_rect().size.x / 2.0, 300))
+
+func _move(p: Vector2) -> void:
+	root.warp_mouse(p)
 	var ev := InputEventMouseMotion.new()
-	ev.position = Vector2(960, 300) * Vector2(root.size) / root.get_visible_rect().size
+	ev.position = p * Vector2(root.size) / root.get_visible_rect().size
+	ev.global_position = ev.position
 	Input.parse_input_event(ev)
 
 func _tiles_for(tower_id: String, n: int) -> Array:

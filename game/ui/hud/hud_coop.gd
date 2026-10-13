@@ -1,32 +1,41 @@
 class_name HudCoop
 extends Control
-## The co-op parts of the battle HUD (Multiplayer — Design, co-op), added by Hud only when controller.is_coop:
-##  - the turn strip under the tracker: this round's order as name chips in slot colours (the acting player first,
-##    lit; players who ended their turn greyed after them; "You" for you);
-##  - "Your turn" as a board banner when your turn starts;
-##  - Pass left of End turn (gives the turn away: you move to the end of this round's order; End turn is final);
-##  - the notice banner (a player left, a desync, the connection lost) under the strip;
-##  - the chat toggle at the bottom-left over the hand tray: the last 5 lines and an input (Net.chat).
-## Full-rect and pointer-transparent; only the chips' tooltips, Pass and the chat take the pointer.
+## The co-op parts of the battle HUD (Multiplayer — Design, co-op; UI/UX mockups screens-b/co-op-pass and
+## lobby-match-left), added by Hud only when controller.is_coop:
+##  - the turn order INSIDE the tracker: one medallion per player in this round's order (the acting one in a cobalt
+##    ring, ✓ = ended their turn, ↻ = passed), joined by "›"; no per-player colours;
+##  - Pass: a smaller wood circle tucked behind End turn at its upper-left, joined to it by a wood band, with its key
+##    cap (KeyBinds "Pass", Tab). Disabled = solid dark wood, dimmed label, the reason in its tooltip;
+##  - while someone else acts, End turn is covered by a solid dark wood face with their medallion and "Şule's turn";
+##    once you ended your turn, a green "Done · Waiting for N" face;
+##  - the toast under the tracker (a player left: leave icon + "Their towers are neutral now…"; a desync);
+##  - the chat: the last 3 lines as bare outlined text above the hand tray, fading after a few seconds; the input
+##    only while typing (KeyBinds "Chat", T, opens it; Enter sends, Esc closes) — Enter itself stays End turn.
+## The Pass dial and the End turn face live in the top bar (under / over its End turn button).
 
-const CHAT_LINES := 5
-const CHAT_W := 460.0
+const CHAT_LINES := 3
+const CHAT_W := 560.0
+const CHAT_SHOW := 6.0
+const CHAT_FADE := 1.0
+const PASS_R := 63.0
+const END_R := 84.0
+const TOAST_SECONDS := 4.0
 
 var controller: LevelController
 
-var strip: HBoxContainer
-var pass_button: TdButton
-var notice: PanelContainer
-var notice_label: Label
-var chat_button: TdButton
-var chat_panel: PanelContainer
-var chat_box: VBoxContainer
+var order_row: HBoxContainer
+var dial: PassDial
+var face: EndFace
+var toast: PanelContainer
+var toast_title: Label
+var toast_sub: Label
+var chat_feed: VBoxContainer
+var chat_hint: Label
 var chat_input: LineEdit
 
-var _strip_key := []
+var _order_key := []
 var _last_turn := "-"
-var _unread := 0
-var _pass_state := []
+var _chat_key := []
 
 func _init() -> void:
 	name = "Coop"
@@ -37,160 +46,120 @@ func _ready() -> void:
 	_build()
 
 func _build() -> void:
-	if strip != null: return
-	strip = HudArt.hbox(8)
-	strip.name = "TurnStrip"
-	strip.alignment = BoxContainer.ALIGNMENT_CENTER
-	strip.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(strip)
+	if toast != null: return
+	toast = PanelContainer.new()
+	toast.name = "CoopNotice"
+	toast.mouse_filter = MOUSE_FILTER_IGNORE
+	var tb := StyleBoxFlat.new()
+	tb.bg_color = Color(TdTheme.color("wood.900"), 0.94)
+	tb.border_color = Color(TdTheme.color("gold"), 0.55)
+	tb.set_border_width_all(2)
+	tb.set_corner_radius_all(12)
+	tb.content_margin_left = 24; tb.content_margin_right = 28
+	tb.content_margin_top = 12; tb.content_margin_bottom = 14
+	toast.add_theme_stylebox_override("panel", tb)
+	toast.visible = false
+	add_child(toast)
+	var th := HudArt.hbox(18)
+	toast.add_child(th)
+	var leave := HudArt.sprite("icon_quit", Vector2(30, 30), TdTheme.color("gold"))
+	leave.size_flags_vertical = SIZE_SHRINK_CENTER
+	th.add_child(leave)
+	var tv := HudArt.vbox(2)
+	th.add_child(tv)
+	toast_title = HudArt.label("", "h3", TdTheme.color("cream.100"), 28)
+	tv.add_child(toast_title)
+	toast_sub = HudArt.label("", "body", TdTheme.color("cream.200"), 21)
+	tv.add_child(toast_sub)
 
-	pass_button = TdButton.new()
-	pass_button.name = "PassButton"
-	pass_button.style = TdButton.Style.SECONDARY
-	pass_button.text = "Pass"
-	pass_button.custom_minimum_size = Vector2(128, 56)
-	pass_button.size = Vector2(128, 56)
-	add_child(pass_button)
-	pass_button.clicked.connect(func(): if controller != null: controller.pass_turn())
-	TdTooltipTrigger.attach(pass_button, TooltipText.title("Pass", TooltipText.neutral_color()),
-		"Gives your turn away: you move to the end of this round's order and act again after the others. " +
-		"You can pass as often as you like.\n" + TooltipText.colored(TooltipText.neutral_color(),
-		"End turn is final: your turn does not come back until the next round.")).set_placement(TdTooltipPlacement.Side.ABOVE)
-
-	notice = HudArt.panel("pill_wood", [28, 10, 28, 12])
-	notice.name = "CoopNotice"
-	notice.mouse_filter = MOUSE_FILTER_IGNORE
-	notice.visible = false
-	add_child(notice)
-	notice_label = HudArt.label("", "h3", TdTheme.color("cream.100"), 26)
-	notice_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	notice.add_child(notice_label)
-
-	chat_button = TdButton.new()
-	chat_button.name = "ChatButton"
-	chat_button.style = TdButton.Style.SECONDARY
-	chat_button.text = "Chat"
-	chat_button.custom_minimum_size = Vector2(112, 48)
-	chat_button.size = Vector2(112, 48)
-	add_child(chat_button)
-	chat_button.clicked.connect(toggle_chat)
-	TdTooltipTrigger.attach(chat_button, TooltipText.title("Chat", TooltipText.neutral_color()),
-		"Talk to the others in this match. Enter sends, Esc closes.").set_placement(TdTooltipPlacement.Side.ABOVE)
-
-	chat_panel = PanelContainer.new()
-	chat_panel.name = "ChatPanel"
-	chat_panel.visible = false
-	chat_panel.mouse_filter = MOUSE_FILTER_STOP
-	var bg := StyleBoxFlat.new()
-	bg.bg_color = Color(TdTheme.color("ink"), 0.82)
-	bg.set_corner_radius_all(12)
-	bg.content_margin_left = 16; bg.content_margin_right = 16
-	bg.content_margin_top = 12; bg.content_margin_bottom = 12
-	chat_panel.add_theme_stylebox_override("panel", bg)
-	add_child(chat_panel)
-	var v := HudArt.vbox(8)
-	chat_panel.add_child(v)
-	chat_box = HudArt.vbox(2)
-	chat_box.custom_minimum_size = Vector2(CHAT_W - 32, 0)
-	v.add_child(chat_box)
+	chat_feed = HudArt.vbox(2)
+	chat_feed.name = "ChatFeed"
+	chat_feed.mouse_filter = MOUSE_FILTER_IGNORE
+	add_child(chat_feed)
+	chat_hint = HudArt.label("", "small", Color(TdTheme.color("cream.200"), 0.8), 18)
+	_outline(chat_hint)
+	add_child(chat_hint)
 	chat_input = LineEdit.new()
 	chat_input.name = "ChatInput"
-	chat_input.placeholder_text = "Say something…"
+	chat_input.placeholder_text = "Say something…  (Enter sends, Esc closes)"
 	chat_input.max_length = 200
-	chat_input.custom_minimum_size = Vector2(CHAT_W - 32, 48)
+	chat_input.custom_minimum_size = Vector2(CHAT_W, 48)
+	chat_input.size = Vector2(CHAT_W, 48)
 	TdTheme.apply_type(chat_input, "body", TdTheme.color("ink"), 22)
 	chat_input.add_theme_color_override("font_placeholder_color", Color(TdTheme.color("ink"), 0.55))
 	var field := StyleBoxFlat.new()
 	field.bg_color = Color("efe2c4")
 	field.set_corner_radius_all(10)
+	field.border_color = TdTheme.color("rim")
+	field.set_border_width_all(2)
 	field.content_margin_left = 14; field.content_margin_right = 14
 	chat_input.add_theme_stylebox_override("normal", field)
 	chat_input.add_theme_stylebox_override("focus", field)
+	chat_input.visible = false
 	chat_input.text_submitted.connect(_on_submit)
 	chat_input.gui_input.connect(_on_input_key)
-	v.add_child(chat_input)
+	chat_input.focus_exited.connect(func(): if chat_input.visible and chat_input.text == "": close_chat())
+	add_child(chat_input)
 	resized.connect(_layout)
-	_layout()
 
-## Connects to the controller (Hud calls it once the controller is co-op).
-func bind(c: LevelController) -> void:
+## Connects to the controller and the top bar (Hud calls it once the controller is co-op).
+func bind(c: LevelController, top_bar: HudTopBar) -> void:
 	controller = c
 	_build()
-	c.chat_changed.connect(_on_chat)
-	c.coop_notice_changed.connect(func(_t): refresh())
+	order_row = HudArt.hbox(4)
+	order_row.name = "TurnOrder"
+	order_row.size_flags_vertical = SIZE_SHRINK_CENTER
+	top_bar.add_tracker_part(order_row)
+	dial = PassDial.new()
+	dial.hud = self
+	top_bar.add_child(dial)
+	top_bar.move_child(dial, top_bar.end_turn.get_index()) # under End turn
+	face = EndFace.new()
+	face.hud = self
+	top_bar.add_child(face) # over End turn
+	dial.end_turn = top_bar.end_turn
+	face.end_turn = top_bar.end_turn
+	c.chat_changed.connect(func(): _chat_key = [])
 	refresh()
 
 ## The chat input has the keyboard: the level's keys wait (Hud folds it into ui_panel_open).
 func typing() -> bool:
-	return chat_input != null and chat_input.has_focus()
+	return chat_input != null and chat_input.visible and chat_input.has_focus()
 
-func toggle_chat() -> void:
-	chat_panel.visible = not chat_panel.visible
-	if chat_panel.visible:
-		_unread = 0
-		_fill_chat()
-		chat_input.grab_focus()
-	else: chat_input.release_focus()
-	_chat_label()
-	_layout()
+func open_chat() -> void:
+	chat_input.visible = true
+	chat_input.grab_focus.call_deferred()
+	_chat_key = []
+
+func close_chat() -> void:
+	chat_input.clear()
+	chat_input.release_focus()
+	chat_input.visible = false
+	_chat_key = []
 
 func _on_submit(text: String) -> void:
 	if controller != null and text.strip_edges() != "": controller.send_chat(text)
-	chat_input.clear()
+	close_chat()
 
 func _on_input_key(e: InputEvent) -> void:
 	if e is InputEventKey and e.pressed and e.keycode == KEY_ESCAPE:
 		chat_input.accept_event()
-		toggle_chat()
-
-func _on_chat() -> void:
-	if not chat_panel.visible: _unread += 1
-	_fill_chat()
-	_chat_label()
-
-func _chat_label() -> void:
-	chat_button.text = "Chat" if _unread == 0 else "Chat (%d)" % _unread
-	chat_button.fit_to_content(112)
-
-func _fill_chat() -> void:
-	for ch in chat_box.get_children(): ch.free()
-	if controller == null: return
-	var lines: Array = controller.chat_lines.slice(maxi(0, controller.chat_lines.size() - CHAT_LINES))
-	if lines.is_empty():
-		chat_box.add_child(HudArt.label("No messages yet.", "body", Color(TdTheme.color("cream.300"), 0.8), 20))
-	for line in lines:
-		var r := HudArt.rich("body", TdTheme.color("cream.100"), 20)
-		r.custom_minimum_size = Vector2(CHAT_W - 32, 0)
-		var t := str(line.text).replace("[", "[lb]")
-		if line.system: r.text = "[i][color=#%s]%s[/color][/i]" % [TdTheme.color("cream.300").to_html(false), t]
-		else: r.text = "[b][color=#%s]%s[/color][/b]  %s" % [(line.color as Color).lightened(0.3).to_html(false), str(line.name).replace("[", "[lb]"), t]
-		chat_box.add_child(r)
+		close_chat()
 
 # ------------------------------------------------------------------ refresh
 
 func _process(_delta: float) -> void:
 	if controller == null or controller.coop == null: return
+	var keys = get_tree().root.get_node_or_null("KeyBinds")
+	if keys != null and not controller.ui_panel_open and not chat_input.visible and keys.pressed("Chat"): open_chat()
 	refresh()
 
 func refresh() -> void:
 	var c := controller
 	if c == null or c.coop == null: return
-	_turn_strip()
-	# Pass: your turn only, with someone to pass to
-	var can_pass: bool = c.can_act and c.coop.coop.turn_order.size() > 1
-	var why := c.wait_reason
-	if why == "" and c.can_act: why = "Nobody else is left to act this round"
-	if why == "": why = "Not now"
-	var st := [can_pass, why, c.session.phase == Phase.Player and not c.session.is_over]
-	if st != _pass_state:
-		_pass_state = st
-		pass_button.set_interactable(can_pass, why)
-		pass_button.visible = st[2]
-	notice.visible = c.coop_notice != ""
-	if notice.visible:
-		notice_label.text = c.coop_notice
-		var bad: bool = c.coop.desync or c.coop.lost
-		notice_label.add_theme_color_override("font_color", TdTheme.color("bad").lightened(0.35) if bad else TdTheme.color("cream.100"))
+	_turn_order()
+	_toast()
+	_chat()
 	var turn: String = c.current_player
 	if turn != _last_turn:
 		var was := _last_turn
@@ -199,79 +168,348 @@ func refresh() -> void:
 			c.overlay.banner("Your turn", 1.2, false, "coop_turn")
 	_layout()
 
-## Name chips in this round's order: the acting player lit, then the others waiting, then those who ended (greyed).
-func _turn_strip() -> void:
+func _toast() -> void:
 	var c := controller
-	var cs: CoopSession = c.coop.coop
-	var order: Array = []
-	for p in cs.turn_order: order.append([p, "wait"])
-	for p in cs.players:
-		if not cs.turn_order.has(p): order.append([p, "ended"])
-	if not order.is_empty() and c.current_player != "": order[0][1] = "acting"
-	var key := [order, c.local_player]
-	if key == _strip_key: return
-	_strip_key = key
-	for ch in strip.get_children(): ch.free()
-	for o in order:
-		strip.add_child(_chip(o[0], o[1]))
+	toast.visible = c.coop_notice != ""
+	if not toast.visible: return
+	toast_title.text = c.coop_notice
+	toast_sub.text = c.coop_notice_sub
+	toast_sub.visible = c.coop_notice_sub != ""
+	var bad: bool = c.coop.desync or c.coop.lost
+	toast_title.add_theme_color_override("font_color", TdTheme.color("bad").lightened(0.35) if bad else TdTheme.color("cream.100"))
 
-func _chip(player: String, state: String) -> Control:
+## This round's order: the players still to act (the first is acting), then the ones who ended.
+func order_now() -> Array:
+	var cs: CoopSession = controller.coop.coop
+	var out: Array = []
+	for p in cs.turn_order: out.append([p, "passed" if controller.coop.passed.has(p) else "wait"])
+	for p in cs.players:
+		if not cs.turn_order.has(p): out.append([p, "ended"])
+	if not out.is_empty() and controller.current_player != "": out[0][1] = "acting"
+	return out
+
+func _turn_order() -> void:
+	var order := order_now()
+	var key := [order, controller.local_player]
+	if key == _order_key: return
+	_order_key = key
+	for ch in order_row.get_children(): ch.free()
+	for i in order.size():
+		if i > 0:
+			var arrow := HudArt.label("›", "h3", TdTheme.color("cream.300"), 24)
+			arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			order_row.add_child(arrow)
+		order_row.add_child(_medal(order[i][0], order[i][1]))
+
+func _medal(player: String, state: String) -> Control:
 	var c := controller
-	var col: Color = c.player_color(player)
-	var chip := PanelContainer.new()
-	chip.mouse_filter = MOUSE_FILTER_PASS
-	var box := StyleBoxFlat.new()
-	box.bg_color = Color(TdTheme.color("ink"), 0.78 if state == "acting" else 0.55)
-	box.set_corner_radius_all(18)
-	box.content_margin_left = 12; box.content_margin_right = 16
-	box.content_margin_top = 4; box.content_margin_bottom = 6
+	var holder := Control.new()
+	holder.custom_minimum_size = Vector2(44, 44)
+	holder.mouse_filter = MOUSE_FILTER_PASS
+	holder.size_flags_vertical = SIZE_SHRINK_CENTER
 	if state == "acting":
-		box.border_color = col
-		box.set_border_width_all(3)
-	chip.add_theme_stylebox_override("panel", box)
-	var row := HudArt.hbox(8)
-	chip.add_child(row)
-	var dot := Panel.new()
-	dot.custom_minimum_size = Vector2(16, 16)
-	dot.size_flags_vertical = SIZE_SHRINK_CENTER
-	dot.mouse_filter = MOUSE_FILTER_IGNORE
-	var ds := StyleBoxFlat.new()
-	ds.bg_color = col if state != "ended" else Color(col, 0.35)
-	ds.set_corner_radius_all(8)
-	dot.add_theme_stylebox_override("panel", ds)
-	row.add_child(dot)
+		var glow := Panel.new()
+		glow.mouse_filter = MOUSE_FILTER_IGNORE
+		var gs := StyleBoxFlat.new()
+		gs.bg_color = Color(0, 0, 0, 0)
+		gs.border_color = TdTheme.color("accent.light")
+		gs.set_border_width_all(3)
+		gs.set_corner_radius_all(26)
+		gs.shadow_color = Color(TdTheme.color("accent.light"), 0.6)
+		gs.shadow_size = 8
+		glow.add_theme_stylebox_override("panel", gs)
+		glow.position = Vector2(-3, -3)
+		glow.size = Vector2(50, 50)
+		holder.add_child(glow)
+	var m := HudArt.medallion(40, "medallion_ring", 3.0)
+	m.position = Vector2(2, 2)
+	HudArt.set_medallion(m, c.player_portrait(player))
+	if state == "ended": m.modulate.a = 0.55
+	holder.add_child(m)
+	if state == "ended" or state == "passed":
+		var badge := TurnBadge.new()
+		badge.kind = state
+		badge.position = Vector2(28, 28)
+		holder.add_child(badge)
 	var me := player == c.local_player
-	var text := ("You" if me else c.player_name(player))
-	var label_col := TdTheme.color("cream.100") if state == "acting" else TdTheme.color("cream.300")
-	if state == "ended": label_col = Color(label_col, 0.55)
-	var l := HudArt.label(text, "small", label_col, 22 if state == "acting" else 20)
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	row.add_child(l)
-	var what: String = {"acting": "Acting now", "wait": "Waiting for their turn", "ended": "Ended their turn this round"}[state]
-	TdTooltipTrigger.attach(chip, TooltipText.title(text, TooltipText.neutral_color()), what).set_placement(TdTooltipPlacement.Side.BELOW)
-	return chip
+	var who := "You" if me else c.player_name(player)
+	var what: String = {"acting": "Acting now", "wait": "Waiting for their turn", "passed": "Passed: acts again after the others",
+		"ended": "Ended their turn this round"}[state]
+	TdTooltipTrigger.attach(holder, TooltipText.title(who, TooltipText.neutral_color()), what).set_placement(TdTooltipPlacement.Side.BELOW)
+	return holder
+
+# ------------------------------------------------------------------ chat feed
+
+func _chat() -> void:
+	var c := controller
+	var now := Time.get_ticks_msec()
+	var lines: Array = c.chat_lines.slice(maxi(0, c.chat_lines.size() - CHAT_LINES))
+	var alphas: Array = []
+	for l in lines:
+		var age := (now - int(l.get("at", now))) / 1000.0
+		var a := 1.0 if chat_input.visible else clampf(1.0 - (age - CHAT_SHOW) / CHAT_FADE, 0.0, 1.0)
+		alphas.append(snappedf(a, 0.05))
+	var key := [c.chat_lines.size(), alphas, chat_input.visible]
+	if key == _chat_key: return
+	_chat_key = key
+	for ch in chat_feed.get_children(): ch.free()
+	for i in lines.size():
+		if alphas[i] <= 0.0: continue
+		var line: Dictionary = lines[i]
+		var r := HudArt.rich("body", TdTheme.color("cream.100"), 21)
+		r.custom_minimum_size = Vector2(CHAT_W, 0)
+		r.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+		r.add_theme_constant_override("outline_size", 6)
+		var t := str(line.text).replace("[", "[lb]")
+		if line.system: r.text = "[i][color=#%s]%s[/color][/i]" % [TdTheme.color("cream.200").to_html(false), t]
+		else: r.text = "[b][color=#%s]%s[/color][/b] %s" % [TdTheme.color("accent.light").to_html(false), str(line.name).replace("[", "[lb]"), t]
+		r.modulate.a = alphas[i]
+		chat_feed.add_child(r)
+	var keys = get_tree().root.get_node_or_null("KeyBinds")
+	var k: String = keys.first("Chat") if keys != null else "T"
+	chat_hint.text = "%s · chat" % k if k != "" else ""
+	chat_hint.visible = not chat_input.visible and chat_hint.text != ""
+
+static func _outline(l: Label) -> void:
+	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	l.add_theme_constant_override("outline_size", 6)
+
+# ------------------------------------------------------------------ layout
 
 func _layout() -> void:
-	if strip == null: return
+	if toast == null: return
 	var s := size
-	strip.size = strip.get_combined_minimum_size()
-	strip.position = Vector2((s.x - strip.size.x) / 2.0, HudLayout.TOP_BAR + 4.0)
-	notice.size = notice.get_combined_minimum_size()
-	notice.position = Vector2((s.x - notice.size.x) / 2.0, strip.position.y + 52.0)
-	var end := HudLayout.end_turn_rect(s)
-	var px := end.position.x - 12.0 - pass_button.size.x
-	var py := end.end.y - pass_button.size.y - 8.0
-	# a wide action bar reaching End turn: Pass goes above End turn instead
-	var hud := get_parent()
-	var bar = hud.find_child("ActionBar", false, false) if hud != null else null
-	if bar == null and hud != null:
-		for ch in hud.get_children():
-			if ch is HudActionBar: bar = ch
-	if bar != null and bar.visible and bar.position.x + bar.size.x > px - 8.0 and bar.position.y + bar.size.y > py:
-		px = end.end.x - pass_button.size.x
-		py = end.position.y - 12.0 - pass_button.size.y
-	pass_button.position = Vector2(px, py)
+	toast.size = toast.get_combined_minimum_size()
+	toast.position = Vector2((s.x - toast.size.x) / 2.0, HudLayout.TOP_BAR + 8.0)
 	var tray_top := s.y - HudLayout.TRAY_H
-	chat_button.position = Vector2(HudLayout.MARGIN, tray_top - 10.0 - chat_button.size.y)
-	chat_panel.size = chat_panel.get_combined_minimum_size()
-	chat_panel.position = Vector2(HudLayout.MARGIN, chat_button.position.y - 8.0 - chat_panel.size.y)
+	chat_hint.size = chat_hint.get_combined_minimum_size()
+	chat_hint.position = Vector2(HudLayout.MARGIN + 6.0, tray_top - 6.0 - chat_hint.size.y)
+	var bottom := chat_hint.position.y - 2.0
+	if chat_input.visible:
+		chat_input.position = Vector2(HudLayout.MARGIN, tray_top - 10.0 - chat_input.size.y)
+		bottom = chat_input.position.y - 6.0
+	chat_feed.size = Vector2(CHAT_W, chat_feed.get_combined_minimum_size().y)
+	chat_feed.position = Vector2(HudLayout.MARGIN + 6.0, bottom - chat_feed.size.y)
+
+# ------------------------------------------------------------------ texts the parts share
+
+## Pass's tooltip (and why it is off).
+func pass_tip() -> Array:
+	var c := controller
+	var keys = get_tree().root.get_node_or_null("KeyBinds")
+	var k: String = keys.first("Pass") if keys != null else "Tab"
+	var sub := ("%s · as often as you like" % k) if k != "" else "As often as you like"
+	if c.can_pass:
+		var after: Array = []
+		var order: Array = c.coop.coop.turn_order.duplicate()
+		order.remove_at(0)
+		order.append(c.local_player)
+		for p in order: after.append("you" if p == c.local_player else c.player_name(p))
+		return [TooltipText.title("Pass", TooltipText.neutral_color(), sub),
+			"Let the others go first. You act again after them this round.", "Order after passing", " → ".join(after)]
+	var why := ""
+	var cs: CoopSession = c.coop.coop
+	if c.session.phase != Phase.Player or c.session.is_over: why = "Enemies are moving."
+	elif not cs.turn_order.has(c.local_player): why = "You ended your turn; Pass works only before that."
+	elif c.wait_reason != "": why = c.wait_reason + "."
+	elif cs.turn_order.size() <= 1: why = "Nobody else is left to act this round."
+	else: why = "Not now."
+	return [TooltipText.title("Pass", TooltipText.neutral_color(), TooltipText.colored(TooltipText.harmful_color(), "Not available")), why, "", ""]
+
+# ------------------------------------------------------------------ parts
+
+## ✓ (ended) or ↻ (passed) on a turn-order medallion.
+class TurnBadge extends Control:
+	var kind := "ended"
+	func _init() -> void:
+		mouse_filter = MOUSE_FILTER_IGNORE
+		size = Vector2(20, 20)
+	func _draw() -> void:
+		var ctr := Vector2(10, 10)
+		draw_circle(ctr, 11.0, TdTheme.color("rim"))
+		draw_circle(ctr, 9.0, TdTheme.color("good.ink") if kind == "ended" else TdTheme.color("wood.600"))
+		var w := Color(1, 1, 1)
+		if kind == "ended":
+			draw_polyline(PackedVector2Array([Vector2(5.5, 10.5), Vector2(8.5, 13.5), Vector2(14.5, 6.5)]), w, 2.2, true)
+		else:
+			draw_arc(ctr, 5.0, deg_to_rad(-60), deg_to_rad(230), 16, TdTheme.color("cream.100"), 2.0, true)
+			var tip := ctr + Vector2(cos(deg_to_rad(-60)), sin(deg_to_rad(-60))) * 5.0
+			draw_colored_polygon(PackedVector2Array([tip + Vector2(-3.5, -2.5), tip + Vector2(3.0, -1.0), tip + Vector2(-0.5, 3.5)]), TdTheme.color("cream.100"))
+
+## The Pass circle behind End turn's upper-left with the wood band to it; draws, hit-tests and clicks itself.
+class PassDial extends Control:
+	var hud: HudCoop
+	var end_turn: Control
+	var hovered := false
+	var pressed_in := false
+	var _state := []
+	var _trigger: TdTooltipTrigger
+	func _init() -> void:
+		name = "PassButton"
+		mouse_filter = MOUSE_FILTER_STOP
+		size = Vector2(290, 236)
+		mouse_entered.connect(func(): hovered = true; queue_redraw())
+		mouse_exited.connect(func(): hovered = false; pressed_in = false; queue_redraw())
+	func _ready() -> void:
+		_trigger = TdTooltipTrigger.attach(self)
+		_trigger.set_placement(TdTooltipPlacement.Side.ABOVE)
+	## Only the Pass circle takes the pointer (the band and End turn's corner do not).
+	func _has_point(p: Vector2) -> bool:
+		return p.distance_to(Vector2(HudCoop.PASS_R, HudCoop.PASS_R)) <= HudCoop.PASS_R
+	func _gui_input(e: InputEvent) -> void:
+		if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
+			if e.pressed: pressed_in = true
+			elif pressed_in:
+				pressed_in = false
+				if hud.controller != null and hud.controller.can_pass: hud.controller.pass_turn()
+			accept_event()
+			queue_redraw()
+	func _process(_d: float) -> void:
+		var c: LevelController = hud.controller if hud != null else null
+		if c == null or c.coop == null or end_turn == null: return
+		var er := Rect2(end_turn.position, end_turn.size)
+		position = er.end - size
+		var show: bool = c.session.phase == Phase.Player and not c.session.is_over
+		visible = show
+		var tip := hud.pass_tip()
+		var keys = get_tree().root.get_node_or_null("KeyBinds")
+		var k: String = keys.first("Pass") if keys != null else "Tab"
+		var st := [c.can_pass, hovered, pressed_in, k, tip]
+		if st != _state:
+			_state = st
+			_trigger.set_content(tip[0], tip[1], tip[2], tip[3])
+			queue_redraw()
+	func _draw() -> void:
+		var c: LevelController = hud.controller if hud != null else null
+		if c == null: return
+		var on: bool = c.can_pass
+		var p := Vector2(HudCoop.PASS_R, HudCoop.PASS_R)
+		var e := size - Vector2(HudCoop.END_R, HudCoop.END_R)
+		var rim := TdTheme.color("rim")
+		# the band: the hull between the two circles, rim first
+		# the band keeps the Pass circle's width all the way (rim lines top and bottom), End turn covers its end
+		_band(p, HudCoop.PASS_R + 3.0, e, HudCoop.PASS_R + 3.0, rim)
+		_band(p, HudCoop.PASS_R, e, HudCoop.PASS_R, Color("43342A") if on else Color("2A211B"))
+		if on: _band(p, HudCoop.PASS_R * 0.55, e, HudCoop.PASS_R * 0.55, Color("4B3A2E"))
+		# the circle
+		draw_circle(p, HudCoop.PASS_R + 3.0, rim)
+		var fill := Color("5A4636")
+		if on and hovered: fill = Color("7A6250")
+		if not on: fill = Color("2C221B")
+		if on and pressed_in: fill = Color("46372B")
+		draw_circle(p, HudCoop.PASS_R, fill)
+		if on: draw_arc(p, HudCoop.PASS_R - 3.0, deg_to_rad(200), deg_to_rad(340), 24, Color(1.0, 0.86, 0.67, 0.18), 3.0, true)
+		if on and hovered: draw_arc(p, HudCoop.PASS_R + 5.0, 0, TAU, 64, TdTheme.color("accent.light"), 3.0, true)
+		# label + key cap (offset up-left like the mockup: the band takes the lower right)
+		var font: Font = TdTheme.font("plinth")
+		var lc := TdTheme.color("cream.100") if on else Color(TdTheme.color("cream.100"), 0.45)
+		var centre := p - Vector2(8, 10)
+		var tw := font.get_string_size("Pass", HORIZONTAL_ALIGNMENT_LEFT, -1, 26).x
+		draw_string(font, centre + Vector2(-tw / 2.0, 2), "Pass", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, lc)
+		var keys = get_tree().root.get_node_or_null("KeyBinds")
+		var k: String = keys.first("Pass") if keys != null else "Tab"
+		if k != "":
+			var kw := maxf(28.0, font.get_string_size(k, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x + 18.0)
+			var kr := Rect2(centre + Vector2(-kw / 2.0, 12), Vector2(kw, 26))
+			var box := StyleBoxFlat.new()
+			box.bg_color = TdTheme.color("paper") if on else Color("6E6253")
+			box.set_corner_radius_all(6)
+			box.border_color = rim
+			box.set_border_width_all(2)
+			draw_style_box(box, kr)
+			draw_string(font, Vector2(kr.position.x + (kw - font.get_string_size(k, HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x) / 2.0, kr.position.y + 20),
+				k, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, TdTheme.color("ink") if on else Color("2A211B"))
+	func _band(c1: Vector2, r1: float, c2: Vector2, r2: float, col: Color) -> void:
+		var d := c2 - c1
+		var l := d.length()
+		if l <= absf(r1 - r2): return
+		var base := d.angle()
+		var a := acos((r1 - r2) / l)
+		var pts := PackedVector2Array([
+			c1 + Vector2.from_angle(base + a) * r1, c2 + Vector2.from_angle(base + a) * r2,
+			c2 + Vector2.from_angle(base - a) * r2, c1 + Vector2.from_angle(base - a) * r1])
+		draw_colored_polygon(pts, col)
+
+## Over End turn while someone else acts (their medallion + "Şule's turn"), or "Done · Waiting for N" after yours.
+class EndFace extends Control:
+	var hud: HudCoop
+	var end_turn: Control
+	var _mode := ""
+	var _medal: Control
+	var _title: Label
+	var _sub: Label
+	var _trigger: TdTooltipTrigger
+	var _t := 0.0
+	func _init() -> void:
+		name = "EndTurnFace"
+		mouse_filter = MOUSE_FILTER_STOP
+		size = Vector2(168, 168)
+		visible = false
+	func _ready() -> void:
+		_medal = HudArt.medallion(44, "medallion_ring", 3.0)
+		_medal.pivot_offset = Vector2(22, 22)
+		add_child(_medal)
+		_title = HudArt.label("", "h3", TdTheme.color("cream.100"), 20)
+		_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		add_child(_title)
+		_sub = HudArt.label("", "small", Color("E6EFFF"), 18)
+		_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		add_child(_sub)
+		_trigger = TdTooltipTrigger.attach(self)
+		_trigger.set_placement(TdTooltipPlacement.Side.LEFT)
+	func _has_point(p: Vector2) -> bool:
+		return p.distance_to(size / 2.0) <= 87.0
+	func _process(d: float) -> void:
+		var c: LevelController = hud.controller if hud != null else null
+		if c == null or c.coop == null or end_turn == null: return
+		position = end_turn.position + (end_turn.size - size) / 2.0
+		var cs: CoopSession = c.coop.coop
+		var running: bool = c.session.phase == Phase.Player and not c.session.is_over and c.current_player != ""
+		var mode := ""
+		if running and not cs.turn_order.has(c.local_player) and not cs.left.has(c.local_player): mode = "done:%d" % cs.turn_order.size()
+		elif running and c.current_player != c.local_player: mode = "other:" + c.current_player
+		visible = mode != ""
+		if mode != _mode:
+			_mode = mode
+			_apply(c, mode)
+			queue_redraw()
+		if visible and mode.begins_with("other"):
+			_t += TdTheme.unscaled(d)
+			_medal.scale = Vector2.ONE * (1.0 + 0.06 * sin(_t * TAU / 1.8))
+	func _apply(c: LevelController, mode: String) -> void:
+		if mode == "": return
+		var who := c.current_player
+		if mode.begins_with("other"):
+			_medal.visible = true
+			HudArt.set_medallion(_medal, c.player_portrait(who))
+			_medal.position = Vector2((size.x - 44) / 2.0, 42)
+			_title.text = "%s's turn" % c.player_name(who)
+			_title.add_theme_font_size_override("font_size", 20)
+			_title.size = Vector2(size.x - 16, 28)
+			_title.position = Vector2(8, 96)
+			_sub.visible = false
+			_trigger.set_content(TooltipText.title("%s's turn" % c.player_name(who), TooltipText.neutral_color()),
+				"Wait for %s to finish. You can look around and select units meanwhile." % c.player_name(who))
+		else:
+			var n := int(mode.split(":")[1])
+			_medal.visible = false
+			_title.text = "Done"
+			_title.add_theme_font_size_override("font_size", 30)
+			_title.size = Vector2(size.x - 16, 36)
+			_title.position = Vector2(8, 46)
+			_sub.visible = true
+			_sub.text = "Waiting\nfor %d" % n
+			_sub.size = Vector2(size.x - 16, 48)
+			_sub.position = Vector2(8, 88)
+			_trigger.set_content(TooltipText.title("Turn ended", TooltipText.neutral_color()),
+				"You ended your turn for this round. The enemies move once everyone has ended.")
+	func _draw() -> void:
+		var ctr := size / 2.0
+		draw_circle(ctr, 87.0, TdTheme.color("rim"))
+		if _mode.begins_with("done"):
+			draw_circle(ctr, 84.0, Color("33503F"))
+			draw_circle(ctr - Vector2(0, 12), 64.0, Color("4E6B5A", 0.55))
+		else:
+			draw_circle(ctr, 84.0, Color("2A211B"))
+			draw_circle(ctr - Vector2(0, 14), 62.0, Color("4A3A2E", 0.55))
+		draw_arc(ctr, 81.0, deg_to_rad(200), deg_to_rad(340), 32, Color(1.0, 0.86, 0.67, 0.14), 3.0, true)

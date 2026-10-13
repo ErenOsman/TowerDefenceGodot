@@ -309,6 +309,10 @@ func _show_list(e: Entity, f: EntityFrame, self_entity, abilities: Array, passiv
 		var left: int = f.cooldowns.get(a, 0) if f != null else 0
 		key += "|%s:%d" % [a.name, left]
 	for p in passives: key += "|%s:%s" % [p.name, p.active]
+	# co-op: another player's tower (not a leaver's: those are neutral, anyone's) shows its abilities dimmed
+	var foreign := ""
+	if c.is_coop and e != null and c.owner_of(e) != "" and not c.commands(e): foreign = "%s's tower" % c.player_name(c.owner_of(e))
+	key += "|" + foreign
 	if key == _rows_key: return
 	_rows_key = key
 	for ch in _list.get_children():
@@ -320,6 +324,9 @@ func _show_list(e: Entity, f: EntityFrame, self_entity, abilities: Array, passiv
 		var state := HudText.row_state(0 if held else left, held)
 		var ready := state == "Ready"
 		var row := _row(HudArt.ability_chip(c.converter, a), a.display_name, state, TdTheme.color("good") if ready else TdTheme.color("cream.200"))
+		if foreign != "":
+			row = _row(HudArt.ability_chip(c.converter, a), a.display_name, foreign, TdTheme.color("cream.300"))
+			row.modulate.a = 0.6
 		var content := TooltipText.ability(a.display_name, HudText.fill_stats(a.description, HudText.stat_values(self_entity, c.session.state.vocab)), " · ".join(a.tags),
 			AbilityText.tags(a, self_entity, c.session.state.vocab) if self_entity != null else [], a.cooldown, a.cooldown_until_reset,
 			left, [], a.start_cooldown)

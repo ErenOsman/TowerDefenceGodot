@@ -11,7 +11,7 @@ Unity repo by `tools/sync_from_unity.sh` (the Unity repo is the single source of
 - The Princess is a 3D prop placed on the board while her line shows (not a portrait beside the box).
 - TdButton reserves "bleed" room for rims/rings so clipping containers never cut hovered/selected buttons (ability buttons: 143 px + 4 px gap on the action bar).
 - Camp: stations on a ring from `art/camp/layout.json` (Blender kit, free slots for later stations).
-- Tutorial lines and descriptions come from the content JSON unchanged; wording fixes belong in the Unity content.
+- Descriptions and level intros come from the content JSON unchanged; wording fixes belong in the Unity content. The tutorial level is the exception: its guided lines live in `data/tutorial.json` (see "Tutorial lines" below).
 
 ## Decisions taken while testing the Godot build
 See `docs/Decisions.md` (2026-10-13 rows) — they are logged in the Unity repo and synced here.
@@ -34,3 +34,38 @@ See `docs/Decisions.md` (2026-10-13 rows) — they are logged in the Unity repo 
   mirrors `towers.hand` (the hand levels use); a save without the key gets Layout 1 = the hand, 2–4 empty.
 - Tower roles / delivery in the hand editor's filters are derived from the abilities (`HandLogic.traits`), not authored:
   every tower has Tower Walk, so there is no "Movement" role chip and no "Can move" toggle (UI Design Rules, cd1b6a5).
+
+## Tutorial lines — Godot-only for now (guided tutorial)
+The tutorial level plays a guided ("babysitting") tutorial instead of `Sequences/Tutorial Steps` when
+`data/tutorial.json` exists (`game/level/guided_tutorial.gd`, owned by the LevelController; other levels' intros and
+entrances still use SequenceRun). At every step only one action is possible: it is ringed and the Princess's bubble
+points at it; anything else is refused (the line repeated on the hint line, the ringed target and the bubble shake).
+Space / a click goes on on talk lines; Skip ends the guidance (free play). **Move these texts into the Unity content**
+(`Data/Sequences/Tutorial Steps`) once Unity gets the same gating; then `data/tutorial.json` keeps only `allow`/`advance`.
+
+| # | Princess says | Allowed (ringed) | Goes on when |
+| --- | --- | --- | --- |
+| 1 | Slimes come down this road to your castle. | nothing (points at road tile (4,2), then the castle) | click / Space (twice) |
+| 2 | Place your Archer: click its piece. | the Archer's tray piece | placing starts |
+| 3 | Now click a lit tile. | build tiles (10,1) and (10,3) only (only they light) | the tower is placed |
+| 4 | End the turn to let the slime come. | End turn | the round ended |
+| 5 | A slime. Towers can move: click your Archer. | selecting the Archer | it is selected |
+| 6 | Click Tower Walk, then the lit tile. | Tower Walk, then the tile 2 steps toward the slime on the archer's row | the walk is cast |
+| 7 | End turn until it is in range. | End turn | by itself: the first enemy is in Shoot range at a turn start |
+| 8 | Shoot: click Shoot, then the slime. | Shoot, then the slime | the shot is cast |
+| 8b | Nice shot. | nothing | 1.5 s |
+| 9 | Abilities have a cooldown; End turn refreshes them. | End turn | the round ended |
+| 10 | A Runner is fast. {click:QuickCast} Shoot to fire at the nearest target. | quick cast Shoot (or a normal Shoot at an enemy); End turn while nothing is in range | a cast |
+| 11 | That's it: place, move, shoot, end turn. Finish the wave. | everything | the level is won (end screen) |
+
+`data/tutorial.json` = the Sequences.json line fields (`speaker`, `text`, `pointAt`, `tileX/Y`, `uiElement`,
+`continueOn`, `seconds`, `waitFor`, `pausesPlay`) plus:
+- `advance`: `click` | `seconds:<s>` | `event:<placing|placed|selected|cast|round_ended|in_range|won>` (it decides
+  `continueOn`; talk lines pause play).
+- `allow` tokens: `piece:<tower type id>`, `tile:x,y`, `select:archer` (the player's first tower), `ability:<ability id>`,
+  `aim_tile:x,y`, `aim_tile:toward_enemy:<n>` (n tiles along the archer's row toward the first enemy; the nearest valid
+  walk aim if that one is not), `aim_unit:first_enemy`, `aim_unit:enemy`, `end_turn`, `end_turn:until_castable` (End
+  turn only while the line's ability can hit no enemy or is not ready), `quick_cast`, `all`. `[]` = talk only.
+  What a step needs first is implied: the piece again while a tile line is not placing; the archer while an ability
+  line's tower is not selected. Right-click / Esc cancelling always works. Selling is refused until `all`.
+- `hint` (optional): the refusal text (default: the line's text; talk lines: "Click the bubble or press Space to go on.").

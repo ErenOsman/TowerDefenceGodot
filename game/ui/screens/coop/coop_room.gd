@@ -9,6 +9,8 @@ extends TdPopup
 
 const HAND_EDITOR := "res://game/ui/screens/hand_editor.tscn"
 const BANNER_SECONDS := 8.0
+## The chat panel's height (about nine lines plus the field).
+const CHAT_H := 350.0
 
 var net: Node = null
 ## Lines of the chat: [{name, text, color, system}].
@@ -23,7 +25,7 @@ var _banner_text: Label
 var _banner_left := 0.0
 var _slots: VBoxContainer
 var _card: Dictionary
-var _change_level: Button
+var _change_level: Control
 var _chat_box: VBoxContainer
 var _chat_scroll: ScrollContainer
 var _chat_in: LineEdit
@@ -76,8 +78,8 @@ func _build() -> void:
 	hh.add_child(_code)
 	var copy := TdMenu.wood_button("Copy", Vector2(130, 56))
 	copy.size_flags_vertical = SIZE_SHRINK_CENTER
-	copy.tooltip_text = "Copy the room code to send to a friend."
-	copy.pressed.connect(func(): if net != null and net.in_room: DisplayServer.clipboard_set(str(net.room.get("id", ""))))
+	copy.tooltip_text = "Copy the room name and password to send to a friend."
+	copy.pressed.connect(func(): DisplayServer.clipboard_set(invite_text()))
 	hh.add_child(copy)
 	# body
 	var body := TdMenu.hbox(24)
@@ -99,15 +101,15 @@ func _build() -> void:
 	_slots = TdMenu.vbox(10)
 	left.add_child(_slots)
 	var right := TdMenu.vbox(16)
-	right.custom_minimum_size = Vector2(500, 0)
+	right.custom_minimum_size = Vector2(560, 0)
 	body.add_child(right)
-	_card = CoopUi.level_card(500, 140)
+	_card = CoopUi.level_card(560, 84)
 	right.add_child(_card.panel)
-	_change_level = TdMenu.wood_button("Change level", Vector2(0, 50))
-	_change_level.pressed.connect(open_settings)
+	_change_level = CoopUi.paper_action("icon_edit", "Change level", func(): open_settings())
 	_card.extra.add_child(_change_level)
 	var chat := TdMenu.panel(TdPanel.Kind.WOOD, 16)
-	chat.size_flags_vertical = SIZE_EXPAND_FILL
+	chat.custom_minimum_size = Vector2(0, CHAT_H) # fixed: the same for host and guest
+	chat.size_flags_vertical = SIZE_SHRINK_BEGIN
 	right.add_child(chat)
 	var cv := TdMenu.vbox(8)
 	chat.add_child(cv)
@@ -115,6 +117,7 @@ func _build() -> void:
 	_chat_scroll = ScrollContainer.new()
 	_chat_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_chat_scroll.size_flags_vertical = SIZE_EXPAND_FILL
+	_chat_scroll.custom_minimum_size = Vector2(0, CHAT_H - 120.0)
 	cv.add_child(_chat_scroll)
 	_chat_box = TdMenu.vbox(2)
 	_chat_box.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -155,7 +158,7 @@ func _on_open() -> void:
 	if net == null: net = get_node_or_null("/root/Net")
 	if net == null: return
 	for pair in [["room_changed", _on_room], ["room_notes", _on_notes], ["chat_received", _on_chat], ["match_started", _on_match],
-			["kicked", _on_kicked], ["error_received", _on_error]]:
+			["kicked", _on_kicked], ["error_received", _on_error], ["rtt_changed", _on_rtt]]:
 		if not net.is_connected(pair[0], pair[1]): net.connect(pair[0], pair[1])
 	if chat_log.is_empty() and net.in_room:
 		var host := NetProtocol.player_name(net.room, str(net.room.get("host", "")))
@@ -166,7 +169,7 @@ func _exit_tree() -> void:
 	super._exit_tree()
 	if net == null: return
 	for pair in [["room_changed", _on_room], ["room_notes", _on_notes], ["chat_received", _on_chat], ["match_started", _on_match],
-			["kicked", _on_kicked], ["error_received", _on_error]]:
+			["kicked", _on_kicked], ["error_received", _on_error], ["rtt_changed", _on_rtt]]:
 		if net.is_connected(pair[0], pair[1]): net.disconnect(pair[0], pair[1])
 
 func _process(delta: float) -> void:
@@ -191,13 +194,16 @@ func _on_notes(notes: Array) -> void:
 			"level":
 				var ln := CoopLevels.level_name(str(n.value))
 				add_system_line("%s changed the level to %s." % [n.name, ln])
-				show_banner("Level changed to %s — everyone is not ready again." % ln)
+				show_banner("Level changed to %s — Everyone's Ready was reset." % ln)
 			"count":
 				add_system_line("%s set the room to %d players." % [n.name, int(n.value)])
-				show_banner("The room is for %d players now — everyone is not ready again." % int(n.value))
+				show_banner("The room is for %d players now — Everyone's Ready was reset." % int(n.value))
 
 func _on_chat(from: String, n: String, text: String) -> void:
 	add_line(n, text, _color_of(from))
+
+func _on_rtt(_ms: int) -> void:
+	refresh()
 
 func _on_kicked() -> void:
 	close()
@@ -246,6 +252,13 @@ func _color_of(player_id: String) -> Color:
 	var p = NetProtocol.find_player(net.room, player_id)
 	return CoopMode.COLORS[NetProtocol.int_of(p, "slot") % CoopMode.COLORS.size()] if p != null else CoopMode.COLORS[0]
 
+## "Room: <name> · Password: <password>" for Copy (the room id never shows).
+func invite_text() -> String:
+	if net == null or not net.in_room: return ""
+	var t := "Room: %s" % net.room.get("name", "")
+	if bool(net.room.get("locked", false)) and net.room_password != "": t += " · Password: %s" % net.room_password
+	return t
+
 func refresh() -> void:
 	if net == null or not net.in_room: return
 	var room: Dictionary = net.room
@@ -253,18 +266,24 @@ func refresh() -> void:
 	var count := NetProtocol.int_of(room, "count")
 	var players := NetProtocol.players_by_slot(room)
 	_title.text = str(room.get("name", ""))
-	_lock.visible = bool(room.get("locked", false))
+	var locked := bool(room.get("locked", false))
+	_lock.modulate = TdTheme.color("cream.100") if locked else Color(TdTheme.color("cream.300"), 0.35)
+	_lock.tooltip_text = "Password room" if locked else "Open room: no password"
+	_lock.mouse_filter = MOUSE_FILTER_PASS
 	_sub.text = "%s · co-op · %d of %d player%s" % [CoopLevels.level_name(level), players.size(), count, "" if count == 1 else "s"]
-	_code.text = "Room code: [b]%s[/b]" % room.get("id", "") if not net.practice else "[b]Offline practice[/b]"
+	_code.text = "Room: [b][color=#%s]%s[/color][/b]  ·  Password: [b]%s[/b]" % [TdTheme.color("cream.100").to_html(false),
+		_esc(str(room.get("name", ""))), "•".repeat(6) if locked else "none"]
 	CoopUi.fill_level_card(_card, level, count)
 	_change_level.visible = net.is_host
 	_draw_slots(room, players, count, level)
 	var me = NetProtocol.find_player(room, net.player_id)
 	var am_ready: bool = me != null and bool(me.get("ready", false))
-	_ready_btn.text = "Ready" if am_ready else "Ready up"
-	_ready_btn.style = TdButton.Style.SECONDARY
+	# the guest's main button is Ready (cobalt); the host's main button is Start, so its Ready is the wood one
+	_ready_btn.style = TdButton.Style.SECONDARY if net.is_host else TdButton.Style.PRIMARY
+	_ready_btn.text = "Ready" if am_ready or not net.is_host else "Ready up"
 	_ready_btn.set_selected(am_ready)
-	_ready_btn.modulate = Color(0.75, 1.0, 0.75) if am_ready else Color.WHITE
+	_ready_btn.modulate = Color(0.78, 1.0, 0.78) if am_ready else Color.WHITE
+	_ready_btn.tooltip_text = "Click again to stop being ready." if am_ready else "Tell the others you are ready."
 	var waiting := NetProtocol.not_ready_names(room)
 	var host_name := NetProtocol.player_name(room, str(room.get("host", "")))
 	if net.is_host:
@@ -286,22 +305,23 @@ func _draw_slots(room: Dictionary, players: Array, count: int, level: String) ->
 
 func _slot_row(i: int, p, room: Dictionary, cap: int, h: float) -> Control:
 	var ready: bool = p != null and bool(p.get("ready", false))
-	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(0, h)
+	var panel: Container
 	if p == null:
-		var sb := CoopUi.box(Color(0.1, 0.075, 0.06, 0.45), 12, Color(0.4, 0.31, 0.24, 0.8), 2, Vector4(14, 6, 14, 6))
-		panel.add_theme_stylebox_override("panel", sb)
+		panel = CoopUi.DashedBox.new()
 	else:
+		panel = PanelContainer.new()
 		panel.add_theme_stylebox_override("panel", CoopUi.box(Color(0.18, 0.13, 0.1, 0.9), 12, CoopUi.GOOD if ready else Color(0.3, 0.23, 0.17), 3 if ready else 2, Vector4(14, 6, 14, 6)))
+	panel.custom_minimum_size = Vector2(0, h)
 	var row := TdMenu.hbox(14)
 	panel.add_child(row)
 	row.add_child(CoopUi.number_badge(i + 1, p == null))
 	if p == null:
-		row.add_child(CoopUi.empty_circle(54))
-		var open := TdMenu.label("Open slot", "body", TdTheme.color("cream.300"), 22)
-		open.size_flags_vertical = SIZE_SHRINK_CENTER
-		open.size_flags_horizontal = SIZE_EXPAND_FILL
-		row.add_child(open)
+		var circle := CoopUi.empty_circle(54)
+		circle.size_flags_vertical = SIZE_SHRINK_CENTER
+		row.add_child(circle)
+		var gap := TdMenu.spacer()
+		gap.size_flags_horizontal = SIZE_EXPAND_FILL
+		row.add_child(gap)
 		var strip := CoopUi.hand_strip([], cap, 44)
 		strip.size_flags_vertical = SIZE_SHRINK_CENTER
 		row.add_child(strip)
@@ -316,6 +336,7 @@ func _slot_row(i: int, p, room: Dictionary, cap: int, h: float) -> Control:
 	var nm := TdMenu.label(str(p.get("name", "?")), "h2", CoopMode.COLORS[i % CoopMode.COLORS.size()].lightened(0.2), 32)
 	nm.size_flags_vertical = SIZE_SHRINK_CENTER
 	row.add_child(nm)
+	row.add_child(CoopUi.ping_label(net.ping_of(pid) if net.has_method("ping_of") else -1))
 	if pid == str(room.get("host", "")):
 		var crown := TdMenu.label("♛ Host", "body", CoopUi.GOLD, 22)
 		crown.size_flags_vertical = SIZE_SHRINK_CENTER

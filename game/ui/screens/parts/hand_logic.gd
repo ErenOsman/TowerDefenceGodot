@@ -17,7 +17,8 @@ const COST_ANY := 300
 ## The cost quick chips: [label, min, max].
 const COST_CHIPS := [["≤100", 0, 100], ["≤200", 0, 200], ["200+", 200, COST_ANY]]
 const SORTS := ["number", "name", "cost"]
-const SORT_NAMES := ["Number", "Name", "Cost"]
+## The Sort dropdown's labels: "Default" sorts by the hidden type number (user, 2026-10-13: never "Number").
+const SORT_NAMES := ["Default", "Name", "Cost"]
 ## Status tags that take control of a unit (Control role).
 const CONTROL_TAGS := ["Taunted", "Redirected", "Stunned", "Frozen", "Asleep", "Rooted", "Silenced", "Disarmed"]
 ## A layout name's longest length.
@@ -271,11 +272,6 @@ static func stat_tiles(me: IEntity, vocab: Vocabulary, count := 99) -> Array:
 static func num_text(v) -> String:
 	var f := float(v)
 	return str(int(f)) if is_equal_approx(f, roundf(f)) else str(snappedf(f, 0.01))
-
-## A result pill's name: a walk's reach is tiles ("2 Tiles", "1 Tile"); the rest as MenuLogic.result_name.
-static func result_name(value: String, n: String) -> String:
-	if n == "Move": return "Tile" if value == "1" else "Tiles"
-	return MenuLogic.result_name(n)
 
 ## An ability row's subtitle: its tags, the delivery in lower case ("Attack · projectile · 1 turn CD").
 static func ability_subtitle(tags: Array, cooldown: int, until_reset: bool) -> String:

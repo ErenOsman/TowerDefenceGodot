@@ -79,6 +79,7 @@ static func count_picker(parent: Container, selected: int, on_pick: Callable) ->
 		b.selectable = true
 		b.selected = n == selected
 		b.font_size = 26
+		b.bleed_mode = TdButton.Bleed.OFF
 		var k := n
 		b.clicked.connect(func():
 			for x in out: x.set_selected(x == b)
@@ -162,7 +163,7 @@ static func level_card(width: float, map_h: float, with_desc := false) -> Dictio
 	v.add_child(facts)
 	var energy := note_row("icon_energy", "")
 	v.add_child(energy)
-	var turns := note_row("icon_clock", "Turns in join order (the numbers); [b]Pass[/b] moves you to the end.")
+	var turns := note_row("icon_clock", "Turns in join order; [b]Pass[/b] moves you to the end.")
 	v.add_child(turns)
 	var extra := TdMenu.vbox(8)
 	v.add_child(extra)
@@ -295,3 +296,127 @@ static func show_popup(p: TdPopup) -> void:
 	p.is_open = true
 	p.visible = true
 	p._on_open()
+
+## A dashed rounded outline (empty room slots); content goes in as children of the returned MarginContainer.
+class DashedBox extends MarginContainer:
+	var color := Color(0.45, 0.35, 0.27, 0.9)
+	var radius := 12.0
+	func _init() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		for side in ["left", "right"]: add_theme_constant_override("margin_" + side, 14)
+		for side in ["top", "bottom"]: add_theme_constant_override("margin_" + side, 6)
+		resized.connect(queue_redraw)
+	func _draw() -> void:
+		var r := Rect2(Vector2(1, 1), size - Vector2(2, 2))
+		var pts := PackedVector2Array()
+		var rad := minf(radius, minf(r.size.x, r.size.y) / 2.0)
+		var corners := [[r.position + Vector2(r.size.x - rad, rad), -PI / 2.0], [r.end - Vector2(rad, rad), 0.0],
+			[Vector2(r.position.x + rad, r.end.y - rad), PI / 2.0], [r.position + Vector2(rad, rad), PI]]
+		for c in corners:
+			for i in 7: pts.append(c[0] + Vector2.from_angle(c[1] + i * PI / 12.0) * rad)
+		pts.append(pts[0])
+		# walk the outline, drawing 10 px dashes with 7 px gaps
+		var dash := 10.0
+		var gap := 7.0
+		var on := true
+		var left := dash
+		for i in pts.size() - 1:
+			var a: Vector2 = pts[i]
+			var b: Vector2 = pts[i + 1]
+			var seg := a.distance_to(b)
+			var t := 0.0
+			while t < seg:
+				var step := minf(left, seg - t)
+				var p0 := a.lerp(b, t / seg)
+				var p1 := a.lerp(b, (t + step) / seg)
+				if on: draw_line(p0, p1, color, 2.0, true)
+				t += step
+				left -= step
+				if left <= 0.001:
+					on = not on
+					left = dash if on else gap
+
+static var _glyphs := {}
+
+## Small line icons the kit lacks, drawn once (48 px, cream): "search" (magnifier), "refresh" (circular arrow).
+static func glyph(kind: String) -> Texture2D:
+	if _glyphs.has(kind): return _glyphs[kind]
+	var n := 48
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	var col := TdTheme.color("cream.100")
+	var c := Vector2(n / 2.0, n / 2.0)
+	for y in n:
+		for x in n:
+			var p := Vector2(x + 0.5, y + 0.5)
+			var a := 0.0
+			match kind:
+				"search":
+					var cc := Vector2(20, 20)
+					a = 1.0 - clampf(absf(p.distance_to(cc) - 12.0) - 2.2, 0.0, 1.0)
+					var d := Geometry2D.get_closest_point_to_segment(p, Vector2(29, 29), Vector2(41, 41)).distance_to(p)
+					a = maxf(a, 1.0 - clampf(d - 3.0, 0.0, 1.0))
+				"refresh":
+					var ang := fposmod(atan2(p.y - c.y, p.x - c.x), TAU)
+					var ring := 1.0 - clampf(absf(p.distance_to(c) - 15.0) - 2.2, 0.0, 1.0)
+					if ang < deg_to_rad(320) and ang > deg_to_rad(10): a = ring
+					# the arrow head at the end of the arc (top right, pointing down)
+					var tip := Vector2(c.x + 15.0, c.y - 9.0)
+					var tri := PackedVector2Array([tip + Vector2(-8, -6), tip + Vector2(8, -6), tip + Vector2(0, 6)])
+					if Geometry2D.is_point_in_polygon(p, tri): a = 1.0
+			if a > 0.0: img.set_pixel(x, y, Color(col, a))
+	var t := ImageTexture.create_from_image(img)
+	_glyphs[kind] = t
+	return t
+
+## A round initial medallion (the host on a lobby row, when no portrait is known).
+static func initial_medal(player_name: String, d := 48.0, tint := Color("4a90e2")) -> Control:
+	var p := PanelContainer.new()
+	p.custom_minimum_size = Vector2(d, d)
+	p.add_theme_stylebox_override("panel", box(tint.darkened(0.35), int(d / 2), Color("efe2c4"), 2, Vector4.ZERO))
+	var l := TdMenu.label(player_name.substr(0, 1).to_upper() if player_name != "" else "?", "h3", Color.WHITE, int(d * 0.48))
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	p.add_child(l)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return p
+
+## A clickable paper row with an icon (the level card's "Change level"); on_click runs on a left click.
+static func paper_action(icon: String, text: String, on_click: Callable) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.mouse_filter = Control.MOUSE_FILTER_STOP
+	p.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	var normal := box(Color("e9dbb9"), 10, Color("6f9be0"), 2, Vector4(12, 8, 12, 8))
+	var hover := box(Color("f3e8cc"), 10, SEL_BG, 3, Vector4(12, 8, 12, 8))
+	p.add_theme_stylebox_override("panel", normal)
+	p.mouse_entered.connect(func(): p.add_theme_stylebox_override("panel", hover))
+	p.mouse_exited.connect(func(): p.add_theme_stylebox_override("panel", normal))
+	var h := TdMenu.hbox(10)
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.add_child(h)
+	if TdTheme.has_sprite(icon):
+		var i := TdMenu.picture(TdTheme.texture(icon), Vector2(24, 24))
+		i.modulate = TdTheme.color("ink")
+		i.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		h.add_child(i)
+	h.add_child(TdMenu.label(text, "h3", TdTheme.color("ink"), 22))
+	p.gui_input.connect(func(ev):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT: on_click.call())
+	return p
+
+## "• 42 ms" in good / warn colours, "• —" when unknown.
+static func ping_label(ms: int) -> Label:
+	var col := TdTheme.color("cream.300") if ms < 0 else (GOOD if ms < 100 else Color("e8913a"))
+	var l := TdMenu.label("• —" if ms < 0 else "• %d ms" % ms, "body", col, 21)
+	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	l.tooltip_text = "Round trip to the server" if ms >= 0 else "Not measured"
+	l.mouse_filter = Control.MOUSE_FILTER_PASS
+	return l
+
+## A visible cream scrollbar on a ScrollContainer's vertical bar (the default theme's is nearly invisible).
+static func style_scrollbar(scroll: ScrollContainer) -> void:
+	var bar := scroll.get_v_scroll_bar()
+	bar.custom_minimum_size = Vector2(12, 0)
+	bar.add_theme_stylebox_override("scroll", box(Color(0.1, 0.075, 0.06, 0.8), 6, Color(0, 0, 0, 0), 0, Vector4(2, 2, 2, 2)))
+	var grab := box(Color(TdTheme.color("cream.300"), 0.8), 6, Color(0, 0, 0, 0), 0, Vector4(4, 4, 4, 4))
+	for k in ["grabber", "grabber_highlight", "grabber_pressed"]: bar.add_theme_stylebox_override(k, grab)

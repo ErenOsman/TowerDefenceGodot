@@ -395,6 +395,11 @@ func _set_pressed(v: bool) -> void:
 	_redraw()
 	_layout()
 
+## The denied shake alone (no reason, no `denied`): the guided tutorial's refusal of a ringed button.
+func shake() -> void:
+	var p := profile()
+	_motion.shake(p["denied_shake"], p["denied_time"])
+
 func _deny() -> void:
 	var p := profile()
 	_motion.shake(p["denied_shake"], p["denied_time"])

@@ -48,6 +48,14 @@ func _build() -> void:
 	var tools := TdMenu.hbox(18)
 	body.add_child(tools)
 	_search = CoopUi.field("Search room name", 420)
+	for k in ["normal", "focus"]:
+		var sb: StyleBox = _search.get_theme_stylebox(k).duplicate()
+		sb.content_margin_left = 54
+		_search.add_theme_stylebox_override(k, sb)
+	var lens := TdMenu.picture(CoopUi.glyph("search"), Vector2(26, 26))
+	lens.modulate = TdTheme.color("ink")
+	lens.position = Vector2(18, 15)
+	_search.add_child(lens)
 	_search.text_changed.connect(func(_t): _draw_list())
 	tools.add_child(_search)
 	_show_full = CheckButton.new()
@@ -57,7 +65,10 @@ func _build() -> void:
 	TdTheme.apply_type(_show_full, "body", TdTheme.color("cream.100"), 22)
 	_show_full.toggled.connect(func(_v): _draw_list())
 	tools.add_child(_show_full)
-	var refresh := TdMenu.wood_button("Refresh", Vector2(170, 56))
+	var refresh := TdMenu.wood_button("Refresh", Vector2(190, 56))
+	refresh.icon = CoopUi.glyph("refresh")
+	refresh.expand_icon = false
+	refresh.add_theme_constant_override("icon_max_width", 26)
 	refresh.pressed.connect(refresh_rooms)
 	tools.add_child(refresh)
 	var sp := TdMenu.spacer()
@@ -233,10 +244,6 @@ func _draw_list() -> void:
 		var retry := TdMenu.wood_button("Retry", Vector2(220, 62))
 		retry.pressed.connect(refresh_rooms)
 		_empty_actions.add_child(retry)
-		var practice := TdMenu.wood_button("Offline practice", Vector2(280, 62))
-		practice.tooltip_text = "Play a co-op level alone on this computer."
-		practice.pressed.connect(start_practice)
-		_empty_actions.add_child(practice)
 	elif rooms.is_empty():
 		_empty_title.text = "No rooms yet."
 		_empty_text.text = "Make the first one: pick a level and wait for friends to join." if n.rooms.is_empty() \
@@ -283,10 +290,17 @@ func _room_row(r: Dictionary) -> PanelContainer:
 	nm.clip_text = true
 	nv.add_child(nm)
 	nv.add_child(TdMenu.label(CoopLevels.level_name(str(r.get("level", ""))), "small", TdTheme.color("cream.200"), 20))
-	var host := TdMenu.label(str(r.get("host_name", "")), "body", TdTheme.color("cream.100"), 24)
-	host.custom_minimum_size = Vector2(220, 0)
+	var host_box := TdMenu.hbox(10)
+	host_box.custom_minimum_size = Vector2(220, 0)
+	host_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var host_name := str(r.get("host_name", ""))
+	if host_name != "": host_box.add_child(CoopUi.initial_medal(host_name, 44, CoopMode.COLORS[0]))
+	var host := TdMenu.label(host_name, "body", TdTheme.color("cream.100"), 24)
 	host.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	h.add_child(host)
+	host.clip_text = true
+	host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	host_box.add_child(host)
+	h.add_child(host_box)
 	var count := TdMenu.label("%d/%d" % [NetProtocol.int_of(r, "players"), NetProtocol.int_of(r, "count")], "h3", TdTheme.color("cream.100"), 26)
 	count.custom_minimum_size = Vector2(110, 0)
 	count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -321,7 +335,7 @@ func _draw_detail(online: bool) -> void:
 	_detail.visible = online and not r.is_empty()
 	_not_connected.visible = not online or r.is_empty()
 	_not_connected.text = "Not connected." if not online else "Pick a room, or make your own."
-	_join.visible = online
+	_join.visible = online and not r.is_empty()
 	if r.is_empty():
 		_join.set_interactable(false, "Pick a room")
 		return

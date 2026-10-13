@@ -190,6 +190,12 @@ func _shortcuts_tab() -> Control:
 	row.add_child(_button("Level select", func(): _go("LevelSelect")))
 	col.add_child(row)
 	col.add_child(HSeparator.new())
+	col.add_child(_label("Co-op", "H3Label"))
+	var coop_row := HBoxContainer.new()
+	coop_row.add_theme_constant_override("separation", 12)
+	coop_row.add_child(_button("Offline practice (co-op, one player)", _on_coop_practice))
+	col.add_child(coop_row)
+	col.add_child(HSeparator.new())
 	col.add_child(_label("Playback", "H3Label"))
 	instant_toggle = CheckButton.new()
 	instant_toggle.text = "Instant playback (no animations)"
@@ -405,3 +411,16 @@ func _refresh_log() -> void:
 
 func _say(text: String) -> void:
 	status.text = text
+
+## Co-op without a server: Net on an in-process relay with a one-player room, then the Camp opens the lobby on it.
+func _on_coop_practice() -> void:
+	var net = get_tree().root.get_node_or_null("Net")
+	var flow = get_tree().root.get_node_or_null("SceneFlow")
+	if net == null or flow == null: return
+	net.start_practice()
+	var ids := CoopLevels.list().level_ids()
+	var level: String = ids[0] if ids.size() > 0 else ""
+	net.create_room("Practice", level, 1, "", CoopLevels.my_hand_types(CoopLevels.hand_cap(level)))
+	net.poll()
+	net.reopen_lobby = true
+	_go("Camp")

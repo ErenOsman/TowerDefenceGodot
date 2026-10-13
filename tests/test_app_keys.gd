@@ -30,7 +30,7 @@ func test_defaults_follow_game_keys() -> void:
 	assert_eq(kb.get_modifier("Aim"), Modifiers.None)
 	assert_eq(kb.get_modifier("QuickCast"), Modifiers.Shift)
 	assert_eq(kb.get_modifier("Hand"), Modifiers.Ctrl)
-	assert_eq(kb.actions.size(), 3 + 9 + 6)
+	assert_eq(kb.actions.size(), 3 + 9 + 6 + 2) # round keys + abilities + camera + co-op (Pass, Chat)
 	assert_eq(kb.modifier_actions.size(), 3)
 	assert_eq(kb.describe("Nope"), "")
 	assert_eq(kb.first("Nope"), "unbound")

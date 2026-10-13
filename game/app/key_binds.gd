@@ -18,6 +18,9 @@ signal changed
 const EndRound := "EndRound"
 const Skip := "Skip"
 const Pause := "Pause"
+## Co-op only: Pass (give your turn away) and opening the match chat.
+const Pass := "Pass"
+const Chat := "Chat"
 const CameraUp := "CameraUp"
 const CameraDown := "CameraDown"
 const CameraLeft := "CameraLeft"
@@ -76,6 +79,8 @@ func register_game_keys() -> void:
 	register(CameraRight, "Move camera right", g_camera, KeyCombo.new(KEY_D), KeyCombo.new(KEY_RIGHT), true)
 	register(RotateLeft, "Rotate camera left", g_camera, KeyCombo.new(KEY_Q))
 	register(RotateRight, "Rotate camera right", g_camera, KeyCombo.new(KEY_E))
+	register(Pass, "Pass (give your turn away)", "Co-op", KeyCombo.new(KEY_TAB))
+	register(Chat, "Open the chat", "Co-op", KeyCombo.new(KEY_T))
 
 # ---------------------------------------------------------------- key actions
 

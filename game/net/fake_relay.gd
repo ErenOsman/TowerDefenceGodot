@@ -52,6 +52,8 @@ var next_seed := 1001
 var seed_fn: Callable = Callable()
 ## level id → bool (the level's energy rule) for match_start.shared_pool; unset = false.
 var shared_pool_of: Callable = Callable()
+## Tools only: player id → round trip in ms, sent as `ping_ms` on the room's players (the real relay v1 sends none).
+var player_pings := {}
 ## Every message the relay received, as [player_id, msg] (tests read it).
 var received: Array = []
 
@@ -320,7 +322,10 @@ func _link_of(player_id: String) -> Link:
 ## The room as clients see it (no password, version or checksums).
 func _public_room(room: Dictionary) -> Dictionary:
 	var players := []
-	for p in room.players: players.append({"id": p.id, "name": p.name, "ready": p.ready, "hand": p.hand.duplicate(), "slot": p.slot})
+	for p in room.players:
+		var e := {"id": p.id, "name": p.name, "ready": p.ready, "hand": p.hand.duplicate(), "slot": p.slot}
+		if player_pings.has(p.id): e["ping_ms"] = player_pings[p.id]
+		players.append(e)
 	return {"t": "room", "id": room.id, "name": room.name, "level": room.level, "count": room.count, "host": room.host,
 		"locked": room.password != "", "started": room.started, "players": players}
 

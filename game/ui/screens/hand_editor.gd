@@ -6,7 +6,7 @@ extends TdPopup
 ##    replaces that tower). Before a level, a divider after the level's cap: "Two Roads takes the first 4".
 ##  - Beside it: 4 fixed layout tabs (rename only); the active one is the hand levels use; click one to load it.
 ##  - Left: search, Role / Delivery chips, cost slider + quick chips, toggles. Centre: every owned tower (each its
-##    own card; sort Number / Name / Cost). Right: the selected tower's detail card and Add to hand / Remove.
+##    own card; sort Default (the hidden release number) / Name / Cost). Right: the selected tower's detail card and Add to hand / Remove.
 ## Everything saves as you go (TowerCollection + GameData.hand_layouts through SaveData.save()) and emits `changed`.
 ## Opened from level select (with its level: set `level`, or set_level_context(cap, name)), the Camp's Towers station
 ## and the co-op room. Esc / right click / × close it (TdPopup).
@@ -649,7 +649,7 @@ func _refresh_detail() -> void:
 			var icon: Texture2D = TdTheme.ability_icon(MenuLogic.icon_name(asset.icon)) if asset != null and asset.icon != "" else null
 			var pills := []
 			if me != null and vocab != null:
-				for r in AbilityText.tags(ab, me, vocab): pills.append([str(r[0]), HandLogic.result_name(str(r[0]), str(r[1]))])
+				for r in AbilityText.tags(ab, me, vocab): pills.append([str(r[0]), MenuLogic.result_name(str(r[1]))])
 			rows.add_child(_ability_row(icon, ab.display_name, HandLogic.ability_subtitle(ab.tags, ab.cooldown, ab.cooldown_until_reset), pills, "", false))
 		for pv in PassiveView.of(def):
 			var asset = GameApp.convert.asset_of(pv.def, "PassiveAsset")

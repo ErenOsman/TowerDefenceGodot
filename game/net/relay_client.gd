@@ -28,6 +28,8 @@ signal player_left(player: String)
 ## Hand-off to the in-match code: emitted right after match_started with the match ready to build:
 ## {seed, level, shared_pool, players: [{id, name, hand (type ids), slot}] (slot order), local_player (your id)}.
 signal match_ready(info: Dictionary)
+## Your round trip to the relay changed (ms; -1 = unknown).
+signal rtt_changed(ms: int)
 ## Every relay message, decoded (after the specific signal).
 signal message_received(msg: Dictionary)
 
@@ -66,6 +68,13 @@ var _seq := 0
 var _retry_in := 0.0
 var _retry_wait := RETRY_FIRST
 var _connecting_for := 0.0
+## Round trip to the relay in ms (a `list` → `rooms` exchange every RTT_EVERY seconds while online); -1 = unknown.
+var rtt_ms := -1
+const RTT_EVERY := 5.0
+var _rtt_in := 0.0
+var _rtt_sent := -1
+## The password you created or joined the room with ("" = open), for the room header and Copy.
+var room_password := ""
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -149,6 +158,12 @@ func poll(delta := 0.0) -> void:
 			_set_state(State.HELLO)
 			_send(NetProtocol.hello(_version(), _player_name()))
 		for text in _frames(): _handle_text(text)
+		if state == State.ONLINE and not practice: # an in-process relay has no round trip to measure
+			_rtt_in -= delta
+			if _rtt_in <= 0.0 and _rtt_sent < 0:
+				_rtt_in = RTT_EVERY
+				_rtt_sent = Time.get_ticks_msec()
+				_send(NetProtocol.list())
 	elif ready_state == WebSocketPeer.STATE_CONNECTING:
 		_connecting_for += delta
 		if _connecting_for > CONNECT_TIMEOUT:
@@ -189,6 +204,10 @@ func _reset_session() -> void:
 	match_info = {}
 	rooms = []
 	_seq = 0
+	_rtt_sent = -1
+	if rtt_ms != -1:
+		rtt_ms = -1
+		rtt_changed.emit(rtt_ms)
 	if had_room: room_changed.emit(room)
 
 func _set_state(s: int) -> void:
@@ -200,8 +219,10 @@ func _set_state(s: int) -> void:
 
 func list_rooms() -> void: _send(NetProtocol.list())
 func create_room(room_name: String, level: String, count: int, password: String, hand: Array) -> void:
+	room_password = password
 	_send(NetProtocol.create(room_name, level, count, password, hand))
 func join_room(room_id: String, password: String, hand: Array) -> void:
+	room_password = password
 	_send(NetProtocol.join(room_id, password, hand))
 ## Leaves the room (or the match) at once on this side; the relay keeps the room open for the others.
 func leave_room() -> void:
@@ -251,6 +272,10 @@ func handle_message(m: Dictionary) -> void:
 			_set_state(State.ONLINE)
 			welcomed.emit(player_id, version_ok) # the relay sends `rooms` right after welcome
 		"rooms":
+			if _rtt_sent >= 0:
+				rtt_ms = Time.get_ticks_msec() - _rtt_sent
+				_rtt_sent = -1
+				rtt_changed.emit(rtt_ms)
 			rooms = (m.get("rooms", []) as Array).duplicate(true)
 			rooms_changed.emit(rooms)
 		"room":
@@ -315,3 +340,10 @@ func _player_name() -> String:
 func _version() -> String:
 	if version == "": version = CoopLevels.content_version()
 	return version
+
+## A player's round trip for the room's rows: yours as measured, another's when the relay reports one
+## (`ping_ms` on the player entry — v1 does not), else -1.
+func ping_of(player: String) -> int:
+	if player == player_id: return rtt_ms
+	var p = NetProtocol.find_player(room, player)
+	return NetProtocol.int_of(p, "ping_ms", -1) if p != null else -1

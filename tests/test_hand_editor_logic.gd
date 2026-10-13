@@ -101,6 +101,8 @@ func test_filters_on_the_real_content() -> void:
 	assert_eq(HandLogic.count_text(shown.size(), es.size()), "%d of %d towers" % [es.size() - 1, es.size()])
 
 func test_sort_number_name_cost() -> void:
+	assert_seq(HandLogic.SORT_NAMES, ["Default", "Name", "Cost"], "the number sort is labelled Default")
+	assert_eq(HandLogic.SORTS[0], "number", "Default is the first option and sorts by the hidden number")
 	var c := _collection()
 	var es := HandLogic.entries(c, lib().catalog, _conv)
 	var f := HandLogic.default_filter()
@@ -204,9 +206,7 @@ func test_detail_texts() -> void:
 	var t: TowerAsset = lib().catalog.find_tower("archer")
 	var me := DefStats.new(_conv.entity(t.entity))
 	var vocab: Vocabulary = _conv.rules(lib().rules).vocabulary
-	assert_eq(HandLogic.result_name("2", "Move"), "Tiles", "a walk's reach is tiles")
-	assert_eq(HandLogic.result_name("1", "Move"), "Tile")
-	assert_eq(HandLogic.result_name("10", "Damage"), "Damage")
+	assert_eq(MenuLogic.result_name("Move"), "Range", "a walk's reach reads as Range (user, 2026-10-13)")
 	var mage: TowerAsset = lib().catalog.find_tower("mage")
 	assert_seq(HandLogic.stat_tiles(DefStats.new(_conv.entity(mage.entity)), vocab).map(func(x): return x[1]),
 		["Max HP", "Power", "Range", "Speed", "Potency", "Radius"], "no cap: Potency and Radius make a third row")

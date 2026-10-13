@@ -80,7 +80,9 @@ func _build() -> void:
 	left.add_child(TdMenu.label("Level", "h3", TdTheme.color("cream.100"), 22))
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS # more levels below: the bar says so
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	CoopUi.style_scrollbar(scroll)
 	left.add_child(scroll)
 	_levels = TdMenu.vbox(6)
 	_levels.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -120,7 +122,7 @@ func _refresh() -> void:
 		CoopLevels.hand_cap(level_id), "" if CoopLevels.hand_cap(level_id) == 1 else "s"]
 	CoopUi.clear(_levels)
 	for id in CoopLevels.list().level_ids():
-		var row := CoopUi.level_row(id, 770, id == level_id)
+		var row := CoopUi.level_row(id, 750, id == level_id)
 		var k: String = id
 		row.gui_input.connect(func(ev):
 			if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:

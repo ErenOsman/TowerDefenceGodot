@@ -19,7 +19,7 @@ var _apply_note: HBoxContainer
 var _apply: TdButton
 
 func _build() -> void:
-	var w := CoopUi.window(self, Vector2(1320, 790), 32)
+	var w := CoopUi.window(self, Vector2(1340, 790), 32)
 	window = w.panel
 	var body: VBoxContainer = w.body
 	var head := CoopUi.title_row("Room settings", "Only the host sees this.", 56)
@@ -30,7 +30,7 @@ func _build() -> void:
 	body.add_child(cols)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.custom_minimum_size = Vector2(700, 0)
+	scroll.custom_minimum_size = Vector2(620, 0)
 	cols.add_child(scroll)
 	_levels = TdMenu.vbox(6)
 	_levels.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -38,7 +38,7 @@ func _build() -> void:
 	var right := TdMenu.vbox(12)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cols.add_child(right)
-	_card = CoopUi.level_card(540, 190, true)
+	_card = CoopUi.level_card(560, 190, true)
 	_card.turns.visible = false
 	_card.extra.add_child(TdMenu.label("Rules come with the level.", "body", TdTheme.color("ink"), 20))
 	right.add_child(_card.panel)
@@ -90,7 +90,7 @@ func removed_names() -> Array:
 func _refresh() -> void:
 	CoopUi.clear(_levels)
 	for id in CoopLevels.list().level_ids():
-		var row := CoopUi.level_row(id, 680, id == level_id, "Current" if id == _current_level() else "")
+		var row := CoopUi.level_row(id, 600, id == level_id, "Current" if id == _current_level() else "")
 		var k: String = id
 		row.gui_input.connect(func(ev):
 			if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
@@ -101,18 +101,18 @@ func _refresh() -> void:
 	var present: int = (net.room.get("players", []) as Array).size() if net != null and net.in_room else 1
 	_count_note.text = "%d player%s %s in the room. Fewer slots remove the last to join." % [present, "" if present == 1 else "s", "is" if present == 1 else "are"]
 	var gone := removed_names()
-	CoopUi.set_warning(_lower_warn, "%s will be removed (%s joined last)." % [NetProtocol.join_names(gone), "they" if gone.size() > 1 else "they"] if gone.size() > 0 else "")
+	CoopUi.set_warning(_lower_warn, "%s will be removed (joined last); everyone's Ready resets." % NetProtocol.join_names(gone) if gone.size() > 0 else "")
 	var changed := level_id != _current_level() or count != _current_count()
 	if gone.size() > 0:
-		CoopUi.set_warning(_apply_note, "%d player%s leave; everyone's Ready resets." % [gone.size(), "" if gone.size() == 1 else "s"])
+		CoopUi.set_warning(_apply_note, "") # the names line above says it once
 		_apply.style = TdButton.Style.DANGER
 		_apply.text = "Apply and remove %d" % gone.size()
-		_apply.custom_minimum_size = Vector2(320, 64)
+		_fit_apply()
 	else:
 		CoopUi.set_warning(_apply_note, "Everyone's Ready resets." if changed else "No changes yet.", CoopUi.GOLD if changed else TdTheme.color("cream.200"))
 		_apply.style = TdButton.Style.PRIMARY
 		_apply.text = "Apply"
-		_apply.custom_minimum_size = Vector2(222, 64)
+		_fit_apply()
 	_apply.set_interactable(changed, "No changes yet")
 
 func apply() -> void:
@@ -120,3 +120,10 @@ func apply() -> void:
 	if level_id != _current_level(): net.set_level(level_id)
 	if count != _current_count(): net.set_count(count)
 	close()
+
+## Apply's width follows its label (24 px padding each side), at least 222.
+func _fit_apply() -> void:
+	var f: Font = TdTheme.font("button")
+	var w := f.get_string_size(_apply.text, HORIZONTAL_ALIGNMENT_LEFT, -1, _apply.font_size).x + 24.0 * 2.0 + 40.0 # + the check icon
+	_apply.custom_minimum_size = Vector2(maxf(222.0, w), 64)
+	_apply.size = _apply.custom_minimum_size

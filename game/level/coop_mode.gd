@@ -41,6 +41,8 @@ var lost := false
 var awaiting := 0
 ## Rounds whose checksum was sent, in order (tests read it).
 var checksums: Array = []
+## Players who passed in this round (player id → true; cleared when a round ends). The HUD's turn order marks them.
+var passed: Dictionary = {}
 var setup_error := ""
 
 var _last_turn := "-"
@@ -192,10 +194,12 @@ func _on_cmd(player: String, _round: int, _seq: int, cmd: Dictionary) -> void:
 	if player == me: awaiting = maxi(0, awaiting - 1)
 	var before := coop.round
 	var ok := coop.apply_command(player, cmd)
-	command_applied.emit(player, cmd, ok)
 	if not ok:
+		command_applied.emit(player, cmd, ok)
 		_desync(before, "%s's move was refused here (%s)." % [name_of(player), coop.last_reason])
 		return
+	if str(cmd.get("k", "")) == "pass": passed[player] = true
+	command_applied.emit(player, cmd, ok)
 	_after_change(before)
 
 func _on_player_left(player: String) -> void:
@@ -206,8 +210,8 @@ func _on_player_left(player: String) -> void:
 	if not slots.has(player) or coop.left.has(player): return
 	var before := coop.round
 	coop.remove_player(player)
-	player_gone.emit(player, name_of(player))
 	chat_line.emit("", "%s left the match." % name_of(player), Color(0, 0, 0, 0))
+	player_gone.emit(player, name_of(player))
 	_after_change(before)
 
 func _on_desync(round: int, _hashes: Dictionary) -> void:
@@ -218,6 +222,7 @@ func _on_chat(_from: String, from_name: String, text: String) -> void:
 
 ## After a command or a leaver: a finished round sends its checksum; the acting player may have changed.
 func _after_change(round_before: int) -> void:
+	if coop.round != round_before: passed.clear()
 	if coop.round != round_before or (coop.is_over and not checksums.has(round_before)):
 		var h := coop.checksum()
 		checksums.append(round_before)

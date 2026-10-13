@@ -4,16 +4,19 @@ extends SceneTree
 ##   ~/godot/run.sh projects/td -s tools/coop_shot.gd [-- <out dir>]
 ## PNGs: <out dir>/coop_<n>_<step>.png — list (3 rooms), list_empty, list_offline, create, create_refused, join_wrong,
 ## room_host (4 slots, 3 players… 2 ready), room_guest, room_changed (level banner), settings_lower.
+## A second argument limits the steps saved (comma list, e.g. "list,room_host"); later steps are skipped.
 
 var out_dir := "user://coop"
 var _n := 0
 var net: RelayClient
 var relay: FakeRelay
 var bots := {}   # name → FakeRelay.Link
+var only: PackedStringArray = []
 
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	if args.size() > 0: out_dir = args[0]
+	if args.size() > 1: only = args[1].split(",")
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
 	_run.call_deferred()
 
@@ -44,6 +47,9 @@ func _run() -> void:
 	net.player_name_override = "Çağrı"
 	net.connect_fake(relay)
 	net.practice = false # shown as online (the fake relay stands in for the server)
+	net.auto_poll = true
+	relay.player_pings = {}
+	net._rtt_in = 1e9 # no round-trip probe against the in-process relay (it would measure frame time)
 	await _until(func(): return not flow.is_loading, 30.0)
 	await _frames(4)
 	flow.go(flow.Camp)
@@ -57,8 +63,10 @@ func _run() -> void:
 	# --- three rooms from bots
 	var ids := CoopLevels.list().level_ids()
 	var mert := _bot("Mert")
+	relay.player_pings[mert.player_id] = 180
 	_say(mert, NetProtocol.create("Quick slimes", ids[1], 2, "", ["cannon"]))
 	var ayla := _bot("Ayla")
+	relay.player_pings[ayla.player_id] = 42
 	_say(ayla, NetProtocol.create("Herkes gelsin!", ids[0], 6, "", ["mage", "archer"]))
 	var sule := _bot("Şule")
 	_say(sule, NetProtocol.create("Akşam savunması", ids[2], 4, "gizli", ["archer", "cannon", "mage"]))
@@ -76,6 +84,7 @@ func _run() -> void:
 	await _frames(4)
 	var join: CoopJoinPopup = _top(CoopJoinPopup)
 	join._password.text = "yanlış"
+	join._password.caret_column = join._password.text.length()
 	join.join()
 	await _frames(10)
 	await _shot("join_wrong")
@@ -99,13 +108,14 @@ func _run() -> void:
 	# --- our own room (host view): 4 slots, Mert and Ayla join, 2 ready
 	create._name.text = "Akşam savunması"
 	create._name.text_changed.emit(create._name.text)
+	create._password.text = "gizli"
 	create.create()
 	await _frames(8)
 	var room: CoopRoom = lobby.room_popup
 	_say(mert, NetProtocol.leave())
-	_say(mert, NetProtocol.join(net.room.id, "", ["archer", "cannon", "mage"]))
+	_say(mert, NetProtocol.join(net.room.id, "gizli", ["archer", "cannon", "mage"]))
 	_say(ayla, NetProtocol.leave())
-	_say(ayla, NetProtocol.join(net.room.id, "", ["cannon", "archer"]))
+	_say(ayla, NetProtocol.join(net.room.id, "gizli", ["cannon", "archer"]))
 	await _frames(4)
 	net.set_ready(true)
 	_say(mert, NetProtocol.ready(true))
@@ -113,7 +123,11 @@ func _run() -> void:
 	net.chat("I take the left road.")
 	_say(mert, NetProtocol.chat("ok, Mage on the right then"))
 	await _frames(12)
+	net.rtt_ms = 42 # the fake relay answers in-process: a typical round trip for the picture
+	room.refresh()
+	await _frames(4)
 	await _shot("room_host")
+	if not only.is_empty() and not only.has("room_changed"): quit(0); return
 	# --- the level changes (banner + everyone not ready)
 	net.set_level(ids[1])
 	await _frames(10)
@@ -163,6 +177,7 @@ func _until(cond: Callable, timeout: float) -> void:
 		await process_frame
 
 func _shot(label: String) -> void:
+	if not only.is_empty() and not only.has(label): return
 	await RenderingServer.frame_post_draw
 	_n += 1
 	var p := "%s/coop_%02d_%s.png" % [out_dir, _n, label]

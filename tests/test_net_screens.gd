@@ -51,7 +51,8 @@ func test_lobby_offline_state() -> void:
 	me.disconnect_relay()
 	l.refresh()
 	assert_eq(l._empty_title.text, "Can't reach the server.")
-	assert_eq(l._empty_actions.get_child_count(), 2, "Retry and Offline practice")
+	assert_eq(l._empty_actions.get_child_count(), 1, "Retry only (Offline practice is in the F1 dev panel)")
+	assert_false(l._join.visible, "no Join without a room")
 	assert_false(l._create.interactable)
 
 func test_join_popup_shows_wrong_password() -> void:
@@ -81,6 +82,8 @@ func test_room_slots_host_controls_and_settings() -> void:
 	me.poll()
 	var room: CoopRoom = l.room_popup
 	assert_not_null(room)
+	assert_false(room._code.text.contains(me.room.id), "the internal room id never shows")
+	assert_eq(room.invite_text(), "Room: Akşam")
 	assert_eq(room._slots.get_child_count(), 4, "one row per slot")
 	bot.send_text(NetProtocol.encode(NetProtocol.join(me.room.id, "", ["mage"])))
 	me.poll()

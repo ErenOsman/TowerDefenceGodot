@@ -146,6 +146,19 @@ func _build() -> void:
 	_layout()
 	refresh_keys()
 
+## Adds a part to the tracker before the phase tag, after a divider (co-op: the turn order medallions).
+func add_tracker_part(part: Control) -> void:
+	var row := _phase_tag.get_parent()
+	var sep := ColorRect.new()
+	sep.color = TdTheme.color("wood.500")
+	sep.custom_minimum_size = Vector2(2, 32)
+	sep.size_flags_vertical = SIZE_SHRINK_CENTER
+	sep.mouse_filter = MOUSE_FILTER_IGNORE
+	row.add_child(sep)
+	row.move_child(sep, _phase_tag.get_index())
+	row.add_child(part)
+	row.move_child(part, _phase_tag.get_index())
+
 func _pill() -> PanelContainer:
 	var p := HudArt.panel("pill_wood", [8, 8, 20, 8])
 	p.custom_minimum_size = Vector2(0, 56)
@@ -227,13 +240,17 @@ func _process(delta: float) -> void:
 		phase_text = controller.turn_text # co-op: whose turn it is ("Your turn" / "Şule's turn")
 	_phase.text = phase_text
 	_phase_tag.visible = phase_text != ""
-	if _phase_shown != f.phase:
-		_phase_shown = f.phase
+	# co-op: cobalt only for YOUR turn; another player's turn is a wood chip
+	var others: bool = controller.is_coop and f.phase == Phase.Player and not controller.current_player in ["", controller.local_player]
+	var phase_key: int = f.phase + (100 if others else 0)
+	if _phase_shown != phase_key:
+		_phase_shown = phase_key
 		var sprite := "tag_phase_player" if f.phase == Phase.Player else "tag_phase_enemy"
+		if others: sprite = "pill_wood"
 		_phase_tag.add_theme_stylebox_override("panel", TdTheme.stylebox(sprite, Color.WHITE, [18, 4, 18, 4]))
 		_phase_tag.modulate.a = 0.0
 		TdTheme.tween(_phase_tag).tween_property(_phase_tag, "modulate:a", 1.0, TdTheme.motion("quick"))
-	_wave.text = HudText.wave_text(f.waves)
+	_wave.text = ("Wave " if controller.is_coop else "") + HudText.wave_text(f.waves)
 	_show_pips(f.waves)
 	_show_energy(controller.shown_energy, dt)
 	_show_hp(f, dt)

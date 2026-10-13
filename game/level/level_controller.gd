@@ -85,6 +85,9 @@ var _was_busy := false
 var _end_shown := false
 var _launched := false
 var _sequence: SequenceRun = null
+## The guided tutorial (game/level/guided_tutorial.gd) while the catalog's tutorial level plays it, else null. While it
+## runs, `sequence` is its run and every command asks it first (input_allowed).
+var guided: GuidedTutorial = null
 var _waves_cleared := 0
 var _waves_arrived := 0
 var _met := {}
@@ -138,11 +141,13 @@ var shown: ViewFrame:
 ## your turn, with nothing of yours still on its way to the relay).
 var can_act: bool:
 	get: return session != null and not director.busy and session.phase == Phase.Player and not session.is_over \
-		and not (_sequence != null and _sequence.blocking) and (coop == null or coop.my_turn)
+		and not (sequence != null and sequence.blocking) and (coop == null or coop.my_turn)
 
 ## The speech-bubble sequence playing (the level's intro, the tutorial's steps, an entrance), or null.
 var sequence: SequenceRun:
-	get: return _sequence if _sequence != null and not _sequence.finished else null
+	get:
+		if guided != null and not guided.finished: return guided.run
+		return _sequence if _sequence != null and not _sequence.finished else null
 
 ## The unit the playing sequence is about (an enemy's entrance lines), or -1.
 var sequence_subject: int:
@@ -191,6 +196,8 @@ var hint: String:
 	get:
 		if setup_error != null: return setup_error
 		if director != null and director.busy: return "Playing…  (%s skips one action)" % _key_first("Skip")
+		# the guided tutorial's refusal (its hint) shows over the placing / aiming help
+		if _message != null and guided != null and not guided.finished: return _message
 		if _placing != null:
 			var p: TowerDef = session.tower(_placing)
 			if p != null and session.energy < p.cost:
@@ -529,6 +536,7 @@ func _process(delta: float) -> void:
 		_check_entrances()
 		_discover_for_codex()
 	_tick_sequence(unscaled)
+	_tick_guided(unscaled)
 	if director.busy and _pressed("Skip"): skip()
 	_handle_pause_keys()
 	_handle_input()
@@ -600,21 +608,40 @@ func default_hud_insets() -> Vector3:
 
 ## Continues the sequence's line when it waits for a click (the bubble's click).
 func continue_sequence() -> void:
-	if _sequence != null: _sequence.click()
+	if guided != null and not guided.finished: guided.click()
+	elif _sequence != null: _sequence.click()
 	version += 1
 
 ## Ends the sequence at once (the bubble's Skip).
 func skip_sequence() -> void:
-	if _sequence != null: _sequence.skip()
+	if guided != null and not guided.finished: guided.skip()
+	elif _sequence != null: _sequence.skip()
 	version += 1
+
+## The guided tutorial lets the player do this now (always true without it). kind / payload: see
+## GuidedTutorial.allows ("piece" tower id, "tile", "select" entity id, "ability", "aim" tile, "quick_cast", "end_turn").
+func input_allowed(kind: String, payload = null) -> bool:
+	return guided == null or guided.finished or guided.allows(kind, payload)
+
+## input_allowed, and a refusal (the hint repeated, the ringed target shakes) when it is not.
+func _gate(kind: String, payload = null) -> bool:
+	if input_allowed(kind, payload): return true
+	guided.refuse()
+	version += 1
+	return false
+
+func _guided_event(e: String) -> void:
+	if guided != null: guided.notify(e)
 
 ## Starts placing a tower from the hand, or stops when it is already being placed.
 func toggle_placing(tower_id: String) -> void:
 	var was: bool = _placing == tower_id
+	if not was and not _gate("piece", tower_id): return
 	_cancel_modes()
 	if not was and can_act:
 		_placing = tower_id
 		_selected = -1
+		_guided_event("placing")
 	version += 1
 
 ## The tower whose tray piece is under the pointer (its ring lights on the board); -1 when none.
@@ -627,6 +654,7 @@ func select_and_show(id: int) -> void:
 
 ## Selects an entity (its abilities and stats show in the HUD); -1 clears it.
 func select(id: int) -> void:
+	if id >= 0 and id != _selected and not _gate("select", id): return
 	_cancel_modes()
 	preview_ability(null, null)
 	preview_aura(null, null)
@@ -638,6 +666,7 @@ func select(id: int) -> void:
 		if v != null: camera.glide(v.global_position)
 	_message = null
 	if id >= 0 and _sequence != null: _sequence.notify(SequenceEvent.UnitSelected)
+	if id >= 0: _guided_event("selected")
 	if cleared and _sequence != null: _sequence.notify(SequenceEvent.SelectionCleared)
 	version += 1
 
@@ -648,6 +677,7 @@ func toggle_aim(ability: AbilityDef) -> void:
 		_cancel_modes()
 		version += 1
 		return
+	if not _gate("ability", ability): return
 	if not can_act: return
 	_cancel_modes()
 	if not commands(caster):
@@ -671,7 +701,9 @@ func toggle_aim(ability: AbilityDef) -> void:
 ## otherwise the hint says why.
 func quick_cast(ability: AbilityDef) -> void:
 	var caster: Entity = session.state.get_entity(_selected) if session != null else null
-	if caster == null or not can_act: return
+	if caster == null: return
+	if not _gate("quick_cast", ability): return
+	if not can_act: return
 	_cancel_modes()
 	if not commands(caster):
 		_say("Not your tower")
@@ -709,6 +741,7 @@ func sell_selected() -> void:
 	var e: Entity = session.state.get_entity(_selected) if session != null else null
 	var tower_id = session.tower_id_of(e) if e != null else null
 	if tower_id == null: return
+	if not _gate("sell", tower_id): return
 	if coop != null:
 		if not can_act: return
 		_coop_send(CoopSession.sell_command(tower_id))
@@ -717,12 +750,14 @@ func sell_selected() -> void:
 
 ## Ends the round (co-op: ends your turn for this round — final; the enemies move once everyone has ended).
 func end_round() -> void:
+	if not _gate("end_turn"): return
 	if not can_act: return
 	if coop != null:
 		_coop_send({"k": "end_turn"})
 		return
 	_do(func(): session.end_round(); return true)
 	if _sequence != null: _sequence.notify(SequenceEvent.RoundEnded)
+	_guided_event("round_ended")
 
 ## Finishes the action that is playing.
 func skip() -> void:
@@ -741,6 +776,8 @@ var coop: CoopMode = null
 const COOP_NOTICE_SECONDS := 4.0
 const COOP_LEAVE_SECONDS := 5.0
 var coop_notice := ""
+## The notice's second line ("Their towers are neutral now; anyone can use them.").
+var coop_notice_sub := ""
 var _coop_notice_left := 0.0
 var _coop_leave_in := -1.0
 ## Chat lines of the match, oldest first: [{name, text, color, system}] (the HUD shows the last few).
@@ -805,9 +842,19 @@ func player_name(player: String) -> String:
 func player_color(player: String) -> Color:
 	return coop.color_of(player) if coop != null else Color.WHITE
 
+## Co-op: the player's picture (the first tower of their hand), or null.
+func player_portrait(player: String) -> Texture2D:
+	if coop == null: return null
+	var hand: Array = coop.coop.hand_of(player)
+	return HudArt.portrait(converter, hand[0].entity) if not hand.is_empty() and hand[0].entity != null else null
+
+## Co-op: whether Pass would do something now (your turn, someone else still to act this round).
+var can_pass: bool:
+	get: return coop != null and can_act and coop.coop.turn_order.size() > 1
+
 ## Co-op: gives your turn away (you act again after the others this round).
 func pass_turn() -> void:
-	if coop == null or not can_act: return
+	if not can_pass: return
 	_coop_send({"k": "pass"})
 
 ## Co-op: whether you could still do something besides walking (End turn's attention); single player: the session's.
@@ -844,11 +891,14 @@ func _setup_coop(info: Dictionary, lib: ContentLibrary) -> bool:
 	_my_pool = coop.my_energy()
 	coop.turn_changed.connect(func(_p): version += 1)
 	coop.command_applied.connect(_on_coop_command)
-	coop.desynced.connect(func(_r, reason): _coop_end("%s Back to the lobby…" % reason))
-	coop.match_lost.connect(func(reason): _coop_end("%s Back to the lobby…" % reason))
-	coop.player_gone.connect(func(_p, n): _set_coop_notice("%s left the match." % n, COOP_NOTICE_SECONDS))
+	coop.desynced.connect(func(_r, reason): _coop_end(reason))
+	coop.match_lost.connect(func(reason): _coop_end(reason))
+	coop.player_gone.connect(func(_p, n):
+		_set_coop_notice("%s left the match." % n, COOP_NOTICE_SECONDS, NEUTRAL_LINE)
+		chat_lines.append({"name": "", "text": NEUTRAL_LINE, "color": Color.WHITE, "system": true, "at": Time.get_ticks_msec()})
+		chat_changed.emit())
 	coop.chat_line.connect(func(from_name, text, color):
-		chat_lines.append({"name": from_name, "text": text, "color": color, "system": from_name == ""})
+		chat_lines.append({"name": from_name, "text": text, "color": color, "system": from_name == "", "at": Time.get_ticks_msec()})
 		if chat_lines.size() > 50: chat_lines.pop_front()
 		chat_changed.emit())
 	return true
@@ -872,8 +922,11 @@ func _on_pool_energy(slot: int, amount: int, energy: int) -> void:
 	_my_pool = energy
 	energy_ticked.emit(amount, energy)
 
-func _set_coop_notice(text: String, seconds: float) -> void:
+const NEUTRAL_LINE := "Their towers are neutral now; anyone can use them."
+
+func _set_coop_notice(text: String, seconds: float, sub := "") -> void:
 	coop_notice = text
+	coop_notice_sub = sub
 	_coop_notice_left = seconds
 	coop_notice_changed.emit(text)
 	version += 1
@@ -882,7 +935,7 @@ func _set_coop_notice(text: String, seconds: float) -> void:
 func _coop_end(text: String) -> void:
 	if _coop_leave_in >= 0.0: return
 	_cancel_modes()
-	_set_coop_notice(text, INF)
+	_set_coop_notice(text, INF, "Back to the lobby…")
 	_coop_leave_in = COOP_LEAVE_SECONDS
 
 func _tick_coop(unscaled: float) -> void:
@@ -1078,6 +1131,9 @@ func _handle_input() -> void:
 	if _pressed("EndRound"):
 		end_round()
 		return
+	if coop != null and _pressed("Pass"):
+		pass_turn()
+		return
 	var hand := _modifier_held("Hand")
 	var ability_keys := _modifier_held("Aim") or quick_cast_held
 	_hold_preview(ability_keys)
@@ -1107,6 +1163,17 @@ func click_tile(p: Vector2i) -> void:
 	_click_tile(p)
 
 func _click_tile(p: Vector2i) -> void:
+	if guided != null and not guided.finished:
+		if _placing != null and can_act:
+			if not _gate("tile", p): return
+		elif _aiming != null and can_act:
+			if not _gate("aim", p): return
+		else:
+			var id := _shown_entity_at(p) if not can_act else -1
+			if can_act:
+				var under: Entity = session.state.entity_at(p)
+				id = under.id if under != null else -1
+			if not _gate("select", id): return
 	if not can_act: # while an action plays: clicks only select, from what is shown
 		select(_shown_entity_at(p))
 		return
@@ -1124,6 +1191,7 @@ func _click_tile(p: Vector2i) -> void:
 			if placed != null:
 				_selected = placed.id
 				if _sequence != null: _sequence.notify(SequenceEvent.TowerPlaced)
+				_guided_event("placed")
 		else:
 			_say(session.last_reason)
 			version += 1
@@ -1365,7 +1433,7 @@ func _draw_highlights() -> void:
 		for x in grid.width:
 			for y in grid.height:
 				var p := Vector2i(x, y)
-				if session.can_place(_placing, p): _mark(p, Preview.PLACE)
+				if session.can_place(_placing, p) and input_allowed("tile", p): _mark(p, Preview.PLACE)
 				elif grid.buildable.has(p): _mark(p, Preview.PLACE_BLOCKED)
 		session.last_reason = reason
 
@@ -1407,7 +1475,9 @@ func _draw_highlights() -> void:
 
 	if _aiming != null and caster != null:
 		var walk := _aiming.targeting.is_movement
-		for t in AimPreview.range(session.state, caster.id, _aiming): _mark(t, Preview.MOVE if walk else Preview.RANGE)
+		for t in AimPreview.range(session.state, caster.id, _aiming):
+			if walk and not input_allowed("aim", t): continue # the guided tutorial lights only its tile
+			_mark(t, Preview.MOVE if walk else Preview.RANGE)
 		if not walk:
 			for a in _aims: _mark(a.tile, _target_kind(caster, a.tile))
 		if _route != null: _mark_route(caster.pos, _route.path)
@@ -1697,12 +1767,37 @@ func _start_intro() -> void:
 	if is_tutorial: play = profile == null or not profile.created or profile.tutorial_pending
 	else: play = profile == null or not profile.has_seen_intro(level.get_id())
 	if not play: return
+	if is_tutorial and start_guided(profile): return
 	_play(level.intro, profile, "" if is_tutorial else level.get_id())
+
+## Starts the guided tutorial from res://data/tutorial.json (false when the file is missing: the content's intro plays).
+func start_guided(profile: PlayerProfile = null, path: String = GuidedTutorial.PATH) -> bool:
+	var player_name := profile.player_name if profile != null and profile.created else PlayerProfile.DefaultName
+	var keys = _auto("KeyBinds")
+	var fill := func(text: String) -> String:
+		text = text.replace("{player}", player_name)
+		return keys.fill_keys(text) if keys != null else GuidedTutorial.plain_fill(text)
+	var g := GuidedTutorial.load_file(self, path, fill)
+	if g == null: return false
+	guided = g
+	g.run.line_changed.connect(func():
+		version += 1
+		sequence_changed.emit())
+	version += 1
+	sequence_changed.emit()
+	return true
+
+## Ticks the guided tutorial: Space goes on on a talk line; "won" when the level is won.
+func _tick_guided(unscaled: float) -> void:
+	if guided == null or guided.finished: return
+	if session.outcome == Outcome.Won: guided.notify("won")
+	if not director.busy and guided.talking and _pressed("Skip"): guided.click()
+	guided.tick(unscaled, not director.busy)
 
 ## The first time the player meets an enemy whose asset has entrance lines (a boss), the base speaks them,
 ## pointing at it, once its arrival has played. One at a time: they wait for any other sequence.
 func _check_entrances() -> void:
-	if director.busy or session.is_over or (_sequence != null and not _sequence.finished): return
+	if director.busy or session.is_over or (_sequence != null and not _sequence.finished) or sequence != null: return
 	var sd = _auto("SaveData")
 	var profile: PlayerProfile = sd.profile if sd != null else null
 	for enemy in session.enemies:
@@ -1760,6 +1855,8 @@ func _play(asset: SequenceAsset, profile: PlayerProfile, seen_key: String) -> vo
 
 ## Tells the sequence about a cast: a movement ability is TowerMoved, anything else AbilityCast (and QuickCast).
 func _notify_cast(ability: AbilityDef, quick: bool) -> void:
+	_guided_event("cast")
+	if quick: _guided_event("quick_cast")
 	if _sequence == null: return
 	if ability.tags.has(Tags.Movement):
 		_sequence.notify(SequenceEvent.TowerMoved)
@@ -1805,6 +1902,8 @@ func _tick_sequence(unscaled: float) -> void:
 ## The ring and dim round what the sequence line points at on the board.
 func _update_sequence_marks() -> void:
 	var line: SequenceLine = sequence.current if sequence != null else null
+	# the guided tutorial's line points where its step needs (the HUD shows the same; no flicker between the two)
+	if guided != null and not guided.finished: line = guided.display_line()
 	if line == null or line.point_at == SequencePointAt.UI or line.point_at == SequencePointAt.Nothing or line.point_at == SequencePointAt.Center:
 		overlay.sequence.set_target(null, false)
 		return
@@ -1867,6 +1966,7 @@ func _presentation(ability) -> AbilityPresentationAsset:
 # ------------------------------------------------------------------ autoloads and keys
 
 func _auto(n: String):
+	if not is_inside_tree(): return null
 	var tree := get_tree()
 	return tree.root.get_node_or_null(n) if tree != null else null
 

@@ -23,6 +23,13 @@ var _hidden_version := -1
 var _pointing := false
 var _mode_t := 1.0
 var _clock := 0.0
+## The guided tutorial: extra board rings (every lit tile), the shake on a refused action, the text kept when only
+## the target changes.
+var _tile_rings: Control
+var _tile_ring_points: Array = []
+var _refusals := 0
+var _shake_t := 1.0
+var _shown_text := ""
 
 func _init() -> void:
 	name = "Sequence"
@@ -63,6 +70,11 @@ func _ready() -> void:
 	_ring.visible = false
 	_ring.draw.connect(_draw_ring)
 	add_child(_ring)
+	_tile_rings = Control.new()
+	_tile_rings.mouse_filter = MOUSE_FILTER_IGNORE
+	_tile_rings.set_anchors_preset(PRESET_FULL_RECT)
+	_tile_rings.draw.connect(_draw_tile_rings)
+	add_child(_tile_rings)
 	dialogue = TdDialogueBox.new()
 	dialogue.size = Vector2(1100, 220)
 	# no bust beside the box: the Princess stands on the board (the board's speaker prop); only a small medallion
@@ -117,8 +129,12 @@ func _process(delta: float) -> void:
 		_ring.visible = false
 		_dim.visible = false
 		_run = null
+		_shown_text = ""
+		_tile_ring_points.clear()
+		_tile_rings.queue_redraw()
 		return
 	line = effective_line(line)
+	_guided_marks(line, dt)
 	if run == _run and run.version == _hidden_version: return
 	if run != _run or run.version != _version:
 		_run = run
@@ -133,14 +149,23 @@ func _process(delta: float) -> void:
 		var skip_key: String = keys.first("Skip") if keys != null else "Space"
 		var how := HudText.how_it_goes_on(line.continue_on, line.wait_for, skip_key)
 		var text := TooltipText.from_rich(line.text)
+		var guided := _guided()
 		if _pointing:
 			dialogue.hide_line()
+			var same := guided != null and text == _shown_text and bubble.is_shown()
 			bubble.show_line(_speaker(line), text, waits, portrait)
-			bubble.set_hint("" if waits else how.trim_prefix("Click to hide. "), "Click or [b]%s[/b]" % skip_key if waits else "")
+			if same: bubble.reveal_all() # only the target moved (the guided tutorial's next click): no retyping
+			if guided != null:
+				var note := "Tutorial · %d/%d" % [run.index + 1, run.count] if line.continue_on != SequenceContinue.Seconds else ""
+				bubble.set_hint(note, "Click or [b]%s[/b]" % skip_key if waits else "")
+			else:
+				bubble.set_hint("" if waits else how.trim_prefix("Click to hide. "), "Click or [b]%s[/b]" % skip_key if waits else "")
+			_shown_text = text
 			var world = controller.sequence_target_world(line)
 			if world != null and controller.camera != null and not controller.camera.in_view(world, 0.02): controller.camera.glide(world)
 		else:
 			bubble.hide_bubble()
+			_shown_text = ""
 			dialogue.show_line(_speaker(line), text, waits, null)
 			_medal.visible = portrait != null
 			HudArt.set_medallion(_medal, portrait)
@@ -161,6 +186,7 @@ func _process(delta: float) -> void:
 		var on_screen: bool = spot != null and Rect2(Vector2.ZERO, size).has_point(spot)
 		bubble.keep_inside = line.point_at == SequencePointAt.UI or on_screen
 		bubble.point_at(spot)
+		bubble.position.x = _shake_offset()
 		bubble.modulate.a = fade
 		var ui_rect = _ui_rect(line)
 		var hole = ui_rect.get_center() if ui_rect != null else _target(line, true)
@@ -171,7 +197,7 @@ func _process(delta: float) -> void:
 		_ring.visible = ui_rect != null
 		if ui_rect != null:
 			var r := HudSequence.ring_rect(ui_rect, size)
-			_ring.position = r.position
+			_ring.position = r.position + Vector2(_shake_offset(), 0)
 			_ring.size = r.size
 			_ring.queue_redraw()
 	else:
@@ -206,6 +232,10 @@ func _set_dim(centre, radius: float, alpha: float) -> void:
 ## - a line that waits for a cast or a move points at what to click next: your tower while none is selected, then
 ##   the ability button it names (Tower Walk for a move, the first attack for a cast), then its own target.
 func effective_line(line: SequenceLine) -> SequenceLine:
+	var guided := _guided()
+	if guided != null: # the guided tutorial points where its step needs the player next
+		var shown := guided.display_line()
+		return shown if shown != null else line
 	if controller == null or controller.session == null or line.continue_on != SequenceContinue.Event: return line
 	var w := line.wait_for
 	var out: SequenceLine = null
@@ -245,6 +275,49 @@ func _draw_ring() -> void:
 	box.anti_aliasing = true
 	_ring.draw_style_box(box, Rect2(Vector2.ZERO, _ring.size))
 
+## The guided tutorial while it runs, else null.
+func _guided() -> GuidedTutorial:
+	if controller == null or controller.guided == null or controller.guided.finished: return null
+	return controller.guided
+
+## The guided tutorial's extra marks: a ring on every lit tile besides the one the bubble points at, and a shake of
+## the ringed target and the bubble when an action was refused.
+func _guided_marks(line: SequenceLine, dt: float) -> void:
+	var guided := _guided()
+	_tile_ring_points.clear()
+	if guided != null:
+		if guided.refusals != _refusals:
+			_refusals = guided.refusals
+			_shake_t = 0.0
+			var target := _ui_control(line)
+			if target is HudHandPiece: (target as HudHandPiece).deny("")
+			elif target is TdButton: (target as TdButton).shake()
+		var pointed := Vector2i(line.tile_x, line.tile_y) if line.point_at == SequencePointAt.Tile else Vector2i(-99, -99)
+		for t in guided.ring_tiles():
+			if t == pointed or controller.camera == null: continue
+			var w := GridSpace.to_world(t) + Vector3.UP * 0.05
+			if controller.camera.is_position_behind(w): continue
+			_tile_ring_points.append(controller.camera.unproject_position(w))
+	_shake_t = minf(1.0, _shake_t + dt / 0.32)
+	_tile_rings.queue_redraw()
+
+## The refusal shake (±7 px, like a denied hand piece), 0 when still.
+func _shake_offset() -> float:
+	return sin(_shake_t * TAU * 4.0) * 7.0 * (1.0 - _shake_t) if _shake_t < 1.0 else 0.0
+
+## The soft light rings of the board marks (SequenceMarks' look) round each extra lit tile.
+func _draw_tile_rings() -> void:
+	if _tile_ring_points.is_empty(): return
+	var zoom: float = WorldUi.readable(controller.camera.zoom_factor()) if controller != null and controller.camera != null else 1.0
+	var half := Vector2(120, 64) * zoom * (1.0 + 0.08 * sin(_clock * 4.0)) * 0.5
+	for c in _tile_ring_points:
+		var pts := PackedVector2Array()
+		for i in 49:
+			var a := i * TAU / 48.0
+			pts.append(c + Vector2(_shake_offset() + cos(a) * half.x, sin(a) * half.y))
+		for k in [[22.0, 0.07], [15.0, 0.12], [9.0, 0.2], [4.0, 0.35], [2.0, 0.55]]:
+			_tile_rings.draw_polyline(pts, Color(1.0, 0.94, 0.72, k[1]), k[0], true)
+
 func _on_dialogue_clicked() -> void:
 	if controller == null: return
 	var run: SequenceRun = controller.sequence
@@ -272,10 +345,15 @@ func _target(line: SequenceLine, ground: bool):
 	return controller.sequence_target_screen(line, ground)
 
 func _ui_rect(line: SequenceLine):
+	var c := _ui_control(line)
+	return c.get_global_rect() if c != null else null
+
+## The HUD element a line points at (shown), or null.
+func _ui_control(line: SequenceLine) -> Control:
 	if line.point_at != SequencePointAt.UI or line.ui_element == "" or not find_ui.is_valid(): return null
 	var c: Control = null
 	if line.ui_element == "@piece": c = find_piece.call() if find_piece.is_valid() else null
 	elif line.ui_element.begins_with("@ability:"): c = find_ability.call(line.ui_element.trim_prefix("@ability:")) if find_ability.is_valid() else null
 	else: c = find_ui.call(line.ui_element)
 	if c == null or not c.is_visible_in_tree(): return null
-	return c.get_global_rect()
+	return c

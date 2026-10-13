@@ -1,0 +1,96 @@
+{
+  "_about": "The guided tutorial (game/level/guided_tutorial.gd). Lines in the Sequences.json line format plus two Godot-only fields: allow (the one thing the player may do while the line shows) and advance (what moves it on). Grammar: docs/GODOT-NOTES.md, Tutorial lines.",
+  "lines": [
+    {
+      "speaker": "Princess",
+      "text": "Slimes come down this road to your castle.",
+      "pointAt": "Tile", "tileX": 4, "tileY": 2, "uiElement": "",
+      "continueOn": "Click", "seconds": 3, "waitFor": "TowerPlaced", "pausesPlay": true,
+      "allow": [], "advance": "click"
+    },
+    {
+      "speaker": "Princess",
+      "text": "Slimes come down this road to your castle.",
+      "pointAt": "Speaker", "tileX": 0, "tileY": 0, "uiElement": "",
+      "continueOn": "Click", "seconds": 3, "waitFor": "TowerPlaced", "pausesPlay": true,
+      "allow": [], "advance": "click"
+    },
+    {
+      "speaker": "Princess",
+      "text": "Place your Archer: click its piece.",
+      "pointAt": "UI", "tileX": 0, "tileY": 0, "uiElement": "@piece",
+      "continueOn": "Event", "seconds": 3, "waitFor": "TowerPlaced", "pausesPlay": false,
+      "allow": ["piece:archer"], "advance": "event:placing"
+    },
+    {
+      "speaker": "Princess",
+      "text": "Now click a lit tile.",
+      "pointAt": "Tile", "tileX": 10, "tileY": 3, "uiElement": "",
+      "continueOn": "Event", "seconds": 3, "waitFor": "TowerPlaced", "pausesPlay": false,
+      "allow": ["tile:10,3", "tile:10,1"], "advance": "event:placed"
+    },
+    {
+      "speaker": "Princess",
+      "text": "End the turn to let the slime come.",
+      "pointAt": "UI", "tileX": 0, "tileY": 0, "uiElement": "EndTurnButton",
+      "continueOn": "Event", "seconds": 3, "waitFor": "RoundEnded", "pausesPlay": false,
+      "allow": ["end_turn"], "advance": "event:round_ended"
+    },
+    {
+      "speaker": "Princess",
+      "text": "A slime. Towers can move: click your Archer.",
+      "pointAt": "FirstTower", "tileX": 0, "tileY": 0, "uiElement": "",
+      "continueOn": "Event", "seconds": 3, "waitFor": "UnitSelected", "pausesPlay": false,
+      "allow": ["select:archer"], "advance": "event:selected"
+    },
+    {
+      "speaker": "Princess",
+      "text": "Click Tower Walk, then the lit tile.",
+      "pointAt": "UI", "tileX": 0, "tileY": 0, "uiElement": "@ability:move",
+      "continueOn": "Event", "seconds": 3, "waitFor": "TowerMoved", "pausesPlay": false,
+      "allow": ["ability:Tower Walk", "aim_tile:toward_enemy:2"], "advance": "event:cast"
+    },
+    {
+      "speaker": "Princess",
+      "text": "End turn until it is in range.",
+      "pointAt": "UI", "tileX": 0, "tileY": 0, "uiElement": "EndTurnButton",
+      "continueOn": "Event", "seconds": 3, "waitFor": "EnemyInRange", "pausesPlay": false,
+      "allow": ["end_turn"], "advance": "event:in_range"
+    },
+    {
+      "speaker": "Princess",
+      "text": "Shoot: click Shoot, then the slime.",
+      "pointAt": "UI", "tileX": 0, "tileY": 0, "uiElement": "@ability:attack",
+      "continueOn": "Event", "seconds": 3, "waitFor": "AbilityCast", "pausesPlay": false,
+      "allow": ["ability:Shoot", "aim_unit:first_enemy"], "advance": "event:cast"
+    },
+    {
+      "speaker": "Princess",
+      "text": "Nice shot.",
+      "pointAt": "FirstTower", "tileX": 0, "tileY": 0, "uiElement": "",
+      "continueOn": "Seconds", "seconds": 1.5, "waitFor": "AbilityCast", "pausesPlay": true,
+      "allow": [], "advance": "seconds:1.5"
+    },
+    {
+      "speaker": "Princess",
+      "text": "Abilities have a cooldown; End turn refreshes them.",
+      "pointAt": "UI", "tileX": 0, "tileY": 0, "uiElement": "EndTurnButton",
+      "continueOn": "Event", "seconds": 3, "waitFor": "RoundEnded", "pausesPlay": false,
+      "allow": ["end_turn"], "advance": "event:round_ended"
+    },
+    {
+      "speaker": "Princess",
+      "text": "A Runner is fast. {click:QuickCast} Shoot to fire at the nearest target.",
+      "pointAt": "UI", "tileX": 0, "tileY": 0, "uiElement": "@ability:attack",
+      "continueOn": "Event", "seconds": 3, "waitFor": "QuickCast", "pausesPlay": false,
+      "allow": ["quick_cast", "ability:Shoot", "aim_unit:enemy", "end_turn:until_castable"], "advance": "event:cast"
+    },
+    {
+      "speaker": "Princess",
+      "text": "That's it: place, move, shoot, end turn. Finish the wave.",
+      "pointAt": "Nothing", "tileX": 0, "tileY": 0, "uiElement": "",
+      "continueOn": "Event", "seconds": 3, "waitFor": "LevelWon", "pausesPlay": false,
+      "allow": ["all"], "advance": "event:won"
+    }
+  ]
+}

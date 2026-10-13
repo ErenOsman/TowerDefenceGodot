@@ -102,7 +102,7 @@ func bind(c: LevelController) -> void:
 		coop_hud = HudCoop.new()
 		root.add_child(coop_hud)
 		root.move_child(coop_hud, pause.get_index()) # under the popups
-		coop_hud.bind(c)
+		coop_hud.bind(c, top_bar)
 	var keys = get_tree().root.get_node_or_null("KeyBinds") if is_inside_tree() else null
 	if keys != null and keys.has_signal("changed"): keys.changed.connect(func():
 		top_bar.keys_changed()
@@ -179,7 +179,9 @@ func _refresh() -> void:
 	if subject != null:
 		inspector.refresh()
 		if not inspector.visible or key != _inspector_subject: inspector.play_open()
-	inspector.visible = subject != null and not pause.is_open() and not end_screen.visible
+	# the guided tutorial keeps the card closed until its free-play line: one thing to look at, one thing to click
+	var guided_card := controller.guided == null or not controller.guided.hides_card
+	inspector.visible = subject != null and not pause.is_open() and not end_screen.visible and guided_card
 	_inspector_subject = key
 
 func _layout() -> void:
