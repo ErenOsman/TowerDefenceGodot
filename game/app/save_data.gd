@@ -23,6 +23,9 @@ var profile: PlayerProfile:
 	get: return data.profile
 var codex: CodexProgress:
 	get: return data.codex
+## The Workshop tokens (Workshop — Design).
+var tokens: TokenWallet:
+	get: return data.tokens
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS

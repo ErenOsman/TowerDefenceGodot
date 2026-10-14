@@ -88,18 +88,32 @@ static func split(amount: int, n: int) -> Array:
 
 ## A player's hand from tower type IDs (the protocol's `hand`): tower IDs "<player id>:<type id>#<n>", n counting
 ## each type from 1. type_by_id: Callable(String) -> TowerType; unknown types are skipped.
+## Workshop: an entry "<type id>@<form id>" brings the tower as that form (Workshop.resolve_form: the form's entity,
+## name and cost; its tower ID still names only the type). An unknown form id falls back to the default form.
 static func build_hand(player_id: String, type_ids: Array, type_by_id: Callable) -> Array:
 	var out := []
 	var counts := {}
-	for type_id in type_ids:
-		var type: TowerType = type_by_id.call(str(type_id))
+	for entry in type_ids:
+		var parsed := parse_hand_entry(str(entry))
+		var type_id: String = parsed[0]
+		var type: TowerType = type_by_id.call(type_id)
 		if type == null: continue
 		counts[type_id] = counts.get(type_id, 0) + 1
 		var d := TowerDef.new()
 		d.id = "%s:%s#%d" % [player_id, type_id, counts[type_id]]
-		d.type = type
+		d.type = Workshop.resolve_form(type, type.find_form(parsed[1])) if parsed[1] != "" else type
 		out.append(d)
 	return out
+
+## A protocol hand entry → [type id, form id] ("archer@archer-fire" → ["archer", "archer-fire"]; "archer" → ["archer", ""]).
+static func parse_hand_entry(entry: String) -> Array:
+	var at := entry.find("@")
+	if at < 0: return [entry, ""]
+	return [entry.substr(0, at), entry.substr(at + 1)]
+
+## The protocol hand entry of a tower type in a form ("" = the default): "archer" or "archer@archer-fire".
+static func hand_entry(type_id: String, form_id: String = "") -> String:
+	return type_id if form_id == "" else "%s@%s" % [type_id, form_id]
 
 # ------------------------------------------------------------------ queries
 

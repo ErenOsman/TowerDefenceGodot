@@ -169,6 +169,46 @@ func tower_type(a: TowerAsset) -> TowerType:
 	d.cost = a.cost
 	_remember(a, d)
 	d.entity = entity(a.entity)
+	var forms := []
+	for f in a.forms:
+		if f != null: forms.append(form(f))
+	d.forms = forms
+	return d
+
+## A tower form (Workshop — Design): its entity, cost, unlock cost and parent. Not in the C# yet (Godot-first).
+func form(a: FormAsset) -> FormDef:
+	if a == null: return null
+	if _cache.has(a): return _cache[a]
+	var d := FormDef.new()
+	_remember(a, d)
+	d.id = a.get_id()
+	d.name = a.get_display_name()
+	d.description = a.description
+	d.icon = a.icon
+	d.badge = a.badge
+	d.tower = a.tower.get_id() if a.tower != null else ""
+	d.cost = a.cost
+	d.order = a.order
+	for u in a.unlock:
+		if u == null or u.token == null: continue
+		var t := token(u.token)
+		d.unlock[t.id] = d.unlock.get(t.id, 0) + u.amount
+		d.tokens[t.id] = t
+	d.parent = form(a.parent)
+	d.entity = entity(a.entity)
+	return d
+
+## A token kind (Workshop — Design).
+func token(a: TokenAsset) -> TokenDef:
+	if a == null: return null
+	if _cache.has(a): return _cache[a]
+	var d := TokenDef.new()
+	_remember(a, d)
+	d.id = a.get_id()
+	d.name = a.get_display_name()
+	d.description = a.description
+	d.icon = a.icon
+	d.rarity = a.rarity
 	return d
 
 ## One individual tower of a type, for a level's hand (tests and tools; the game builds it from the save).

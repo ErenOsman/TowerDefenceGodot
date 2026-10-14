@@ -82,6 +82,13 @@ const SCHEMA := {
 		"towers": "list:ref:TowerAsset", "enemies": "list:ref:EntityAsset", "statuses": "list:ref:StatusAsset", "tips": "list:obj:CodexTip",
 	},
 	"SequenceAsset": {"number": "int", "lines": "list:obj:SequenceLine"},
+	# Workshop (Workshop — Design): Godot-first, from res://data/content-godot until the Unity repo has them
+	"FormAsset": {
+		"id": "string", "displayName": "string", "description": "string", "icon": "art", "badge": "art",
+		"tower": "ref:TowerAsset", "parent": "ref:FormAsset", "entity": "ref:EntityAsset", "cost": "int",
+		"unlock": "list:obj:TokenAmount", "order": "int",
+	},
+	"TokenAsset": {"id": "string", "displayName": "string", "description": "string", "icon": "art", "rarity": "enum:TokenRarity"},
 	"AbilityPresentationAsset": {
 		"number": "int", "casterAnimation": "enum:CasterAnimation", "customTrigger": "string", "projectile": "art",
 		"projectileSpeed": "float", "castVfx": "art", "impactVfx": "art", "hitVfx": "art", "vfxLifetime": "float",
@@ -116,8 +123,10 @@ const SCHEMA := {
 	},
 	"CatalogLevelData": {
 		"level": "ref:LevelAsset", "requirement": "enum:RequirementKind", "requires": "list:ref:LevelAsset",
-		"requireAll": "bool", "firstClearReward": "ref:TowerAsset",
+		"requireAll": "bool", "firstClearReward": "ref:TowerAsset", "firstWinTokens": "list:obj:TokenAmount",
+		"winTokens": "list:obj:TokenAmount",
 	},
+	"TokenAmount": {"token": "ref:TokenAsset", "amount": "int"},
 	"CodexTip": {"id": "string", "title": "string", "text": "string", "image": "art"},
 	# ------------------------------------------------------------------ core classes the assets embed (other slices own them)
 	"PatternDef": {
@@ -179,6 +188,7 @@ const SCHEMA := {
 const ASSET_TYPES := [
 	"AbilityAsset", "StatusAsset", "ReactionAsset", "PassiveAsset", "EntityAsset", "ItemAsset", "TowerAsset", "LevelAsset",
 	"TerrainAsset", "TileAsset", "GameRulesAsset", "GameCatalogAsset", "CodexAsset", "SequenceAsset", "AbilityPresentationAsset",
+	"FormAsset", "TokenAsset",
 ]
 
 ## A new object of a content class by name (C# Activator.CreateInstance), or null for an unknown name.
@@ -199,6 +209,9 @@ static func create(type_name: String) -> Object:
 		"CodexAsset": return CodexAsset.new()
 		"SequenceAsset": return SequenceAsset.new()
 		"AbilityPresentationAsset": return AbilityPresentationAsset.new()
+		"FormAsset": return FormAsset.new()
+		"TokenAsset": return TokenAsset.new()
+		"TokenAmount": return TokenAmount.new()
 		"StepList": return StepList.new()
 		"LibraryEntry": return LibraryEntry.new()
 		"ReplacementData": return ReplacementData.new()
@@ -284,6 +297,7 @@ static func enum_class(enum_name: String):
 		"SequenceEvent": return SequenceEvent
 		"TileKind": return TileKind
 		"CasterAnimation": return CasterAnimation
+		"TokenRarity": return TokenRarity
 	return null
 
 ## The C# class name of a content object (its GDScript class_name), or "" for none.

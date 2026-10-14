@@ -123,6 +123,13 @@ var ui_panel_open: bool = false
 var preview_enemy_phase: bool = false
 ## The tower type this level's first clear just gave (shown on the end screen), or null.
 var reward: TowerAsset = null
+## The Workshop tokens this result just gave ({token id: amount}; first-win drops first; {} on a loss/quit/co-op).
+var drops: Dictionary = {}
+## The end screen's line for them: "Rewards: Fire Arrow ×2, Ember Core ×1" ("" for none).
+var drops_text: String:
+	get:
+		var app = _auto("GameApp")
+		return HudText.rewards_text(drops, app.catalog if app != null else null)
 ## The previewed tiles' screen rects this frame (tooltips keep clear of them).
 var preview_rects: Array = []
 
@@ -287,7 +294,7 @@ func _ready() -> void:
 ## Builds everything; on failure setup_error says why (and the scene stays empty but alive).
 func _setup() -> void:
 	var app = _auto("GameApp")
-	var lib: ContentLibrary = app.lib if app != null else ContentLibrary.load("res://data/content")
+	var lib: ContentLibrary = app.lib if app != null else ContentLibrary.load_game()
 	var coop_info := CoopLaunch.take() # a co-op match from the relay (Net.match_ready): {} in single player
 	var dev = DevLaunch.take() if coop_info.is_empty() else null # dev tools only (Level Playtester / F1 panel): null in normal play
 	if dev != null: _apply_dev_launch(dev, lib)
@@ -1771,6 +1778,8 @@ func _record(quit: bool) -> void:
 		reward = sd.complete_tutorial() if result.won and not result.quit else null
 	elif app != null and app.catalog != null:
 		reward = app.catalog.grant_first_clear_reward(result, rec, sd.towers)
+	if not is_tutorial and app != null and app.catalog != null:
+		drops = app.catalog.grant_drops(result, rec, sd.tokens) # Workshop tokens: first-win once, win drop every win
 	sd.save()
 
 ## The level's intro plays the first time the level is played (the tutorial's: until it is finished).

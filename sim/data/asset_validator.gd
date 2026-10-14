@@ -27,6 +27,8 @@ static func validate_asset(asset, vocab: Vocabulary = null) -> Array[String]:
 	if asset is TowerAsset: return validate_tower(asset)
 	if asset is LevelAsset: return validate_level(asset)
 	if asset is GameCatalogAsset: return validate_catalog(asset)
+	if asset is FormAsset: return validate_form(asset)
+	if asset is TokenAsset: return validate_token(asset)
 	var none: Array[String] = []
 	return none
 
@@ -59,7 +61,54 @@ static func warnings(asset) -> Array[String]:
 		check.call(asset.display_name.is_empty() and (asset.entity == null or asset.entity.display_name.is_empty()), "display name (on the tower or its entity)")
 		check.call(asset.description.is_empty(), "description")
 		check.call(asset.icon.is_empty(), "icon")
+	elif asset is FormAsset or asset is TokenAsset:
+		check.call(asset.display_name.is_empty(), "display name")
+		check.call(asset.description.is_empty(), "description")
+		check.call(asset.icon.is_empty(), "icon")
 	return w
+
+## The deepest a form may sit (Workshop — Design § Validation: root + 2 levels).
+const MaxFormDepth := 2
+
+## A tower form (Workshop — Design § Validation): its id, tower, entity (a Unit standing OffPath), parent (a form of
+## the same tower, no cycles, depth ≤ MaxFormDepth) and unlock cost (at least one token; tokens exist; amounts > 0).
+## Godot-first (not in the C# yet).
+static func validate_form(f: FormAsset) -> Array[String]:
+	var errors: Array[String] = []
+	var error := func(message: String) -> void: errors.append("%s: %s" % [f.name, message])
+	if f.id.is_empty(): error.call("has no form ID (saves would refer to the asset name, which breaks on rename)")
+	if f.tower == null: error.call("has no tower")
+	if f.entity == null: error.call("has no entity")
+	else:
+		if f.entity.kind != EntityKind.Unit: error.call("its entity should be a Unit")
+		if f.entity.footing != Footing.OffPath: error.call("its entity's footing should be OffPath (towers never stand on a path)")
+	if f.parent != null and f.parent.tower != f.tower: error.call("its parent %s is a form of another tower" % f.parent.name)
+	var depth := 1
+	var p := f.parent
+	var seen := {f: true}
+	while p != null:
+		if seen.has(p):
+			error.call("its parents make a cycle")
+			break
+		seen[p] = true
+		depth += 1
+		p = p.parent
+	if depth > MaxFormDepth and not errors.any(func(e): return e.contains("cycle")):
+		error.call("sits %d deep; forms may only be %d deep for now" % [depth, MaxFormDepth])
+	var total := 0
+	for i in f.unlock.size():
+		var u = f.unlock[i]
+		if u == null or u.token == null: error.call("unlock[%d] has no token" % i)
+		elif u.amount <= 0: error.call("unlock[%d] needs a positive amount" % i)
+		else: total += u.amount
+	if total == 0: error.call("costs no tokens (only the default form is free)")
+	return errors
+
+## A token kind: its id.
+static func validate_token(t: TokenAsset) -> Array[String]:
+	var errors: Array[String] = []
+	if t.id.is_empty(): errors.append("%s: has no token ID (saves would refer to the asset name, which breaks on rename)" % t.name)
+	return errors
 
 static func validate_ability(a: AbilityAsset, vocab: Vocabulary) -> Array[String]:
 	var v := Scope.new(a.name, vocab)

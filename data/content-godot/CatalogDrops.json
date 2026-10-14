@@ -1,0 +1,126 @@
+{
+ "chapter1-1": {
+  "firstWinTokens": [],
+  "winTokens": [
+   {
+    "token": "Tokens/Yew Bow",
+    "amount": 1
+   }
+  ]
+ },
+ "chapter1-2": {
+  "firstWinTokens": [],
+  "winTokens": [
+   {
+    "token": "Tokens/Yew Bow",
+    "amount": 1
+   }
+  ]
+ },
+ "chapter1-3": {
+  "firstWinTokens": [],
+  "winTokens": [
+   {
+    "token": "Tokens/Yew Bow",
+    "amount": 1
+   }
+  ]
+ },
+ "chapter1-4": {
+  "firstWinTokens": [],
+  "winTokens": [
+   {
+    "token": "Tokens/Yew Bow",
+    "amount": 1
+   }
+  ]
+ },
+ "chapter2-1": {
+  "firstWinTokens": [
+   {
+    "token": "Tokens/Fire Arrow",
+    "amount": 1
+   },
+   {
+    "token": "Tokens/Arcane Shard",
+    "amount": 1
+   }
+  ],
+  "winTokens": [
+   {
+    "token": "Tokens/Fire Arrow",
+    "amount": 1
+   },
+   {
+    "token": "Tokens/Poison Gland",
+    "amount": 1
+   }
+  ]
+ },
+ "chapter2-2": {
+  "firstWinTokens": [
+   {
+    "token": "Tokens/Fire Arrow",
+    "amount": 1
+   },
+   {
+    "token": "Tokens/Arcane Shard",
+    "amount": 1
+   },
+   {
+    "token": "Tokens/Steel Plate",
+    "amount": 2
+   }
+  ],
+  "winTokens": [
+   {
+    "token": "Tokens/Steel Plate",
+    "amount": 1
+   }
+  ]
+ },
+ "chapter2-3": {
+  "firstWinTokens": [
+   {
+    "token": "Tokens/Fire Arrow",
+    "amount": 1
+   },
+   {
+    "token": "Tokens/Arcane Shard",
+    "amount": 1
+   }
+  ],
+  "winTokens": [
+   {
+    "token": "Tokens/Poison Gland",
+    "amount": 1
+   },
+   {
+    "token": "Tokens/Arcane Shard",
+    "amount": 1
+   }
+  ]
+ },
+ "chapter2-4": {
+  "firstWinTokens": [
+   {
+    "token": "Tokens/Fire Arrow",
+    "amount": 1
+   },
+   {
+    "token": "Tokens/Arcane Shard",
+    "amount": 1
+   },
+   {
+    "token": "Tokens/Ember Core",
+    "amount": 1
+   }
+  ],
+  "winTokens": [
+   {
+    "token": "Tokens/Ember Core",
+    "amount": 1
+   }
+  ]
+ }
+}

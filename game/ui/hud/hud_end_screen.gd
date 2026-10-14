@@ -153,7 +153,9 @@ func show_outcome(outcome: int) -> void:
 		_extra.remove_child(ch)
 		ch.queue_free()
 	if _won and c.reward != null: _extra.add_child(_reward_card(c.reward))
-	elif not _won:
+	# Workshop tokens (TODO UI agent: a proper token row with icons; this is the plain line)
+	if _won and "drops_text" in c and c.drops_text != "": _extra.add_child(HudArt.label(c.drops_text, "body", TdTheme.color("cream.100")))
+	if not _won:
 		var tip = _codex_tip("losing")
 		if tip != null: _extra.add_child(_tip_card(tip))
 	_extra.visible = _extra.get_child_count() > 0

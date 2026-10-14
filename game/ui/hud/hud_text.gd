@@ -162,6 +162,34 @@ static func joined(tower_name: String) -> String:
 	var first := tower_name.substr(0, 1).to_upper()
 	return "%s %s joined you!" % ["An" if "AEIOU".contains(first) and first != "" else "A", tower_name]
 
+## A level tower's form name (Workshop): its form's name ("Fire Archer"), else its type's ("Archer"). The custom
+## name is TowerDef.name; this is the line under or beside it.
+static func form_name(def: TowerDef) -> String:
+	if def == null or def.type == null: return ""
+	if def.form != null and def.form.name != "": return def.form.name
+	return def.type.base.name if def.type.base != null else def.type.name
+
+## A level tower's form badge sprite (res://art/ui/KitB/forms/<form id>.png), "" for the default form or no sprite.
+static func badge_path(def: TowerDef) -> String:
+	if def == null or def.form == null or def.form.badge == "": return ""
+	var p := ArtPaths.kit(def.form.badge)
+	return p if p != "" and ResourceLoader.exists(p) else ""
+
+## Workshop drops as one end-screen line: "Rewards: Fire Arrow ×2, Ember Core ×1" ("" for none). drops: {token id:
+## amount}; catalog (may be null) gives the names (the id otherwise).
+static func rewards_text(drops: Dictionary, catalog: GameCatalogAsset = null) -> String:
+	var parts := token_parts(drops, catalog)
+	return "" if parts.is_empty() else "Rewards: " + ", ".join(parts)
+
+## {token id: amount} → ["Fire Arrow ×2", …] in order (names from the catalog's tokens, else the id).
+static func token_parts(amounts: Dictionary, catalog: GameCatalogAsset = null) -> Array:
+	var parts := []
+	for id in amounts:
+		if int(amounts[id]) <= 0: continue
+		var t: TokenAsset = catalog.find_token(id) if catalog != null else null
+		parts.append("%s ×%d" % [t.get_display_name() if t != null else str(id), int(amounts[id])])
+	return parts
+
 ## The end screen's summary lines (UI_EndScreen).
 static func end_summary(won: bool, rounds: int, waves_cleared: int, waves_total: int, base_hp: int, base_max: int,
 		towers_lost: int) -> String:

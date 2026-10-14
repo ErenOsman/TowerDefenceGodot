@@ -12,6 +12,9 @@ var entity: EntityDef:
 	get: return type.entity if type != null else null
 var cost: int:
 	get: return type.cost if type != null else 0
+## The form it fights as (Workshop), or null for the default form.
+var form: FormDef:
+	get: return type.form if type != null else null
 var name: String:
 	get:
 		if custom_name != "": return custom_name

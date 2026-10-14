@@ -9,6 +9,10 @@ const CLI := "res://addons/td_tools/td_tools_cli.gd"
 const WORK := "user://td_tools"
 const TIMEOUT_MS := 180000
 
+## The content a save action runs on: the game's (with the Godot-only Workshop overlay) for the default folder.
+static func _game_lib(folder: String) -> ContentLibrary:
+	return ContentLibrary.load_game() if folder == ContentFiles.Folder else ContentLibrary.load(folder)
+
 ## Runs a job here and now.
 static func run(cmd: String, args: Dictionary) -> Dictionary:
 	var folder: String = args.get("folder", ContentFiles.Folder)
@@ -37,7 +41,7 @@ static func run(cmd: String, args: Dictionary) -> Dictionary:
 		"save_action":
 			var path: String = args.get("path", SaveTools.PATH)
 			var data := SaveTools.load_data(path)
-			var line := SaveTools.run(str(args.get("action", "")), data, ContentLibrary.load(folder).catalog, args.get("arg"))
+			var line := SaveTools.run(str(args.get("action", "")), data, _game_lib(folder).catalog, args.get("arg"))
 			var problem := SaveTools.write_data(path, data)
 			return {"line": line, "problem": problem, "summary": SaveTools.summary(data)}
 	return {"problem": "unknown job '%s'" % cmd}

@@ -30,6 +30,12 @@ var camp_unlock: LevelAsset = null
 ## What the Codex lists (towers, enemies, statuses, tips).
 var codex: CodexAsset = null
 
+# Workshop (not serialized: ContentLibrary links them from Forms.json / Tokens.json)
+## Every token kind, in content order: Array of TokenAsset.
+var tokens: Array = []
+## Every tower form, in content order: Array of FormAsset (each type's own list: TowerAsset.forms).
+var forms: Array = []
+
 ## Every level entry in play order, with its chapter index: Array of [CatalogLevelData, chapter index].
 func entries() -> Array:
 	var result := []
@@ -63,6 +69,8 @@ func to_catalog() -> LevelCatalog:
 		for r in data.requires: req.append(r.get_id() if r != null else "")
 		entry.requires = req
 		entry.require_all = data.require_all
+		entry.first_win_tokens = _amounts(data.first_win_tokens)
+		entry.win_tokens = _amounts(data.win_tokens)
 		list.append(entry)
 	var infos := []
 	for c in chapters:
@@ -122,6 +130,35 @@ func grant_starting_towers(towers: TowerCollection) -> bool:
 	for t in starting_towers:
 		if t != null: _give(towers, t)
 	return towers.towers.size() > 0
+
+## A level's token drops (Workshop — Design): call right after recording a result, like grant_first_clear_reward.
+## Adds them to the wallet and returns them ({token id: amount}, first-win drops first; {} on a loss or quit).
+func grant_drops(result: LevelResult, record: LevelRecord, wallet: TokenWallet) -> Dictionary:
+	if result == null: return {}
+	var drops := Workshop.drops(result, record, to_catalog().find(result.level_id))
+	if wallet != null: wallet.add_all(drops)
+	return drops
+
+## A token kind by its id, or null.
+func find_token(token_id: String) -> TokenAsset:
+	for t in tokens:
+		if t != null and t.get_id() == token_id: return t
+	return null
+
+## A form by its id, or null.
+func find_form(form_id: String) -> FormAsset:
+	for f in forms:
+		if f != null and f.get_id() == form_id: return f
+	return null
+
+## TokenAmount list → {token id: amount} (amounts of the same token add up; empty entries skipped).
+static func _amounts(list: Array) -> Dictionary:
+	var out := {}
+	for a in list:
+		if a == null or a.token == null or a.amount <= 0: continue
+		var id: String = a.token.get_id()
+		out[id] = out.get(id, 0) + a.amount
+	return out
 
 func _give(towers: TowerCollection, type: TowerAsset) -> void:
 	var owned: OwnedTower = towers.add(type.get_id())

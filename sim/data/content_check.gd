@@ -22,7 +22,7 @@ class Finding:
 ## The asset types Validate All looks at.
 const Types := [
 	"AbilityAsset", "StatusAsset", "ReactionAsset", "PassiveAsset", "GameRulesAsset", "EntityAsset", "ItemAsset",
-	"TowerAsset", "LevelAsset", "GameCatalogAsset", "TerrainAsset", "TileAsset",
+	"TowerAsset", "LevelAsset", "GameCatalogAsset", "TerrainAsset", "TileAsset", "FormAsset", "TokenAsset",
 ]
 
 ## Checks the assets (any others are skipped). The vocabulary comes from the rules asset (or the default).
@@ -41,6 +41,23 @@ static func run(assets: Array, vocab: Vocabulary) -> Array:
 		if not (tower is TowerAsset): continue
 		if ids.has(tower.get_id()): findings.append(Finding.new(tower, "%s: tower type ID '%s' is also used by %s" % [tower.name, tower.get_id(), ids[tower.get_id()].name], true))
 		else: ids[tower.get_id()] = tower
+
+	# Workshop (Godot-first): form and token ids unique; every token kind drops somewhere (else a warning)
+	for type_name in ["FormAsset", "TokenAsset"]:
+		var seen := {}
+		for a in list:
+			if ContentSerializer.type_of(a) != type_name: continue
+			if seen.has(a.get_id()): findings.append(Finding.new(a, "%s: %s ID '%s' is also used by %s" % [a.name, "form" if type_name == "FormAsset" else "token", a.get_id(), seen[a.get_id()].name], true))
+			else: seen[a.get_id()] = a
+	var dropped := {}
+	for c in list:
+		if not (c is GameCatalogAsset): continue
+		for e in c.entries():
+			for amt in e[0].first_win_tokens + e[0].win_tokens:
+				if amt != null and amt.token != null: dropped[amt.token] = true
+	for t in list:
+		if t is TokenAsset and not dropped.has(t):
+			findings.append(Finding.new(t, "%s: no level drops it (add it to a level's firstWinTokens or winTokens)" % t.name, false))
 
 	# the levels' look (Tiles — Design): layer cells name Tiles of the right kind, and the automatic look finds a piece
 	var kit = null
@@ -76,6 +93,7 @@ static func run(assets: Array, vocab: Vocabulary) -> Array:
 		var made = true
 		if asset is LevelAsset: made = converter.level(asset)
 		elif asset is TowerAsset: made = converter.tower_type(asset)
+		elif asset is FormAsset: made = converter.form(asset)
 		elif asset is EntityAsset: made = converter.entity(asset)
 		elif asset is GameRulesAsset: made = converter.rules(asset)
 		if made == null: findings.append(Finding.new(asset, "%s: converting it failed" % asset.name, true))

@@ -11,3 +11,7 @@ var requires: Array = []
 var require_all: bool = true
 ## Given once, the first time the level is won: a new tower of this type. Null: none.
 var first_clear_reward: TowerAsset = null
+## Workshop: tokens given once, with the first win. Array of TokenAmount.
+var first_win_tokens: Array = []
+## Workshop: tokens given on every win. Array of TokenAmount.
+var win_tokens: Array = []

@@ -42,9 +42,39 @@ var rules: GameRulesAsset:
 		var list := all_of("GameRulesAsset")
 		return list[0] if not list.is_empty() else null
 
-## Loads every *.json file in the folder (res://data/content), in ordinal file-name order.
-static func load(folder: String = ContentFiles.Folder) -> ContentLibrary:
+## Loads every *.json file in the folder (res://data/content), in ordinal file-name order. With an overlay folder
+## (Godot-only content, ContentFiles.OverlayFolder), its files are merged over the folder's: a file of the same name
+## adds its entries to that file's (an entry with the same key replaces the folder's), other files are added, and
+## the overlay's CatalogDrops.json fills the catalog's drop lists (apply_drops).
+static func load(folder: String = ContentFiles.Folder, overlay: String = "") -> ContentLibrary:
 	var library := ContentLibrary.new()
+	var texts := _texts_of(folder)
+	var drops = null
+	if overlay != "" and DirAccess.dir_exists_absolute(overlay):
+		for pair in _texts_of(overlay):
+			if pair[0] == ContentFiles.DropsFile:
+				drops = pair
+				continue
+			var merged := false
+			for i in texts.size():
+				if texts[i][0] == pair[0]:
+					texts[i] = [pair[0], _merge(texts[i][1], pair[1])]
+					merged = true
+					break
+			if not merged: texts.append(pair)
+		texts.sort_custom(func(a, b): return a[0] < b[0])
+	library.add(texts)
+	if drops != null:
+		var json := JSON.new()
+		if json.parse(drops[1]) != OK: library.problems.append("%s: line %d: %s" % [drops[0], json.get_error_line(), json.get_error_message()])
+		else: library.apply_drops(json.data, drops[0])
+	return library
+
+## The game's content: res://data/content with the Godot-only overlay (res://data/content-godot) merged over it.
+static func load_game() -> ContentLibrary:
+	return ContentLibrary.load(ContentFiles.Folder, ContentFiles.OverlayFolder)
+
+static func _texts_of(folder: String) -> Array:
 	var names := []
 	for f in DirAccess.get_files_at(folder):
 		if f.ends_with(".json"): names.append(f)
@@ -52,8 +82,43 @@ static func load(folder: String = ContentFiles.Folder) -> ContentLibrary:
 	var texts := []
 	for f in names:
 		texts.append([f, FileAccess.get_file_as_string(folder.path_join(f))])
-	library.add(texts)
-	return library
+	return texts
+
+## Two content files of the same type as one: overlay's entries over base's (texts that do not parse stay apart so
+## add() reports them).
+static func _merge(base_text: String, overlay_text: String) -> String:
+	var a = JSON.parse_string(base_text)
+	var b = JSON.parse_string(overlay_text)
+	if not (a is Dictionary) or not (b is Dictionary) or not (a.get("assets") is Dictionary) or not (b.get("assets") is Dictionary):
+		return base_text if not (b is Dictionary) else overlay_text
+	for key in b["assets"]: a["assets"][key] = b["assets"][key]
+	return JSON.stringify(a)
+
+## Fills the catalog's level entries' drop lists from the overlay's drop table
+## ({ "<level id>": { "firstWinTokens": [{token, amount}], "winTokens": [...] } }); problems are reported.
+func apply_drops(root, file: String = ContentFiles.DropsFile) -> void:
+	if not (root is Dictionary):
+		problems.append("%s: not a JSON object" % file)
+		return
+	var c := catalog
+	if c == null:
+		problems.append("%s: no catalog to put the drops in" % file)
+		return
+	var list: Array = problems
+	for level_id in root:
+		var entry: CatalogLevelData = null
+		for e in c.entries():
+			if e[0].level != null and e[0].level.get_id() == level_id: entry = e[0]
+		var o = root[level_id]
+		if entry == null or not (o is Dictionary):
+			problems.append("%s: %s: %s" % [file, level_id, "no such level in the catalog" if entry == null else "not an object"])
+			continue
+		var only := {}
+		for k in ["firstWinTokens", "winTokens"]:
+			if o.has(k): only[k] = o[k]
+		for k in o:
+			if not only.has(k): problems.append("%s: %s.%s: no such field" % [file, level_id, k])
+		ContentSerializer.load_into(entry, only, self, list, "%s: %s" % [file, level_id])
 
 ## Loads files given as text: an Array of [file name, JSON text].
 func add(texts: Array) -> void:
@@ -93,6 +158,19 @@ func add(texts: Array) -> void:
 	var list: Array = problems
 	for w in work:
 		ContentSerializer.load_into(w[0], w[1], self, list, w[2])
+	_link_forms()
+
+## Not in the C#: the Workshop links each tower type to its forms (TowerAsset.forms, content order) and lists every
+## token kind and form on the catalog (GameCatalogAsset.tokens / forms), since neither is serialized there.
+func _link_forms() -> void:
+	for t in all_of("TowerAsset"): t.forms = []
+	var forms := all_of("FormAsset")
+	for f in forms:
+		if f.tower != null: f.tower.forms.append(f)
+	var c := catalog
+	if c != null:
+		c.forms = forms
+		c.tokens = all_of("TokenAsset")
 
 ## The object an entry key names ("Units/Enemies/Rabbit"), or null. (C# Get: `get` is Object's.)
 func get_asset(key) -> ContentAsset:

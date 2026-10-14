@@ -6,6 +6,14 @@ extends RefCounted
 ## The content JSON folder in this project (C# Folder = "Content", relative to the Unity project).
 const Folder := "res://data/content"
 
+## Godot-only content overlay (Workshop forms/tokens, their entities and the catalog drops) merged over Folder by
+## ContentLibrary.load_game() and hashed by ContentHash.compute(); see docs/GODOT-NOTES.md "Workshop content".
+## Delete it when the Unity repo has Forms.json / Tokens.json.
+const OverlayFolder := "res://data/content-godot"
+
+## The overlay's catalog drop table: { "<level id>": { "firstWinTokens": [...], "winTokens": [...] } }.
+const DropsFile := "CatalogDrops.json"
+
 ## Where content assets live in the Unity project; keys are paths under it without ".asset".
 const DataRoot := "Assets/Data"
 
@@ -14,6 +22,7 @@ const FILES := {
 	"ReactionAsset": "Reactions", "StatusAsset": "Statuses", "ItemAsset": "Items", "TerrainAsset": "Terrains",
 	"TileAsset": "Tiles", "LevelAsset": "Levels", "SequenceAsset": "Sequences", "AbilityPresentationAsset": "Presentations",
 	"CodexAsset": "Codex", "GameCatalogAsset": "Catalog", "GameRulesAsset": "Rules",
+	"FormAsset": "Forms", "TokenAsset": "Tokens",
 }
 
 ## The JSON file name of an asset type ("Units.json"); other types get a file named after the type.

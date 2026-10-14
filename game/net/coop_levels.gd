@@ -46,20 +46,27 @@ static func energy_text(level_id: String, players: int) -> String:
 	return "Separate energy · 1/%d each · %d each, +%d a round" % [n, a.start_energy / n, a.energy_per_round / n]
 
 ## The tower TYPE ids the player brings (the protocol's `hand`): the saved hand's owned towers, in order, cut to cap.
+## A formed tower is sent as "<type id>@<form id>" (CoopSession.hand_entry; the relay never reads it).
 static func my_hand_types(cap: int) -> Array:
 	var sd = _node("SaveData")
 	var out := []
 	if sd == null: return out
 	for id in sd.towers.hand:
 		var owned = sd.towers.find(id)
-		if owned != null: out.append(owned.type)
+		if owned != null: out.append(CoopSession.hand_entry(owned.type, owned.form))
 		if out.size() >= cap: break
 	return out
 
-## A TowerAsset by type id (for pictures), or null.
+## A TowerAsset by type id or hand entry ("archer@archer-fire" → the Archer; for pictures), or null.
 static func tower_asset(type_id: String) -> TowerAsset:
 	var app = _app()
-	return app.catalog.find_tower(type_id) if app != null and app.catalog != null else null
+	return app.catalog.find_tower(CoopSession.parse_hand_entry(type_id)[0]) if app != null and app.catalog != null else null
+
+## The FormAsset of a hand entry ("archer@archer-fire"), or null for the default form.
+static func form_asset(entry: String) -> FormAsset:
+	var app = _app()
+	var form_id: String = CoopSession.parse_hand_entry(entry)[1]
+	return app.catalog.find_form(form_id) if form_id != "" and app != null and app.catalog != null else null
 
 static func _app():
 	return _node("GameApp")

@@ -1,0 +1,29 @@
+{
+ "type": "ReactionAsset",
+ "assets": {
+  "Reactions/Spiked Counter Strike": {
+   "trigger": "OnHitTaken",
+   "condition": "Self.DistanceTo(Source) <= 1",
+   "chance": "1",
+   "rollPer": "Hit",
+   "timing": "AfterItem",
+   "limit": "OncePerTurn",
+   "ignoreTags": [
+    "Reflected"
+   ],
+   "worksWhenDead": false,
+   "response": {
+    "items": [
+     {
+      "$type": "DamageStepData",
+      "amount": "8",
+      "tags": [
+       "Reflected"
+      ],
+      "on": "EventSource"
+     }
+    ]
+   }
+  }
+ }
+}

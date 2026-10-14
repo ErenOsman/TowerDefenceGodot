@@ -172,7 +172,28 @@ func _save_tab() -> Control:
 		else:
 			var id: String = a[0]
 			side.add_child(_button(a[1], func(): _quick(id)))
+	side.add_child(_tokens_row())
 	return row
+
+## Workshop tokens: one line per kind, "+1" / "+5" (the save quick action add_tokens).
+func _tokens_row() -> Control:
+	var box := VBoxContainer.new()
+	box.add_child(_label("Tokens", "H3Label"))
+	var app = _app("GameApp")
+	var grid := GridContainer.new()
+	grid.columns = 3
+	box.add_child(grid)
+	var tokens: Array = app.catalog.tokens if app != null and app.catalog != null else []
+	for t in tokens:
+		if t == null: continue
+		var l := _label(t.get_display_name(), "SmallLabel")
+		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_child(l)
+		var id: String = t.get_id()
+		grid.add_child(_button("+1", func(): _quick("add_tokens", [id, 1])))
+		grid.add_child(_button("+5", func(): _quick("add_tokens", [id, 5])))
+	if tokens.is_empty(): box.add_child(_label("(no token kinds in the content)", "SmallLabel"))
+	return box
 
 func _shortcuts_tab() -> Control:
 	var col := VBoxContainer.new()

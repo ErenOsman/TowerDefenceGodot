@@ -13,6 +13,7 @@ const ACTIONS := [
 	["win_first", "Win first N levels"],
 	["tutorial_done", "Mark tutorial done"],
 	["clear_codex", "Clear codex"],
+	["unlock_forms", "Unlock all forms"],
 ]
 
 ## The file's text ("" when there is none).
@@ -102,13 +103,35 @@ static func run(action: String, data: GameData, catalog: GameCatalogAsset, arg =
 		"clear_codex":
 			clear_codex(data)
 			return "Codex cleared."
+		"unlock_forms": return "Unlocked %d form(s) on your towers." % unlock_all_forms(data, catalog)
+		"add_tokens":
+			# arg: [token id, amount] (the F1 panel's Tokens line)
+			var a: Array = arg if arg is Array and arg.size() >= 2 else ["", 0]
+			var token: TokenAsset = catalog.find_token(str(a[0])) if catalog != null else null
+			if token == null: return "Unknown token '%s'." % str(a[0])
+			data.tokens.add(token.get_id(), int(a[1]))
+			return "+%d %s (now %d)." % [int(a[1]), token.get_display_name(), data.tokens.count(token.get_id())]
 	return "Unknown action '%s'." % action
+
+## Workshop cheat: unlocks every form of every owned tower's type (no tokens spent; the current forms stay).
+## Returns how many unlocks it added.
+static func unlock_all_forms(data: GameData, catalog: GameCatalogAsset) -> int:
+	if catalog == null: return 0
+	var n := 0
+	for o in data.towers.towers:
+		var t := catalog.find_tower(o.type)
+		if t == null: continue
+		for f in t.forms:
+			if f != null and not o.forms.has(f.get_id()):
+				o.forms.append(f.get_id())
+				n += 1
+	return n
 
 ## One line describing a save: name, tutorial, towers, levels won, codex entries.
 static func summary(data: GameData) -> String:
 	var won := 0
 	for r in data.progress.levels:
 		if r.won: won += 1
-	return "%s · tutorial %s · %d towers (%d in hand) · %d levels won · codex %d" % [
+	return "%s · tutorial %s · %d towers (%d in hand) · %d levels won · codex %d · tokens %d" % [
 		data.profile.player_name if data.profile.created else "(no profile)", TutorialState.name_of(data.profile.tutorial),
-		data.towers.towers.size(), data.towers.hand.size(), won, data.codex.discovered.size()]
+		data.towers.towers.size(), data.towers.hand.size(), won, data.codex.discovered.size(), data.tokens.total()]

@@ -8,3 +8,7 @@ var requirement: int = RequirementKind.Previous
 var requires: Array = []
 ## For Levels: all listed levels must be won (true) or any one (false).
 var require_all: bool = true
+## Workshop drops: {token id: amount} given once, with the first win.
+var first_win_tokens: Dictionary = {}
+## Workshop drops: {token id: amount} given on every win.
+var win_tokens: Dictionary = {}

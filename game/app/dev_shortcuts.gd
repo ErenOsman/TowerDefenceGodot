@@ -45,5 +45,6 @@ static func win(data: GameData, catalog: GameCatalogAsset, levels: Array) -> int
 		result.when = Time.get_datetime_string_from_system(true) + "Z"
 		var record := data.progress.record(result)
 		catalog.grant_first_clear_reward(result, record, data.towers)
+		catalog.grant_drops(result, record, data.tokens)
 		won += 1
 	return won

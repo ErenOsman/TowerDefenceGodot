@@ -11,7 +11,7 @@ var _rules: GameRules = null
 var _tex_cache := {}    # res path → Texture2D or null
 var _scene_cache := {}  # res path → PackedScene or null
 
-## The content library (every asset in res://data/content).
+## The content library (every asset in res://data/content, with res://data/content-godot merged over it).
 var lib: ContentLibrary:
 	get:
 		ensure_loaded()
@@ -41,11 +41,22 @@ var loaded: bool:
 func ensure_loaded() -> void:
 	if _lib != null: return
 	var t := Time.get_ticks_msec()
-	_lib = ContentLibrary.load(CONTENT_FOLDER)
+	_lib = ContentLibrary.load_game() # data/content + the Godot-only overlay data/content-godot (Workshop)
 	_convert = AssetConverter.new()
 	_rules = _convert.rules(_lib.rules) if _lib.rules != null else null
 	for p in _lib.problems: push_warning("[GameApp] content: " + p)
 	print("[GameApp] content loaded: %d assets in %d ms" % [_lib.all.size(), Time.get_ticks_msec() - t])
+
+# ---------------------------------------------------------------- Workshop
+
+## A tower type by id, converted once (its forms included), or null.
+func tower_type(type_id: String) -> TowerType:
+	var a: TowerAsset = catalog.find_tower(type_id) if catalog != null else null
+	return convert.tower_type(a) if a != null else null
+
+## What a level builds for an owned tower: its type as its current form (Workshop.resolve), or null.
+func resolved_type(owned: OwnedTower) -> TowerType:
+	return Workshop.resolve(owned, tower_type(owned.type)) if owned != null else null
 
 # ---------------------------------------------------------------- art
 

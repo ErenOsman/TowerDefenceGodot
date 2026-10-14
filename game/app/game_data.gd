@@ -13,6 +13,8 @@ var progress: LevelProgress = LevelProgress.new()
 var profile: PlayerProfile = PlayerProfile.new()
 ## What the Codex shows as discovered and what is still new.
 var codex: CodexProgress = CodexProgress.new()
+## The Workshop tokens owned (and earned) per kind (Workshop — Design). Godot-first: saved under "tokens".
+var tokens: TokenWallet = TokenWallet.new()
 
 ## The saved hand layouts (Godot-only: the Unity GameData has no such field; see docs/GODOT-NOTES.md): LAYOUTS fixed
 ## entries {"name": String, "hand": [owned tower ids]}; the active one is the hand levels use (towers.hand mirrors it).
@@ -35,6 +37,7 @@ func to_dict() -> Dictionary:
 		"profile": profile_to_dict(profile),
 		"codex": {"discovered": codex.discovered.duplicate(), "viewed": codex.viewed.duplicate()},
 		"handLayouts": {"active": active_layout, "layouts": layouts},
+		"tokens": tokens.to_dict(),
 	}
 
 func to_json() -> String:
@@ -52,6 +55,7 @@ static func from_dict(d) -> GameData:
 	if c is Dictionary:
 		g.codex.discovered = _strings(c.get("discovered"))
 		g.codex.viewed = _strings(c.get("viewed"))
+	g.tokens = TokenWallet.from_dict(d.get("tokens")) # a save from before the Workshop: no tokens
 	var hl = d.get("handLayouts")
 	if hl is Dictionary:
 		g.active_layout = int(hl.get("active", 0))
@@ -80,7 +84,7 @@ static func from_json(text: String) -> GameData:
 
 static func towers_to_dict(t: TowerCollection) -> Dictionary:
 	var list := []
-	for o in t.towers: list.append({"id": o.id, "type": o.type, "customName": o.custom_name})
+	for o in t.towers: list.append({"id": o.id, "type": o.type, "customName": o.custom_name, "form": o.form, "forms": o.forms.duplicate()})
 	return {"towers": list, "hand": t.hand.duplicate()}
 
 static func towers_from_dict(d) -> TowerCollection:
@@ -92,6 +96,11 @@ static func towers_from_dict(d) -> TowerCollection:
 		owned.id = _str(o.get("id"))
 		owned.type = _str(o.get("type"))
 		owned.custom_name = _str(o.get("customName"))
+		# Workshop (older saves have neither key: the default form, nothing unlocked); a current form that is not
+		# among the unlocked ones is dropped back to the default
+		owned.forms = _strings(o.get("forms"))
+		owned.form = _str(o.get("form"))
+		if owned.form != "" and not owned.forms.has(owned.form): owned.form = ""
 		t.towers.append(owned)
 	t.hand = _strings(d.get("hand"))
 	return t

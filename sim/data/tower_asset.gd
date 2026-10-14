@@ -21,6 +21,9 @@ var entity: EntityAsset = null
 ## Energy to place it. Selling refunds cost × 0.5 × Hp / MaxHp.
 var cost: int = 3
 
+## Not serialized: the type's forms (FormAsset whose tower is this one) in content order, linked by ContentLibrary.
+var forms: Array = []
+
 ## C# Id: the id, else the asset name.
 func get_id() -> String:
 	return name if id.is_empty() else id

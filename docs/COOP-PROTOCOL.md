@@ -7,7 +7,8 @@ Transport: WebSocket, JSON text frames, one object per frame, field `t` = messag
 `ws://92.5.94.11/ws/relay` (nginx → 127.0.0.1:8090), later `wss://` when the wiki gets HTTPS.
 `version` = the content hash: SHA-256 (hex, first 16 chars) over the sorted `data/content/*.json` bytes (Abilities, Catalog,
 Levels, Passives, Reactions, Rules, Sequences, Statuses, Terrains, Towers, Units, Codex, Tiles, Presentations,
-PresentationTimings, UITheme) plus the protocol version string "coop-1". Rooms of other versions are never listed.
+PresentationTimings, UITheme), then the Godot-only overlay `data/content-godot/*.json` as `content-godot/<name>` (sorted
+after them; Forms, Tokens, CatalogDrops and their units/abilities), plus the protocol version string "coop-1". Rooms of other versions are never listed.
 
 ## Client → relay
 | t | fields | notes |
@@ -47,6 +48,12 @@ PresentationTimings, UITheme) plus the protocol version string "coop-1". Rooms o
 `{"k": "place", "tower": <tower id>, "x": int, "y": int}` · `{"k": "sell", "tower": id}` ·
 `{"k": "cast", "unit": entity id, "ability": ability id, "x": int, "y": int, "path": [[x,y]…] (walks)}` ·
 `{"k": "pass"}` · `{"k": "end_turn"}`. Tower ids in co-op are `"<player id>:<tower type id>#<n>"` so hands never collide.
+
+**Hand entries and Workshop forms.** `hand` stays a list of strings: a tower type id (`"archer"`), or
+`"<type id>@<form id>"` (`"archer@archer-fire"`) for a tower in a Workshop form. The relay never reads them (it only
+checks strings ≤ 64); clients parse them (`CoopSession.parse_hand_entry` / `build_hand`) and build the form's entity,
+name and cost. The tower id keeps naming only the type (`"p1:archer#1"`). Forms are content, so they are covered by
+the content hash (`ContentHash` includes `data/content-godot/`); an unknown form id falls back to the default form.
 Each player's commands carry a per-player `seq` (1, 2, 3…); a client applies a command only when it is the acting player's
 turn in the session (the session rejects others; a rejected command from the relay is a desync).
 

@@ -63,6 +63,8 @@ func move_in_hand(id: String, index: int) -> void:
 
 ## The hand as level towers, in order. Hand entries that are not owned, or whose type is unknown
 ## (removed from the game), are skipped and reported in problems. type_by_id: Callable(String) -> TowerType.
+## Each tower is built as its current Workshop form (Workshop.resolve): the form's entity, name and cost, keeping
+## the tower's own ID; a form the content no longer has is reported and the default form is used.
 func build_hand(type_by_id: Callable, problems = null) -> Array:
 	var result := []
 	var seen := {}
@@ -77,9 +79,17 @@ func build_hand(type_by_id: Callable, problems = null) -> Array:
 		if type == null:
 			if problems != null: problems.append("Tower %s has an unknown type '%s'" % [id, owned.type])
 			continue
+		if owned.form != "" and type.find_form(owned.form) == null and problems != null:
+			problems.append("Tower %s has an unknown form '%s' (default form used)" % [id, owned.form])
 		var d := TowerDef.new()
 		d.id = owned.id
 		d.custom_name = owned.custom_name
-		d.type = type
+		d.type = Workshop.resolve(owned, type)
 		result.append(d)
 	return result
+
+## What a level builds for one owned tower (Workshop): its type as its current form, or null when the type is unknown.
+func resolve(id: String, type_by_id: Callable) -> TowerType:
+	var owned := find(id)
+	if owned == null: return null
+	return Workshop.resolve(owned, type_by_id.call(owned.type))

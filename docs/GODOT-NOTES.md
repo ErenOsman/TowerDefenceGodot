@@ -79,3 +79,32 @@ End turn shows at 60 % on lines that do not allow it.
   line's tower is not selected. Right-click / Esc cancelling always works. Selling is refused until `all`.
 - `hint` (optional): replaces the generated refusal text.
 - A line that goes on at `event:aiming` refuses aim clicks (one step = one action: the button, then the target).
+
+## Workshop content — Godot-only until the Unity repo has Forms.json/Tokens.json
+`data/content/*.json` is synced from the Unity repo and never edited here, so the Workshop's starter content
+(Workshop — Design § Starter content: placeholder names and numbers) lives in an **overlay**, `data/content-godot/`:
+
+| File | What |
+| --- | --- |
+| `Forms.json` (`FormAsset`) | the 9 starter forms: `archer-fire`, `archer-inferno` (child of Fire Archer), `archer-poison`, `archer-longbow`, `guardian-bastion`, `guardian-spiked`, `mage-pyro`, `mage-frost`, `mage-storm`. Fields: `id, displayName, description, icon, badge, tower, parent, entity, cost (-1 = base), unlock [{token, amount}], order`. Icons = the base tower's portrait; badges `Assets/Art/UI/KitB/forms/<form id>.png` (→ `res://art/ui/KitB/forms/`) |
+| `Tokens.json` (`TokenAsset`) | `fire-arrow, poison-gland, yew-bow, steel-plate, arcane-shard, ember-core` (`id, displayName, description, icon, rarity`); icons `Assets/Art/UI/KitB/tokens/<token id>.png` |
+| `Units.json`, `Abilities.json`, `Passives.json`, `Reactions.json` | the form entities (`Units/Towers/Forms/*`: copies of the base tower with the doc's stat changes, base model/icon/miniature) and their abilities (Fire Shot, Fire Volley, Venom Shot, Long Shot, Shield Bash, Fireball, Frost Bolt, Chain Spark), the Spiked Counter-attack passive and its 8-damage reaction. Same shape as the Unity files |
+| `CatalogDrops.json` | `{ "<level id>": { "firstWinTokens": [...], "winTokens": [...] } }`: Chapter 1 levels win drop 1 Yew Bow; every Chapter 2 level first win 1 Fire Arrow + 1 Arcane Shard; Rock Garden win Fire Arrow + Poison Gland; Three at the Gate first win +2 Steel Plate, win 1 Steel Plate; The Drummer win Poison Gland + Arcane Shard; The Glutton first win +1 Ember Core, win 1 Ember Core |
+
+How it is read:
+- `ContentLibrary.load_game()` (GameApp, the level's fallback, the save-action tool job) = `load(data/content, data/content-godot)`:
+  an overlay file with the name of a content file adds its entries to that file (same key → the overlay's wins), other
+  files are added, and `CatalogDrops.json` fills `CatalogLevelData.firstWinTokens / winTokens` (the fields Unity's
+  `Catalog.json` will carry; they are in `ContentSerializer.SCHEMA` already). `ContentLibrary.load(folder)` alone (tests of
+  the synced content, golden, Validate All in the TD Tools dock) does not read the overlay.
+- `ContentHash.compute()` hashes the overlay files too (as `content-godot/<name>`, after the content's), so co-op clients
+  must have the same forms.
+- Not serialized, linked by the library: `TowerAsset.forms` (its FormAssets in content order), `GameCatalogAsset.forms /
+  tokens`. The Unity build should derive them the same way (or add `forms` lists to the catalog).
+- Saves (Godot-first, also missing in Unity's GameData): `towers.towers[i].form` (current form id, "" = default) and
+  `.forms` (unlocked ids); `tokens: {"tokens": [{id, count}], "earned": [{id, count}]}`. Old saves load with no forms and no tokens.
+- Co-op hand entries are `"<type id>@<form id>"` for formed towers (docs/COOP-PROTOCOL.md).
+
+**When Unity adopts the Workshop:** move `Forms.json`, `Tokens.json` and the form units/abilities into `Content/`, put the
+drop lists on the catalog's level entries, sync, then delete `data/content-godot/` (and `CatalogDrops.json` handling can
+stay harmlessly or go). Check that the Unity ids match the ones above or old Godot saves lose their forms/tokens.

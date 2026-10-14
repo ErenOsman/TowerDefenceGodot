@@ -282,6 +282,28 @@ static func tower_name(owned: OwnedTower, type: TowerAsset) -> String:
 	if owned.custom_name != "": return owned.custom_name
 	return type.get_display_name() if type != null else "Unknown tower"
 
+## An owned tower's current Workshop form (FormAsset), or null for the default form or a form the content lacks.
+static func form_of(owned: OwnedTower, catalog: GameCatalogAsset) -> FormAsset:
+	if owned == null or owned.form == "" or catalog == null: return null
+	var f := catalog.find_form(owned.form)
+	return f if f != null and f.tower != null and f.tower.get_id() == owned.type else null
+
+## An owned tower's form name for hand cards, the Codex and the Workshop: "Fire Archer", else the type's name
+## ("Archer"); "" when the type is unknown. The custom name (tower_name) shows beside it.
+static func form_name(owned: OwnedTower, catalog: GameCatalogAsset) -> String:
+	if owned == null: return ""
+	var f := form_of(owned, catalog)
+	if f != null: return f.get_display_name()
+	var t: TowerAsset = catalog.find_tower(owned.type) if catalog != null else null
+	return t.get_display_name() if t != null else ""
+
+## An owned tower's form badge sprite (res://art/ui/KitB/forms/<form id>.png); "" for the default form or no sprite.
+static func badge_path(owned: OwnedTower, catalog: GameCatalogAsset) -> String:
+	var f := form_of(owned, catalog)
+	if f == null or f.badge == "": return ""
+	var p := ArtPaths.kit(f.badge)
+	return p if p != "" and ResourceLoader.exists(p) else ""
+
 # ------------------------------------------------------------------ chapters (UI_ChapterSelect.cs)
 
 ## One card per chapter of a kind (ChapterKind.Main / Side): {chapter, name, open, status, won, total, plus the

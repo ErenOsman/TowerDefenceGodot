@@ -7,15 +7,23 @@ extends RefCounted
 
 const Protocol := "coop-1"
 
-## The hash of the content folder (every *.json in it, sorted by name).
-static func compute(folder: String = ContentFiles.Folder) -> String:
+## The hash of the content folder (every *.json in it, sorted by name) and of the Godot-only overlay folder
+## (ContentFiles.OverlayFolder: Workshop forms, tokens and drops), whose files sort as "content-godot/<name>" after
+## the content's, so both clients must have the same overlay too. A missing or empty overlay adds nothing.
+static func compute(folder: String = ContentFiles.Folder, overlay: String = ContentFiles.OverlayFolder) -> String:
+	var files := _files_of(folder, "")
+	if overlay != "" and DirAccess.dir_exists_absolute(overlay):
+		files.append_array(_files_of(overlay, overlay.get_file() + "/"))
+	return of_files(files)
+
+static func _files_of(folder: String, prefix: String) -> Array:
 	var names := []
 	for f in DirAccess.get_files_at(folder):
 		if f.ends_with(".json"): names.append(f)
 	names.sort() # ordinal
 	var files := []
-	for f in names: files.append([f, FileAccess.get_file_as_bytes(folder.path_join(f))])
-	return of_files(files)
+	for f in names: files.append([prefix + f, FileAccess.get_file_as_bytes(folder.path_join(f))])
+	return files
 
 ## The hash of files given as [file name, PackedByteArray] pairs (sorted by name here).
 static func of_files(files: Array) -> String:
