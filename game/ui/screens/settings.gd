@@ -159,8 +159,14 @@ func _row(page: Container, text: String, control: Control, sub := "") -> HBoxCon
 	var labels := TdMenu.vbox(0)
 	labels.size_flags_horizontal = SIZE_EXPAND_FILL
 	labels.alignment = BoxContainer.ALIGNMENT_CENTER
-	labels.add_child(TdMenu.label(text, "body", TdTheme.color("cream.100"), 24))
-	if sub != "": labels.add_child(TdMenu.label(sub, "small", TdTheme.color("cream.300"), 18))
+	# the labels wrap inside the window's fixed width: a long sub line must never widen the panel (Eren 2026-10-14)
+	var l := TdMenu.label(text, "body", TdTheme.color("cream.100"), 24)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	labels.add_child(l)
+	if sub != "":
+		var s := TdMenu.label(sub, "small", TdTheme.color("cream.300"), 18)
+		s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		labels.add_child(s)
 	row.add_child(labels)
 	var holder := HBoxContainer.new()
 	holder.custom_minimum_size = Vector2(CONTROL_W, 0)

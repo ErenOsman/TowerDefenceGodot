@@ -43,12 +43,8 @@ func _init() -> void:
 	right_click_closes = false
 
 func _build() -> void:
-	TdMenu.menu_background(self)
-	var dim := ColorRect.new()
-	dim.color = Color(0.08, 0.06, 0.05, 0.55)
-	dim.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	dim.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(dim)
+	# plain wood planks while waiting in the room: the blurred level picture confused players (Eren 2026-10-14)
+	TdMenu.wood_background(self)
 	var root := MarginContainer.new()
 	root.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]: root.add_theme_constant_override("margin_" + side, 32)
@@ -434,7 +430,8 @@ func leave_room() -> void:
 	net.leave_room()
 	close()
 
-## Change hand: the hand editor, limited to this level's co-op cap; the new hand goes to the room.
+## Change hand: the hand editor, limited to this level's co-op cap. Opening it makes you Not ready (Eren 2026-10-14);
+## the new hand goes to the room once, when the editor closes (not on every edit; the relay resets Ready on it too).
 func open_hand_editor() -> TdPopup:
 	var he: TdPopup = load(HAND_EDITOR).instantiate()
 	he.free_on_close = true
@@ -444,7 +441,10 @@ func open_hand_editor() -> TdPopup:
 	cap_level.hand_cap = CoopLevels.hand_cap(level)
 	he.level = cap_level
 	_popups.add_child(he)
-	he.changed.connect(func(): my_hand_cut())
+	if net != null and net.in_room:
+		var me = NetProtocol.find_player(net.room, net.player_id)
+		if me != null and bool(me.get("ready", false)): net.set_ready(false)
+	he.closed.connect(func(): my_hand_cut())
 	CoopUi.show_popup(he)
 	return he
 

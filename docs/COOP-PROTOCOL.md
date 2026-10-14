@@ -8,14 +8,14 @@ Transport: WebSocket, JSON text frames, one object per frame, field `t` = messag
 `version` = the content hash: SHA-256 (hex, first 16 chars) over the sorted `data/content/*.json` bytes (Abilities, Catalog,
 Levels, Passives, Reactions, Rules, Sequences, Statuses, Terrains, Towers, Units, Codex, Tiles, Presentations,
 PresentationTimings, UITheme), then the Godot-only overlay `data/content-godot/*.json` as `content-godot/<name>` (sorted
-after them; Forms, Tokens, CatalogDrops and their units/abilities), plus the protocol version string "coop-1". Rooms of other versions are never listed.
+after them; Forms, Tokens, Missions, Extras and their units/abilities), plus the protocol version string "coop-1". Rooms of other versions are never listed.
 
 ## Client → relay
 | t | fields | notes |
 |---|---|---|
 | `hello` | `version`, `name` (player name, ≤ 16), `client` ("godot-td/0.7") | first message; else the relay closes |
 | `list` | – | asks for the lobby (also pushed on changes while in the lobby) |
-| `create` | `name` (room name ≤ 24, swear-filtered), `level` (level id), `count` (1–6, default 2), `password` (optional), `hand` (tower type ids, ≤ cap) | creator becomes host, joins slot 0 |
+| `create` | `name` (room name ≤ 24, swear-filtered), `level` (level id), `count` (1–6, default 2), `password` (optional), `hand` (tower type ids, ≤ cap), `mission` (optional mission id; the relay ignores it) | creator becomes host, joins slot 0. Every co-op level is a mission (Missions & Guild — Design): rooms carry the mission's **level** id and clients map it back (`CoopLevels.mission_for_level`); the client checks its plays left before `create`/`join`, leaves a room switched to a mission it used up, and spends the play at `match_start` (the relay knows no saves) |
 | `join` | `room` (room id), `password` (optional), `hand` | errors: `not_found`, `full`, `wrong_password`, `version`, `started` |
 | `leave` | – | room stays open; host leaves → the next joined player becomes host |
 | `ready` | `value` (bool) | |
@@ -23,7 +23,7 @@ after them; Forms, Tokens, CatalogDrops and their units/abilities), plus the pro
 | `set_count` | `count` | host only; lowering below the players present removes the last joined (client confirms first); resets Ready |
 | `kick` | `player` | host only |
 | `chat` | `text` (≤ 200) | |
-| `set_hand` | `hand` | until the match starts |
+| `set_hand` | `hand` | until the match starts; resets the sender's Ready (the client also sends `ready false` when the player opens Change hand, and sends `set_hand` once when the editor closes, not on every edit) |
 | `start` | – | host only, all present players Ready (empty slots don't block) |
 | `cmd` | `round`, `seq`, `cmd` (opaque object; see CoopSession.Command) | relay stamps `player` and broadcasts to the room incl. the sender (so every client applies commands in relay order) |
 | `checksum` | `round`, `hash` | the relay compares all players' hashes for that round; mismatch → `desync` to all |
