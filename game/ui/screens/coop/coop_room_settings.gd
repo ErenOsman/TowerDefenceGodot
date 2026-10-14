@@ -89,15 +89,50 @@ func removed_names() -> Array:
 
 func _refresh() -> void:
 	CoopUi.clear(_levels)
+	var sd = get_node_or_null("/root/SaveData")
+	var mp: MissionProgress = sd.missions if sd != null else null
 	for id in CoopLevels.list().level_ids():
-		var row := CoopUi.level_row(id, 600, id == level_id, "Current" if id == _current_level() else "")
+		# a mission room lists missions as Create room does (QA 2026-10-14: it listed level names), a mission used up
+		# today greyed and not pickable (the switch would make everyone who played it leave, the host too)
+		var m := CoopLevels.mission_for_level(id)
+		var row: PanelContainer
+		var usable := true
+		if m != null:
+			row = CoopCreatePopup.mission_row(id, m, mp, id == level_id)
+			row.custom_minimum_size.x = 600
+			usable = id == _current_level() or CoopLevels.can_create(id)
+			if id == _current_level():
+				var t := TdMenu.pill("[b]Current[/b]", Color(0.12, 0.09, 0.07, 0.85), CoopUi.GOLD, 20)
+				t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+				row.get_child(0).add_child(t)
+		else:
+			row = CoopUi.level_row(id, 600, id == level_id, "Current" if id == _current_level() else "")
 		var k: String = id
-		row.gui_input.connect(func(ev):
-			if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-				level_id = k
-				_refresh())
+		if usable and id != level_id: # hover: a lighter rim, as the lobby's and Create room's rows
+			var normal: StyleBox = row.get_theme_stylebox("panel")
+			var lit := CoopUi.box(CoopUi.ROW_BG.lightened(0.06), 10, TdTheme.color("accent.light"), 2, Vector4(8, 6, 16, 6))
+			row.mouse_entered.connect(func(): row.add_theme_stylebox_override("panel", lit))
+			row.mouse_exited.connect(func(): row.add_theme_stylebox_override("panel", normal))
+		if usable:
+			row.gui_input.connect(func(ev):
+				if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+					level_id = k
+					_refresh())
+		else:
+			row.modulate.a = 0.55
+			row.mouse_default_cursor_shape = Control.CURSOR_ARROW
+			row.tooltip_text = CoopLevels.last_reason
 		_levels.add_child(row)
+	# the player counts outside the picked mission's range are off, with the reason (as Create room)
+	var pm := CoopLevels.mission_for_level(level_id)
+	for i in _picker.size():
+		var n := i + NetProtocol.MIN_COUNT
+		_picker[i].set_interactable(pm == null or (n >= pm.min_players and n <= pm.max_players), MissionUiLogic.players_reason(pm))
+	if pm != null:
+		count = pm.clamp_players(count)
+		for i in _picker.size(): _picker[i].set_selected(i + NetProtocol.MIN_COUNT == count)
 	CoopUi.fill_level_card(_card, level_id, count)
+	if pm != null: _card.title.text = pm.name
 	var present: int = (net.room.get("players", []) as Array).size() if net != null and net.in_room else 1
 	_count_note.text = "%d player%s %s in the room. Fewer slots remove the last to join." % [present, "" if present == 1 else "s", "is" if present == 1 else "are"]
 	var gone := removed_names()

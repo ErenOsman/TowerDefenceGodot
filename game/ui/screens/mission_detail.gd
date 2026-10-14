@@ -79,6 +79,8 @@ func _reshape_right_column() -> void:
 	var map_frame: Control = _map_col.get_child(0)
 	map_frame.custom_minimum_size = Vector2(MAP_SIZE.x, MAP_H)
 	_preview.custom_minimum_size = Vector2(MAP_SIZE.x, MAP_H)
+	# its board picture took the level select's 300 px height in _ready: rendered 300 high and cut to 160 (QA 2026-10-14)
+	if _preview._pic != null: _preview._pic.custom_minimum_size = Vector2(MAP_SIZE.x, MAP_H)
 	for c in _reward.get_children():
 		_reward.remove_child(c)
 		c.queue_free()

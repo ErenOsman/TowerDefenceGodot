@@ -83,8 +83,10 @@ func refresh() -> void:
 			var id: String = tok.get_id()
 			var have: int = SaveData.tokens.count(id)
 			var pill := TdDrops.coin(id, have, false, false, 40.0, str(have))
+			# "Found in" as the Workshop's token chips say it (QA 2026-10-14: the two tooltips of a token differed)
+			var where := WorkshopLogic.found_in_text(id, GameApp.missions())
 			TdTooltipTrigger.attach(pill, TooltipText.title(tok.get_display_name(), TooltipText.value_color(), "Token"),
-				tok.description, "You have", str(have))
+				tok.description + ("\nFound in: %s." % where if where != "" else ""), "You have", str(have))
 			_inv.add_child(pill)
 	for c in _grid.get_children():
 		_grid.remove_child(c)

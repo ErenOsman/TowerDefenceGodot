@@ -13,8 +13,9 @@ extends TdPopup
 
 const HAND_EDITOR := "res://game/ui/screens/hand_editor.tscn"
 const BANNER_SECONDS := 8.0
-## The chat panel's height (about nine lines plus the field).
-const CHAT_H := 350.0
+## The chat panel's height (about eight lines plus the field). 350 pushed a mission room 22 px past the 1080 screen
+## (the bottom row lost its margin; QA 2026-10-14), so 320.
+const CHAT_H := 320.0
 ## The level picture's height: a mission room's is shorter (its drop row sits under it; the chat keeps its size).
 const MAP_H := 116.0
 const MISSION_MAP_H := 72.0
@@ -532,6 +533,12 @@ func open_hand_editor() -> TdPopup:
 	cap_level.display_name = "co-op (%s)" % CoopLevels.level_name(level)
 	cap_level.hand_cap = CoopLevels.hand_cap(level)
 	he.level = cap_level
+	# a mission room: the editor counts rested towers and marks "▲ goes" like the mission detail's (QA 2026-10-14: it
+	# benched the rested towers after two tired ones that the match takes)
+	var mission := CoopLevels.mission_for_level(level)
+	if mission != null:
+		he.set("mission", mission)
+		he.set("hand_cap", CoopLevels.hand_cap(level))
 	_popups.add_child(he)
 	if net != null and net.in_room:
 		var me = NetProtocol.find_player(net.room, net.player_id)

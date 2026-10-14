@@ -52,8 +52,8 @@ func _build(e: Dictionary, key: int) -> void:
 	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_name.clip_text = true
 	_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_name.position = Vector2(4, 80)
-	_name.size = Vector2(tile.x - 8, 26)
+	_name.position = Vector2(1, 80) # 1 px insets: "Fire Archer" (105 px at 18) fits the 108 px tile (QA 2026-10-14)
+	_name.size = Vector2(tile.x - 2, 26)
 	_name.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(_name)
 	var coin := TdHandSlot.coin(e.cost, 32.0)

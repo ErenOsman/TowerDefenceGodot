@@ -50,6 +50,11 @@ func _ensure_built() -> void:
 		if button == MOUSE_BUTTON_LEFT and close_on_scrim: back()
 		elif button == MOUSE_BUTTON_RIGHT and right_click_closes: back())
 	add_child(scrim)
+	# right click = Back anywhere over the popup: read before the GUI (controls with MOUSE_FILTER_STOP — cards, panels,
+	# buttons — ate it, so only the scrim closed; QA 2026-10-14). A child node: subclasses override _input.
+	var rc := _RightClick.new()
+	rc.popup = self
+	add_child(rc)
 	_build()
 
 ## Override: build the window (add it as a child and set `window`).
@@ -71,6 +76,8 @@ func open() -> void:
 	open_popups.erase(self)
 	open_popups.append(self)
 	_block_keys()
+	# a tooltip of what was clicked to open this would stay over it until the pointer moves (Godot re-hovers on motion only)
+	TdTooltip.hide_immediate()
 	_on_open()
 	if use_scrim: scrim.fade_in()
 	if window != null:
@@ -109,6 +116,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT and right_click_closes:
 		get_viewport().set_input_as_handled()
 		back()
+
+## Right click → back() for the top popup, before the GUI takes the click (not over a text field: its context menu).
+class _RightClick extends Node:
+	var popup: TdPopup
+	func _input(event: InputEvent) -> void:
+		if not (event is InputEventMouseButton) or not event.pressed or event.button_index != MOUSE_BUTTON_RIGHT: return
+		if popup == null or not popup.is_open or not popup.is_top() or not popup.right_click_closes: return
+		var over := get_viewport().gui_get_hovered_control()
+		if over is LineEdit or over is TextEdit: return
+		get_viewport().set_input_as_handled()
+		popup.back()
 
 func _exit_tree() -> void:
 	if is_open:

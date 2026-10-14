@@ -340,6 +340,7 @@ func _room_row(r: Dictionary) -> PanelContainer:
 	h.add_child(nv)
 	var nm := TdMenu.label(str(r.get("name", "")), "h3", TdTheme.color("cream.100"), 26)
 	nm.clip_text = true
+	nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS # a 24-letter name can be wider than the column (QA)
 	nv.add_child(nm)
 	var done := room_done(r)
 	nv.add_child(TdMenu.label(MissionUiLogic.room_row_line(CoopLevels.room_title(str(r.get("level", ""))), done), "small", TdTheme.color("cream.200"), 20))
@@ -356,6 +357,7 @@ func _room_row(r: Dictionary) -> PanelContainer:
 	var host := TdMenu.label(host_name, "body", TdTheme.color("cream.100"), 24)
 	host.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	host.clip_text = true
+	host.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	host_box.add_child(host)
 	h.add_child(host_box)
@@ -375,6 +377,11 @@ func _room_row(r: Dictionary) -> PanelContainer:
 	h.add_child(TdMenu.spacer(0, 24))
 	h.add_child(pill)
 	if (full or started or done) and not sel: p.modulate.a = 0.6
+	if not sel: # hover: a lighter rim, as the mission board's cards (QA 2026-10-14: rows had no hover state)
+		var normal: StyleBox = p.get_theme_stylebox("panel")
+		var lit := CoopUi.box(CoopUi.ROW_BG.lightened(0.06), 10, TdTheme.color("accent.light"), 2, Vector4(8, 6, 8, 6))
+		p.mouse_entered.connect(func(): p.add_theme_stylebox_override("panel", lit))
+		p.mouse_exited.connect(func(): p.add_theme_stylebox_override("panel", normal))
 	var id: String = r.id
 	p.gui_input.connect(func(ev):
 		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
@@ -430,6 +437,8 @@ func _draw_detail(online: bool) -> void:
 		_join_note.add_child(TdDrops.icon("check", 20, TdTheme.color("cream.200")))
 		var jl := TdMenu.label(MissionUiLogic.join_done_text(m.name), "plate", TdTheme.color("cream.200"), 19)
 		_join_note.add_child(jl)
+	elif why != "": # full / started: the reason on a line too, not only on hover (the one Disabled look rule; QA 2026-10-14)
+		_join_note.add_child(TdMenu.label(why, "plate", TdTheme.color("cream.200"), 19))
 	_join.set_interactable(why == "", why)
 
 ## The mission's drops on the level card (a dark box: Each win / First win).

@@ -303,6 +303,10 @@ func _scroll_body(parent: Control, sep := 10, gutter_px := 12, fade := false) ->
 		parent.add_child(scroll)
 	var gutter := MarginContainer.new()
 	gutter.add_theme_constant_override("margin_right", gutter_px)
+	if fade:
+		# the head medallion's ring hangs ~5 px outside its rect: room for it inside the scroll's clip (QA 2026-10-14)
+		gutter.add_theme_constant_override("margin_left", 6)
+		gutter.add_theme_constant_override("margin_top", 6)
 	gutter.size_flags_horizontal = SIZE_EXPAND_FILL
 	scroll.add_child(gutter)
 	var body := TdMenu.vbox(sep)
@@ -988,12 +992,12 @@ class FormNode extends Control:
 		var ic := TdMenu.picture(GameApp.kit_texture(t.icon) if t != null else null, Vector2(24, 24))
 		ic.size_flags_vertical = SIZE_SHRINK_CENTER
 		h.add_child(ic)
-		var l := TdMenu.label(WorkshopLogic.chip_text(have, need), "header", SHORT if short else TdTheme.color("cream.100"), 16)
+		var l := TdMenu.label(WorkshopLogic.chip_text(have, need), "header", SHORT if short else TdTheme.color("cream.100"), 18)
 		l.add_theme_font_override("font", TdTheme.font("plinth"))
 		l.size_flags_vertical = SIZE_SHRINK_CENTER
 		h.add_child(l)
 		if not short:
-			var okl := TdMenu.label("✓", "header", OK, 16)
+			var okl := TdMenu.label("✓", "header", OK, 18)
 			okl.size_flags_vertical = SIZE_SHRINK_CENTER
 			h.add_child(okl)
 		return p

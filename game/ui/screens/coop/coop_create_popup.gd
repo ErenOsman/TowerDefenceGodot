@@ -91,9 +91,14 @@ func _build() -> void:
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	CoopUi.style_scrollbar(scroll)
 	left.add_child(scroll)
+	# a gutter between the rows and the always-shown bar (the bar hid the rows' right rim; QA 2026-10-14)
+	var gutter := MarginContainer.new()
+	gutter.add_theme_constant_override("margin_right", 8)
+	gutter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(gutter)
 	_levels = TdMenu.vbox(6)
 	_levels.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(_levels)
+	gutter.add_child(_levels)
 	var right := TdMenu.vbox(14)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	cols.add_child(right)
@@ -158,6 +163,11 @@ func _refresh() -> void:
 	_counter.text = "%d / %d" % [room_name.length(), NetProtocol.MAX_ROOM_NAME]
 	_count_note.text = "Up to %d player%s. Each brings %d tower%s. The level decides the energy rule." % [count, "" if count == 1 else "s",
 		CoopLevels.hand_cap(level_id), "" if CoopLevels.hand_cap(level_id) == 1 else "s"]
+	# the disabled counts say why on a line too, not only on hover (QA 2026-10-14)
+	var rm := CoopLevels.mission_for_level(level_id)
+	if rm != null and (rm.min_players > NetProtocol.MIN_COUNT or rm.max_players < _picker.size() + NetProtocol.MIN_COUNT - 1):
+		_count_note.text = "%s. Up to %d player%s, each brings %d tower%s." % [MissionUiLogic.players_reason(rm), count,
+			"" if count == 1 else "s", CoopLevels.hand_cap(level_id), "" if CoopLevels.hand_cap(level_id) == 1 else "s"]
 	CoopUi.clear(_levels)
 	var sd = get_node_or_null("/root/SaveData")
 	var mp: MissionProgress = sd.missions if sd != null else null
@@ -166,6 +176,11 @@ func _refresh() -> void:
 		var usable := CoopLevels.can_create(id)
 		var row := mission_row(id, m, mp, id == level_id)
 		var k: String = id
+		if usable and id != level_id: # hover: a lighter rim (QA 2026-10-14: no hover state)
+			var normal: StyleBox = row.get_theme_stylebox("panel")
+			var lit := CoopUi.box(CoopUi.ROW_BG.lightened(0.06), 10, TdTheme.color("accent.light"), 2, Vector4(8, 6, 16, 6))
+			row.mouse_entered.connect(func(): row.add_theme_stylebox_override("panel", lit))
+			row.mouse_exited.connect(func(): row.add_theme_stylebox_override("panel", normal))
 		if usable:
 			row.gui_input.connect(func(ev):
 				if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
