@@ -154,7 +154,10 @@ Unity ids match the ones above or old Godot saves lose their forms/tokens/missio
   loops, camera, light, button placement); the Guild has no map-kit ground (Guild Floor + Guild Hall are decor), its
   `centre` (Mission Board) is the Missions station (button below), plus the README's warm hearth light. Props load
   through `GameApp.prop_scene(folder, name)` (`camp_scene` = folder "camp"; both fall back to `art/tiles/`). The
-  blurred `TdGuildBackdrop` remains only behind the full-screen mission detail. First visit: the welcome card (`profile.guildSeen`). A co-op match goes back to `GameApp.lobby_scene()`
+  blurred `TdGuildBackdrop` remains only behind the full-screen mission detail.
+- Station buttons in the Guild (UI/UX ruling 2026-10-14) sit on the floor just in front of their prop, never above
+  it (`TdStationWorld.floor_buttons`); the Camp keeps buttons above its back-row props (floor buttons covered the
+  campfire and the Workshop table: render 2026-10-14); the Guild's Camp station is the bottom-left "← Camp" button plus the Guild Door as a hotspot (`TdStationWorld.hotspot`). First visit: the welcome card (`profile.guildSeen`). A co-op match goes back to `GameApp.lobby_scene()`
   (the Guild once open, else the Camp) and reopens the lobby there.
 - Camp: the Signpost station "Missions" in layout slot 4 (prop `Signpost`, the map-kit piece: `GameApp.camp_scene`
   falls back to `res://art/tiles/<name>.fbx`); locked (lock icon, "Opens after Chapter 2", the Disabled look, like

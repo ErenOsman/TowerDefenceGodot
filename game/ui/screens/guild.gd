@@ -5,8 +5,9 @@ extends Control
 ## hall walls, the Mission Board in the centre, Coop Table, Tower Rack, Guild Door; Idle loops; camp.gd's camera and
 ## light, plus a warm hearth light), "Guild · Missions and co-op", and a station button over (or under) each prop:
 ## Missions (primary, under the Mission Board: the mission board, then a mission's detail), Multiplayer (the co-op
-## lobby, moved here from the Camp), Towers (the hand editor, the same hands and layouts as the Camp's) and Camp
-## (the Guild Door: back). The first visit shows the welcome card once (PlayerProfile.guild_seen). Back from a co-op
+## lobby, moved here from the Camp) and Towers (the hand editor, the same hands and layouts as the Camp's), each on
+## the floor in front of its prop; Camp has no station button: "← Camp" bottom-left (like the Camp's "← Main menu")
+## and the Guild Door is a hotspot (hover highlight + "Back to the Camp", click goes back). The first visit shows the welcome card once (PlayerProfile.guild_seen). Back from a co-op
 ## match (Net.reopen_lobby) or the Camp's "Multiplayer → Guild" opens the lobby. Texts: MissionUiLogic.
 
 const SCREENS := "res://game/ui/screens/"
@@ -28,6 +29,9 @@ const HEARTH := Vector3(3.1, 0.5, -8.75)
 const ACTIONS := {"Missions": "open_missions", "Multiplayer": "open_multiplayer", "Towers": "open_towers", "Camp": "back_to_camp"}
 
 var world: TdStationWorld
+## The bottom-left "← Camp" button and the Guild Door's hotspot.
+var camp_button: TdMenuButton
+var door: Control
 var stations := {}   # id → TdMenuButton
 var welcome_card: Control
 var popups: Control
@@ -100,11 +104,28 @@ func _build_stations() -> void:
 		stations[st.id] = b
 		b.clicked.connect(Callable(self, ACTIONS[st.id]))
 		if not world.props.has(st.id) or world.props[st.id] == null: b.visible = false
+	# Camp: no station button over the door (UI/UX ruling): "← Camp" bottom-left like the Camp's "← Main menu", and
+	# the Guild Door itself is a hotspot (hover: highlight + "Back to the Camp", click: back)
+	stations["Camp"].visible = false
+	var back := TdMenuButton.new()
+	back.style = TdButton.Style.MENU_WOOD
+	back.custom_minimum_size = Vector2(290, 64)
+	back.size = back.custom_minimum_size
+	back.text = "Camp"
+	back.icon = TdTheme.texture("icon_back")
+	back.set_anchors_and_offsets_preset(PRESET_BOTTOM_LEFT)
+	back.offset_left = 60; back.offset_top = -110; back.offset_right = 350; back.offset_bottom = -46
+	back.clicked.connect(back_to_camp)
+	add_child(back)
+	camp_button = back
+	door = world.hotspot(self, "Camp", "Back to the Camp", back_to_camp)
+	move_child(door, world.get_index() + 1) # under the buttons
 	resized.connect(_place_buttons)
 	_place_buttons.call_deferred()
 
 func _place_buttons() -> void:
 	world.place_buttons(self, stations, MissionUiLogic.Stations.map(func(st): return st.id))
+	world.place_hotspots()
 
 func _process(_delta: float) -> void:
 	_place_buttons() # the 3D view's size settles late (as the Camp)
