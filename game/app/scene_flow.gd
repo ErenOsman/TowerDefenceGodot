@@ -18,9 +18,9 @@ signal loading_completed
 ## The loading screen was closed over the opened level.
 signal loading_screen_closed
 
-enum { Boot, MainMenu, Game, LevelSelect, Welcome, Camp, Loading }
-const NAMES := ["Boot", "MainMenu", "Game", "LevelSelect", "Welcome", "Camp", "Loading"]
-const FILES := ["boot", "main_menu", "level", "level_select", "welcome", "camp", "loading"]
+enum { Boot, MainMenu, Game, LevelSelect, Welcome, Camp, Loading, Guild }
+const NAMES := ["Boot", "MainMenu", "Game", "LevelSelect", "Welcome", "Camp", "Loading", "Guild"]
+const FILES := ["boot", "main_menu", "level", "level_select", "welcome", "camp", "loading", "guild"]
 
 ## True while a scene change runs.
 var is_loading: bool = false

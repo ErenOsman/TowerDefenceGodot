@@ -271,34 +271,14 @@ static func confirm_body(type: TowerType, form: FormDef, wallet: TokenWallet) ->
 			parts.append("%d %s (you have %d → %d)" % [n, form.token_name(id), have, have - n])
 	return "Spends %s. You can switch back to %s any time." % [" and ".join(parts), name_of(type, ROOT)]
 
-## Where a token drops, for "Found in: …" and the token tooltips: a whole chapter as "Chapter 2 levels", else the
-## levels' names joined with "and" ("Rock Garden and The Drummer"), a boss level marked "(boss)" (catalog order).
-## "" when no level drops it. catalog: the game catalog (levels by id, chapters).
-static func found_in_text(token_id: String, catalog: GameCatalogAsset) -> String:
-	if catalog == null: return ""
-	var lc := catalog.to_catalog()
-	var ids := Workshop.found_in(token_id, lc)
-	if ids.is_empty(): return ""
-	var per_chapter := {}
-	for e in lc.entries: per_chapter[e.chapter] = int(per_chapter.get(e.chapter, 0)) + 1
-	var have := {}
-	for e in lc.entries:
-		if ids.has(e.level_id): have[e.chapter] = int(have.get(e.chapter, 0)) + 1
-	var names := []
-	var done := {}
-	for e in lc.entries:
-		if not ids.has(e.level_id): continue
-		if int(have.get(e.chapter, 0)) == int(per_chapter[e.chapter]) and int(per_chapter[e.chapter]) > 1:
-			if not done.has(e.chapter):
-				done[e.chapter] = true
-				names.append(MenuLogic.chapter_name(catalog, e.chapter) + " levels")
-			continue
-		var lv := catalog.find_level(e.level_id)
-		var n: String = lv.get_display_name() if lv != null else e.level_id
-		if lv != null and is_boss_level(lv): n += " (boss)"
-		names.append(n)
-	if names.size() == 1: return names[0]
-	return ", ".join(PackedStringArray(names.slice(0, names.size() - 1))) + " and " + names[names.size() - 1]
+## Where a token drops, for "Found in: …" and the token tooltips: the missions that drop it, by name in board order
+## ("Night Watch and Drum Line"; Missions & Guild — Design: missions are the only token source), via
+## MissionBoard.found_in_text. "" when no mission drops it. missions: the board's MissionDefs (GameApp.missions()),
+## or a GameCatalogAsset (its missions are converted).
+static func found_in_text(token_id: String, missions) -> String:
+	if missions is GameCatalogAsset: missions = missions.to_missions()
+	if not (missions is Array): return ""
+	return MissionBoard.found_in_text(token_id, missions)
 
 # ------------------------------------------------------------------ the Codex's Forms page (mockup codex2.html)
 

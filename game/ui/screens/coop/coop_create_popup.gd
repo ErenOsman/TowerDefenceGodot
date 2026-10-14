@@ -4,6 +4,10 @@ extends TdPopup
 ## = open room), players 1–6 (default 2), the level from the Multiplayer list (CoopList), the level card on the
 ## right, Create. A refused name (the relay's swear filter: bad_name) turns the field red with the reason.
 ## Closes once the relay puts you in the new room.
+## Missions & Guild (mockups lobby-mission-picker, lobby-create-refused): the list is the co-op missions, each row
+## "1 play left today · Any 1–4"; a mission used up today is greyed with "Done today · resets in 5 h" and cannot be
+## picked; the card names the mission, its plays note and its drops; Create is refused (the warning line) when the
+## mission has no play left (CoopLevels.can_create / last_reason). The player count is kept within the mission's range.
 
 var net: Node = null
 var room_name := ""
@@ -18,6 +22,9 @@ var _count_note: Label
 var _levels: VBoxContainer
 var _card: Dictionary
 var _create: TdButton
+var _create_warn: HBoxContainer
+var _plays_note: PanelContainer
+var _drops: VBoxContainer
 var _picker: Array = []
 
 ## The 1–6 buttons (tools select one).
@@ -77,7 +84,7 @@ func _build() -> void:
 		_refresh())
 	_count_note = TdMenu.label("", "body", TdTheme.color("cream.200"), 20)
 	left.add_child(_count_note)
-	left.add_child(TdMenu.label("Level", "h3", TdTheme.color("cream.100"), 22))
+	left.add_child(TdMenu.label("Mission", "h3", TdTheme.color("cream.100"), 22))
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS # more levels below: the bar says so
@@ -92,9 +99,16 @@ func _build() -> void:
 	cols.add_child(right)
 	_card = CoopUi.level_card(460, 210)
 	right.add_child(_card.panel)
+	_card.turns.visible = false
+	_plays_note = CoopUi.note_row("icon_clock", "")
+	_card.extra.add_child(_plays_note)
+	_drops = TdMenu.vbox(0)
+	_card.extra.add_child(_drops)
 	var sp := TdMenu.spacer()
 	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.add_child(sp)
+	_create_warn = CoopUi.warning()
+	right.add_child(_create_warn)
 	var cr := TdMenu.hbox(0)
 	cr.alignment = BoxContainer.ALIGNMENT_END
 	right.add_child(cr)
@@ -106,6 +120,12 @@ func _build() -> void:
 func _on_open() -> void:
 	var levels := CoopLevels.list().level_ids()
 	if level_id == "" and levels.size() > 0: level_id = levels[0]
+	# a mission used up today cannot be picked: start on the first one with a play left
+	if not CoopLevels.can_create(level_id):
+		for id in levels:
+			if CoopLevels.can_create(id):
+				level_id = id
+				break
 	if room_name == "":
 		var sd = get_node_or_null("/root/SaveData")
 		var who: String = sd.profile.player_name if sd != null and sd.profile != null else ""
@@ -114,27 +134,89 @@ func _on_open() -> void:
 	if net != null:
 		if not net.error_received.is_connected(_on_error): net.error_received.connect(_on_error)
 		if not net.room_changed.is_connected(_on_room): net.room_changed.connect(_on_room)
+		if not net.state_changed.is_connected(_on_state): net.state_changed.connect(_on_state)
 	_refresh()
 
+func _on_state(_s: int) -> void:
+	if is_open: _refresh()
+
+## Keeps the player count within the picked mission's range (and the picker showing it).
+func _clamp_count() -> void:
+	var m := CoopLevels.mission_for_level(level_id)
+	if m == null: return
+	count = m.clamp_players(count)
+	for i in _picker.size(): _picker[i].set_selected(i + NetProtocol.MIN_COUNT == count)
+
 func _refresh() -> void:
+	_clamp_count()
 	_counter.text = "%d / %d" % [room_name.length(), NetProtocol.MAX_ROOM_NAME]
 	_count_note.text = "Up to %d player%s. Each brings %d tower%s. The level decides the energy rule." % [count, "" if count == 1 else "s",
 		CoopLevels.hand_cap(level_id), "" if CoopLevels.hand_cap(level_id) == 1 else "s"]
 	CoopUi.clear(_levels)
+	var sd = get_node_or_null("/root/SaveData")
+	var mp: MissionProgress = sd.missions if sd != null else null
 	for id in CoopLevels.list().level_ids():
-		var row := CoopUi.level_row(id, 750, id == level_id)
+		var m := CoopLevels.mission_for_level(id)
+		var usable := CoopLevels.can_create(id)
+		var row := mission_row(id, m, mp, id == level_id)
 		var k: String = id
-		row.gui_input.connect(func(ev):
-			if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
-				level_id = k
-				_refresh())
+		if usable:
+			row.gui_input.connect(func(ev):
+				if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+					level_id = k
+					CoopUi.set_warning(_create_warn, "")
+					_refresh())
+		else:
+			row.modulate.a = 0.55
+			row.mouse_default_cursor_shape = Control.CURSOR_ARROW
+			row.tooltip_text = CoopLevels.last_reason
 		_levels.add_child(row)
 	CoopUi.fill_level_card(_card, level_id, count)
+	var cm := CoopLevels.mission_for_level(level_id)
+	_plays_note.visible = cm != null
+	CoopUi.clear(_drops)
+	if cm != null:
+		_card.title.text = cm.name
+		var rich: RichTextLabel = _plays_note.get_child(0).get_child(_plays_note.get_child(0).get_child_count() - 1)
+		rich.text = MissionUiLogic.create_plays_note(cm, mp)
+		var box := CoopUi.flat_panel(Color("2b201a"), 10, Color(0, 0, 0, 0), Vector4(12, 8, 12, 8))
+		box.add_child(TdDrops.rows(cm, MissionUiLogic.first_win_claimed(cm, mp), 34.0, 86.0, 19))
+		_drops.add_child(box)
 	var ok: bool = room_name.strip_edges() != "" and level_id != "" and net != null and net.is_online
 	_create.set_interactable(ok, "Name the room" if room_name.strip_edges() == "" else "Not connected")
 
+## A mission row of the picker (lobby-mission-picker.html): thumb, the mission's name, "1 play left today · Any 1–4"
+## or "✓ Done today · resets in 5 h".
+static func mission_row(id: String, m: MissionDef, mp: MissionProgress, selected: bool) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.custom_minimum_size = Vector2(750, 70)
+	p.mouse_filter = Control.MOUSE_FILTER_STOP
+	p.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	p.add_theme_stylebox_override("panel", CoopUi.box(CoopUi.SEL_BG if selected else CoopUi.ROW_BG, 10,
+		CoopUi.SEL_LINE if selected else CoopUi.ROW_LINE, 3 if selected else 2, Vector4(8, 6, 16, 6)))
+	var h := TdMenu.hbox(14)
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.add_child(h)
+	h.add_child(CoopUi.thumb_rect(id, Vector2(80, 56), 4))
+	var v := TdMenu.vbox(0)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	h.add_child(v)
+	v.add_child(TdMenu.label(m.name if m != null else CoopLevels.level_name(id), "h3", TdTheme.color("cream.100"), 26))
+	var line := MissionUiLogic.picker_line(m, mp) if m != null else "%d waves" % CoopUi.waves_of(id)
+	var lh := TdMenu.hbox(6)
+	lh.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if m != null and MissionBoard.plays_left(m, mp) <= 0: lh.add_child(TdDrops.icon("check", 18, TdTheme.color("cream.200")))
+	lh.add_child(TdMenu.label(line, "small", TdTheme.color("cream.200"), 20))
+	v.add_child(lh)
+	return p
+
 func create() -> void:
 	if net == null: return
+	if not CoopLevels.can_create(level_id): # a mission used up today: refused before sending
+		CoopUi.set_warning(_create_warn, CoopLevels.last_reason)
+		return
+	_clamp_count()
 	if not NetProtocol.name_allowed(room_name) and net.practice:
 		show_error("bad_name")
 		return
@@ -156,3 +238,4 @@ func _exit_tree() -> void:
 	if net != null:
 		if net.error_received.is_connected(_on_error): net.error_received.disconnect(_on_error)
 		if net.room_changed.is_connected(_on_room): net.room_changed.disconnect(_on_room)
+		if net.state_changed.is_connected(_on_state): net.state_changed.disconnect(_on_state)

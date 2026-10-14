@@ -86,9 +86,10 @@
    ],
    "face_yaw": 0.0,
    "row": "front",
-   "station": null,
-   "prop": null,
-   "note": "free slot for a future station"
+   "station": "Missions",
+   "prop": "Signpost",
+   "scale": 2.6,
+   "note": "Missions & Guild: the Signpost (map-kit piece art/tiles/Signpost.fbx) opens the Guild"
   },
   {
    "slot": 5,

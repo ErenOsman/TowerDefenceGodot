@@ -108,13 +108,14 @@ func test_lines() -> void:
 
 func test_found_in() -> void:
 	var c := lib().catalog
-	# Transitional (Missions & Guild): WorkshopLogic still names LEVELS — Workshop.found_in(LevelCatalog) now gives
-	# the levels the dropping missions play. The UI agent switches it to MissionBoard.found_in_text (mission names).
-	assert_eq(WorkshopLogic.found_in_text("poison-gland", c), "Rock Garden and The Drummer")
-	assert_eq(WorkshopLogic.found_in_text("ember-core", c), "The Glutton (boss)")
-	assert_eq(WorkshopLogic.found_in_text("fire-arrow", c), "Two Roads, Rock Garden and The Drummer")
-	assert_eq(WorkshopLogic.found_in_text("yew-bow", c), "Two Roads")
+	# Missions & Guild: missions are the only token source, so "Found in" names the missions (board order)
+	assert_eq(WorkshopLogic.found_in_text("poison-gland", c), "Night Watch and Drum Line")
+	assert_eq(WorkshopLogic.found_in_text("ember-core", c), "The Glutton Returns")
+	assert_eq(WorkshopLogic.found_in_text("fire-arrow", c), "Patrol, Night Watch and Drum Line")
+	assert_eq(WorkshopLogic.found_in_text("yew-bow", c), "Patrol")
 	assert_eq(WorkshopLogic.found_in_text("nothing", c), "")
+	assert_eq(WorkshopLogic.found_in_text("steel-plate", c.to_missions()), "Hold the Gate", "a mission list works too")
+	assert_eq(WorkshopLogic.found_in_text("steel-plate", null), "")
 
 func test_trait_lines() -> void:
 	lib()
@@ -162,12 +163,12 @@ func test_action_texts() -> void:
 	assert_eq(a.kind, "blocked")
 	assert_eq(a.reason, "Needs Fire Archer first.")
 	a = WorkshopLogic.action(o, t, "archer-poison", w, 3, f)
-	assert_eq(a.reason, "Needs 1 more Poison Gland. Found in: Rock Garden and The Drummer.")
+	assert_eq(a.reason, "Needs 1 more Poison Gland. Found in: Night Watch and Drum Line.")
 	o.forms = ["archer-fire"]
 	o.form = "archer-fire"
 	w.spend({"fire-arrow": 1})
 	a = WorkshopLogic.action(o, t, "archer-inferno", w, 3, f)
-	assert_eq(a.reason, "Needs 1 more Ember Core. Found in: The Glutton (boss).")
+	assert_eq(a.reason, "Needs 1 more Ember Core. Found in: The Glutton Returns.")
 	a = WorkshopLogic.action(o, t, "", w, 3, f)
 	assert_eq(a.kind, "use")
 	assert_eq(a.text, "Use this form")

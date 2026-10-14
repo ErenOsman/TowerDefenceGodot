@@ -29,6 +29,8 @@ var sort := "number"
 var selected_id := ""
 ## The pictures of the tiles: Callable(entry) → Texture2D (defaults to the type's portrait).
 var picture_of: Callable = Callable()
+## tower id → "" (rested) or its tired line (the hand editor: Missions & Guild tower energy); unset = never tired.
+var tired_of: Callable = Callable()
 
 var tiles := {}   # tower id → TdTowerTile
 var shown: Array = []
@@ -327,6 +329,7 @@ func refresh_grid() -> void:
 		var t := TdTowerTile.make(e, pic, hand.find(e.id) if hand_keys else -1, tile_size)
 		t.draggable = hand_keys
 		t.set_selected(e.id == selected_id)
+		if tired_of.is_valid(): t.set_tired(str(tired_of.call(e.id)))
 		t.pressed.connect(select)
 		t.double_pressed.connect(func(id: String): activated.emit(id))
 		grid.add_child(t)

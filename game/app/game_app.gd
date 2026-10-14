@@ -118,6 +118,11 @@ func guild_scene() -> int:
 	var i: int = SceneFlow.NAMES.find("Guild")
 	return i if i >= 0 else home()
 
+## Where the co-op lobby lives: the Guild once it is open (Missions & Guild — Design: Multiplayer moved there),
+## the Camp before. A co-op match goes back there (and reopens the lobby).
+func lobby_scene() -> int:
+	return guild_scene() if guild_unlocked() else SceneFlow.Camp
+
 # ---------------------------------------------------------------- art
 
 ## The Texture2D of an icon reference ("Assets/Art/Icons/…/X.png#X"), or of any UI sprite path; null when missing.
@@ -140,9 +145,11 @@ func portrait_texture(unit_name: String) -> Texture2D:
 func model_scene(view_path: String) -> PackedScene:
 	return _scene(ArtPaths.model(view_path))
 
-## A Camp prop model (res://art/camp/<name>.fbx); null when missing.
+## A Camp prop model (res://art/camp/<name>.fbx, else the map-kit piece res://art/tiles/<name>.fbx, e.g. the
+## Signpost); null when missing.
 func camp_scene(prop_name: String) -> PackedScene:
-	return _scene(ArtPaths.camp(prop_name))
+	var s := _scene(ArtPaths.camp(prop_name))
+	return s if s != null else _scene("res://art/tiles/%s.fbx" % prop_name)
 
 ## A font from a content font reference or a file name ("Nunito-Bold"); null when missing.
 func font_file(unity_path: String) -> Font:

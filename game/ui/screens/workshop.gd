@@ -199,7 +199,7 @@ func _build_confirm() -> void:
 func _on_open() -> void:
 	_vocab = GameApp.rules.vocabulary if GameApp.rules != null else null
 	_found.clear()
-	for t in GameApp.catalog.tokens: _found[t.get_id()] = WorkshopLogic.found_in_text(t.get_id(), GameApp.catalog)
+	for t in GameApp.catalog.tokens: _found[t.get_id()] = WorkshopLogic.found_in_text(t.get_id(), GameApp.missions())
 	view = "pick"
 	confirm_open = false
 	_confirm.visible = false

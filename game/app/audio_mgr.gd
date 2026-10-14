@@ -99,13 +99,13 @@ func is_music_playing() -> bool:
 func current_music() -> String:
 	return _names[_active] if _active.playing else ""
 
-## SceneMusic.cs per scene: MainMenu/Welcome → menu; LevelSelect/Camp → one of map1–3 (kept when one already
+## SceneMusic.cs per scene: MainMenu/Welcome → menu; LevelSelect/Camp/Guild → one of map1–3 (kept when one already
 ## plays); the level → its LevelAsset.music when set, else battle. Boot/Loading keep what plays.
 func play_scene_music(scene_id: int, level: LevelAsset = null) -> void:
 	match scene_id:
 		SceneFlow.MainMenu, SceneFlow.Welcome:
 			play_music("menu")
-		SceneFlow.LevelSelect, SceneFlow.Camp:
+		SceneFlow.LevelSelect, SceneFlow.Camp, SceneFlow.Guild:
 			if MAP_TRACKS.has(current_music()): return
 			play_music(MAP_TRACKS[randi() % MAP_TRACKS.size()])
 		SceneFlow.Game:

@@ -5,6 +5,14 @@ extends TdPopup
 ## state) and the selected room's level card with Join. Offline: "Can't reach the server." with Retry and Offline
 ## practice. Opened from the Camp's Multiplayer station; connects Net to the relay when opened. Child popups: create
 ## room, join (password), the room screen (when you are in a room). Back closes it (and leaves the connection idle).
+## Missions & Guild (mockups lobby-list-mission, lobby-auto-left): every room is a mission; a room set to a mission
+## you used up today says "Night Watch · done today" and "Done today", Join is off with "Done today: you played
+## Night Watch today. Resets in 5 h."; the level card shows the mission's drops. When the host switches your room to
+## such a mission you leave it at once and a "Done today" popup says why (CoopLevels.auto_leave_reason). Opened from
+## a mission (preselect_mission), Create room opens with that mission picked.
+
+## Open Create room at once with this mission picked ("" = none): the mission board's Find a room.
+var preselect_mission := ""
 
 var net: Node = null   # the Net autoload (RelayClient), or a test's client
 
@@ -25,6 +33,9 @@ var _detail_sub: HBoxContainer
 var _card: Dictionary
 var _not_connected: Label
 var _join: TdButton
+var _join_note: HBoxContainer
+var _note: Label
+var _drops: VBoxContainer
 var _footer: Label
 var _popups: Control
 var selected_room := ""
@@ -141,13 +152,19 @@ func _build() -> void:
 	_card = CoopUi.level_card(440, 200)
 	_card.turns.visible = false
 	_detail.add_child(_card.panel)
-	var note := TdMenu.label("Co-op gives no rewards or records to your story.", "body", TdTheme.color("cream.200"), 20)
-	_detail.add_child(note)
+	_drops = TdMenu.vbox(0)
+	_card.extra.add_child(_drops)
+	_note = TdMenu.label("Co-op gives no rewards or records to your story.", "body", TdTheme.color("cream.200"), 20)
+	_detail.add_child(_note)
 	_not_connected = TdMenu.label("Not connected.", "body", TdTheme.color("cream.200"), 22)
 	_not_connected.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_not_connected.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_not_connected.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.add_child(_not_connected)
+	_join_note = TdMenu.hbox(8)
+	_join_note.alignment = BoxContainer.ALIGNMENT_END
+	_join_note.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	right.add_child(_join_note)
 	var join_row := TdMenu.hbox(0)
 	join_row.alignment = BoxContainer.ALIGNMENT_END
 	right.add_child(join_row)
@@ -173,6 +190,10 @@ func _on_open() -> void:
 	elif n.is_online: n.list_rooms()
 	refresh()
 	if n.in_room: _open_room()
+	elif preselect_mission != "":
+		var m := CoopLevels.mission(preselect_mission)
+		preselect_mission = ""
+		if m != null: open_create.call_deferred(m.level_id)
 
 func close() -> void:
 	super.close()
@@ -197,7 +218,31 @@ func _on_error(code: String, _text: String) -> void:
 
 func _on_room(room: Dictionary) -> void:
 	if not is_open: return
+	# the host switched the room to a mission this player used up today: leave it and say why
+	if CoopLevels.auto_leave_reason(room) != "":
+		_auto_leave.call_deferred(CoopLevels.room_title(str(room.get("level", ""))))
+		return
 	if not room.is_empty() and room_popup == null: _open_room()
+
+func _auto_leave(mission_name: String) -> void:
+	var n := _net()
+	if n == null or not n.in_room: return
+	n.leave_room()
+	show_done_popup(mission_name)
+
+## The "Done today" popup of the auto-leave (lobby-auto-left.html); returns it.
+func show_done_popup(mission_name: String) -> TdPopup:
+	var p := DonePopup.new()
+	p.free_on_close = true
+	p.texts = MissionUiLogic.auto_left(mission_name)
+	_popups.add_child(p)
+	CoopUi.show_popup(p)
+	return p
+
+## A room's mission is used up today for this player (Join off, "Done today").
+static func room_done(r: Dictionary) -> bool:
+	var level := str(r.get("level", ""))
+	return CoopLevels.mission_for_level(level) != null and CoopLevels.plays_left(level) <= 0
 
 ## Redraws everything from Net's state.
 func refresh() -> void:
@@ -296,7 +341,8 @@ func _room_row(r: Dictionary) -> PanelContainer:
 	var nm := TdMenu.label(str(r.get("name", "")), "h3", TdTheme.color("cream.100"), 26)
 	nm.clip_text = true
 	nv.add_child(nm)
-	nv.add_child(TdMenu.label(CoopLevels.level_name(str(r.get("level", ""))), "small", TdTheme.color("cream.200"), 20))
+	var done := room_done(r)
+	nv.add_child(TdMenu.label(MissionUiLogic.room_row_line(CoopLevels.room_title(str(r.get("level", ""))), done), "small", TdTheme.color("cream.200"), 20))
 	var host_box := TdMenu.hbox(10)
 	host_box.custom_minimum_size = Vector2(220, 0)
 	host_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -318,16 +364,17 @@ func _room_row(r: Dictionary) -> PanelContainer:
 	count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	count.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(count)
-	var state := "Playing" if started else ("Full" if full else "Waiting")
+	var state := "Playing" if started else ("Full" if full else ("Done today" if done else "Waiting"))
 	# only the selected row's Waiting is filled; the others are outlined
 	var pill: PanelContainer
-	if state == "Waiting" and sel: pill = CoopUi.state_pill(state, Color("2f7d3a"), Color.WHITE)
+	if state == "Done today": pill = CoopUi.state_pill(state, Color("2c4f86") if sel else Color(0.2, 0.16, 0.13), Color.WHITE if sel else TdTheme.color("cream.300"))
+	elif state == "Waiting" and sel: pill = CoopUi.state_pill(state, Color("2f7d3a"), Color.WHITE)
 	elif state == "Waiting": pill = TdMenu.pill("[b]Waiting[/b]", Color(0, 0, 0, 0), CoopUi.GOOD.lightened(0.15), 20, CoopUi.GOOD)
 	else: pill = CoopUi.state_pill(state, Color(0.2, 0.16, 0.13), TdTheme.color("cream.300"))
 	pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(TdMenu.spacer(0, 24))
 	h.add_child(pill)
-	if (full or started) and not sel: p.modulate.a = 0.6
+	if (full or started or done) and not sel: p.modulate.a = 0.6
 	var id: String = r.id
 	p.gui_input.connect(func(ev):
 		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
@@ -352,6 +399,8 @@ func _draw_detail(online: bool) -> void:
 	_not_connected.visible = not online or r.is_empty()
 	_not_connected.text = "Not connected." if not online else "Pick a room, or make your own."
 	_join.visible = online and not r.is_empty()
+	CoopUi.clear(_join_note)
+	CoopUi.clear(_drops)
 	if r.is_empty():
 		_join.set_interactable(false, "Pick a room")
 		return
@@ -366,9 +415,29 @@ func _draw_detail(online: bool) -> void:
 	_detail_sub.add_child(_detail_icon(CoopUi.glyph("players")))
 	_detail_sub.add_child(TdMenu.label("%d of %d" % [NetProtocol.int_of(r, "players"), NetProtocol.int_of(r, "count")], "body", TdTheme.color("cream.200"), 21))
 	CoopUi.fill_level_card(_card, str(r.get("level", "")), NetProtocol.int_of(r, "count"))
+	var level := str(r.get("level", ""))
+	var m := CoopLevels.mission_for_level(level)
+	if m != null:
+		_card.title.text = m.name
+		_drops.add_child(_drops_card(m))
+	_note.visible = m == null
 	var full: bool = NetProtocol.int_of(r, "players") >= NetProtocol.int_of(r, "count")
 	var started := bool(r.get("started", false))
-	_join.set_interactable(not full and not started, "This room is full." if full else "The match has started.")
+	var done := room_done(r)
+	var why := "This room is full." if full else ("The match has started." if started else "")
+	if done and why == "": why = MissionUiLogic.join_done_text(m.name)
+	if done:
+		_join_note.add_child(TdDrops.icon("check", 20, TdTheme.color("cream.200")))
+		var jl := TdMenu.label(MissionUiLogic.join_done_text(m.name), "plate", TdTheme.color("cream.200"), 19)
+		_join_note.add_child(jl)
+	_join.set_interactable(why == "", why)
+
+## The mission's drops on the level card (a dark box: Each win / First win).
+static func _drops_card(m: MissionDef) -> Control:
+	var box := CoopUi.flat_panel(Color("2b201a"), 10, Color(0, 0, 0, 0), Vector4(12, 8, 12, 8))
+	var sd = (Engine.get_main_loop() as SceneTree).root.get_node_or_null("SaveData")
+	box.add_child(TdDrops.rows(m, MissionUiLogic.first_win_claimed(m, sd.missions if sd != null else null), 34.0, 86.0, 19))
+	return box
 
 ## Join: a password room asks for it first; an open room joins at once.
 func _detail_icon(tex: Texture2D) -> TextureRect:
@@ -381,6 +450,9 @@ func join_selected() -> void:
 	var r := _selected()
 	var n := _net()
 	if r.is_empty() or n == null: return
+	if not CoopLevels.can_join(r): # a mission used up today (the client checks; the relay does not know saves)
+		_join._deny()
+		return
 	if bool(r.get("locked", false)):
 		var j := CoopJoinPopup.new()
 		j.free_on_close = true
@@ -391,10 +463,11 @@ func join_selected() -> void:
 		return
 	n.join_room(r.id, "", CoopLevels.my_hand_types(CoopLevels.hand_cap(str(r.get("level", "")))))
 
-func open_create() -> CoopCreatePopup:
+func open_create(level_id := "") -> CoopCreatePopup:
 	var c := CoopCreatePopup.new()
 	c.free_on_close = true
 	c.net = _net()
+	if level_id != "": c.level_id = level_id
 	_popups.add_child(c)
 	CoopUi.show_popup(c)
 	return c
@@ -421,3 +494,28 @@ func _open_room() -> void:
 		room_popup = null
 		refresh())
 	CoopUi.show_popup(room_popup)
+
+## The auto-leave message (lobby-auto-left.html): "✓ Done today", the room switched to <mission>, which you already
+## played today; you left the room; "Resets in 5 h."; OK.
+class DonePopup extends TdPopup:
+	var texts := {}
+	func _build() -> void:
+		var w := CoopUi.window(self, Vector2(760, 0), 32)
+		window = w.panel
+		var body: VBoxContainer = w.body
+		var head := TdMenu.hbox(12)
+		body.add_child(head)
+		var ic := TdDrops.icon("check", 30, TdTheme.color("gold"))
+		head.add_child(ic)
+		head.add_child(TdMenu.label(str(texts.get("title", "")), "h1", TdTheme.color("cream.100"), 46))
+		var t := TdMenu.rich(str(texts.get("body", "")), "body", TdTheme.color("cream.200"), 23)
+		t.custom_minimum_size = Vector2(690, 0)
+		body.add_child(t)
+		body.add_child(TdMenu.rich(str(texts.get("resets", "")), "body", TdTheme.color("cream.200"), 22))
+		var row := HBoxContainer.new()
+		row.alignment = BoxContainer.ALIGNMENT_END
+		body.add_child(row)
+		var ok := TdMenu.button(TdButton.Style.PRIMARY, "OK", Vector2(220, 62))
+		ok.font_size = 28
+		ok.clicked.connect(close)
+		row.add_child(ok)

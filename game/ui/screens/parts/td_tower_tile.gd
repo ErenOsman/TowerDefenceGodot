@@ -80,6 +80,14 @@ func _build(e: Dictionary, key: int) -> void:
 		add_child(b)
 		tooltip_text = "%s · in hand, key %d" % [e.name, key + 1]
 
+## A tower that went on a mission today: the portrait at 50 % with the moon badge (Missions & Guild — Design).
+func set_tired(text: String) -> void:
+	if text == "" or _medal == null: return
+	for c in _medal.get_children(): c.modulate.a = 0.5
+	TdTiredBadge.attach(self, tile.x, 0.26, Vector2(0.72, 0.5))
+	if _name != null: _name.modulate.a = 0.6
+	tooltip_text += "\n" + text
+
 func set_selected(v: bool) -> void:
 	selected = v
 	_restyle()

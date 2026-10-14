@@ -57,7 +57,9 @@ static func preload_paths() -> Array[String]:
 	var out: Array[String] = []
 	var add := func(p: String):
 		if p != "" and not out.has(p) and ResourceLoader.exists(p): out.append(p)
-	for prop in _camp_props(): add.call(ArtPaths.camp(prop))
+	for prop in _camp_props():
+		add.call(ArtPaths.camp(prop))
+		add.call("res://art/tiles/%s.fbx" % prop) # a map-kit piece used as a Camp prop (the Signpost)
 	for piece in TILE_PIECES: add.call("res://art/tiles/%s.fbx" % piece)
 	var catalog: GameCatalogAsset = GameApp.catalog
 	if catalog != null:
@@ -67,7 +69,7 @@ static func preload_paths() -> Array[String]:
 	add.call(BACKGROUND)
 	add.call(THEME)
 	# the screens between levels themselves (their scripts compile now; SceneFlow then opens them from the cache)
-	for id in [SceneFlow.Welcome, SceneFlow.MainMenu, SceneFlow.Camp, SceneFlow.LevelSelect, SceneFlow.Loading]:
+	for id in [SceneFlow.Welcome, SceneFlow.MainMenu, SceneFlow.Camp, SceneFlow.Guild, SceneFlow.LevelSelect, SceneFlow.Loading]:
 		add.call(SceneFlow.path_of(id))
 	return out
 

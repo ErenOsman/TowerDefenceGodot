@@ -921,7 +921,8 @@ func leave_coop() -> void:
 	var flow = _auto("SceneFlow")
 	if flow == null: return
 	_restore_speed()
-	flow.go(flow.Camp)
+	var app = _auto("GameApp")
+	flow.go(app.lobby_scene() if app != null and app.has_method("lobby_scene") else flow.Camp) # the Guild once open
 
 func _setup_coop(info: Dictionary, lib: ContentLibrary) -> bool:
 	var net = CoopLaunch.net if CoopLaunch.net != null else _auto("Net")

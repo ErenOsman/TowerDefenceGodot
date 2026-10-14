@@ -6,6 +6,10 @@ extends TdPopup
 ## Change hand; the host has × to remove others), the level card (+ Change level for the host → room settings), the
 ## chat, and the bottom row: Leave room, what we wait for, Ready, Start (host; all present players Ready).
 ## When the relay starts the match, Net emits match_ready; the in-match code opens the level.
+## Missions & Guild (mockup lobby-room-tired): your row's strip shows your saved hand's first towers up to the cap
+## with tired ones dimmed (moon badge) and "1 tired: the next rested tower goes" (CoopLevels.tired_note); Ready is
+## refused while no rested tower would come (CoopLevels.can_ready: "All your towers are tired: …"). A switch to a
+## mission you used up today is the lobby's business (it leaves the room and says why).
 
 const HAND_EDITOR := "res://game/ui/screens/hand_editor.tscn"
 const BANNER_SECONDS := 8.0
@@ -190,6 +194,7 @@ func _on_room(room: Dictionary) -> void:
 	if room.is_empty():
 		close()
 		return
+	if CoopLevels.auto_leave_reason(room) != "": return # the lobby leaves the room (and closes this)
 	refresh()
 
 func _on_notes(notes: Array) -> void:
@@ -361,9 +366,15 @@ func _slot_row(i: int, p, room: Dictionary, cap: int, h: float) -> Control:
 	var sp := TdMenu.spacer()
 	sp.size_flags_horizontal = SIZE_EXPAND_FILL
 	row.add_child(sp)
-	var strip2 := CoopUi.hand_strip(hand, cap, 44)
+	var strip2: Control = my_strip(cap) if mine else CoopUi.hand_strip(hand, cap, 44)
 	strip2.size_flags_vertical = SIZE_SHRINK_CENTER
 	row.add_child(strip2)
+	var tired := CoopLevels.tired_note(cap) if mine and CoopLevels.mission_for_level(str(room.get("level", ""))) != null else ""
+	if tired != "":
+		var tl := TdMenu.label(tired.replace(": ", ":\n"), "small", TdTheme.color("cream.100"), 18)
+		tl.size_flags_vertical = SIZE_SHRINK_CENTER
+		tl.add_theme_constant_override("line_spacing", -4)
+		row.add_child(tl)
 	var state := CoopUi.state_pill("✓ Ready" if ready else "Not ready", Color("2f7d3a") if ready else Color(0.13, 0.1, 0.08), Color.WHITE if ready else TdTheme.color("cream.200"))
 	state.custom_minimum_size = Vector2(150, 0)
 	state.size_flags_vertical = SIZE_SHRINK_CENTER
@@ -398,6 +409,35 @@ func _slot_row(i: int, p, room: Dictionary, cap: int, h: float) -> Control:
 		holder.add_child(x)
 	return panel
 
+## Your strip in your row: the saved hand's first `cap` towers (tired ones dimmed with the moon badge: the match
+## skips them and takes the next rested tower), padded with empty circles.
+func my_strip(cap: int) -> HBoxContainer:
+	var sd = get_node_or_null("/root/SaveData")
+	var h := TdMenu.hbox(4)
+	h.mouse_filter = MOUSE_FILTER_IGNORE
+	if sd == null: return h
+	var ids: Array = sd.towers.hand.slice(0, cap)
+	for i in cap:
+		if i >= ids.size():
+			h.add_child(CoopUi.empty_circle(44))
+			continue
+		var owned = sd.towers.find(ids[i])
+		var entry := CoopSession.hand_entry(owned.type, owned.form) if owned != null else ""
+		var one := CoopUi.hand_strip([entry], 1, 44)
+		var m: Control = one.get_child(0)
+		one.remove_child(m)
+		one.queue_free()
+		var holder := Control.new()
+		holder.custom_minimum_size = Vector2(44, 44)
+		holder.mouse_filter = MOUSE_FILTER_PASS
+		holder.add_child(m)
+		if MissionBoard.is_tired(str(ids[i]), sd.missions):
+			m.modulate = Color(1, 1, 1, 0.5)
+			TdTiredBadge.attach(holder, 44.0, 0.42, Vector2(0.82, 0.8))
+			TdTooltipTrigger.attach(holder, "", MissionUiLogic.tired_line(null, false))
+		h.add_child(holder)
+	return h
+
 ## Your hand in the room is cut to the level's co-op cap (sent again when the saved hand or the cap changed).
 func my_hand_cut() -> bool:
 	if net == null or not net.in_room: return false
@@ -413,7 +453,14 @@ func my_hand_cut() -> bool:
 func toggle_ready() -> void:
 	if net == null or not net.in_room: return
 	var me = NetProtocol.find_player(net.room, net.player_id)
-	net.set_ready(not (me != null and bool(me.get("ready", false))))
+	var ready := me != null and bool(me.get("ready", false))
+	# a mission needs a rested tower to bring (Missions & Guild — Design § Tower energy)
+	if not ready and not CoopLevels.can_ready(str(net.room.get("level", ""))):
+		_ready_btn._deny()
+		add_system_line(CoopLevels.last_reason + ".")
+		_wait.text = CoopLevels.last_reason + "."
+		return
+	net.set_ready(not ready)
 
 ## The host's Start: refused with its reason (shake + tooltip) while someone is not Ready.
 func can_start() -> bool:

@@ -745,6 +745,7 @@ class HandSlot extends Control:
 	var bench := false
 	var _mini: TextureRect
 	var _plate: TdButton
+	var _coin: Panel
 	var _hovered := false
 
 	func _init() -> void:
@@ -786,6 +787,7 @@ class HandSlot extends Control:
 				coin.add_child(cl)
 				if bench: coin.modulate.a = 0.6
 				add_child(coin)
+				_coin = coin
 		else:
 			var ghost := DashedEllipse.new()
 			ghost.position = Vector2((SLOT.x - 96) / 2.0, SLOT.y - 40 - 34)
@@ -810,6 +812,29 @@ class HandSlot extends Control:
 		add_child(_plate)
 		if bench: modulate.a = 0.8 # benched slots a little dimmer (as in hand select)
 		TdTooltipTrigger.attach(self, "", "Click: change hand" if not empty else "Empty slot. Click: change hand")
+
+	## Mission marks (the mission detail): a tired tower at 50 % with the moon badge and "Tired ·\nrests in 5 h"
+	## under its plate; a tower the mission takes gets "▲ goes" there.
+	func mark(tired_text: String, goes: bool) -> void:
+		if empty: return
+		var line := ""
+		var col := TdTheme.color("cream.200")
+		if tired_text != "":
+			if _mini != null: _mini.modulate = Color(1, 1, 1, 0.5)
+			if _coin != null: _coin.modulate = Color(0.75, 0.75, 0.75, 0.6)
+			if _plate != null: _plate.set_extra_state("Locked")
+			TdTiredBadge.attach(self, 124.0, 0.3, Vector2(0.5, 0.52))
+			line = tired_text
+			col = TdTheme.color("cream.100")
+		elif goes:
+			line = "▲ goes"
+		if line == "": return
+		var l := TdMenu.label(line, "plate", col, 18)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		l.position = Vector2(-8, SLOT.y + 2)
+		l.size = Vector2(SLOT.x + 16, 22)
+		l.add_theme_constant_override("line_spacing", -4)
+		add_child(l)
 
 	func _restyle() -> void:
 		if _plate != null:

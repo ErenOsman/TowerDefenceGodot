@@ -21,6 +21,7 @@ var slot := 0
 var tower_id := ""
 var late := false
 var selected := false
+var tired := false
 var _hovered := false
 var _over := false
 var _fig: TextureRect
@@ -134,6 +135,30 @@ func _remove_button() -> Control:
 		elif ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
 			b.accept_event())
 	return b
+
+## A tower that went on a mission today (Missions & Guild — Design § Tower energy): the miniature at 50 % with the
+## moon badge and "Tired ·\nrests in 5 h" under the plate.
+func set_tired(text: String) -> void:
+	tired = text != ""
+	if not tired or tower_id == "": return
+	if _fig != null: _fig.modulate = Color(1, 1, 1, 0.5)
+	if _plate != null: _plate.set_extra_state("Locked")
+	TdTiredBadge.attach(self, SIZE.x, 0.3, Vector2(0.5, 0.5))
+	_under(text, TdTheme.color("cream.100"))
+	tooltip_text = text.replace("\n", " ")
+
+## A tower the mission takes (hand editor opened for a mission): "▲ goes" under the plate.
+func set_goes() -> void:
+	if tower_id != "" and not tired: _under("▲ goes", TdTheme.color("cream.200"))
+
+func _under(text: String, col: Color) -> void:
+	var l := TdMenu.label(text, "plate", col, 18)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.position = Vector2(-6, SIZE.y + 1)
+	l.size = Vector2(SIZE.x + 12, 22)
+	l.add_theme_constant_override("line_spacing", -4)
+	l.mouse_filter = MOUSE_FILTER_IGNORE
+	add_child(l)
 
 func set_late(v: bool) -> void:
 	late = v

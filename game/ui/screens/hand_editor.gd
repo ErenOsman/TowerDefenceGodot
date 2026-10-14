@@ -10,6 +10,10 @@ extends TdPopup
 ## Everything saves as you go (TowerCollection + GameData.hand_layouts through SaveData.save()) and emits `changed`.
 ## Opened from level select (with its level: set `level`, or set_level_context(cap, name)), the Camp's Towers station
 ## and the co-op room. Esc / right click / × close it (TdPopup).
+## Missions & Guild (mockup hand-select-mission): towers that went on a mission today are dimmed with the moon badge
+## and "Tired · rests in 5 h" (in the strip and the collection, wherever it opens; the card says it too). Opened for a
+## mission (`mission` set, from the mission detail), the divider counts rested towers ("Night Watch takes the first 4
+## rested", after the last tower that goes) and "▲ goes" marks the towers that will come.
 
 signal changed
 
@@ -19,6 +23,8 @@ var level: LevelAsset = null
 var hand_cap := -1
 ## Overrides the level's name when not "".
 var level_name := ""
+## The mission the hand is for (null: none): the divider counts rested towers, "▲ goes" under the ones it takes.
+var mission: MissionDef = null
 
 const WIN := Vector2(1460, 864)
 const GRID_COLUMNS := 6
@@ -87,6 +93,7 @@ func _build() -> void:
 	collection.extras = true
 	collection.hand_keys = true
 	collection.columns = GRID_COLUMNS
+	collection.tired_of = func(id: String) -> String: return MissionUiLogic.tired_line(null, false) if MissionBoard.is_tired(id, SaveData.missions) else ""
 	collection.build()
 	collection.selected.connect(_select)
 	collection.activated.connect(toggle)
@@ -183,9 +190,16 @@ func _refresh_tray(pop := false) -> void:
 	var towers := SaveData.towers
 	var c := cap()
 	var note := HandLogic.cap_note(context_name(), c)
+	var cut := c
+	var marks := MissionUiLogic.hand_marks(towers.hand, SaveData.missions, c)
+	if mission != null:
+		note = MissionUiLogic.editor_cap_note(mission.name, c)
+		cut = MissionUiLogic.divider_at(towers.hand, SaveData.missions, c)
+		if cut < 0: cut = TowerCollection.MaxHand
 	var made := []
+	var lines := false
 	for i in TowerCollection.MaxHand:
-		if note != "" and i == c and c < TowerCollection.MaxHand: _tray.add_child(_divider(note))
+		if note != "" and i == cut and cut < TowerCollection.MaxHand: _tray.add_child(_divider(note))
 		var s: TdHandSlot
 		if i < towers.hand.size():
 			var owned := towers.find(towers.hand[i])
@@ -195,13 +209,21 @@ func _refresh_tray(pop := false) -> void:
 			s.pressed.connect(_select)
 			s.removed.connect(remove)
 			s.drag_began.connect(func(id: String): _drag_hand_id = id)
+			if marks[i].tired:
+				s.set_tired(MissionUiLogic.tired_line())
+				lines = true
+			elif mission != null and marks[i].goes:
+				s.set_goes()
+				lines = true
 			made.append(s)
 		else:
 			s = TdHandSlot.empty(i)
-		s.set_late(note != "" and i >= c)
+		s.set_late(note != "" and i >= cut and not s.tired)
 		s.dropped.connect(_on_drop)
 		_tray.add_child(s)
 		_slots.append(s)
+	# room under the slots for the tired / goes lines
+	_tray_panel.add_theme_stylebox_override("panel", TdTheme.stylebox("hand_tray", Color.WHITE, [14, 28, 14, 46 if lines else 4]))
 	if pop: TdMenu.pop_in(made, 0.03)
 
 ## The divider at the level's cap, its note above it.
@@ -368,6 +390,13 @@ func _refresh_detail() -> void:
 	_detail.add_child(foot)
 	var towers := SaveData.towers
 	var at := towers.hand.find(e.id)
+	if MissionBoard.is_tired(e.id, SaveData.missions):
+		var tl := TdMenu.hbox(8)
+		tl.add_child(TdDrops.icon("hourglass", 20, TdTheme.color("gold.ink")))
+		var tt := TdMenu.wrap_label(MissionUiLogic.tired_detail(), "plate", TdTheme.color("gold.ink"), 18)
+		tt.custom_minimum_size = Vector2(300, 0)
+		tl.add_child(tt)
+		foot.add_child(tl)
 	if at >= 0:
 		foot.add_child(TdMenu.label("In your hand · key %d" % (at + 1), "plate", TdTheme.color("good.ink"), 18))
 		var b := TdMenu.button(TdButton.Style.SECONDARY, "Remove from hand", Vector2(340, 58), TdTheme.texture("icon_close"))

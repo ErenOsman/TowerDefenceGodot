@@ -7,6 +7,10 @@ extends HudPopup
 ## buttons, the primary always on the right: Level select (wood) · Retry (cobalt), or with a next level Retry · Level
 ## select · Next level (cobalt). Retry is hidden after winning the tutorial. Esc and right click never
 ## close it: one of its buttons decides.
+## A mission (mockups end-screen-mission, -last): "Mission · Patrol", the rewards row "Rewards [coin ×1]  First win
+## [gold-rimmed coin ×1]  Spend them in the Workshop." (first win only when this win took it), under it "⧗ 1 play left
+## today" / "✓ Done today: no plays left · resets in 5 h"; Retry hidden when no play is left (can_retry); the leave
+## button says "Guild" (LevelController.leave_label).
 
 const WIDTH := 880.0
 
@@ -153,8 +157,30 @@ func show_outcome(outcome: int) -> void:
 		_extra.remove_child(ch)
 		ch.queue_free()
 	if _won and c.reward != null: _extra.add_child(_reward_card(c.reward))
+	var m: MissionDef = c.mission if "mission" in c else null
+	if m != null:
+		_place.text = MissionUiLogic.end_subtitle(m)
+		var mp = _mission_progress()
+		var rec: LevelRecord = mp.find(m.id) if mp != null else null
+		var groups := MissionUiLogic.end_reward_groups(m, _won, rec != null and rec.wins == 1)
+		if not groups.is_empty(): _extra.add_child(_mission_rewards(groups))
+		if mp != null:
+			var line := MissionUiLogic.end_plays_line(m, mp)
+			var done := MissionBoard.plays_left(m, mp) <= 0
+			var row := HudArt.hbox(8)
+			row.alignment = BoxContainer.ALIGNMENT_CENTER
+			row.add_child(TdDrops.icon("check" if done else "hourglass", 20, TdTheme.color("cream.200")))
+			row.add_child(HudArt.label(line, "body", TdTheme.color("cream.100"), 22))
+			if _extra.get_child_count() > 0: _extra.add_child(TdMenu.spacer(14))
+			_extra.add_child(row)
+			# a play is left but Retry is hidden (every tower it would take is tired): say why
+			var why: String = c.retry_note if "retry_note" in c else ""
+			if not done and why != "" and not c.can_retry:
+				var wl := HudArt.label(why + ".", "body", TdTheme.color("cream.300"), 20)
+				wl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				_extra.add_child(wl)
 	# Workshop tokens: "Rewards:" and a chip per token kind (icon, ×n, name)
-	if _won and "drops" in c and not c.drops.is_empty(): _extra.add_child(_token_row(c.drops))
+	elif _won and "drops" in c and not c.drops.is_empty(): _extra.add_child(_token_row(c.drops))
 	if not _won:
 		var tip = _codex_tip("losing")
 		if tip != null: _extra.add_child(_tip_card(tip))
@@ -167,7 +193,14 @@ func show_outcome(outcome: int) -> void:
 	leave_button.text = c.leave_label
 	# the primary always on the right: Level select · Retry, or Retry · Level select · Next level
 	var row: HBoxContainer = retry_button.get_parent()
-	if has_next:
+	leave_button.style = TdButton.Style.SECONDARY
+	if m != null:
+		# a mission (end-screen-mission): Retry (wood) · Guild (cobalt), Guild alone once no play is left
+		retry_button.style = TdButton.Style.SECONDARY
+		leave_button.style = TdButton.Style.PRIMARY
+		row.move_child(retry_button, 0)
+		row.move_child(leave_button, 1)
+	elif has_next:
 		row.move_child(retry_button, 0)
 		row.move_child(leave_button, 1)
 	else:
@@ -233,6 +266,39 @@ func _tip_card(tip) -> Control:
 	t.custom_minimum_size = Vector2(690, 0)
 	t.text = TooltipText.from_rich(tip.text)
 	v.add_child(t)
+	return p
+
+func _mission_progress() -> MissionProgress:
+	var sd := get_tree().root.get_node_or_null("SaveData") if is_inside_tree() else null
+	return sd.missions if sd != null else null
+
+## A mission's rewards row: per group its label ("Rewards" gold, "First win" cream), the coins (first-win ones
+## gold-rimmed), then "Spend them in the Workshop.".
+func _mission_rewards(groups: Array) -> Control:
+	var p := PanelContainer.new()
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(TdTheme.color("wood.850"), 0.95)
+	box.border_color = TdTheme.color("gold.dark")
+	box.set_border_width_all(2)
+	box.set_corner_radius_all(14)
+	box.content_margin_left = 20; box.content_margin_right = 20; box.content_margin_top = 10; box.content_margin_bottom = 10
+	p.add_theme_stylebox_override("panel", box)
+	p.mouse_filter = MOUSE_FILTER_IGNORE
+	p.custom_minimum_size = Vector2(778, 0)
+	var row := HFlowContainer.new()
+	row.alignment = FlowContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("h_separation", 12)
+	row.add_theme_constant_override("v_separation", 8)
+	p.add_child(row)
+	for g in groups:
+		var first: bool = g[2]
+		var l := HudArt.label(g[0], "h3" if g[0] == "Rewards" else "body", TdTheme.color("gold") if g[0] == "Rewards" else TdTheme.color("cream.200"), 26 if g[0] == "Rewards" else 21)
+		l.size_flags_vertical = SIZE_SHRINK_CENTER
+		row.add_child(l)
+		for c in TdDrops.coins(g[1], first, false, 42.0): row.add_child(c)
+	var sp := HudArt.label(MissionUiLogic.SpendInWorkshop, "body", TdTheme.color("cream.200"), 20)
+	sp.size_flags_vertical = SIZE_SHRINK_CENTER
+	row.add_child(sp)
 	return p
 
 ## The Workshop tokens a win gave (Workshop — Design § Rules "Tokens"): "Rewards:" then a chip per kind (its 32 px

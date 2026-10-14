@@ -4,7 +4,9 @@ extends Control
 ## Campfire, all facing the camera; Tent and Supplies) with a station button over each prop: Chapters (the chapter picker, then a chapter's
 ## levels), Towers (the hand editor over every owned tower), Codex, Workshop (towers into their forms: workshop.gd; locked
 ## until Chapter 2 is cleared, MenuLogic.workshop_unlocked), and
-## Main menu; Multiplayer (the co-op lobby). The first visit (PlayerProfile.camp_seen) shows a welcome card, then a tour: the
+## Main menu; Multiplayer (the co-op lobby, until the Guild opens: then "Moved to the Guild"); Missions on the
+## Signpost (Missions & Guild — Design: locked "Missions open after Chapter 2" until GameApp.guild_unlocked(), then
+## it opens the Guild, tagged "New" until the first visit). The first visit (PlayerProfile.camp_seen) shows a welcome card, then a tour: the
 ## Princess's speech bubble (TdTextBubble) points at each station in turn, the station highlighted; a click goes on,
 ## Skip ends it. Map music comes from SceneFlow (AudioMgr.play_scene_music).
 
@@ -19,7 +21,8 @@ const STATIONS := [
 	{"id": "Chapters", "label": "Chapters", "icon": "icon_castle", "action": "open_chapters", "locked": false, "primary": true},
 	{"id": "Codex", "label": "Codex", "icon": "icon_codex", "action": "open_codex", "locked": false},
 	{"id": "Workshop", "label": "Workshop", "icon": "icon_edit", "action": "open_workshop", "locked": false, "gate": "workshop"},
-	{"id": "Multiplayer", "label": "Multiplayer", "icon": "icon_onboard", "action": "open_multiplayer", "locked": false},
+	{"id": "Multiplayer", "label": "Multiplayer", "icon": "icon_onboard", "action": "open_multiplayer", "locked": false, "gate": "moved"},
+	{"id": "Missions", "label": "Missions", "icon": "extra:flag", "action": "open_guild", "locked": false, "gate": "guild"},
 ]
 ## Used when layout.json cannot be read (same values as layout.json, the ring layout of 2026-10-13).
 const FALLBACK_LAYOUT := {
@@ -31,7 +34,7 @@ const FALLBACK_LAYOUT := {
 		{"slot": 1, "tile": [2.43, 6.66], "face_yaw": 0.0, "row": "back", "station": "Towers", "prop": "Miniature Shelf", "scale": 3.4},
 		{"slot": 2, "tile": [1.43, 3.87], "face_yaw": 0.0, "row": "front", "station": "Workshop", "prop": "Tower Workshop", "scale": 3.2},
 		{"slot": 3, "tile": [4.24, 1.63], "face_yaw": 0.0, "row": "front", "station": null, "prop": null},
-		{"slot": 4, "tile": [8.76, 1.63], "face_yaw": 0.0, "row": "front", "station": null, "prop": null},
+		{"slot": 4, "tile": [8.76, 1.63], "face_yaw": 0.0, "row": "front", "station": "Missions", "prop": "Signpost", "scale": 2.6},
 		{"slot": 5, "tile": [11.57, 3.87], "face_yaw": 0.0, "row": "front", "station": "Multiplayer", "prop": "Signal Post", "scale": 2.4},
 		{"slot": 6, "tile": [10.57, 6.66], "face_yaw": 0.0, "row": "back", "station": "Codex", "prop": "Codex Lectern", "scale": 3.2},
 	],
@@ -47,6 +50,7 @@ const TOUR := [
 	["Codex", "Codex: every tower, enemy and status you have met, and tips."],
 	["Workshop", "Workshop: changing your towers comes later."],
 	["Multiplayer", "Multiplayer: play a level together with friends online, each with your own towers."],
+	["Missions", "The Signpost: after Chapter 2 it leads to the Guild, where missions earn tokens for the Workshop."],
 ]
 const TOUR_SPEAKER := "Princess"
 
@@ -193,7 +197,7 @@ func _build_ui() -> void:
 		b.custom_minimum_size = Vector2(236, 72 if st.locked else 60)
 		b.size = b.custom_minimum_size
 		b.text = st.label
-		b.icon = TdTheme.texture(st.icon)
+		b.icon = TdDrops.icon_texture(st.icon.trim_prefix("extra:")) if st.icon.begins_with("extra:") else TdTheme.texture(st.icon)
 		b.selectable = true
 		b.left_pad = 20
 		b.font_size = 26
@@ -202,6 +206,10 @@ func _build_ui() -> void:
 		var locked_line := "Coming later" if st.locked else ""
 		if st.get("gate", "") == "workshop" and not MenuLogic.workshop_unlocked(GameApp.catalog, SaveData.progress):
 			locked_line = MenuLogic.workshop_locked_text(GameApp.catalog) # "Opens after Chapter 2"
+		elif st.get("gate", "") == "guild" and not GameApp.guild_unlocked():
+			locked_line = MissionUiLogic.signpost_locked_text(GameApp.catalog) # "Missions open after Chapter 2"
+		elif st.get("gate", "") == "moved" and GameApp.guild_unlocked():
+			locked_line = MissionUiLogic.MovedToGuild # the lobby lives in the Guild now
 		if locked_line != "":
 			b.custom_minimum_size = Vector2(maxf(236.0, 90.0 + TdTheme.font("nunito_bold").get_string_size(locked_line, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x), 72)
 			b.size = b.custom_minimum_size
@@ -209,6 +217,10 @@ func _build_ui() -> void:
 			b.set_interactable(false, locked_line)
 		elif st.action != "":
 			b.clicked.connect(Callable(self, st.action))
+			if st.get("gate", "") == "guild" and MissionUiLogic.signpost_tag(SaveData.profile.guild_seen) != "":
+				b.custom_minimum_size.x += 64.0 # room for the tag
+				b.size = b.custom_minimum_size
+				_new_tag(b, MissionUiLogic.signpost_tag(false))
 		if not props.has(st.id): b.visible = false # no slot for it in the layout yet
 	var menu := TdMenuButton.new()
 	menu.style = TdButton.Style.MENU_WOOD
@@ -465,6 +477,22 @@ func open_towers() -> TdPopup:
 ## Workshop: the picker, then a tower's forms (Workshop — Design).
 func open_workshop() -> TdPopup:
 	return open_popup("workshop")
+
+## Missions (the Signpost): the Guild.
+func open_guild() -> void:
+	end_tour()
+	SaveData.save()
+	SceneFlow.go(SceneFlow.Guild)
+
+## A small gold "New" at the right end of a station button.
+func _new_tag(b: TdButton, text: String) -> void:
+	var l := TdMenu.label(text, "plate", TdTheme.color("gold"), 20)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	l.offset_right = -18
+	l.mouse_filter = MOUSE_FILTER_IGNORE
+	b.add_child(l)
 
 ## Multiplayer: the co-op lobby (connects to the relay).
 func open_multiplayer() -> TdPopup:
