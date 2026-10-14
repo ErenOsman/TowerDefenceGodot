@@ -34,6 +34,8 @@ const Stations := [
 	{"id": "Camp", "label": "Camp", "sub": "Back to the Camp", "icon": "back"},
 ]
 const MovedToGuild := "Moved to the Guild"
+## The Camp's Signpost tooltip (the prop is the way to the Guild).
+const SignpostTip := "Guild · missions and co-op"
 ## The Camp's Multiplayer station once the Guild is open (until the first Guild visit: then it is gone).
 const MultiplayerToGuild := "Multiplayer → Guild"
 const SpendInWorkshop := "Spend them in the Workshop."

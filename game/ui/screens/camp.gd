@@ -4,9 +4,11 @@ extends Control
 ## Campfire, all facing the camera; Tent and Supplies) with a station button over each prop: Chapters (the chapter picker, then a chapter's
 ## levels), Towers (the hand editor over every owned tower), Codex, Workshop (towers into their forms: workshop.gd; locked
 ## until Chapter 2 is cleared, MenuLogic.workshop_unlocked), and
-## Main menu; Multiplayer (the co-op lobby, until the Guild opens: then "Moved to the Guild"); Missions on the
-## Signpost (Missions & Guild — Design: locked "Missions open after Chapter 2" until GameApp.guild_unlocked(), then
-## it opens the Guild, tagged "New" until the first visit). The first visit (PlayerProfile.camp_seen) shows a welcome card, then a tour: the
+## Main menu; Multiplayer (the co-op lobby, until the Guild opens: then gone, the lobby lives in the Guild). The
+## Signpost has NO station button (user decision 2026-10-14): the prop itself is the way to the Guild, like the Guild
+## Door — hover glow + "Guild · missions and co-op", click opens the Guild, a gold "New" floats by it until the first
+## Guild visit; before Chapter 2 it is dimmed, its tooltip says "Opens after Chapter 2" and a click shakes it. The
+## first visit (PlayerProfile.camp_seen) shows a welcome card, then a tour: the
 ## Princess's speech bubble (TdTextBubble) points at each station in turn, the station highlighted; a click goes on,
 ## Skip ends it. Map music comes from SceneFlow (AudioMgr.play_scene_music).
 
@@ -22,7 +24,6 @@ const STATIONS := [
 	{"id": "Codex", "label": "Codex", "icon": "icon_codex", "action": "open_codex", "locked": false},
 	{"id": "Workshop", "label": "Workshop", "icon": "icon_edit", "action": "open_workshop", "locked": false, "gate": "workshop"},
 	{"id": "Multiplayer", "label": "Multiplayer", "icon": "icon_onboard", "action": "open_multiplayer", "locked": false, "gate": "moved"},
-	{"id": "Missions", "label": "Missions", "icon": "extra:flag", "action": "open_guild", "locked": false, "gate": "guild"},
 ]
 ## Used when layout.json cannot be read (same values as layout.json, the ring layout of 2026-10-13).
 const FALLBACK_LAYOUT := {
@@ -38,7 +39,7 @@ const FALLBACK_LAYOUT := {
 		{"slot": 5, "tile": [11.57, 3.87], "face_yaw": 0.0, "row": "front", "station": "Multiplayer", "prop": "Signal Post", "scale": 2.4},
 		{"slot": 6, "tile": [10.57, 6.66], "face_yaw": 0.0, "row": "back", "station": "Codex", "prop": "Codex Lectern", "scale": 3.2},
 	],
-	"decor": [{"prop": "Tent", "tile": [0.9, 8.9], "scale": 2.6, "yaw": 15}, {"prop": "Supplies", "tile": [12.2, 8.9], "scale": 2.6, "yaw": -15}],
+	"decor": [{"prop": "Tent", "tile": [4.45, 8.85], "scale": 2.1, "yaw": 0}, {"prop": "Supplies", "tile": [12.2, 8.9], "scale": 2.6, "yaw": -15}],
 }
 const BOARD := Vector2(14, 10)
 const TOUR := [
@@ -61,6 +62,10 @@ var welcome_card: Control
 var popups: Control
 
 var world: TdStationWorld
+## The Signpost's hotspot (the way to the Guild) and its floating "New".
+var signpost: Control
+var signpost_tag: Control
+const SIGNPOST := "Missions"
 var _vp: SubViewport
 var _cam: Camera3D
 var _highlighted: TdButton
@@ -128,16 +133,8 @@ func _build_ui() -> void:
 		var locked_line := "Coming later" if st.locked else ""
 		if st.get("gate", "") == "workshop" and not MenuLogic.workshop_unlocked(GameApp.catalog, SaveData.progress):
 			locked_line = MenuLogic.workshop_locked_text(GameApp.catalog) # "Opens after Chapter 2"
-		elif st.get("gate", "") == "guild" and not GameApp.guild_unlocked():
-			locked_line = MissionUiLogic.signpost_locked_text(GameApp.catalog) # "Opens after Chapter 2"
 		var action: String = st.action
-		if st.get("gate", "") == "moved" and GameApp.guild_unlocked():
-			# the lobby lives in the Guild now: a shortcut there until the first Guild visit, then gone
-			b.text = MissionUiLogic.MultiplayerToGuild
-			b.custom_minimum_size.x = 350.0
-			b.size = b.custom_minimum_size
-			action = "open_guild_lobby"
-			if SaveData.profile.guild_seen: b.visible = false
+		if st.get("gate", "") == "moved" and GameApp.guild_unlocked(): b.visible = false # the lobby lives in the Guild
 		if locked_line != "":
 			# locked (UI review 2026-10-14): a lock icon, "Opens after Chapter 2", the Disabled look
 			b.custom_minimum_size = Vector2(maxf(236.0, 90.0 + TdTheme.font("nunito_bold").get_string_size(locked_line, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x), 72)
@@ -147,10 +144,6 @@ func _build_ui() -> void:
 			b.set_interactable(false, locked_line)
 		elif action != "":
 			b.clicked.connect(Callable(self, action))
-			if st.get("gate", "") == "guild" and MissionUiLogic.signpost_tag(SaveData.profile.guild_seen) != "":
-				b.custom_minimum_size.x += 64.0 # room for the tag
-				b.size = b.custom_minimum_size
-				_new_tag(b, MissionUiLogic.signpost_tag(false))
 		if not props.has(st.id): b.visible = false # no slot for it in the layout yet
 		if not b.visible and b.has_meta("leader"): b.get_meta("leader").visible = false
 	var menu := TdMenuButton.new()
@@ -182,13 +175,22 @@ func _build_ui() -> void:
 	bubble.clicked.connect(func(): show_tour_step(tour_step + 1))
 	bubble.skip_clicked.connect(end_tour)
 	_build_welcome()
+	_build_signpost()
 	resized.connect(_place_buttons)
 	_place_buttons.call_deferred()
 
 ## Each station's button sits above its prop with a leader line down to it (re-placed every frame: the 3D view's
 ## size settles late); TdStationWorld.place_buttons keeps them apart.
 func _place_buttons() -> void:
-	if world != null: world.place_buttons(self, buttons, STATIONS.map(func(st): return st.id))
+	if world == null: return
+	world.place_buttons(self, buttons, STATIONS.map(func(st): return st.id))
+	world.place_hotspots()
+	if signpost_tag != null and props.get(SIGNPOST) != null:
+		var r := world.prop_rect(props[SIGNPOST])
+		# just above the signpost's top-right, following the prop
+		var ts := signpost_tag.get_combined_minimum_size()
+		var top: Vector2 = world.screen_top(props[SIGNPOST]) # the post's real top (the projected box is loose)
+		signpost_tag.position = Vector2(top.x + 8.0, top.y - ts.y * 0.5)
 
 ## Places buttons without overlaps (TdStationWorld.layout_buttons; kept here for the tests and tools).
 static func layout_buttons(items: Array, width: float, gap: float, lift: float) -> Array:
@@ -256,18 +258,20 @@ func show_tour_step(index: int) -> void:
 	_highlighted = null
 	while index < TOUR.size():
 		var b: TdButton = buttons.get(TOUR[index][0])
-		if b == null or not b.visible:
+		var prop_only: bool = b == null and props.get(TOUR[index][0]) != null # the Signpost: a prop, no button
+		if not prop_only and (b == null or not b.visible):
 			index += 1
 			continue
 		tour_step = index
-		_highlighted = b
-		b.selected = true
+		if b != null:
+			_highlighted = b
+			b.selected = true
 		bubble.show_line(TOUR_SPEAKER, TOUR[index][1], true, GameApp.portrait_texture("Princess"))
 		bubble.set_hint("Tour · %d/%d" % [index + 1, TOUR.size()], "Click or [b]%s[/b]" % KeyBinds.first(KeyBinds.Skip))
 		# beside the station's prop (right of it, or left for props on the right half), under the station row: the
 		# bubble's area is cut to that side, so it covers neither the prop it describes nor another station
 		var pr := _prop_rect(props.get(TOUR[index][0]))
-		var row_bottom := b.get_global_rect().end.y
+		var row_bottom := b.get_global_rect().end.y if b != null else pr.position.y
 		var right_side := pr.get_center().x < size.x * 0.6
 		var centre := absf(pr.get_center().x - size.x / 2.0) < size.x * 0.12
 		var front: bool = _front.get(TOUR[index][0], false)
@@ -354,22 +358,28 @@ func open_guild() -> void:
 	SaveData.save()
 	SceneFlow.go(SceneFlow.Guild)
 
-## The Camp's Multiplayer shortcut once the Guild is open: the Guild, with its lobby opened.
-func open_guild_lobby() -> void:
-	end_tour()
-	if has_node("/root/Net"): get_node("/root/Net").reopen_lobby = true
-	SaveData.save()
-	SceneFlow.go(SceneFlow.Guild)
+## The Signpost (the "Missions" prop in layout.json): a clickable prop leading to the Guild; locked before Chapter 2
+## (dimmed, "Opens after Chapter 2", a click shakes it); a gold "New" floats by it until the first Guild visit.
+func _build_signpost() -> void:
+	var post: Node3D = props.get(SIGNPOST)
+	if post == null: return
+	var open := GameApp.guild_unlocked()
+	signpost = world.hotspot(self, SIGNPOST, MissionUiLogic.SignpostTip if open else MissionUiLogic.signpost_locked_text(GameApp.catalog),
+		func(): open_guild() if GameApp.guild_unlocked() else _shake_signpost(), open)
+	move_child(signpost, world.get_index() + 1) # under the buttons
+	if not open: world.dim(post, true)
+	if open and MissionUiLogic.signpost_tag(SaveData.profile.guild_seen) != "":
+		signpost_tag = TdMenu.pill("[b]%s[/b]" % MissionUiLogic.signpost_tag(false), Color(0.12, 0.09, 0.07, 0.9), TdTheme.color("gold"), 20, TdTheme.color("gold"))
+		signpost_tag.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(signpost_tag)
 
-## A small gold "New" at the right end of a station button.
-func _new_tag(b: TdButton, text: String) -> void:
-	var l := TdMenu.label(text, "plate", TdTheme.color("gold"), 20)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	l.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	l.offset_right = -18
-	l.mouse_filter = MOUSE_FILTER_IGNORE
-	b.add_child(l)
+## A refused click on the locked Signpost: a short shake.
+func _shake_signpost() -> void:
+	var post: Node3D = props.get(SIGNPOST)
+	if post == null: return
+	var x := post.position.x
+	var tw := create_tween()
+	for dx in [-0.12, 0.12, -0.07, 0.07, 0.0]: tw.tween_property(post, "position:x", x + dx, 0.05)
 
 ## Multiplayer: the co-op lobby (connects to the relay).
 func open_multiplayer() -> TdPopup:

@@ -120,11 +120,12 @@
   {
    "prop": "Tent",
    "tile": [
-    0.9,
-    8.9
+    4.45,
+    8.85
    ],
-   "scale": 2.6,
-   "yaw": 15
+   "scale": 2.1,
+   "yaw": 0,
+   "note": "2026-10-14 (Eren: the tent was half off the board behind the shelf): back row, in the gap between the Miniature Shelf and the War Table, fully on the board, facing the camera"
   },
   {
    "prop": "Supplies",

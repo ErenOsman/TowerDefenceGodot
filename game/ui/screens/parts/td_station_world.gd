@@ -138,42 +138,77 @@ func screen_top(n: Node3D) -> Vector2:
 
 ## Places each station's button (ids in order; buttons: id → Control) by the shared rule (UI/UX ruling 2026-10-14:
 ## props never move for buttons). For each station, in order, the first candidate that overlaps no prop and no
-## button already placed and stays on screen: (1) on the floor in front of (below) its prop; (2) beside it on the
+## button already placed (touching another prop counts) and stays inside the board's screen rect (if none is clean,
+## "above" may still touch decor — props that are no station — but no station prop): (1) on the floor in front of (below) its prop; (2) beside it on the
 ## floor, left or right, the side facing more free space first; (3) above the prop. Nothing fits: the candidate that
 ## covers the least.
 ## A short leader line joins the button to its prop when there is a gap.
 func place_buttons(host: Control, buttons: Dictionary, ids: Array) -> void:
-	var obstacles := obstacle_rects(host.size)
 	var placed := []
 	var screen := Rect2(Vector2(BUTTON_GAP, BUTTON_GAP), host.size - Vector2(BUTTON_GAP, BUTTON_GAP) * 2.0)
+	# inside the board's left, right and front edges (a button above a back-row prop may rise past its back edge)
+	var area := screen
+	var br := board_rect()
+	if br.has_area():
+		var top := screen.position.y
+		var x0 := maxf(screen.position.x, br.position.x)
+		var x1 := minf(screen.end.x, br.end.x)
+		area = Rect2(Vector2(x0, top), Vector2(x1 - x0, minf(screen.end.y, br.end.y) - top))
 	for id in ids:
 		var b: Control = buttons.get(id)
 		if b == null or not b.visible or not props.has(id) or props[id] == null: continue
+		var obstacles := obstacle_rects(host.size, props[id]) # the OTHER props
+		var station_obstacles := obstacle_rects(host.size, props[id], true) # the other STATION props only
 		var cands := candidates(prop_rect(props[id]), b.size, obstacles)
 		var pick: Dictionary = {}
+		var own := prop_rect(props[id])
 		for c in cands:
-			if screen.encloses(c.rect) and is_free(c.rect, obstacles, placed):
+			if area.encloses(c.rect) and is_free(c.rect, obstacles, placed) and reads_as_own(c.rect, own, obstacles):
 				pick = c
 				break
-		if pick.is_empty(): # nothing is free: the candidate covering the least (buttons count heavily)
+		# nothing clean: "above" may touch decor (non-station props), never another station's prop or a button
+		if pick.is_empty():
+			var above: Dictionary = cands[cands.size() - 1]
+			if area.encloses(above.rect) and is_free(above.rect, station_obstacles, placed): pick = above
+		if pick.is_empty(): # nothing is free: the candidate covering the least (buttons count heavily, a spot nearer
+			# to another prop than to its own counts more than a small touch)
 			var best := 1e18
 			for c in cands:
-				var cost := overlap(c.rect, obstacles, placed) + (0.0 if screen.encloses(c.rect) else 1e9)
+				var cost := overlap(c.rect, obstacles, placed) + (0.0 if area.encloses(c.rect) else 1e9) \
+					+ (0.0 if reads_as_own(c.rect, own, obstacles) else 1e6) # labelling a neighbour is worse than a touch
 				if cost < best:
 					best = cost
 					pick = c
 		placed.append(pick.rect)
 		_put(host, b, pick.rect, pick.anchor)
 
-## The prop rects buttons must keep clear of: every placed prop's projected bounds, shrunk a little (the boxes are
-## loose), without ground-sized pieces (a floor or hall wider than half the screen).
-func obstacle_rects(screen_size: Vector2) -> Array:
+## The board's screen rect (its four ground corners projected; tile centres at whole numbers, so ±0.5): buttons stay
+## inside it.
+func board_rect() -> Rect2:
+	if cam == null or vp == null or vp.size.x <= 0: return Rect2()
+	var k := size / Vector2(vp.size)
+	var r := Rect2()
+	var first := true
+	for c in [Vector3(-0.5, 0, 0.5), Vector3(board.x - 0.5, 0, 0.5), Vector3(-0.5, 0, -board.y + 0.5), Vector3(board.x - 0.5, 0, -board.y + 0.5)]:
+		var p := cam.unproject_position(c) * k
+		if first: r = Rect2(p, Vector2.ZERO)
+		else: r = r.expand(p)
+		first = false
+	return r
+
+## The rects of the props other than `own` that buttons must not touch: their projected bounds (only the top is
+## trimmed a little: the boxes are loose there), without ground-sized pieces (a floor or hall wider than half the
+## screen). A spot is rejected when it TOUCHES one of them (UI/UX ruling: a button on its own prop beats a spot
+## touching another prop).
+func obstacle_rects(screen_size: Vector2, own: Node3D = null, stations_only := false) -> Array:
 	var out := []
+	var station_nodes := props.values()
 	for n in _all:
-		if not is_instance_valid(n): continue
+		if not is_instance_valid(n) or n == own: continue
+		if stations_only and not station_nodes.has(n): continue
 		var r := prop_rect(n)
 		if r.size.x > screen_size.x * 0.5: continue
-		out.append(r.grow_individual(-r.size.x * 0.08, -r.size.y * 0.12, -r.size.x * 0.08, -r.size.y * 0.04))
+		out.append(r.grow_individual(-r.size.x * 0.04, -r.size.y * 0.08, -r.size.x * 0.04, 0.0))
 	return out
 
 ## The candidate rects for a button of size sz at a prop's screen rect pr, in the rule's order: front (centred,
@@ -195,6 +230,17 @@ static func _room(r: Rect2, obstacles: Array) -> float:
 		best = minf(best, o.get_center().distance_to(r.get_center()))
 	return best
 
+## A button reads as its own prop's: its centre is nearer to that prop than to any other prop (a "beside" spot in
+## the gap between two props would label the neighbour).
+static func reads_as_own(r: Rect2, own: Rect2, obstacles: Array) -> bool:
+	var d := _dist(r.get_center(), own)
+	for o in obstacles:
+		if _dist(r.get_center(), o) < d: return false
+	return true
+
+static func _dist(p: Vector2, r: Rect2) -> float:
+	return p.distance_to(Vector2(clampf(p.x, r.position.x, r.end.x), clampf(p.y, r.position.y, r.end.y)))
+
 ## How much a rect covers: the overlap area with the obstacles, plus 50× that with placed buttons.
 static func overlap(r: Rect2, obstacles: Array, placed: Array) -> float:
 	var a := 0.0
@@ -202,10 +248,10 @@ static func overlap(r: Rect2, obstacles: Array, placed: Array) -> float:
 	for p in placed: a += 50.0 * r.intersection(p.grow(BUTTON_GAP / 2.0)).get_area()
 	return a
 
-## A rect overlaps no obstacle and no placed button (with the button gap).
+## A rect touches no other prop and overlaps no placed button (with the button gap).
 static func is_free(r: Rect2, obstacles: Array, placed: Array) -> bool:
 	for o in obstacles:
-		if o.intersects(r): return false
+		if o.grow(4.0).intersects(r): return false # touching counts
 	for p in placed:
 		if p.grow(BUTTON_GAP / 2.0).intersects(r): return false
 	return true
@@ -228,14 +274,15 @@ func _put(host: Control, b: Control, r: Rect2, a: Vector2) -> void:
 
 ## Makes a prop clickable: an invisible Control on `host` following the prop's screen rect; hovering highlights the
 ## prop (a warm glow over its meshes) and shows `tip`; a click calls on_click. Returns the Control.
-func hotspot(host: Control, station_id: String, tip: String, on_click: Callable) -> Control:
+func hotspot(host: Control, station_id: String, tip: String, on_click: Callable, glow := true) -> Control:
 	var n: Node3D = props.get(station_id)
 	var c := Control.new()
 	c.mouse_filter = MOUSE_FILTER_STOP if n != null else MOUSE_FILTER_IGNORE
 	c.mouse_default_cursor_shape = CURSOR_POINTING_HAND
 	host.add_child(c)
-	c.mouse_entered.connect(func(): highlight(n, true))
-	c.mouse_exited.connect(func(): highlight(n, false))
+	if glow: # no glow on a locked prop (it stays dimmed)
+		c.mouse_entered.connect(func(): highlight(n, true))
+		c.mouse_exited.connect(func(): highlight(n, false))
 	c.gui_input.connect(func(ev):
 		if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed: on_click.call())
 	TdTooltipTrigger.attach(c, "", tip)
@@ -254,6 +301,19 @@ func place_hotspots() -> void:
 		var r := prop_rect(n)
 		c.position = r.position
 		c.size = r.size
+
+static var _dim: ShaderMaterial = null
+
+## Darkens a prop (a locked station, e.g. the Camp's Signpost before Chapter 2).
+func dim(n: Node3D, on: bool) -> void:
+	if n == null: return
+	if _dim == null:
+		var sh := Shader.new()
+		sh.code = "shader_type spatial;\nrender_mode unshaded, blend_mul;\nvoid fragment() { ALBEDO = vec3(0.5, 0.5, 0.52); }\n"
+		_dim = ShaderMaterial.new()
+		_dim.shader = sh
+	for m in n.find_children("*", "MeshInstance3D", true, false):
+		(m as MeshInstance3D).material_overlay = _dim if on else null
 
 ## A warm additive glow over a prop's meshes (hover).
 func highlight(n: Node3D, on: bool) -> void:
