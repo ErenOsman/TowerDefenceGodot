@@ -18,7 +18,7 @@ After Chapter 1 the player gets a home between levels: the **Camp**. From there 
 | Main menu | Play goes to the Camp once it is unlocked (level select before). New **Continue** button: plays the next main-chapter level not won yet; hidden when there is none, and while the next one is still the first level (Play starts that) |
 | After a level | Once the Camp is unlocked, the end screen's leave button and the pause menu's say **Camp**; Next level stays |
 | Tutorial pause | Continue, Settings, Skip tutorial (and Quit, which counts as skipping); no Main menu, no Codex |
-| Later | Multiplayer: shown in the Camp as a locked station ("coming later") until built (the Godot build has its co-op lobby). The tower Workshop is designed: Workshop — Design (2026-10-14) |
+| Later | The tower Workshop is designed: Workshop — Design (2026-10-14). Multiplayer moves to the **Guild**: after Chapter 2 is cleared the Camp's **Signpost** gains **Missions**, which opens the Guild (missions, multiplayer, hand editing): Missions & Guild — Design (2026-10-14) |
 
 ## The Camp
 
@@ -30,7 +30,8 @@ A screen of stations (panels for now; built so they can become places in a visua
 | **Towers** | Every owned tower and the hand: the hand editor, full size |
 | **Workshop** | Modify towers: a tower turns into one of its forms, unlocked with tokens found in levels (Workshop — Design). Locked ("coming later") until it is built |
 | **Codex** | Opens the Codex |
-| **Multiplayer** | Locked: comes later |
+| **Signpost → Missions** | Appears once Chapter 2's last level is won (`guildUnlock`): opens the Guild, where missions (the source of tokens) and multiplayer live (Missions & Guild — Design). Until then the Signpost is a plain prop |
+| **Multiplayer** | Moved to the Guild (2026-10-14); the Godot build's Camp station stays until the Guild exists there |
 | **Main menu** | Back to the main menu |
 
 First visit (`profile.campSeen`): a short welcome card, then each station's button highlighted in turn with one line about it; Skip ends it. Never again after that.

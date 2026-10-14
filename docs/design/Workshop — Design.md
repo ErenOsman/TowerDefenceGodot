@@ -21,7 +21,7 @@ passives, look and name. The tower keeps its ID, its name tag and its place in t
 | Switching | The tower stays in the form picked until changed; any unlocked form can be picked again. Switching is **free** and only in the Workshop (not during a level) | Eren (stays / switch back) · agents (free, Camp only) |
 | Per tower | Unlocks belong to the **individual tower** ("Unlocks for this Archer"): two Archers are two towers, each with its own forms. Tokens spent on one tower do nothing for another | agents (fits "every tower is an individual") |
 | Tokens | The game's **meta currency**: kinds such as Fire Arrow, Poison Gland, Yew Bow, Ember Core, Steel Plate, Arcane Shard, each with an icon and a line saying where it drops. No coins, no second currency | agents |
-| Where tokens come from | Levels: a **first-win drop** (once) and a **win drop** (every win, so replays are worth something); boss levels carry the rare tokens. Set per level in the catalog, like the first-clear reward tower | agents |
+| Where tokens come from | **Missions** (Missions & Guild — Design, 2026-10-14): a mission drops `winTokens` on every win and `firstWinTokens` once; missions are played a limited number of times a day. Chapter levels drop no tokens (their prize is the first-clear tower). Replaces the earlier per-level drops | Eren 2026-10-14 |
 | What a form changes | Anything the tower's entity has: stats, abilities (added, changed, removed), passives, model and portrait, name, and optionally the **energy cost** (default: the base tower's) | Eren (stats/abilities/looks) · agents (cost field, default unchanged) |
 | Elsewhere | A formed tower shows its form name and a small **form badge** on its hand card, tray piece, board medallion and Codex entry | UI/UX agent, mockup workshop-badge |
 | Codex | A tower's Codex page has page tabs **Overview · Abilities** (passives included) **· Forms** (more pages may come). Forms is a **list** of rows, not a tree, showing **only forms the player has unlocked** on any of their towers (locked forms do not appear in the Codex at all); the base form is a row like the others ("Archer · Base form", first, no special styling). Selecting a row switches the whole page (header with the badge, Overview, Abilities) to that form; going back is selecting the base row (no Back button). The tab label is just "Forms", no count. No "Open in Workshop" link: the Codex is read-only reference. Empty state: the default row plus "Unlock more forms in the Workshop." A 4th tab **Immunities** sits after Forms, disabled for now: label dimmed to ~45 %, not clickable, hover tooltip "Coming later"; it becomes a real page once immunities exist in the data. Enemy pages have the same four tabs, Overview · Abilities · Forms · Immunities, with Forms disabled the same way (enemies may get forms later) and Immunities disabled as on towers. The Workshop tree still shows every form's real portrait. Mockup: screens-b/codex2.html | Eren 2026-10-14 |
@@ -100,9 +100,9 @@ Reference mockup (approved as the UI direction): http://92.5.94.11/art/ui/screen
 - **In a level** the tower is built from its form: the form's entity (stats, abilities, passives, model) and the
   form's **energy cost** when it has one, else the base tower's. Selling refunds from that cost (the existing rule).
   Any tooltip, Codex or wiki text about the tower speaks of the form by its own name.
-- **Tokens** are counted per kind in the save; a level's drops are granted on the end screen with the first-clear
-  reward tower ("Rewards: Fire Arrow ×2, Ember Core ×1"), first-win drops once (per level, with the first win),
-  win drops on every win. Quitting or losing drops nothing. Dev shortcuts can grant tokens.
+- **Tokens** are counted per kind in the save; a mission's drops are granted on the end screen ("Rewards: Fire
+  Arrow ×2, Ember Core ×1"), first-win drops once per mission, win drops on every win (Missions & Guild — Design).
+  Quitting or losing drops nothing. Dev shortcuts can grant tokens.
 - **Co-op:** a player's hand entries carry the form, and the form's content comes with the content hash, so both
   clients build the same entity. The relay never reads forms.
 - **Validation (Validate All):** a form's tower, entity, parent and tokens must exist; a form's parent must belong
@@ -135,13 +135,14 @@ files and fields; everything keyed by stable ids like the rest.
 | `id`, `displayName`, `description`, `icon` | "Fire Arrow — An arrowhead that still smoulders." |
 | `rarity` | `Common` / `Rare`: a hint for the header's order and the drop tables, no rule reads it |
 
-Where a token drops is not stored on the token: the Workshop derives "Found in: Rock Garden, The Drummer" from the
-catalog's drop lists (so it stays true when levels change).
+Where a token drops is not stored on the token: the Workshop derives "Found in: Night Watch, Drum Line" from the
+missions' drop lists (so it stays true when missions change).
 
-### Catalog.json — level entries
+### Missions.json — drops
 
-Next to `firstClearReward`: `firstWinTokens` and `winTokens`, each `[{ "token": …, "amount": n }]`. `GameReference`
-exports them with the level and lists every form under its tower with its cost and where its tokens come from.
+`firstWinTokens` and `winTokens` live on missions (`Content/Missions.json`, Missions & Guild — Design), each
+`[{ "token": …, "amount": n }]`; chapter levels carry none. `GameReference` exports them with the mission and lists
+every form under its tower with its cost and where its tokens come from.
 
 ### Saves (`GameData`)
 
@@ -172,17 +173,17 @@ Workshop.CanUnlock(tower, form, wallet): "Needs Fire Archer first" | "Needs 1 mo
 | Guardian | Spiked Guardian | – | 1 Steel Plate + 1 Ember Core | +3 Power, Counter-attack hits for 8 |
 | Mage | Pyromancer · Frost Mage · Storm Mage | – | Arcane Shard (+ Ember Core) | placeholders, see the mockup |
 
-| Token | Rarity | Drops (placeholder) |
+| Token | Rarity | Drops (placeholder; the mission table is in Missions & Guild — Design) |
 | --- | --- | --- |
-| Fire Arrow | Common | first win of every Chapter 2 level ×1; win drop of Rock Garden |
-| Poison Gland | Common | win drop of Rock Garden and The Drummer |
-| Yew Bow | Common | win drop of every Chapter 1 level (replays) |
-| Steel Plate | Common | first win of Three at the Gate ×2; its win drop |
-| Arcane Shard | Common | first win of every Chapter 2 level ×1; win drop of The Drummer |
-| Ember Core | Rare | The Glutton (boss): first win ×1 and win drop ×1 |
+| Fire Arrow | Common | Night Watch (win), Patrol and Drum Line (first win) |
+| Poison Gland | Common | Night Watch and Drum Line (win) |
+| Yew Bow | Common | Patrol (win) |
+| Steel Plate | Common | Hold the Gate (win and first win) |
+| Arcane Shard | Common | Drum Line (win), Night Watch (first win) |
+| Ember Core | Rare | The Glutton Returns (win and first win, co-op) |
 
-Chapter 1 drops nothing on first wins (the reward towers are the prize there); Chapter 1 replays give Yew Bows so the
-first form is reachable before Chapter 2, the Workshop being open from the Camp's first visit.
+Chapters drop nothing: the Workshop is open from the Camp's first visit, but its tokens arrive once Chapter 2 is
+cleared and the Guild's missions open, so the first form is a Chapter 2 reward in effect.
 
 ## Build plan
 
