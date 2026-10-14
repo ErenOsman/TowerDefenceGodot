@@ -153,8 +153,8 @@ func show_outcome(outcome: int) -> void:
 		_extra.remove_child(ch)
 		ch.queue_free()
 	if _won and c.reward != null: _extra.add_child(_reward_card(c.reward))
-	# Workshop tokens (TODO UI agent: a proper token row with icons; this is the plain line)
-	if _won and "drops_text" in c and c.drops_text != "": _extra.add_child(HudArt.label(c.drops_text, "body", TdTheme.color("cream.100")))
+	# Workshop tokens: "Rewards:" and a chip per token kind (icon, ×n, name)
+	if _won and "drops" in c and not c.drops.is_empty(): _extra.add_child(_token_row(c.drops))
 	if not _won:
 		var tip = _codex_tip("losing")
 		if tip != null: _extra.add_child(_tip_card(tip))
@@ -233,6 +233,58 @@ func _tip_card(tip) -> Control:
 	t.custom_minimum_size = Vector2(690, 0)
 	t.text = TooltipText.from_rich(tip.text)
 	v.add_child(t)
+	return p
+
+## The Workshop tokens a win gave (Workshop — Design § Rules "Tokens"): "Rewards:" then a chip per kind (its 32 px
+## icon, "×2", its name; tooltip: name and description), on the reward card's panel.
+func _token_row(drops: Dictionary) -> Control:
+	var app := get_tree().root.get_node_or_null("GameApp")
+	var catalog: GameCatalogAsset = app.catalog if app != null else null
+	var p := PanelContainer.new()
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(TdTheme.color("wood.850"), 0.95)
+	box.border_color = TdTheme.color("gold.dark")
+	box.set_border_width_all(2)
+	box.set_corner_radius_all(14)
+	box.content_margin_left = 20; box.content_margin_right = 20; box.content_margin_top = 10; box.content_margin_bottom = 10
+	p.add_theme_stylebox_override("panel", box)
+	p.mouse_filter = MOUSE_FILTER_IGNORE
+	p.custom_minimum_size = Vector2(778, 0)
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 10)
+	row.add_theme_constant_override("v_separation", 8)
+	p.add_child(row)
+	var l := HudArt.label("Rewards:", "h3", TdTheme.color("gold"), 26)
+	l.size_flags_vertical = SIZE_SHRINK_CENTER
+	row.add_child(l)
+	for r in HudText.token_rows(drops, catalog):
+		var t: TokenAsset = r[0]
+		var chip := PanelContainer.new()
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.09, 0.067, 0.05, 0.7)
+		sb.border_color = TdTheme.color("rim")
+		sb.set_border_width_all(2)
+		sb.set_corner_radius_all(22)
+		sb.content_margin_left = 5; sb.content_margin_right = 14; sb.content_margin_top = 3; sb.content_margin_bottom = 3
+		chip.add_theme_stylebox_override("panel", sb)
+		chip.mouse_filter = MOUSE_FILTER_STOP
+		var h := HudArt.hbox(6)
+		h.mouse_filter = MOUSE_FILTER_IGNORE
+		chip.add_child(h)
+		var ic := HudArt.icon(t.icon) if t != null else null
+		if ic == null and t != null and app != null: ic = app.kit_texture(t.icon)
+		var pic := TdTheme.sprite_rect(ic, Vector2(32, 32))
+		pic.size_flags_vertical = SIZE_SHRINK_CENTER
+		h.add_child(pic)
+		var n := HudArt.label("×%d" % r[2], "h3", TdTheme.color("cream.100"), 24)
+		n.size_flags_vertical = SIZE_SHRINK_CENTER
+		h.add_child(n)
+		var nm := HudArt.label(t.get_display_name() if t != null else str(r[1]), "body", TdTheme.color("cream.200"), 20)
+		nm.size_flags_vertical = SIZE_SHRINK_CENTER
+		h.add_child(nm)
+		if t != null: TdTooltipTrigger.attach(chip, TooltipText.title(t.get_display_name(), TooltipText.value_color(), "Token"),
+			t.description)
+		row.add_child(chip)
 	return p
 
 func _reward_card(reward: TowerAsset) -> Control:

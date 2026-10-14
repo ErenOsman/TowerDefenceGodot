@@ -23,8 +23,6 @@ var level_name := ""
 const WIN := Vector2(1460, 864)
 const GRID_COLUMNS := 6
 
-var _filter := HandLogic.default_filter()
-var _sort := "number"
 var _selected := ""
 var _entries: Array = []
 var _renaming := -1
@@ -37,23 +35,10 @@ var _msg_label: Label
 var _tray: HBoxContainer
 var _tray_panel: PanelContainer
 var _layouts: GridContainer
-var _search: LineEdit
-var _role_chips := {}
-var _deliv_chips := {}
-var _cost_chips: Array = []
-var _cost_value: Label
-var _cost_slider: HSlider
-var _toggles := {}
-var _clear: Button
-var _count: Label
-var _sort_pick: OptionButton
-var _grid: GridContainer
-var _grid_scroll: ScrollContainer
-var _empty: VBoxContainer
+## The collection (filters + grid), shared with the Workshop picker.
+var collection: TdCollection
 var _detail: VBoxContainer
-var _tiles := {}   # tower id → TdTowerTile
 var _slots: Array = []
-var _syncing := false
 
 ## Before a level: the hand cap and the level's name for the divider and its note ("Two Roads takes the first 4").
 func set_level_context(cap: int, name: String) -> void:
@@ -97,8 +82,14 @@ func _build() -> void:
 	var body := TdMenu.hbox(16)
 	body.size_flags_vertical = SIZE_EXPAND_FILL
 	col.add_child(body)
-	body.add_child(_build_filters())
-	body.add_child(_build_grid())
+	collection = TdCollection.new()
+	collection.extras = true
+	collection.hand_keys = true
+	collection.columns = GRID_COLUMNS
+	collection.build()
+	collection.selected.connect(_select)
+	collection.activated.connect(toggle)
+	body.add_child(collection)
 	body.add_child(_build_detail())
 
 func _build_head() -> Control:
@@ -154,244 +145,12 @@ func _build_tray() -> Control:
 	_tray = drop
 	return _tray_panel
 
-func _build_filters() -> Control:
-	var well := TdMenu.panel(TdPanel.Kind.WELL, 12)
-	well.custom_minimum_size = Vector2(248, 0)
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = SIZE_EXPAND_FILL
-	well.add_child(scroll)
-	var v := TdMenu.vbox(4)
-	v.size_flags_horizontal = SIZE_EXPAND_FILL
-	scroll.add_child(v)
-	# search
-	var field := PanelContainer.new()
-	field.add_theme_stylebox_override("panel", TdTheme.stylebox("field_paper_normal", Color.WHITE, [12, 2, 10, 2]))
-	field.custom_minimum_size = Vector2(0, 46)
-	var fh := TdMenu.hbox(8)
-	field.add_child(fh)
-	var glyph := SearchGlyph.new()
-	glyph.custom_minimum_size = Vector2(22, 22)
-	glyph.size_flags_vertical = SIZE_SHRINK_CENTER
-	fh.add_child(glyph)
-	_search = LineEdit.new()
-	_search.placeholder_text = "Search towers"
-	_search.size_flags_horizontal = SIZE_EXPAND_FILL
-	_search.add_theme_stylebox_override("normal", StyleBoxEmpty.new())
-	_search.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	TdTheme.apply_type(_search, "body", TdTheme.color("ink"), 20)
-	_search.add_theme_font_override("font", TdTheme.font("nunito_bold"))
-	_search.clear_button_enabled = true
-	_search.text_changed.connect(func(t: String):
-		_filter.q = t
-		_refresh_grid())
-	fh.add_child(_search)
-	v.add_child(field)
-	v.add_child(_heading("Role"))
-	var roles := _flow()
-	for r in HandLogic.ROLES:
-		var c := _chip(r, HandLogic.ROLE_COLORS[r])
-		var role: String = r
-		c.toggled.connect(func(_on): if not _syncing: HandLogic.toggle_in(_filter.roles, role); _refresh_filters(); _refresh_grid())
-		roles.add_child(c)
-		_role_chips[r] = c
-	v.add_child(roles)
-	v.add_child(_heading("Delivery"))
-	var dl := _flow()
-	for d in HandLogic.DELIVERIES:
-		var c := _chip(d)
-		var dv: String = d
-		c.toggled.connect(func(_on): if not _syncing: HandLogic.toggle_in(_filter.delivery, dv); _refresh_filters(); _refresh_grid())
-		dl.add_child(c)
-		_deliv_chips[d] = c
-	v.add_child(dl)
-	var ch := TdMenu.hbox(8)
-	ch.add_child(_heading("Cost"))
-	_cost_value = TdMenu.label("any", "plate", TdTheme.color("cream.300"), 18)
-	_cost_value.size_flags_vertical = SIZE_SHRINK_END
-	ch.add_child(_cost_value)
-	v.add_child(ch)
-	_cost_slider = HSlider.new()
-	_cost_slider.min_value = 0
-	_cost_slider.max_value = HandLogic.COST_ANY
-	_cost_slider.step = 10
-	_cost_slider.value = HandLogic.COST_ANY
-	_cost_slider.focus_mode = FOCUS_NONE
-	_cost_slider.custom_minimum_size = Vector2(0, 32)
-	_cost_slider.add_theme_constant_override("center_grabber", 1)
-	_cost_slider.add_theme_constant_override("grabber_offset", 0)
-	_cost_slider.value_changed.connect(func(val: float):
-		if _syncing: return
-		_filter.cost_min = 0
-		_filter.cost_max = int(val)
-		_refresh_filters()
-		_refresh_grid())
-	var sm := MarginContainer.new()
-	sm.add_theme_constant_override("margin_left", 14)
-	sm.add_theme_constant_override("margin_right", 14)
-	sm.add_child(_cost_slider)
-	v.add_child(sm)
-	var qc := _flow()
-	for i in HandLogic.COST_CHIPS.size():
-		var c := _chip(HandLogic.COST_CHIPS[i][0])
-		var k := i
-		c.toggled.connect(func(_on): if not _syncing: HandLogic.toggle_cost_chip(_filter, k); _refresh_filters(); _refresh_grid())
-		qc.add_child(c)
-		_cost_chips.append(c)
-	v.add_child(qc)
-	for pair in [["heal", "Heals"], ["status", "Applies statuses"], ["hide", "Hide my hand"]]:
-		var t := Button.new()
-		t.text = pair[1]
-		t.toggle_mode = true
-		t.flat = true
-		t.focus_mode = FOCUS_NONE
-		t.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		t.custom_minimum_size = Vector2(0, 30)
-		t.mouse_default_cursor_shape = CURSOR_POINTING_HAND
-		t.icon = load("res://game/ui/theme/half/toggle_off.png")
-		t.add_theme_constant_override("icon_max_width", 52)
-		t.add_theme_constant_override("h_separation", 10)
-		t.add_theme_font_override("font", TdTheme.font("nunito_bold"))
-		t.add_theme_font_size_override("font_size", 18)
-		for c in ["font_color", "font_focus_color"]: t.add_theme_color_override(c, TdTheme.color("cream.200"))
-		for c in ["font_pressed_color", "font_hover_color", "font_hover_pressed_color"]: t.add_theme_color_override(c, TdTheme.color("cream.100"))
-		for sbn in ["normal", "hover", "pressed", "hover_pressed", "focus"]: t.add_theme_stylebox_override(sbn, StyleBoxEmpty.new())
-		t.toggled.connect(func(on: bool): t.icon = load("res://game/ui/theme/half/toggle_on.png" if on else "res://game/ui/theme/half/toggle_off.png"))
-		var key: String = pair[0]
-		t.toggled.connect(func(on: bool): if not _syncing: _filter[key] = on; _refresh_filters(); _refresh_grid())
-		v.add_child(t)
-		_toggles[key] = t
-	return well
-
-func _build_grid() -> Control:
-	var well := TdMenu.panel(TdPanel.Kind.WELL, 12)
-	well.size_flags_horizontal = SIZE_EXPAND_FILL
-	var v := TdMenu.vbox(8)
-	well.add_child(v)
-	var gh := TdMenu.hbox(10)
-	gh.custom_minimum_size = Vector2(0, 44)
-	v.add_child(gh)
-	_clear = Button.new()
-	_clear.text = "Clear filters"
-	_clear.flat = true
-	_clear.focus_mode = FOCUS_NONE
-	_clear.mouse_default_cursor_shape = CURSOR_POINTING_HAND
-	_clear.add_theme_font_override("font", TdTheme.font("nunito_extrabold"))
-	_clear.add_theme_font_size_override("font_size", 18)
-	for s in ["font_color", "font_hover_color", "font_pressed_color"]:
-		_clear.add_theme_color_override(s, TdTheme.color("cream.200") if s == "font_color" else TdTheme.color("cream.100"))
-	_clear.pressed.connect(clear_filters)
-	gh.add_child(_clear)
-	var fill := TdMenu.spacer()
-	fill.size_flags_horizontal = SIZE_EXPAND_FILL
-	gh.add_child(fill)
-	_count = TdMenu.label("", "plate", TdTheme.color("cream.300"), 18)
-	_count.size_flags_vertical = SIZE_SHRINK_CENTER
-	gh.add_child(_count)
-	var sl := TdMenu.label("Sort", "plate", TdTheme.color("cream.300"), 18)
-	sl.size_flags_vertical = SIZE_SHRINK_CENTER
-	gh.add_child(sl)
-	_sort_pick = OptionButton.new()
-	for n in HandLogic.SORT_NAMES: _sort_pick.add_item(n)
-	_sort_pick.focus_mode = FOCUS_NONE
-	_sort_pick.custom_minimum_size = Vector2(150, 42)
-	_sort_pick.add_theme_font_size_override("font_size", 18)
-	_sort_pick.item_selected.connect(func(i: int):
-		_sort = HandLogic.SORTS[i]
-		_refresh_grid())
-	gh.add_child(_sort_pick)
-	_grid_scroll = ScrollContainer.new()
-	_grid_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	_grid_scroll.size_flags_vertical = SIZE_EXPAND_FILL
-	v.add_child(_grid_scroll)
-	_grid = GridContainer.new()
-	_grid.columns = GRID_COLUMNS
-	_grid.add_theme_constant_override("h_separation", 10)
-	_grid.add_theme_constant_override("v_separation", 10)
-	_grid_scroll.add_child(_grid)
-	_empty = TdMenu.vbox(10)
-	_empty.alignment = BoxContainer.ALIGNMENT_CENTER
-	_empty.size_flags_vertical = SIZE_EXPAND_FILL
-	var e1 := TdMenu.label("No towers match.", "h3", TdTheme.color("cream.100"), 30)
-	e1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_empty.add_child(e1)
-	var e2 := TdMenu.label("Try fewer filters.", "body", TdTheme.color("cream.200"), 20)
-	e2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_empty.add_child(e2)
-	var eb := TdMenu.button(TdButton.Style.SECONDARY, "Clear filters", Vector2(240, 56), TdTheme.texture("icon_close"))
-	eb.size_flags_horizontal = SIZE_SHRINK_CENTER
-	eb.clicked.connect(clear_filters)
-	_empty.add_child(eb)
-	_empty.visible = false
-	v.add_child(_empty)
-	return well
-
 func _build_detail() -> Control:
 	var paper := TdMenu.panel(TdPanel.Kind.PAPER, 16)
 	paper.custom_minimum_size = Vector2(372, 0)
 	_detail = TdMenu.vbox(10)
 	paper.add_child(_detail)
 	return paper
-
-func _heading(text: String) -> Label:
-	var l := TdMenu.label(text, "header", TdTheme.color("cream.200"), 20)
-	return l
-
-func _flow() -> HFlowContainer:
-	var f := HFlowContainer.new()
-	f.add_theme_constant_override("h_separation", 6)
-	f.add_theme_constant_override("v_separation", 6)
-	return f
-
-static var _dots := {}
-
-## A filter chip: a pill toggle (cobalt when on), with an optional colour dot.
-func _chip(text: String, dot := Color(0, 0, 0, 0)) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.toggle_mode = true
-	b.focus_mode = FOCUS_NONE
-	b.custom_minimum_size = Vector2(0, 32)
-	b.mouse_default_cursor_shape = CURSOR_POINTING_HAND
-	b.add_theme_font_override("font", TdTheme.font("nunito_extrabold"))
-	b.add_theme_font_size_override("font_size", 18)
-	for s in ["font_color", "font_hover_color", "font_focus_color"]: b.add_theme_color_override(s, TdTheme.color("cream.100"))
-	for s in ["font_pressed_color", "font_hover_pressed_color"]: b.add_theme_color_override(s, Color.WHITE)
-	var base := StyleBoxFlat.new()
-	base.bg_color = Color("#3A2C22")
-	base.border_color = TdTheme.color("rim")
-	base.set_border_width_all(2)
-	base.set_corner_radius_all(17)
-	base.content_margin_left = 10 if dot.a > 0 else 12
-	base.content_margin_right = 12
-	var hover: StyleBoxFlat = base.duplicate()
-	hover.bg_color = Color("#4C3B2E")
-	hover.border_color = Color("#8A7058")
-	var on: StyleBoxFlat = base.duplicate()
-	on.bg_color = TdTheme.color("accent.fill")
-	on.border_color = TdTheme.color("accent.light")
-	b.add_theme_stylebox_override("normal", base)
-	b.add_theme_stylebox_override("hover", hover)
-	b.add_theme_stylebox_override("pressed", on)
-	b.add_theme_stylebox_override("hover_pressed", on)
-	b.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-	if dot.a > 0:
-		b.icon = _dot(dot)
-		b.add_theme_constant_override("h_separation", 6)
-	return b
-
-static func _dot(c: Color) -> Texture2D:
-	var k := c.to_html()
-	if _dots.has(k): return _dots[k]
-	var n := 12
-	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
-	for y in n:
-		for x in n:
-			var d := Vector2(x + 0.5, y + 0.5).distance_to(Vector2(n, n) / 2.0)
-			if d <= n / 2.0 - 0.5: img.set_pixel(x, y, c)
-			elif d <= n / 2.0: img.set_pixel(x, y, Color(c, 0.5))
-	_dots[k] = ImageTexture.create_from_image(img)
-	return _dots[k]
 
 # ------------------------------------------------------------------ refresh
 
@@ -551,6 +310,7 @@ func _layout_tab(i: int, l: Dictionary, active: bool) -> Control:
 			var o := SaveData.towers.find(hand[k])
 			var type: TowerAsset = GameApp.catalog.find_tower(o.type) if o != null else null
 			var med := TdMenu.medallion(_portrait(type), 22)
+			TdFormBadge.attach(med, MenuLogic.badge_path(o, GameApp.catalog), 22) # a colour dot at this size
 			med.size_flags_vertical = SIZE_SHRINK_CENTER
 			bottom.add_child(med)
 	var fill := TdMenu.spacer()
@@ -560,36 +320,13 @@ func _layout_tab(i: int, l: Dictionary, active: bool) -> Control:
 	return tab
 
 func _refresh_filters() -> void:
-	_syncing = true
-	for r in _role_chips: _role_chips[r].button_pressed = _filter.roles.has(r)
-	for d in _deliv_chips: _deliv_chips[d].button_pressed = _filter.delivery.has(d)
-	for i in _cost_chips.size():
-		var c: Array = HandLogic.COST_CHIPS[i]
-		_cost_chips[i].button_pressed = _filter.cost_min == c[1] and _filter.cost_max == c[2]
-	_cost_slider.value = _filter.cost_max
-	_cost_value.text = HandLogic.cost_text(_filter)
-	for k in _toggles: _toggles[k].button_pressed = bool(_filter[k])
-	if _search.text != str(_filter.q): _search.text = str(_filter.q)
-	_syncing = false
+	collection.refresh_filters()
 
 func _refresh_grid() -> void:
-	for c in _grid.get_children():
-		_grid.remove_child(c)
-		c.queue_free()
-	_tiles.clear()
-	var hand: Array = SaveData.towers.hand
-	var shown := HandLogic.visible(_entries, _filter, hand, _sort)
-	for e in shown:
-		var t := TdTowerTile.make(e, _portrait(e.type), hand.find(e.id))
-		t.set_selected(e.id == _selected)
-		t.pressed.connect(_select)
-		t.double_pressed.connect(toggle)
-		_grid.add_child(t)
-		_tiles[e.id] = t
-	_count.text = HandLogic.count_text(shown.size(), _entries.size())
-	_clear.visible = HandLogic.filter_active(_filter)
-	_empty.visible = shown.is_empty()
-	_grid_scroll.visible = not shown.is_empty()
+	collection.entries = _entries
+	collection.hand = SaveData.towers.hand
+	collection.selected_id = _selected
+	collection.refresh_grid()
 
 func _refresh_detail() -> void:
 	for c in _detail.get_children():
@@ -626,35 +363,16 @@ func _refresh_detail() -> void:
 	var cost := TdMenu.rich("[img=20x20 color=%s]%s[/img] [font_size=22][color=%s]%d[/color][/font_size] energy" % [TdTheme.rich("gold.ink"),
 		TdTheme.texture("icon_energy").resource_path, TdTheme.rich("gold.ink"), e.cost], "small", TdTheme.color("ink.2"), 18)
 	body.add_child(cost)
-	var type: TowerAsset = e.type
-	var desc := type.description if type != null else ""
-	if desc == "" and type != null and type.entity != null: desc = type.entity.description
+	var desc: String = e.get("description", "")
 	if desc != "": body.add_child(TdMenu.rich(TooltipText.describe(desc), "body", TdTheme.color("ink"), 18))
 	var def: EntityDef = e.def
 	var vocab: Vocabulary = GameApp.rules.vocabulary if GameApp.rules != null else null
 	var me: IEntity = DefStats.new(def) if def != null else null
-	if me != null and vocab != null:
-		var tiles := GridContainer.new()
-		tiles.columns = 2
-		tiles.add_theme_constant_override("h_separation", 6)
-		tiles.add_theme_constant_override("v_separation", 6)
-		for t in HandLogic.stat_tiles(me, vocab): tiles.add_child(_stat_tile(t[0], t[1], t[2]))
-		body.add_child(tiles)
+	if me != null and vocab != null: body.add_child(TdTowerCard.stat_grid(HandLogic.stat_tiles(me, vocab)))
 	var rows := TdMenu.vbox(0)
 	rows.size_flags_horizontal = SIZE_EXPAND_FILL
 	body.add_child(rows)
-	if def != null:
-		for ab in def.abilities:
-			var asset = GameApp.convert.asset_of(ab, "AbilityAsset")
-			var icon: Texture2D = TdTheme.ability_icon(MenuLogic.icon_name(asset.icon)) if asset != null and asset.icon != "" else null
-			var pills := []
-			if me != null and vocab != null:
-				for r in AbilityText.tags(ab, me, vocab): pills.append([str(r[0]), MenuLogic.result_name(str(r[1]))])
-			rows.add_child(_ability_row(icon, ab.display_name, HandLogic.ability_subtitle(ab.tags, ab.cooldown, ab.cooldown_until_reset), pills, "", false))
-		for pv in PassiveView.of(def):
-			var asset = GameApp.convert.asset_of(pv.def, "PassiveAsset")
-			var icon: Texture2D = GameApp.icon_texture(asset.icon) if asset != null and asset.icon != "" else null
-			rows.add_child(_ability_row(icon, pv.name, "Passive · always on", [], TooltipText.describe(pv.def.description), true))
+	for r in TdTowerCard.def_rows(def, vocab): rows.add_child(r)
 	# the action
 	var foot := TdMenu.vbox(6)
 	_detail.add_child(foot)
@@ -683,66 +401,6 @@ func _refresh_detail() -> void:
 		b.clicked.connect(func(): add(id))
 		foot.add_child(b)
 
-const STAT_ICONS := {"MaxHp": "icon_heart", "Power": "icon_power", "Potency": "icon_del-spark", "Duration": "icon_clock",
-	"Speed": "icon_speed", "Range": "icon_range", "Radius": "icon_range"}
-
-func _stat_tile(stat: String, label: String, value: String) -> Control:
-	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", TdTheme.stylebox("paper_stat", Color.WHITE, [8, 2, 8, 2]))
-	p.custom_minimum_size = Vector2(158, 44)
-	p.size_flags_horizontal = SIZE_EXPAND_FILL
-	var h := TdMenu.hbox(6)
-	p.add_child(h)
-	var ic := TdMenu.picture(TdTheme.texture(STAT_ICONS.get(stat, "icon_power")), Vector2(18, 18))
-	ic.modulate = TdTheme.color("bad.ink") if stat == "MaxHp" else TdTheme.color("ink.2")
-	ic.size_flags_vertical = SIZE_SHRINK_CENTER
-	h.add_child(ic)
-	var v := TdMenu.label(value, "header", TdTheme.color("ink"), 22)
-	v.size_flags_vertical = SIZE_SHRINK_CENTER
-	h.add_child(v)
-	var l := TdMenu.label(label, "small", TdTheme.color("ink.2"), 18)
-	l.size_flags_vertical = SIZE_SHRINK_CENTER
-	l.clip_text = true
-	l.size_flags_horizontal = SIZE_EXPAND_FILL
-	h.add_child(l)
-	return p
-
-func _ability_row(icon: Texture2D, name_text: String, sub: String, pills: Array, text: String, passive: bool) -> Control:
-	var box := TdMenu.vbox(0)
-	var line := DashLine.new()
-	line.custom_minimum_size = Vector2(0, 2)
-	box.add_child(line)
-	var m := MarginContainer.new()
-	m.add_theme_constant_override("margin_top", 8)
-	m.add_theme_constant_override("margin_bottom", 8)
-	box.add_child(m)
-	var h := TdMenu.hbox(10)
-	m.add_child(h)
-	if passive:
-		var med := TdMenu.medallion(icon, 42)
-		med.size_flags_vertical = SIZE_SHRINK_BEGIN
-		h.add_child(med)
-	else:
-		var ic := TdMenu.picture(icon, Vector2(44, 44))
-		ic.size_flags_vertical = SIZE_SHRINK_BEGIN
-		h.add_child(ic)
-	var v := TdMenu.vbox(2)
-	v.size_flags_horizontal = SIZE_EXPAND_FILL
-	h.add_child(v)
-	v.add_child(TdMenu.label(name_text, "header", TdTheme.color("ink"), 20))
-	var s := TdMenu.wrap_label(sub, "small", TdTheme.color("ink.2"), 18)
-	v.add_child(s)
-	if text != "": v.add_child(TdMenu.rich(text, "body", TdTheme.color("ink"), 18))
-	if not pills.is_empty():
-		var f := HFlowContainer.new()
-		f.add_theme_constant_override("h_separation", 6)
-		f.add_theme_constant_override("v_separation", 4)
-		for p in pills:
-			f.add_child(TdMenu.pill("[font=%s]%s[/font] %s" % [TdTheme.font("plinth").resource_path, p[0], p[1]],
-				Color(0, 0, 0, 0), TdTheme.color("ink.2"), 18, Color(TdTheme.color("ink.2"), 0.45)))
-		v.add_child(f)
-	return box
-
 # ------------------------------------------------------------------ actions
 
 func _entry(id: String) -> Dictionary:
@@ -753,7 +411,9 @@ func _entry(id: String) -> Dictionary:
 ## Shows a tower's details (no grid rebuild: keeps the card under the pointer for a double click).
 func _select(id: String) -> void:
 	_selected = id
-	for k in _tiles: _tiles[k].set_selected(k == id)
+	if collection.selected_id != id:
+		collection.selected_id = id
+		for k in collection.tiles: collection.tiles[k].set_selected(k == id)
 	for s in _slots: s.set_selected(s.tower_id != "" and s.tower_id == id)
 	_refresh_detail()
 
@@ -820,9 +480,7 @@ func _commit_rename(i: int, text: String) -> void:
 	_refresh_layouts.call_deferred()
 
 func clear_filters() -> void:
-	_filter = HandLogic.default_filter()
-	_refresh_filters()
-	_refresh_grid()
+	collection.clear_filters()
 
 func _hand_changed(pop := false) -> void:
 	HandLogic.sync_layout(SaveData.data)
@@ -901,19 +559,3 @@ class LayoutTab extends Control:
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed \
 				and Rect2(Vector2.ZERO, size).has_point(event.position):
 			clicked.emit()
-
-## The search field's magnifier.
-class SearchGlyph extends Control:
-	func _init() -> void:
-		mouse_filter = MOUSE_FILTER_IGNORE
-	func _draw() -> void:
-		var c := TdTheme.color("ink.2")
-		draw_arc(Vector2(9, 9), 6.5, 0, TAU, 24, c, 2.5, true)
-		draw_line(Vector2(14, 14), Vector2(20, 20), c, 3.0, true)
-
-## The dashed rule between ability rows.
-class DashLine extends Control:
-	func _init() -> void:
-		mouse_filter = MOUSE_FILTER_IGNORE
-	func _draw() -> void:
-		draw_dashed_line(Vector2(0, 1), Vector2(size.x, 1), Color(TdTheme.color("ink.2"), 0.3), 2.0, 6.0)

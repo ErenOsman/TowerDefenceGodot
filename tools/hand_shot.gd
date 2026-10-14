@@ -53,8 +53,8 @@ func _run() -> void:
 	he.open()
 	await _frames(40)
 	await _shot("plain")
-	he._filter.roles = ["Support"]
-	he._filter.cost_max = 200
+	he.collection.filter.roles = ["Support"]
+	he.collection.filter.cost_max = 200
 	he._refresh_filters()
 	he._refresh_grid()
 	await _frames(5)

@@ -6,6 +6,9 @@ extends TdPopup
 ## tags, description, result chips); statuses their icon, description and rules (lasts, again); tips their text with
 ## the player's keys (KeyBinds.fill_keys). Opening an entry marks it seen (SaveData.codex) and saves. Reusable from
 ## the main menu, the Camp and the pause menu: open(), close(), closed; open_at(section, id).
+## Tower and enemy pages have page tabs (mockup codex2): Overview · Abilities · Forms · Immunities (Immunities disabled,
+## Forms disabled on enemies: "Coming later"). The Forms page lists the base form and the forms some tower of yours has unlocked; picking one
+## shows it on every page (the base row goes back). Read-only reference: no link to the Workshop.
 
 const SECTIONS := [CodexSection.Towers, CodexSection.Enemies, CodexSection.Statuses, CodexSection.Tips]
 const TAB_NAMES := ["Towers", "Enemies", "Statuses", "Tips"]
@@ -41,6 +44,14 @@ var _stats: GridContainer
 var _title: Label
 var _subtitle: RichTextLabel
 var _description: RichTextLabel
+var _forms: VBoxContainer
+## The page head (medallion with the form badge, title, subtitle) and the page tab strip.
+var _page_top: VBoxContainer
+var _head_medal: CenterContainer
+var _strip: HBoxContainer
+## The tower / enemy page shown: "overview" | "abilities" | "forms"; the form shown on every page ("" = default).
+var page := "overview"
+var form_id := ""
 var _abilities_head: Control
 var _abilities: VBoxContainer
 var _body: RichTextLabel
@@ -124,7 +135,34 @@ func _build() -> void:
 	var cols := TdMenu.hbox(30)
 	cols.size_flags_horizontal = SIZE_EXPAND_FILL
 	cols.size_flags_vertical = SIZE_EXPAND_FILL
-	page.add_child(cols)
+	var pagecol := TdMenu.vbox(0)
+	pagecol.size_flags_vertical = SIZE_EXPAND_FILL
+	page.add_child(pagecol)
+	_page_top = TdMenu.vbox(0)
+	pagecol.add_child(_page_top)
+	var phead := TdMenu.hbox(14)
+	_page_top.add_child(phead)
+	_head_medal = CenterContainer.new()
+	_head_medal.size_flags_vertical = SIZE_SHRINK_CENTER
+	phead.add_child(_head_medal)
+	var hv := TdMenu.vbox(0)
+	hv.size_flags_vertical = SIZE_SHRINK_CENTER
+	phead.add_child(hv)
+	_title = TdMenu.label("", "display", TdTheme.color("accent.ink"), 50)
+	hv.add_child(_title)
+	_subtitle = TdMenu.rich("", "body", TdTheme.color("ink.2"), 26)
+	_subtitle.autowrap_mode = TextServer.AUTOWRAP_OFF
+	hv.add_child(_subtitle)
+	_strip = TdMenu.hbox(6)
+	_page_top.add_child(_strip)
+	var rule := HSeparator.new()
+	var rs := StyleBoxLine.new()
+	rs.color = Color(TdTheme.color("ink.2"), 0.3)
+	rs.thickness = 2
+	rule.add_theme_stylebox_override("separator", rs)
+	_page_top.add_child(rule)
+	_page_top.add_child(TdMenu.spacer(10))
+	pagecol.add_child(cols)
 	_cols = cols
 	# an undiscovered entry: one compact card in the middle of the page (silhouette, muted ???, kind, hint)
 	_locked_overlay = CenterContainer.new()
@@ -215,10 +253,6 @@ func _build() -> void:
 	right.size_flags_horizontal = SIZE_SHRINK_BEGIN
 	right.custom_minimum_size = Vector2(TEXT_W, 0)
 	pad.add_child(right)
-	_title = TdMenu.label("", "display", TdTheme.color("accent.ink"), 50)
-	right.add_child(_title)
-	_subtitle = TdMenu.rich("", "body", TdTheme.color("ink.2"), 26)
-	right.add_child(_subtitle)
 	_description = TdMenu.rich("", "body", TdTheme.color("ink"), 24)
 	right.add_child(_description)
 	_body = TdMenu.rich("", "body", TdTheme.color("ink"), 24)
@@ -238,6 +272,9 @@ func _build() -> void:
 	right.add_child(_abilities_head)
 	_abilities = TdMenu.vbox(0)
 	right.add_child(_abilities)
+	# a tower's Forms page: the forms some tower of yours has unlocked (Workshop — Design § Codex; mockup codex2)
+	_forms = TdMenu.vbox(10)
+	right.add_child(_forms)
 
 func _on_open() -> void:
 	catch_up()
@@ -400,6 +437,9 @@ func _entry_picture(e: Dictionary) -> Texture2D:
 
 ## Selects an entry (an empty Dictionary: nothing), marks it seen, shows its page.
 func select(e: Dictionary) -> void:
+	if e.get("id", "") != selected.get("id", "") or e.get("section", -1) != selected.get("section", -1):
+		page = "overview"
+		form_id = ""
 	selected = e
 	if not e.is_empty() and _known(e) and SaveData.codex.mark_viewed(e.section, e.id):
 		SaveData.save()
@@ -414,6 +454,7 @@ func select(e: Dictionary) -> void:
 func _show_page(e: Dictionary) -> void:
 	for c in _stats.get_children(): c.queue_free()
 	for c in _abilities.get_children(): c.queue_free()
+	for c in _forms.get_children(): c.queue_free()
 	_description.text = ""
 	_body.text = ""
 	_locked_overlay.visible = false
@@ -432,6 +473,13 @@ func _show_page(e: Dictionary) -> void:
 	_description.size_flags_horizontal = SIZE_EXPAND_FILL
 	_description.custom_minimum_size = Vector2.ZERO
 	_title.add_theme_color_override("font_color", TdTheme.color("accent.ink"))
+	_page_top.visible = true
+	_strip.visible = false
+	_forms.visible = false
+	_description.visible = true
+	_abilities.visible = true
+	TdCollection.clear_children(_head_medal)
+	_head_medal.visible = false
 	if e.is_empty():
 		_title.text = ""
 		_subtitle.text = ""
@@ -440,6 +488,7 @@ func _show_page(e: Dictionary) -> void:
 		return
 	if not _known(e):
 		_cols.visible = false
+		_page_top.visible = false
 		_locked_overlay.visible = true
 		_locked_pic.texture = _locked_texture(e)
 		var n := _locked_pic.texture.get_size() * (0.5 if _locked_pic.texture == TdTheme.texture("lock_badge") else 1.0)
@@ -449,14 +498,14 @@ func _show_page(e: Dictionary) -> void:
 		return
 	var a = e.asset
 	if a is TowerAsset:
-		_title.text = a.get_display_name()
-		_subtitle.text = "Tower · [b][color=%s]%d[/color][/b] energy" % [TdTheme.rich("gold.ink"), a.cost]
-		_unit_page(a.entity, a.description)
+		_tower_page(a)
 	elif a is EntityAsset:
 		_title.text = MenuLogic.entity_name(a)
 		_title.add_theme_color_override("font_color", TdTheme.color("bad.ink"))
 		_subtitle.text = "Enemy · Boss" if a.tags.has(Tags.Boss) else "Enemy"
 		_unit_page(a, a.description)
+		_build_strip(ENEMY_PAGES, null)
+		_apply_page()
 	elif a is StatusAsset:
 		var d: StatusDef = GameApp.convert.status(a)
 		_title.text = d.display_name
@@ -515,24 +564,158 @@ func _unit_page(entity: EntityAsset, description: String) -> void:
 		var icon: Texture2D = GameApp.icon_texture(asset.icon) if asset != null and asset.icon != "" else null
 		_abilities.add_child(_ability_row(icon, pv.name, "Passive", TooltipText.describe(MenuLogic.fill_stat_words(pv.def.description, values)), "Always on", 0, [], true))
 
+## A unit page's tabs, built from a list so pages can be added: [id, label, enabled]. The same strip on towers and
+## enemies; a disabled tab (Immunities everywhere, Forms on enemies) is dimmed, not clickable, tooltip "Coming later"
+## (user decisions 2026-10-14).
+const TOWER_PAGES := [["overview", "Overview", true], ["abilities", "Abilities", true], ["forms", "Forms", true], ["immunities", "Immunities", false]]
+const ENEMY_PAGES := [["overview", "Overview", true], ["abilities", "Abilities", true], ["forms", "Forms", false], ["immunities", "Immunities", false]]
+
+## A tower's page (mockup codex2): the head shows the form picked on the Forms page (badge, "Form of Archer"; the
+## base row goes back); Overview = model, stats, description; Abilities = abilities and passives; Forms = the rows.
+func _tower_page(t: TowerAsset) -> void:
+	var type := GameApp.tower_type(t.get_id())
+	var ids := WorkshopLogic.codex_form_ids(SaveData.towers, type)
+	if not ids.has(form_id): form_id = ""
+	var fa: FormAsset = GameApp.catalog.find_form(form_id) if form_id != "" else null
+	_head_medal.visible = true
+	var ent: EntityAsset = fa.entity if fa != null and fa.entity != null else t.entity
+	var pic := TdMenu.unit_picture(ent.view if ent != null else "", fa.icon if fa != null else t.icon)
+	_head_medal.add_child(TdTowerCard.medallion(pic, 64, MenuLogic.form_badge(fa)))
+	if fa != null:
+		_title.text = fa.get_display_name()
+		_subtitle.text = WorkshopLogic.subtitle(type, form_id)
+	else:
+		_title.text = t.get_display_name()
+		_subtitle.text = "Tower · [b][color=%s]%d[/color][/b] energy" % [TdTheme.rich("gold.ink"), t.cost]
+	_unit_page(ent, fa.description if fa != null and fa.description != "" else t.description)
+	_build_strip(TOWER_PAGES, type)
+	if page == "forms": _forms_rows(t, type, ids)
+	_apply_page()
+
+## The page tab strip (an underlined tab per page; disabled ones dimmed with "Coming later").
+func _build_strip(pages: Array, type: TowerType) -> void:
+	TdCollection.clear_children(_strip)
+	_strip.visible = true
+	for pg in pages:
+		var id: String = pg[0]
+		var label: String = pg[1]
+		var b := PageTab.new()
+		b.text = label
+		b.on = page == id
+		b.enabled = pg[2]
+		if pg[2]: b.pressed.connect(func(): show_page_tab(id))
+		else: TdTooltipTrigger.attach(b, "", "Coming later")
+		_strip.add_child(b)
+
+## Shows one page of the selected unit.
+func show_page_tab(id: String) -> void:
+	page = id
+	_show_page(selected)
+	_page_scroll.scroll_vertical = 0
+
+## Shows a form on every page of the selected tower ("" = the default form).
+func show_form(id: String) -> void:
+	form_id = id
+	_show_page(selected)
+
+func _apply_page() -> void:
+	_left.visible = page == "overview"
+	_description.visible = page == "overview"
+	_abilities.visible = page == "abilities"
+	_abilities_head.visible = false
+	_forms.visible = page == "forms"
+
+## The Forms page rows: "Archer · Base form" first (a row like the others), then the unlocked forms; a click shows
+## that form on every page; only the base row: "Unlock more forms in the Workshop.". Read-only: no Workshop link.
+func _forms_rows(t: TowerAsset, type: TowerType, ids: Array) -> void:
+	for id in ids:
+		var fa: FormAsset = GameApp.catalog.find_form(id) if id != "" else null
+		var row := FormRow.new()
+		row.selected = id == form_id
+		row.pressed.connect(func(): show_form(id))
+		var h := TdMenu.hbox(16)
+		h.mouse_filter = MOUSE_FILTER_IGNORE
+		row.add_child(h)
+		var ent: EntityAsset = fa.entity if fa != null and fa.entity != null else t.entity
+		var m := TdTowerCard.medallion(TdMenu.unit_picture(ent.view if ent != null else "", fa.icon if fa != null else t.icon), 64, MenuLogic.form_badge(fa))
+		m.size_flags_vertical = SIZE_SHRINK_CENTER
+		h.add_child(m)
+		var v := TdMenu.vbox(0)
+		v.size_flags_horizontal = SIZE_EXPAND_FILL
+		v.size_flags_vertical = SIZE_SHRINK_CENTER
+		v.mouse_filter = MOUSE_FILTER_IGNORE
+		h.add_child(v)
+		var nm := WorkshopLogic.codex_row_name(type, id)
+		var nl := TdMenu.label(nm, "header", TdTheme.color("ink"), 24)
+		nl.add_theme_font_override("font", TdTheme.font("plinth"))
+		v.add_child(nl)
+		var sl := TdMenu.label(WorkshopLogic.codex_row_sub(type, id), "body", TdTheme.color("ink.2"), 18)
+		sl.add_theme_font_override("font", TdTheme.font("nunito_bold"))
+		v.add_child(sl)
+		var desc: String = fa.description if fa != null else ""
+		if desc != "": v.add_child(TdMenu.rich(TooltipText.describe(desc), "body", TdTheme.color("ink"), 18))
+		_forms.add_child(row)
+	if ids.size() == 1:
+		var e := TdMenu.label("Unlock more forms in the Workshop.", "body", TdTheme.color("ink.2"), 20)
+		_forms.add_child(e)
+
+## A page tab (mockup .cx-pg): the label, underlined in ink when on; disabled: 45 % and not clickable.
+class PageTab extends Control:
+	signal pressed
+	var text := ""
+	var on := false
+	var enabled := true
+	var _hover := false
+	var _label: Label
+	func _ready() -> void:
+		_label = TdMenu.label(text, "body", TdTheme.color("ink") if on or _hover else TdTheme.color("ink.2"), 20)
+		_label.add_theme_font_override("font", TdTheme.font("nunito_extrabold"))
+		_label.position = Vector2(16, 6)
+		_label.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(_label)
+		custom_minimum_size = Vector2(_label.get_minimum_size().x + 32, 44)
+		modulate.a = 1.0 if enabled else 0.45
+		mouse_filter = MOUSE_FILTER_STOP
+		mouse_default_cursor_shape = CURSOR_POINTING_HAND if enabled else CURSOR_ARROW
+		mouse_entered.connect(func(): _hover = true; _restyle())
+		mouse_exited.connect(func(): _hover = false; _restyle())
+	func _restyle() -> void:
+		if enabled: _label.add_theme_color_override("font_color", TdTheme.color("ink") if on or _hover else TdTheme.color("ink.2"))
+	func _draw() -> void:
+		if on: draw_rect(Rect2(8, size.y - 4, size.x - 16, 4), TdTheme.color("ink"))
+	func _gui_input(event: InputEvent) -> void:
+		if enabled and event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			pressed.emit()
+			accept_event()
+
+## A Forms row (mockup .cx-frow): a rounded paper row, cobalt outline when selected; click = show that form.
+class FormRow extends PanelContainer:
+	signal pressed
+	var selected := false
+	var _hover := false
+	func _init() -> void:
+		mouse_filter = MOUSE_FILTER_STOP
+		mouse_default_cursor_shape = CURSOR_POINTING_HAND
+		mouse_entered.connect(func(): _hover = true; _restyle())
+		mouse_exited.connect(func(): _hover = false; _restyle())
+		_restyle.call_deferred()
+	func _restyle() -> void:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.55, 0.73, 1.0, 0.12) if selected else Color(0.18, 0.13, 0.09, 0.12 if _hover else 0.06)
+		sb.border_color = TdTheme.color("accent.light") if selected else Color(0.37, 0.29, 0.21, 0.3)
+		sb.set_border_width_all(3 if selected else 2)
+		sb.set_corner_radius_all(14)
+		sb.content_margin_left = 16; sb.content_margin_right = 16; sb.content_margin_top = 12; sb.content_margin_bottom = 12
+		add_theme_stylebox_override("panel", sb)
+	func _gui_input(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			pressed.emit()
+
 ## The result tags shown under an ability: AbilityText.tags plus how long a status it applies lasts ("2 Duration",
 ## from the Apply Status step's duration, else the status's own) when AbilityText leaves it out (it only names a
 ## duration that scales).
 static func result_tags(ab: AbilityDef, me: IEntity, vocab: Vocabulary) -> Array:
-	var out := AbilityText.tags(ab, me, vocab)
-	for t in out:
-		if str(t[1]) == "Duration": return out
-	for st in AbilityText.all_steps(ab.steps):
-		if not (st is ApplyStatusStep) or st.status == null: continue
-		var d := -1
-		if st.duration != null and not st.duration.is_empty and st.duration.expression.strip_edges().is_valid_int():
-			d = int(st.duration.expression.strip_edges())
-		elif st.status.duration >= 0:
-			d = st.status.duration
-		if d > 0:
-			out.append([str(d), "Duration"])
-			return out
-	return out
+	return TdTowerCard.result_tags(ab, me, vocab)
 
 ## An ability's type words ("Attack · Projectile"); an ability without tags is named from what it does: a status
 ## that controls (taunt, stun, root…) → "Control", healing → "Support", a move → "Movement".

@@ -64,6 +64,8 @@ func _build(owned: OwnedTower, type: TowerAsset, mini: Texture2D) -> void:
 	_fig = TdMenu.picture(mini, Vector2(FIG, FIG))
 	_fig.position = Vector2((SIZE.x - FIG) / 2.0, PLATE_Y - FIG + 4)
 	add_child(_fig)
+	# a formed tower: its form badge on the miniature (mockup workshop-badge, tray piece in hand)
+	TdFormBadge.attach(_fig, MenuLogic.form_badge(MenuLogic.form_in(owned, type)), FIG, 0.32, Vector2(0.86, 0.78))
 	_plate = TdButton.new()
 	_plate.style = TdButton.Style.NAME_PLATE
 	_plate.custom_minimum_size = Vector2(100, 28)

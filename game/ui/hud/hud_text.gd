@@ -181,6 +181,14 @@ static func rewards_text(drops: Dictionary, catalog: GameCatalogAsset = null) ->
 	var parts := token_parts(drops, catalog)
 	return "" if parts.is_empty() else "Rewards: " + ", ".join(parts)
 
+## {token id: amount} → [[TokenAsset or null, token id, amount], …] in order, amounts > 0 (the end screen's chips).
+static func token_rows(amounts: Dictionary, catalog: GameCatalogAsset = null) -> Array:
+	var out := []
+	for id in amounts:
+		if int(amounts[id]) <= 0: continue
+		out.append([catalog.find_token(id) if catalog != null else null, str(id), int(amounts[id])])
+	return out
+
 ## {token id: amount} → ["Fire Arrow ×2", …] in order (names from the catalog's tokens, else the id).
 static func token_parts(amounts: Dictionary, catalog: GameCatalogAsset = null) -> Array:
 	var parts := []

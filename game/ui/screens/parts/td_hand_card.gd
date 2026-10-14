@@ -36,6 +36,7 @@ func _build(owned: OwnedTower, type: TowerAsset, index: int) -> void:
 	_medal = TdMenu.medallion(TdMenu.unit_picture(view, icon), MEDAL)
 	_medal.position = MEDAL_AT
 	add_child(_medal)
+	TdFormBadge.attach(_medal, MenuLogic.form_badge(MenuLogic.form_in(owned, type)), MEDAL)
 	_plate = TdButton.new()
 	_plate.style = TdButton.Style.NAME_PLATE
 	_plate.custom_minimum_size = Vector2(120, 30)

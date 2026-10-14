@@ -188,6 +188,17 @@ static func circle_material() -> ShaderMaterial:
 		_circle.shader = sh
 	return _circle
 
+static var _grey: ShaderMaterial = null
+
+## circle_material, desaturated and darkened (a Workshop form not unlocked yet, the Codex's forms nobody has).
+static func grey_circle_material() -> ShaderMaterial:
+	if _grey == null:
+		var sh := Shader.new()
+		sh.code = "shader_type canvas_item;\nvoid fragment() {\n\tvec4 c = COLOR;\n\tfloat l = dot(c.rgb, vec3(0.299, 0.587, 0.114));\n\tc.rgb = mix(c.rgb, vec3(l), 0.75) * 0.78;\n\tc.a *= 1.0 - smoothstep(0.46, 0.5, distance(UV, vec2(0.5)));\n\tCOLOR = c;\n}\n"
+		_grey = ShaderMaterial.new()
+		_grey.shader = sh
+	return _grey
+
 ## Pops spawned controls in one after another (stagger seconds apart, unscaled time).
 static func pop_in(items: Array, stagger := 0.035) -> void:
 	var i := 0

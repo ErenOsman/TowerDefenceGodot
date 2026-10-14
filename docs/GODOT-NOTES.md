@@ -108,3 +108,23 @@ How it is read:
 **When Unity adopts the Workshop:** move `Forms.json`, `Tokens.json` and the form units/abilities into `Content/`, put the
 drop lists on the catalog's level entries, sync, then delete `data/content-godot/` (and `CatalogDrops.json` handling can
 stay harmlessly or go). Check that the Unity ids match the ones above or old Godot saves lose their forms/tokens.
+
+## Workshop screens (game/ui/screens/workshop.gd)
+- Opened from the Camp's Workshop station (`camp.gd` STATIONS: `open_workshop`, a TdPopup like Codex / Towers; the tour
+  line is unchanged). Picker = `TdCollection` (the hand editor's filters + grid, shared; no hand row, no quick cost chips
+  or toggles) + a detail card; Modify view slides in (0.35 s) in the same popup, not a separate scene.
+- Texts, states, tree layout, compare tiles, tag lines, the action and "Found in" are `WorkshopLogic` (pure, tested in
+  `tests/test_workshop_ui.gd`); the card parts are `TdTowerCard` (shared with the hand editor), the badge `TdFormBadge`
+  (a colour dot under 20 px). Renders: `tools/workshop_shot.gd`.
+- Tree: root children by `FormDef.order` on the mockup's slots (left, right, below; more than 3 evenly round the root),
+  grandchildren 200 px beyond their parent (up from a side node). The right card shows the selected form as it is
+  (stat tiles, abilities, passives): no comparison with the current form (user decision 2026-10-14).
+- "Found in" groups a whole chapter as "Chapter 2 levels" and marks boss levels "(boss)".
+- Elsewhere: `MenuLogic.tower_name` returns the form's name for a formed tower without a custom name (hand cards,
+  slots, level-select strip, the picker); `HandLogic.entries` builds a formed tower from its form (entity, cost,
+  traits, description, badge); Default sort keeps the collection order within a type. HUD tray pieces, the placed
+  medallion and the inspector portrait carry the badge; the end screen shows the token row (`HudText.token_rows`).
+- Codex (user decisions 2026-10-14, mockup codex2): tower and enemy pages have page tabs built from a list
+  (`TOWER_PAGES` / `ENEMY_PAGES`): Overview · Abilities (passives included) · Forms · Immunities (Immunities disabled,
+  Forms disabled on enemies: dimmed, "Coming later"). The Forms page lists "Archer · Base form" and only the forms some tower of yours has unlocked;
+  picking a row shows that form on every page (the base row goes back). Read-only: no Workshop link.

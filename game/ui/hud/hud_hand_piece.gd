@@ -43,6 +43,7 @@ var _pips: HBoxContainer
 var _arrow: TextureRect
 var _trigger: TdTooltipTrigger
 
+var _badge_path := "-"
 var _placed := false
 var _picked := false
 var _poor := false
@@ -169,6 +170,14 @@ func show_state(p_tower_id: String, p_index: int, tower_name: String, cost: int,
 			var name := "pip_mini_held" if cd[1] else ("pip_mini_wait" if cd[0] > 0 else "pip_mini_ready")
 			_pips.add_child(HudArt.sprite(name, Vector2(18, 18)))
 	_restyle()
+
+## The tower's Workshop form badge (HudText.badge_path; "" for the default form): on the miniature in the hand and
+## on the placed medallion (mockup workshop-badge). Rebuilt only when it changes.
+func set_badge(path: String) -> void:
+	if path == _badge_path or _render == null: return
+	_badge_path = path
+	TdFormBadge.attach(_render, path, 112, 0.25, Vector2(0.86, 0.80))
+	TdFormBadge.attach(_medal, path, 64, 0.42)
 
 func set_tooltip(content: Dictionary) -> void:
 	_trigger.set_tooltip(content)

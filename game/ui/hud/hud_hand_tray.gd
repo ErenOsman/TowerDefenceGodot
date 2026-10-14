@@ -52,6 +52,7 @@ func refresh() -> void:
 		var piece: HudHandPiece = _pieces[i]
 		piece.show_state(t.id, i, t.name, t.cost, key, HudArt.miniature(c.converter, t.entity), HudArt.portrait(c.converter, t.entity),
 			frame, cds, c.placing == t.id, affordable, frame != null and c.selected == frame.id)
+		piece.set_badge(HudText.badge_path(t))
 		piece.set_tooltip(_tooltip(t, i, frame, affordable, keys))
 	custom_minimum_size = Vector2(HudLayout.tray_width(hand.size()), HudLayout.TRAY_H)
 

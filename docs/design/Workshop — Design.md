@@ -24,7 +24,8 @@ passives, look and name. The tower keeps its ID, its name tag and its place in t
 | Where tokens come from | Levels: a **first-win drop** (once) and a **win drop** (every win, so replays are worth something); boss levels carry the rare tokens. Set per level in the catalog, like the first-clear reward tower | agents |
 | What a form changes | Anything the tower's entity has: stats, abilities (added, changed, removed), passives, model and portrait, name, and optionally the **energy cost** (default: the base tower's) | Eren (stats/abilities/looks) · agents (cost field, default unchanged) |
 | Elsewhere | A formed tower shows its form name and a small **form badge** on its hand card, tray piece, board medallion and Codex entry | UI/UX agent, mockup workshop-badge |
-| Codex | Every form is listed on its base tower's Codex page with its real portrait (no ???: the game is about collecting, and the Workshop tree shows every portrait too); a form no tower of yours has unlocked is desaturated with the line "Unlock it in the Workshop" and its token cost | agents · UI/UX agent |
+| Codex | A tower's Codex page has page tabs **Overview · Abilities** (passives included) **· Forms** (more pages may come). Forms is a **list** of rows, not a tree, showing **only forms the player has unlocked** on any of their towers (locked forms do not appear in the Codex at all); the base form is a row like the others ("Archer · Base form", first, no special styling). Selecting a row switches the whole page (header with the badge, Overview, Abilities) to that form; going back is selecting the base row (no Back button). The tab label is just "Forms", no count. No "Open in Workshop" link: the Codex is read-only reference. Empty state: the default row plus "Unlock more forms in the Workshop." A 4th tab **Immunities** sits after Forms, disabled for now: label dimmed to ~45 %, not clickable, hover tooltip "Coming later"; it becomes a real page once immunities exist in the data. Enemy pages have the same four tabs, Overview · Abilities · Forms · Immunities, with Forms disabled the same way (enemies may get forms later) and Immunities disabled as on towers. The Workshop tree still shows every form's real portrait. Mockup: screens-b/codex2.html | Eren 2026-10-14 |
+| No comparison | The form card shows the form's own stats and abilities; nothing is compared against the current form (no arrows, no Changed/Same tags) | Eren 2026-10-14 |
 | Confirm | Unlocking asks once ("Unlock Fire Archer for this Archer? Spends 1 Fire Arrow (you have 2 → 1)"); switching does not | mockup workshop-confirm |
 | Content | Forms and tokens are content JSON like everything else (`Content/Forms.json`, `Content/Tokens.json`); drops live in `Catalog.json`; no numbers in code | agents |
 
@@ -60,11 +61,11 @@ Reference mockup (approved as the UI direction): http://92.5.94.11/art/ui/screen
 │ This tower now      │ Forms · click one to see it          │ Fire Archer          │
 │ portrait, name,     │        (Inferno Archer)              │ Form of Archer       │
 │ "Form: Default"     │            │                         │ description          │
-│ Max HP · Power ·    │ (Fire Archer)─(Archer)─(Poison Arch.)│ Compared with Archer │
-│ Range · Speed       │            │                         │ 19 Max HP · 12→11 ▼  │
-│ abilities as now    │        (Longbow)                     │ + Burn on hit        │
-│                     │ ● Current ● Unlocked ● Can unlock    │ Fire Shot [Changed]  │
-│                     │ ● Needs tokens                       │ Tower Walk [Same]    │
+│ Max HP · Power ·    │ (Fire Archer)─(Archer)─(Poison Arch.)│ 19 Max HP · 11 Power │
+│ Range · Speed       │            │                         │ 2 Range · 2 Speed    │
+│ abilities as now    │        (Longbow)                     │ Fire Shot …          │
+│                     │ ● Current ● Unlocked ● Can unlock    │ Tower Walk …         │
+│                     │ ● Needs tokens                       │ (no comparison)      │
 │                     │                                      │ › Leads to: Inferno  │
 │                     │                                      │ Unlock cost 🔥1 (2)  │
 │                     │                                      │ [Unlock · 1 Fire Arrow] │
@@ -79,8 +80,9 @@ Reference mockup (approved as the UI direction): http://92.5.94.11/art/ui/screen
   (tower 3)"), or `Use this form` (unlocked, not current; under it "Free: switch back any time"), or nothing for the
   current form ("This is the tower's current form"). Missing tokens: the button is disabled and a red line says what
   is missing and where it drops ("Needs 1 more Ember Core. Found in: The Glutton (boss)").
-- **Compared with:** the selected node's stats against the **current** form (12 → 11 ▼ Power), then its abilities
-  tagged Changed / Same / New / Gone, then the passives the same way, then "Leads to: …" for its children.
+- **No comparison between forms** (Eren, 2026-10-14): the card shows the selected form as it is — its stat tiles,
+  its abilities and passives as their tooltips show them — with no arrows against the current form and no
+  Changed / Same / New / Gone tags; the player compares by clicking nodes. Then "Leads to: …" for its children.
 - **Token header:** every token kind with the count owned; hovering one shows its name, description and where it drops.
 - **After Unlock:** the confirm popup, then the node fills, the ring flashes, a "Fire Archer unlocked" toast on the
   card and the action becomes `Use this form`. Unlocking does not switch the form by itself.

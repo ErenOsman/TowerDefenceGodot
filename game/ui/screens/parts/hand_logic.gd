@@ -75,20 +75,33 @@ static func traits(def: EntityDef) -> Dictionary:
 
 ## One entry per owned tower, in collection order: {id, type_id, type (TowerAsset or null), def (EntityDef or null),
 ## number (the type's number), name, cost, index (1-based place in the collection: "tower 3"), roles, delivery, move,
-## heal, status}. convert may be null (no traits then).
+## heal, status}, plus the Workshop form: form (FormAsset or null), base_name (the type's name), badge (the form's
+## badge sprite path or ""), description (the form's, else the type's). A formed tower is its form: its entity,
+## cost, traits and name ("Fire Archer"). convert may be null (no traits then).
 static func entries(towers: TowerCollection, catalog: GameCatalogAsset, convert: AssetConverter) -> Array:
 	var out := []
 	var cache := {}
 	for i in towers.towers.size():
 		var o: OwnedTower = towers.towers[i]
 		var type: TowerAsset = catalog.find_tower(o.type) if catalog != null else null
-		if not cache.has(o.type):
-			var def: EntityDef = convert.entity(type.entity) if convert != null and type != null and type.entity != null else null
-			cache[o.type] = [def, traits(def)]
-		var e := {"id": o.id, "type_id": o.type, "type": type, "def": cache[o.type][0],
+		var form := MenuLogic.form_in(o, type)
+		var key := o.type + "@" + (form.get_id() if form != null else "")
+		if not cache.has(key):
+			var ea: EntityAsset = form.entity if form != null and form.entity != null else (type.entity if type != null else null)
+			var def: EntityDef = convert.entity(ea) if convert != null and ea != null else null
+			cache[key] = [def, traits(def)]
+		var desc := ""
+		if form != null: desc = form.description
+		if desc == "" and type != null: desc = type.description
+		if desc == "" and type != null and type.entity != null: desc = type.entity.description
+		var cost: int = type.cost if type != null else 0
+		if form != null and form.cost >= 0: cost = form.cost
+		var e := {"id": o.id, "type_id": o.type, "type": type, "def": cache[key][0],
 			"number": type.number if type != null else 9999, "name": MenuLogic.tower_name(o, type),
-			"cost": type.cost if type != null else 0, "index": i + 1}
-		e.merge(cache[o.type][1])
+			"cost": cost, "index": i + 1, "form": form,
+			"base_name": type.get_display_name() if type != null else "", "badge": MenuLogic.form_badge(form),
+			"description": desc}
+		e.merge(cache[key][1])
 		out.append(e)
 	return out
 
@@ -103,12 +116,12 @@ static func filter_active(f: Dictionary) -> bool:
 	return str(f.q).strip_edges() != "" or not f.roles.is_empty() or not f.delivery.is_empty() or f.cost_min > 0 \
 		or f.cost_max < COST_ANY or f.move or f.heal or f.status or f.hide
 
-## Whether an entry passes the filter: the name contains the search (any case); any picked role; any picked
+## Whether an entry passes the filter: the name (or a formed tower's base type name) contains the search (any case); any picked role; any picked
 ## delivery; the cost in [cost_min, cost_max] (cost_max at COST_ANY = no top); each toggle on requires its flag;
 ## Hide my hand leaves out the hand's towers.
 static func matches(e: Dictionary, f: Dictionary, hand: Array) -> bool:
 	var q := str(f.q).strip_edges().to_lower()
-	if q != "" and not str(e.name).to_lower().contains(q): return false
+	if q != "" and not str(e.name).to_lower().contains(q) and not str(e.get("base_name", "")).to_lower().contains(q): return false
 	if not f.roles.is_empty() and not _any(e.roles, f.roles): return false
 	if not f.delivery.is_empty() and not _any(e.delivery, f.delivery): return false
 	if e.cost < f.cost_min: return false
@@ -124,8 +137,8 @@ static func _any(have: Array, want: Array) -> bool:
 		if have.has(w): return true
 	return false
 
-## Sorts in place: "number" (the release order, default), "name", "cost"; ties by number, then name, then the
-## collection index (a total order: sort_custom is not stable).
+## Sorts in place: "number" (the release order, default; ties in collection order), "name", "cost" (ties by number,
+## then name, then the collection index) (a total order: sort_custom is not stable).
 static func sort_entries(list: Array, by: String) -> Array:
 	list.sort_custom(func(a, b):
 		var ka := _key(a, by)
@@ -140,7 +153,7 @@ static func _key(e: Dictionary, by: String) -> Array:
 	match by:
 		"name": return [n, e.number, e.index]
 		"cost": return [e.cost, e.number, n, e.index]
-	return [e.number, n, e.index]
+	return [e.number, e.index] # Default: the type's number, then the collection order (a formed or renamed tower stays put)
 
 ## The entries the grid shows: filtered, then sorted.
 static func visible(all: Array, f: Dictionary, hand: Array, by := "number") -> Array:

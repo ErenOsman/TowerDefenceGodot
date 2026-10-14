@@ -771,6 +771,8 @@ class HandSlot extends Control:
 			_mini.pivot_offset = Vector2(56, 112)
 			if bench: _mini.modulate = Color(0.55, 0.55, 0.55, 0.5)
 			add_child(_mini)
+			# a formed tower: its form badge on the miniature (the plate already says the form's name)
+			TdFormBadge.attach(_mini, MenuLogic.form_badge(MenuLogic.form_in(owned, type)), 112, 0.26, Vector2(0.86, 0.78))
 			if type != null:
 				var coin := Panel.new()
 				coin.add_theme_stylebox_override("panel", LevelSelectStyle.coin(bench))

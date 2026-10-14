@@ -2,8 +2,8 @@ extends Control
 ## The Camp (UI_Camp.cs; Camp & Chapters — Design): the home between levels once Chapter 1 is won. A 3D camp
 ## laid out from res://art/camp/layout.json (map-kit ground with its frame, the station props on a ring round the
 ## Campfire, all facing the camera; Tent and Supplies) with a station button over each prop: Chapters (the chapter picker, then a chapter's
-## levels), Towers (the hand editor over every owned tower), Codex, and Main menu; Multiplayer (the co-op lobby); Workshop is
-## locked ("Coming later"). The first visit (PlayerProfile.camp_seen) shows a welcome card, then a tour: the
+## levels), Towers (the hand editor over every owned tower), Codex, Workshop (towers into their forms: workshop.gd), and
+## Main menu; Multiplayer (the co-op lobby). The first visit (PlayerProfile.camp_seen) shows a welcome card, then a tour: the
 ## Princess's speech bubble (TdTextBubble) points at each station in turn, the station highlighted; a click goes on,
 ## Skip ends it. Map music comes from SceneFlow (AudioMgr.play_scene_music).
 
@@ -17,7 +17,7 @@ const STATIONS := [
 	{"id": "Towers", "label": "Towers", "icon": "icon_cards", "action": "open_towers", "locked": false},
 	{"id": "Chapters", "label": "Chapters", "icon": "icon_castle", "action": "open_chapters", "locked": false, "primary": true},
 	{"id": "Codex", "label": "Codex", "icon": "icon_codex", "action": "open_codex", "locked": false},
-	{"id": "Workshop", "label": "Workshop", "icon": "icon_edit", "action": "", "locked": true},
+	{"id": "Workshop", "label": "Workshop", "icon": "icon_edit", "action": "open_workshop", "locked": false},
 	{"id": "Multiplayer", "label": "Multiplayer", "icon": "icon_onboard", "action": "open_multiplayer", "locked": false},
 ]
 ## Used when layout.json cannot be read (same values as layout.json, the ring layout of 2026-10-13).
@@ -455,6 +455,10 @@ func open_codex() -> TdPopup:
 ## Towers: the hand editor over every owned tower.
 func open_towers() -> TdPopup:
 	return open_popup("hand_editor")
+
+## Workshop: the picker, then a tower's forms (Workshop — Design).
+func open_workshop() -> TdPopup:
+	return open_popup("workshop")
 
 ## Multiplayer: the co-op lobby (connects to the relay).
 func open_multiplayer() -> TdPopup:

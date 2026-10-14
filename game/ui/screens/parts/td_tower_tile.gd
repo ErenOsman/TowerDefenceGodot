@@ -2,24 +2,31 @@ class_name TdTowerTile
 extends Control
 ## One owned tower in the hand editor's collection grid (mockup hand-select ".hc"): the portrait medallion, the name,
 ## the gold cost coin (top-left) and, when the tower is in the hand, a green badge with its slot number = key
-## (top-right). Selected: cobalt. Click selects, double-click toggles it in / out of the hand, drag it onto a hand slot.
+## (top-right); a formed tower shows its form badge on the portrait. Selected: cobalt. Click selects, double-click toggles it in / out of the hand, drag it onto a hand slot.
 ## No stats on the cards.
 
 signal pressed(tower_id: String)
 signal double_pressed(tower_id: String)
 
 const SIZE := Vector2(108, 116)
+## The Workshop picker's wider tiles (no hand row there: the filters and the card are narrower).
+const WIDE := Vector2(114, 116)
 const MEDAL := 60.0
 
 var tower_id := ""
 var selected := false
+## Can be dragged onto a hand slot (the hand editor; off in the Workshop picker).
+var draggable := true
+var tile := SIZE
 var _hovered := false
 var _medal: Control
 var _name: Label
 var _pic: Texture2D
 
-static func make(e: Dictionary, picture: Texture2D, key: int) -> TdTowerTile:
+static func make(e: Dictionary, picture: Texture2D, key: int, tile_size := SIZE) -> TdTowerTile:
 	var t := TdTowerTile.new()
+	t.tile = tile_size
+	t.custom_minimum_size = tile_size
 	t.tower_id = e.id
 	t._pic = picture
 	t._build(e, key)
@@ -33,14 +40,16 @@ func _init() -> void:
 
 func _build(e: Dictionary, key: int) -> void:
 	_medal = TdMenu.medallion(_pic, MEDAL)
-	_medal.position = Vector2((SIZE.x - MEDAL) / 2.0, 12)
+	_medal.position = Vector2((tile.x - MEDAL) / 2.0, 12)
 	add_child(_medal)
+	# a formed tower: its form badge at the portrait's lower-right (mockup workshop-badge), the form name below
+	TdFormBadge.attach(_medal, str(e.get("badge", "")), MEDAL, 0.5)
 	_name = TdMenu.label(e.name, "micro", TdTheme.color("cream.100"), 18)
 	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_name.clip_text = true
 	_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_name.position = Vector2(4, 80)
-	_name.size = Vector2(SIZE.x - 8, 26)
+	_name.size = Vector2(tile.x - 8, 26)
 	_name.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(_name)
 	var coin := TdHandSlot.coin(e.cost, 32.0)
@@ -56,7 +65,7 @@ func _build(e: Dictionary, key: int) -> void:
 		sb.set_corner_radius_all(7)
 		b.add_theme_stylebox_override("panel", sb)
 		b.size = Vector2(28, 28)
-		b.position = Vector2(SIZE.x - 32, 4)
+		b.position = Vector2(tile.x - 32, 4)
 		b.mouse_filter = MOUSE_FILTER_IGNORE
 		var l := TdMenu.label(str(key + 1), "micro", Color.WHITE, 18)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -94,6 +103,7 @@ func _gui_input(event: InputEvent) -> void:
 		else: pressed.emit(tower_id)
 
 func _get_drag_data(_at: Vector2) -> Variant:
+	if not draggable: return null
 	var holder := Control.new()
 	var m := TdMenu.medallion(_pic, MEDAL)
 	m.position = -Vector2(MEDAL, MEDAL) / 2.0

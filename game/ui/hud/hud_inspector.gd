@@ -19,6 +19,7 @@ var shown_id := -1
 var shown_tower := ""
 
 var _portrait: Control
+var _badge_shown := ""
 var _name: Label
 var _sub: Label
 var _info: TdButton
@@ -193,6 +194,10 @@ func refresh() -> void:
 	var def: EntityDef = e.def if e != null else (hand.entity if hand != null else null)
 	var tdef: TowerDef = hand if hand != null else (session.tower(tower_id) if tower_id != null else null)
 	HudArt.set_medallion(_portrait, HudArt.portrait(c.converter, def), "portrait_ring_enemy" if enemy else "medallion_ring")
+	var badge := HudText.badge_path(tdef) if tdef != null and not enemy else ""
+	if badge != _badge_shown:
+		_badge_shown = badge
+		TdFormBadge.attach(_portrait, badge, 88) # a formed tower's form badge on its portrait
 	_name.text = hand.name if hand != null else f.name
 	_name.add_theme_color_override("font_color", TdTheme.color("bad") if enemy else TdTheme.color("accent.light"))
 	if hand != null: _sub.text = "Tower · %d energy" % hand.cost

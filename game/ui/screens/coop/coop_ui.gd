@@ -207,16 +207,23 @@ static func level_row(level_id: String, width: float, selected: bool, tag := "")
 		h.add_child(t)
 	return p
 
-## A strip of hand medallions for tower type ids, padded with empty circles up to cap.
+## A strip of hand medallions for hand entries (type ids, "<type>@<form>" for formed towers), padded with empty
+## circles up to cap. A formed tower shows its form badge and its tooltip names the form ("Fire Archer").
 static func hand_strip(types: Array, cap: int, diameter := 46.0) -> HBoxContainer:
 	var h := TdMenu.hbox(4)
 	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for i in maxi(cap, types.size()):
 		if i < types.size():
 			var ta := CoopLevels.tower_asset(str(types[i]))
+			var fa := CoopLevels.form_asset(str(types[i]))
 			var view: String = ta.entity.view if ta != null and ta.entity != null else ""
 			var m := TdMenu.medallion(TdMenu.unit_picture(view, ta.icon if ta != null else ""), diameter)
-			if ta != null: m.tooltip_text = ta.get_display_name()
+			TdFormBadge.attach(m, MenuLogic.form_badge(fa), diameter, 0.46)
+			if ta != null:
+				m.mouse_filter = Control.MOUSE_FILTER_PASS
+				var nm := fa.get_display_name() if fa != null else ta.get_display_name()
+				TdTooltipTrigger.attach(m, TooltipText.title(nm, TooltipText.tower_color(), "Form of " + ta.get_display_name() if fa != null else "Tower"),
+					TooltipText.describe(fa.description if fa != null and fa.description != "" else ta.description))
 			h.add_child(m)
 		else:
 			h.add_child(empty_circle(diameter))

@@ -276,11 +276,26 @@ static func spawn_shield(entity: EntityAsset) -> int:
 				if expr.is_valid_int(): total += int(expr)
 	return total
 
-## A tower's name for the player: its custom name, else its type's name.
+## A tower's name for the player: its custom name, else its Workshop form's name ("Fire Archer"), else its type's.
 static func tower_name(owned: OwnedTower, type: TowerAsset) -> String:
 	if owned == null: return "Missing tower"
 	if owned.custom_name != "": return owned.custom_name
+	var f := form_in(owned, type)
+	if f != null: return f.get_display_name()
 	return type.get_display_name() if type != null else "Unknown tower"
+
+## An owned tower's current form among its type's forms (TowerAsset.forms), or null (default / unknown form).
+static func form_in(owned: OwnedTower, type: TowerAsset) -> FormAsset:
+	if owned == null or owned.form == "" or type == null: return null
+	for f in type.forms:
+		if f != null and f.get_id() == owned.form: return f
+	return null
+
+## A form's badge sprite (res://art/ui/KitB/forms/<form id>.png); "" for null or no sprite.
+static func form_badge(f: FormAsset) -> String:
+	if f == null or f.badge == "": return ""
+	var p := ArtPaths.kit(f.badge)
+	return p if p != "" and ResourceLoader.exists(p) else ""
 
 ## An owned tower's current Workshop form (FormAsset), or null for the default form or a form the content lacks.
 static func form_of(owned: OwnedTower, catalog: GameCatalogAsset) -> FormAsset:
@@ -299,10 +314,7 @@ static func form_name(owned: OwnedTower, catalog: GameCatalogAsset) -> String:
 
 ## An owned tower's form badge sprite (res://art/ui/KitB/forms/<form id>.png); "" for the default form or no sprite.
 static func badge_path(owned: OwnedTower, catalog: GameCatalogAsset) -> String:
-	var f := form_of(owned, catalog)
-	if f == null or f.badge == "": return ""
-	var p := ArtPaths.kit(f.badge)
-	return p if p != "" and ResourceLoader.exists(p) else ""
+	return form_badge(form_of(owned, catalog))
 
 # ------------------------------------------------------------------ chapters (UI_ChapterSelect.cs)
 
