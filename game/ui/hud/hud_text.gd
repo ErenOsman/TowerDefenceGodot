@@ -70,21 +70,6 @@ static func shortfall(cost: int, energy: int) -> String:
 
 # ------------------------------------------------------------------ action bar
 
-## The action bar's label while an ability is aimed: "Shoot: pick a target".
-static func aiming_label(ability_name: String) -> String:
-	return "%s: pick a target" % ability_name
-
-## How many of the flags are true (abilities castable now).
-static func ready_count(castable: Array) -> int:
-	var n := 0
-	for c in castable:
-		if c: n += 1
-	return n
-
-## The action bar's second line: "2 ready" for a unit you command, "100 energy" for a hand tower being placed.
-static func ready_line(ready: int, placing_cost := -1) -> String:
-	return "%d energy" % placing_cost if placing_cost >= 0 else "%d ready" % ready
-
 ## Why an ability can't be cast now, for the hint line (UI_ActionBar): "" when it can.
 static func ability_refusal(ability_name: String, castable: bool, left: int, held: bool, reason: String) -> String:
 	if castable: return ""

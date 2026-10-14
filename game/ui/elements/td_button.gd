@@ -47,6 +47,17 @@ const ICON_GAP := 12.0
 		if is_node_ready(): _apply_icon(); _layout()
 ## Icon after the label ("Start ▶").
 @export var icon_after := false
+## Where the icon + label (+ key badge) sit in text buttons: centred (default) or from a fixed left inset
+## (`content_inset`; the pause menu's list). Ability / EndTurn / Icon / NamePlate keep their own layout.
+@export var content_align: HorizontalAlignment = HORIZONTAL_ALIGNMENT_CENTER:
+	set(v):
+		content_align = v
+		if is_node_ready(): _layout()
+## The left inset used when content_align is LEFT.
+@export var content_inset := H_PADDING:
+	set(v):
+		content_inset = v
+		if is_node_ready(): _layout()
 @export var interactable := true:
 	set = _set_interactable_prop
 @export var selectable := false
@@ -309,8 +320,39 @@ func set_ability_state(left: int, total: int, held := false, aiming := false, ke
 	_cd.texture = TdTheme.texture("cd_badge")
 	set_key_hint(key)
 	_face.modulate = Color(1, 1, 1, 0.45 if badge else 1.0)
+	# aimed (Eren 2026-10-14): the cooldown marks turn gold with the aiming rim (ability_overlay_aiming is already a
+	# gold rim; the kit's clock ring and badge rim are blue, so they are recoloured, not swapped)
+	var gold_mat: Material = gold_tint_material() if aiming else null
+	_ring.material = gold_mat
+	_cd.material = gold_mat
 	set_extra_state("Aiming" if aiming else ("Held" if held else ("Cooldown" if cooling else "")))
 	_layout()
+
+## Is the clock ring drawn gold now (the ability is aimed)?
+func ring_is_gold() -> bool:
+	return _ring != null and _ring.material != null
+
+static var _gold_tint: ShaderMaterial = null
+const GOLD_TINT_SHADER := "shader_type canvas_item;
+uniform vec4 gold : source_color;
+void fragment() {
+	vec4 c = COLOR; // texture x modulate
+	// blue-dominant pixels (the kit's lit ring segments, the badge rim) take the gold token, keeping their light;
+	// dark unlit segments and the wooden badge stay as they are
+	float blue = clamp((c.b - max(c.r, c.g * 0.8)) * 2.5, 0.0, 1.0);
+	float light = clamp(max(c.b, c.g) * 1.1, 0.0, 1.0);
+	COLOR = vec4(mix(c.rgb, gold.rgb * light, blue), c.a);
+}"
+
+## The shared material that recolours the kit's blue ring / badge rim to TdTheme gold.
+static func gold_tint_material() -> ShaderMaterial:
+	if _gold_tint == null:
+		var sh := Shader.new()
+		sh.code = GOLD_TINT_SHADER
+		_gold_tint = ShaderMaterial.new()
+		_gold_tint.shader = sh
+		_gold_tint.set_shader_parameter("gold", TdTheme.color("gold"))
+	return _gold_tint
 
 ## A passive on an ability button: only its face (no ring, badge or key), dimmed while its condition is off.
 func set_passive(active: bool) -> void:
@@ -592,6 +634,7 @@ func _layout() -> void:
 			var kgap := 10.0 if key_w > 0.0 else 0.0
 			var total := tw + iw + gap + kgap + key_w
 			var x := (s.x - total) / 2.0
+			if content_align == HORIZONTAL_ALIGNMENT_LEFT: x = content_inset
 			if style == Style.ROW: x = 16.0
 			var lx := x + (0.0 if icon_after else iw + gap)
 			var ix := x + tw + gap if icon_after else x
@@ -602,8 +645,8 @@ func _layout() -> void:
 			_label.size = Vector2(maxf(tw + 2.0, 1.0), s.y)
 			if style == Style.NAME_PLATE:
 				_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-				_label.position = Vector2(6, -1 + sink)
-				_label.size = Vector2(s.x - 12, s.y)
+				_label.position = Vector2(3, -1 + sink)
+				_label.size = Vector2(s.x - 6, s.y)
 			_key.position = Vector2(x + tw + iw + gap + kgap, (s.y - 24.0) / 2.0 + sink)
 			_tag.position = Vector2(s.x - _tag.get_minimum_size().x - 6, s.y - 24)
 

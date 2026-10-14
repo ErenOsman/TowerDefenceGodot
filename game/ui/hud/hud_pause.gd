@@ -50,8 +50,13 @@ func _ready() -> void:
 	quit_button.clicked.connect(_quit)
 	visible = false
 
+## The list buttons read from the left (user, 2026-10-14): icon at a fixed inset, label after it, key chip after the label.
+const LIST_INSET := 32.0
+
 func _add(b: TdButton) -> TdButton:
 	b.size_flags_horizontal = SIZE_SHRINK_CENTER
+	b.content_align = HORIZONTAL_ALIGNMENT_LEFT
+	b.content_inset = LIST_INSET
 	body.add_child(b)
 	return b
 

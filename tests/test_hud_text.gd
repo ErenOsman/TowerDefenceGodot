@@ -1,17 +1,11 @@
 extends TestCase
-## Battle HUD words and small rules: cost missing, ready count, refusals, row states, phase / wave / base HP,
+## Battle HUD words and small rules: cost missing, refusals, row states, phase / wave / base HP,
 ## status placeholders, stat tiles, end screen summary, sequence hints, content icon names.
 
 func test_cost_missing() -> void:
 	assert_eq(HudText.energy_missing(180, 150), 30)
 	assert_eq(HudText.energy_missing(100, 150), 0)
 	assert_eq(HudText.cost_missing(180, 150), "Needs 180 energy (you have 150)")
-
-func test_ready_count_and_line() -> void:
-	assert_eq(HudText.ready_count([]), 0)
-	assert_eq(HudText.ready_count([true, false, true]), 2)
-	assert_eq(HudText.ready_line(2), "2 ready")
-	assert_eq(HudText.ready_line(0, 100), "100 energy")
 
 func test_ability_refusal() -> void:
 	assert_eq(HudText.ability_refusal("Shoot", true, 0, false, ""), "")
@@ -116,9 +110,6 @@ func test_unit_labels() -> void:
 	assert_eq(l[5], "Archer 1")
 	assert_eq(l[9], "Archer 2")
 	assert_eq(l[7], "Base")
-
-func test_aiming_label() -> void:
-	assert_eq(HudText.aiming_label("Shoot"), "Shoot: pick a target")
 
 func test_info_tags_and_pips() -> void:
 	assert_eq(HudText.shown_tags([["2", "Move"], ["10", "Damage"]]), [["2", "Range"], ["10", "Damage"]])

@@ -10,7 +10,6 @@ extends PanelContainer
 var controller: LevelController
 
 var _who: Label
-var _ready: Label
 var _divider: ColorRect
 var _row: HBoxContainer
 var _buttons: Array = []     # TdButton per ability
@@ -38,8 +37,7 @@ func _init() -> void:
 	h.add_child(who)
 	_who = HudArt.label("", "micro", TdTheme.color("accent.light"), 26)
 	who.add_child(_who)
-	_ready = HudArt.label("", "small", TdTheme.color("cream.300"))
-	who.add_child(_ready)
+	# no "N ready" line under the name (Eren 2026-10-14)
 	_divider = ColorRect.new()
 	_divider.color = TdTheme.color("wood.500")
 	_divider.custom_minimum_size = Vector2(2, 56)
@@ -116,14 +114,14 @@ func refresh() -> void:
 		var trig := TdTooltipTrigger.find_on(chip)
 		trig.set_tooltip(TooltipText.passive(pv.name, desc, pv.active))
 		trig.set_placement(TdTooltipPlacement.Side.ABOVE_CENTRED, self)
-	_ready.text = HudText.ready_line(HudText.ready_count(castable_flags), -1 if _caster != null else hand.cost)
 	_show_aiming(list, c.aiming if _caster != null else null)
 	buttons_shown = list.size() + passives.size()
 	_divider.visible = buttons_shown > 0
 
-## While one ability is aimed (UI/UX rule, 2026-10-13): its button shows the kit's Aiming look, lifted 5 px with a slow
-## gold glow pulse (pulse.attention) and a gold key badge; the unit's other buttons dim to 60 %; the label reads
-## "Shoot: pick a target". Cancelling (right click, Esc, the same key) restores all of it.
+## While one ability is aimed (UI/UX rule, 2026-10-13; Eren 2026-10-14): its button gets a gold ring (the Aiming rim, and
+## TdButton.set_ability_state recolours its clock ring and cooldown badge gold), lifted 5 px with a
+## slow gold glow pulse (pulse.attention) and a gold key badge; the unit's other buttons dim to 60 %; the name label
+## stays the unit's name (no "Shoot: pick a target"). Cancelling (right click, Esc, the same key) restores all of it.
 func _show_aiming(list: Array, aiming: AbilityDef) -> void:
 	for i in mini(list.size(), _buttons.size()):
 		var b: TdButton = _buttons[i]
@@ -135,11 +133,6 @@ func _show_aiming(list: Array, aiming: AbilityDef) -> void:
 		var key_badge = b.get("_key")
 		if key_badge is Panel:
 			key_badge.add_theme_stylebox_override("panel", TdTheme.stylebox("badge_key", TdTheme.color("gold")) if on else TdTheme.stylebox("badge_key"))
-	if aiming != null:
-		_who.text = HudText.aiming_label(aiming.display_name)
-		_ready.visible = false
-	else:
-		_ready.visible = true
 
 func _rebuild(list: Array, passives: Array) -> void:
 	for b in _buttons: b.get_parent().queue_free()

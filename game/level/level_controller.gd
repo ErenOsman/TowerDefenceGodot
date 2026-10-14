@@ -123,8 +123,18 @@ var ui_panel_open: bool = false
 var preview_enemy_phase: bool = false
 ## The tower type this level's first clear just gave (shown on the end screen), or null.
 var reward: TowerAsset = null
-## The Workshop tokens this result just gave ({token id: amount}; first-win drops first; {} on a loss/quit/co-op).
+## The Workshop tokens this result just gave ({token id: amount}; first-win drops first; {} on a loss/quit and on
+## chapter levels: only missions drop tokens).
 var drops: Dictionary = {}
+## The mission this level is played as (Missions & Guild — Design): from LevelLaunch.mission_id (solo) or the co-op
+## room's level (CoopLevels.mission_for_level); null for a chapter level. A mission spends a play and tires the towers
+## it takes when the level starts, records its result under the mission id (never in the chapter progress) and
+## gives the mission's drops.
+var mission: MissionDef = null
+## The owned tower ids a solo mission took from the hand (its first rested towers up to the level's hand cap).
+var mission_towers: Array = []
+## Why the mission could not start (MissionBoard.last_reason), "" otherwise.
+var mission_error: String = ""
 ## The end screen's line for them: "Rewards: Fire Arrow ×2, Ember Core ×1" ("" for none).
 var drops_text: String:
 	get:
@@ -246,15 +256,30 @@ var is_tutorial: bool:
 		var app = _auto("GameApp")
 		return app != null and level != null and app.is_tutorial(level) and coop == null
 
-## The end screen offers Retry: always, except after winning the tutorial (and never in co-op).
+## The end screen offers Retry: always, except after winning the tutorial (and never in co-op); a mission only while
+## a play is left today and a rested tower would come in ("Done today" otherwise: retry_note).
 var can_retry: bool:
-	get: return coop == null and (not is_tutorial or session == null or session.outcome != Outcome.Won)
+	get:
+		if mission != null: return coop == null and _mission_retry_reason() == ""
+		return coop == null and (not is_tutorial or session == null or session.outcome != Outcome.Won)
+
+## Why a mission's Retry is hidden: "Done today · resets in 5 h" / the all-tired line; "" when it can be retried
+## (and for chapter levels).
+var retry_note: String:
+	get: return _mission_retry_reason() if mission != null and coop == null else ""
+
+func _mission_retry_reason() -> String:
+	var sd = _auto("SaveData")
+	if sd == null or mission == null: return ""
+	if not MissionBoard.can_start(mission, sd.missions, sd.towers.hand, level.hand_cap if level != null else 0): return MissionBoard.last_reason
+	return ""
 
 ## What the end screen's leave button says: "Camp" / "Level select"; the tutorial leads to the main menu; co-op
-## goes back to the lobby.
+## goes back to the lobby; a solo mission to the Guild.
 var leave_label: String:
 	get:
 		if coop != null: return "Lobby"
+		if mission != null: return "Guild"
 		if is_tutorial: return "Main menu"
 		var app = _auto("GameApp")
 		return app.home_label() if app != null else "Level select"
@@ -264,7 +289,7 @@ var next_level_asset: LevelAsset:
 	get:
 		var app = _auto("GameApp")
 		var sd = _auto("SaveData")
-		if coop != null or app == null or sd == null or level == null or app.catalog == null: return null
+		if coop != null or mission != null or app == null or sd == null or level == null or app.catalog == null: return null
 		var next: CatalogEntry = app.catalog.to_catalog().next_after(level.get_id(), sd.progress)
 		return app.catalog.find_level(next.level_id) if next != null else null
 
@@ -308,8 +333,14 @@ func _setup() -> void:
 			_launched = true
 	elif LevelLaunch.has_request():
 		level = LevelLaunch.level
+		var mission_id := LevelLaunch.mission_id
 		LevelLaunch.clear()
 		_launched = true
+		if mission_id != "" and app != null:
+			mission = app.mission(mission_id)
+			if mission == null:
+				setup_error = "This mission is not in your game: %s." % mission_id
+				return
 	if level == null:
 		for l in lib.all_of("LevelAsset"):
 			if l.get_id() == test_level_id: level = l
@@ -330,7 +361,13 @@ func _setup() -> void:
 		if level.fixed_hand != null:
 			for t in level.fixed_hand:
 				if t != null: hand.append(converter.tower(t, TowerIds.new_id()))
-		if hand.is_empty() and not _dev_hand: hand = _saved_hand(app)
+		if hand.is_empty() and not _dev_hand:
+			if mission != null:
+				hand = _mission_hand(app)
+				if mission_error != "":
+					setup_error = mission_error
+					return
+			else: hand = _saved_hand(app)
 		if hand.is_empty(): hand = _test_hand(lib)
 		var rules := converter.rules(_rules_asset)
 		session = LevelSession.new(converter.level(level), rules, hand, maxi(1, level_seed))
@@ -877,6 +914,7 @@ func send_chat(text: String) -> void:
 ## Co-op: leaves the match for the lobby (the Camp opens Multiplayer again).
 func leave_coop() -> void:
 	if coop == null: return
+	_record(true) # a mission match left while running counts as a quit attempt (nothing when already recorded)
 	coop.leave()
 	var net = CoopLaunch.net if CoopLaunch.net != null else _auto("Net")
 	if net != null and "reopen_lobby" in net: net.reopen_lobby = true
@@ -895,7 +933,10 @@ func _setup_coop(info: Dictionary, lib: ContentLibrary) -> bool:
 		coop = null
 		return false
 	session = coop.session
-	_recorded = true # co-op gives nothing back to single player (no records, no rewards)
+	# a co-op match of a mission records the mission (attempt, win, drops); its play and towers were spent at
+	# match_start (CoopLevels.on_match_start). A room level that is no mission gives nothing back.
+	mission = CoopLevels.mission_for_level(coop.level_id)
+	_recorded = mission == null
 	_my_pool = coop.my_energy()
 	coop.turn_changed.connect(func(_p): version += 1)
 	coop.command_applied.connect(_on_coop_command)
@@ -998,7 +1039,7 @@ func dev_add_energy(amount: int) -> bool:
 ## Plays the level again from the start (asking for the same level).
 func retry() -> void:
 	if coop != null: return
-	if level != null: LevelLaunch.request(level)
+	if level != null: LevelLaunch.request(level, mission.id if mission != null else "")
 	var flow = _auto("SceneFlow")
 	if flow != null and flow.current == flow_game_id(): flow.restart_current()
 	else: get_tree().reload_current_scene()
@@ -1015,6 +1056,7 @@ func level_select() -> void:
 	if flow == null: return
 	_restore_speed()
 	if is_tutorial: flow.go(flow.MainMenu)
+	elif mission != null and app != null: flow.go(app.guild_scene())
 	elif app != null: flow.go(app.home())
 	else: flow.go(flow.LevelSelect)
 
@@ -1042,6 +1084,7 @@ func next_level() -> void:
 ## Saves the level as quit if it is still running (leaving the game from the pause menu).
 func record_quit() -> void:
 	if coop != null:
+		_record(true) # a mission match: a quit attempt
 		coop.leave() # quitting the game: the others get player_left now
 		return
 	_record(true)
@@ -1462,10 +1505,12 @@ func _draw_highlights() -> void:
 	# an enemy's ability row hovered (the HUD's enemy card): only that ability in its coming turn, played on a copy
 	# of the state — its walk, stop tile, attack line; nothing of its range
 	if _aiming == null and _preview_ability != null and _preview_caster != null and _preview_caster.on_board and not session.is_commanded(_preview_caster):
+		var turn := _forecast_of(_preview_caster)
 		var only := []
-		for st in _forecast_of(_preview_caster):
+		for st in turn:
 			if st.ability == _preview_ability: only.append(st)
-		_draw_forecast(_preview_caster, only)
+		# the attack line starts where the walk before it would leave the unit (the walk itself is not drawn)
+		_draw_forecast(_preview_caster, only, EnemyAbilityPreview.cast_from(_preview_caster.pos, turn, _preview_ability))
 	elif _aiming == null and _preview_ability != null and _preview_caster != null and _preview_caster.on_board and _preview_caster.id == _selected:
 		var walk := _preview_ability.targeting.is_movement
 		for t in AimPreview.range(session.state, _preview_caster.id, _preview_ability): _mark(t, Preview.MOVE if walk else Preview.RANGE)
@@ -1524,8 +1569,8 @@ func _hovered_enemy() -> Entity:
 	return e if e != null and e.alive and e.kind == EntityKind.Unit and not session.is_commanded(e) else null
 
 ## Casts played ahead on the board: a walk's route and stop tile, an attack's area and line.
-func _draw_forecast(caster: Entity, steps: Array) -> void:
-	var at: Vector2i = caster.pos if caster != null else Vector2i.ZERO
+func _draw_forecast(caster: Entity, steps: Array, from = null) -> void:
+	var at: Vector2i = from if from is Vector2i else (caster.pos if caster != null else Vector2i.ZERO)
 	for step in steps:
 		if step.is_movement:
 			if step.aim.path != null:
@@ -1626,15 +1671,19 @@ var threat_summary: String:
 ## The hovered enemy's coming turn (after the enemies before it), played on a copy of the state; cached per version.
 func _forecast_of(enemy: Entity) -> Array:
 	if _forecast == null or _forecast_for != enemy.id or _forecast_version != version:
-		var before: Array[int] = []
-		for e in session.enemy_order():
-			if e.id == enemy.id: break
-			before.append(e.id)
-		_turn_forecast = TurnForecast.turn(session.state, enemy.id, before)
+		_turn_forecast = TurnForecast.turn(session.state, enemy.id, _enemies_before(enemy))
 		_forecast = _turn_forecast.steps.get(enemy.id, [])
 		_forecast_for = enemy.id
 		_forecast_version = version
 	return _forecast
+
+## The enemies that take their turn before this one (their walks free the road for it), in order.
+func _enemies_before(enemy: Entity) -> Array[int]:
+	var before: Array[int] = []
+	for e in session.enemy_order():
+		if e.id == enemy.id: break
+		before.append(e.id)
+	return before
 
 # ------------------------------------------------------------------ board feedback (forecast markers, pops)
 
@@ -1703,10 +1752,9 @@ func _build_markers(health_preview: Dictionary) -> Array:
 		_forecast_of(enemy)
 		if _turn_forecast != null: show.call(_turn_forecast, enemy.id)
 	elif _preview_ability != null and _preview_caster != null and not session.is_commanded(_preview_caster) and not director.busy:
-		# an enemy's ability row: what its turn would do, when that ability is part of it
-		var uses := false
-		for st in _forecast_of(_preview_caster): uses = uses or st.ability == _preview_ability
-		if uses and _turn_forecast != null: show.call(_turn_forecast, _preview_caster.id)
+		# an enemy's ability row: what THAT ability alone would do in its coming turn (user, 2026-10-14: hovering
+		# "Path Walk" showed the Spit's "-5"); a walk shows no numbers at all
+		show.call(EnemyAbilityPreview.only(session.state, _preview_caster.id, _preview_ability, _enemies_before(_preview_caster)), _preview_caster.id)
 	var caster: Entity = _preview_caster if _preview_ability != null else (session.state.get_entity(_selected) if _aiming != null else null)
 	var shown_ability: AbilityDef = _preview_ability if _preview_ability != null else _aiming
 	if caster != null and shown_ability != null and not shown_ability.targeting.is_movement and session.is_commanded(caster) and not director.busy:
@@ -1754,6 +1802,21 @@ func _saved_hand(app) -> Array:
 	for p in problems: push_warning("[Level] hand: " + str(p))
 	return hand if hand != null else []
 
+## A solo mission's hand: starts the play (MissionBoard.start_play: spends today's play, tires the towers taken) and
+## builds the hand's first rested towers up to the level's hand cap. Refused: [] and mission_error.
+func _mission_hand(app) -> Array:
+	var sd = _auto("SaveData")
+	if app == null or sd == null or app.catalog == null: return []
+	mission_towers = MissionBoard.start_play(mission, sd.missions, sd.towers.hand, level.hand_cap)
+	if mission_towers.is_empty():
+		mission_error = MissionBoard.last_reason
+		return []
+	sd.save()
+	var problems: Array = []
+	var hand: Array = app.catalog.build_hand(sd.towers, converter, problems, mission_towers)
+	for p in problems: push_warning("[Level] mission hand: " + str(p))
+	return hand if hand != null else []
+
 ## The test hand (TowerAsset ids) when nothing else gives one.
 func _test_hand(lib: ContentLibrary) -> Array:
 	var hand: Array = []
@@ -1767,19 +1830,23 @@ func _test_hand(lib: ContentLibrary) -> Array:
 	return hand
 
 ## Saves the level's result once: won or lost when it ends, quit when it is left while running.
+## A mission's result goes to the mission records (never the chapter progress: no first-clear tower) with its token
+## drops (first win once, win drop every win); chapter levels drop no tokens.
 func _record(quit: bool) -> void:
 	var sd = _auto("SaveData")
 	var app = _auto("GameApp")
 	if _recorded or session == null or level == null or sd == null: return
 	_recorded = true
 	var result := LevelResults.from(session, level.get_id(), Time.get_datetime_string_from_system(true) + "Z", quit)
+	if mission != null:
+		drops = MissionBoard.finish(result, mission, sd.missions, sd.tokens)
+		sd.save()
+		return
 	var rec: LevelRecord = sd.progress.record(result)
 	if is_tutorial:
 		reward = sd.complete_tutorial() if result.won and not result.quit else null
 	elif app != null and app.catalog != null:
 		reward = app.catalog.grant_first_clear_reward(result, rec, sd.towers)
-	if not is_tutorial and app != null and app.catalog != null:
-		drops = app.catalog.grant_drops(result, rec, sd.tokens) # Workshop tokens: first-win once, win drop every win
 	sd.save()
 
 ## The level's intro plays the first time the level is played (the tutorial's: until it is finished).
