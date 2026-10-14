@@ -382,14 +382,24 @@ func _slot_row(i: int, p, room: Dictionary, cap: int, h: float) -> Control:
 		ch.clicked.connect(open_hand_editor)
 		tail.add_child(ch)
 	elif net.is_host:
-		var x := TdMenu.close_button()
+		# a 36 px ×, centred in the row's height, right-aligned inside the rim (no bleed room)
+		var holder := HBoxContainer.new()
+		holder.alignment = BoxContainer.ALIGNMENT_END
+		holder.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+		holder.offset_right = -4
+		holder.mouse_filter = MOUSE_FILTER_IGNORE
+		tail.add_child(holder)
+		var x := TdButton.new()
+		x.style = TdButton.Style.ICON
+		x.bleed_mode = TdButton.Bleed.OFF
 		x.custom_minimum_size = Vector2(36, 36)
 		x.size = Vector2(36, 36)
-		x.bleed_mode = TdButton.Bleed.OFF
-		x.position = Vector2(154, (h - 12 - 36) / 2.0)
+		x.icon = TdTheme.texture("icon_close")
+		x.size_flags_vertical = SIZE_SHRINK_CENTER
+		x.name = "Kick"
 		TdTooltipTrigger.attach(x, "", "Remove %s from the room" % p.get("name", ""))
 		x.clicked.connect(func(): net.kick(pid))
-		tail.add_child(x)
+		holder.add_child(x)
 	return panel
 
 ## Your hand in the room is cut to the level's co-op cap (sent again when the saved hand or the cap changed).

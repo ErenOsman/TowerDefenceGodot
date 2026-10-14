@@ -80,9 +80,14 @@ func _build() -> void:
 	for page in [_audio_page(), _display_page(), _gameplay_page(), _controls_page()]:
 		stack.add_child(page)
 		pages.append(page)
+	# a footer row on every tab (same height everywhere, so nothing jumps): a hint line, and Reset on Controls
 	var bottom := TdMenu.hbox(16)
-	bottom.alignment = BoxContainer.ALIGNMENT_END
+	bottom.custom_minimum_size = Vector2(0, 56)
 	col.add_child(bottom)
+	_footer_hint = TdMenu.label("", "small", TdTheme.color("cream.300"), 20)
+	_footer_hint.size_flags_horizontal = SIZE_EXPAND_FILL
+	_footer_hint.size_flags_vertical = SIZE_SHRINK_CENTER
+	bottom.add_child(_footer_hint)
 	reset_button = Button.new()
 	reset_button.theme_type_variation = "DangerButton"
 	reset_button.text = "Reset to defaults"
@@ -93,6 +98,9 @@ func _build() -> void:
 	show_tab(0)
 
 var _reset_armed := false
+var _footer_hint: Label
+const FOOTER_HINTS := ["Drag a slider, or click it and use the arrow keys.", "The window size applies when not fullscreen.",
+	"Gameplay settings apply at once, also during a battle.", "The mouse is fixed: left click selects, right click cancels."]
 
 ## Reset to defaults asks once ("Click again to reset"), then resets every key.
 func _on_reset() -> void:
@@ -121,7 +129,8 @@ func show_tab(i: int) -> void:
 	for k in pages.size():
 		pages[k].visible = k == i
 		tab_buttons[k].selected = k == i
-	reset_button.get_parent().visible = i == 3
+	reset_button.visible = i == 3
+	_footer_hint.text = FOOTER_HINTS[i]
 	if i == 3: refresh_controls()
 
 ## Reads every control back from the settings.

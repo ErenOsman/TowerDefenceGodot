@@ -4,8 +4,8 @@ extends HudPopup
 ## top edge ("Victory" cobalt, "Defeat" red; the defeat window gets a red rim), "Chapter 1 · First Steps", the summary
 ## line, three paper stat tiles (victory: rounds, base health left, towers lost; defeat: waves cleared, rounds, towers
 ## lost), then the reward card (a first clear's tower) or, on a defeat, one Codex tip, and one centred row of
-## buttons: defeat = Level select (wood) · Retry (cobalt); victory = Retry · Level select (wood) · Next level (cobalt)
-## (Retry is cobalt when there is no next level; it is hidden after winning the tutorial). Esc and right click never
+## buttons, the primary always on the right: Level select (wood) · Retry (cobalt), or with a next level Retry · Level
+## select · Next level (cobalt). Retry is hidden after winning the tutorial. Esc and right click never
 ## close it: one of its buttons decides.
 
 const WIDTH := 880.0
@@ -48,6 +48,7 @@ func _ready() -> void:
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	body.add_child(row)
 	retry_button = HudPopup.wide_button("Retry", TdButton.Style.SECONDARY, "", 240)
+	retry_button.icon = HudArt.retry_icon()
 	retry_button.clicked.connect(func(): if controller != null: controller.retry())
 	leave_button = HudPopup.wide_button("Level select", TdButton.Style.SECONDARY, "icon_back", 240)
 	leave_button.clicked.connect(func(): if controller != null: controller.level_select())
@@ -162,10 +163,15 @@ func show_outcome(outcome: int) -> void:
 	retry_button.visible = c.can_retry
 	retry_button.style = TdButton.Style.SECONDARY if has_next else TdButton.Style.PRIMARY
 	leave_button.text = c.leave_label
+	# the primary always on the right: Level select · Retry, or Retry · Level select · Next level
 	var row: HBoxContainer = retry_button.get_parent()
-	row.move_child(leave_button, 0 if not _won else 1)
-	if not _won: row.move_child(retry_button, 1)
-	else: row.move_child(retry_button, 0)
+	if has_next:
+		row.move_child(retry_button, 0)
+		row.move_child(leave_button, 1)
+	else:
+		row.move_child(leave_button, 0)
+		row.move_child(retry_button, 1)
+	row.move_child(next_button, 2)
 	open()
 
 ## "Chapter 1 · First Steps": the level's chapter (from the catalog) and its name.

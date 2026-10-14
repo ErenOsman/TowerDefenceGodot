@@ -108,7 +108,7 @@ func _run() -> void:
 		for e in cx.entries:
 			if e.id == "guardian": cx.select(e)
 		await _frames(10)
-		cx._page_scroll.scroll_vertical = 200
+		cx._page_scroll.scroll_vertical = 100000 # to the end: the passive row (Counter-attack)
 		await _frames(6)
 		await _shot("codex_guardian_scrolled")
 		save.codex.discover(CodexSection.Towers, "priest")

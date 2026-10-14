@@ -156,7 +156,10 @@ func _panels_changed() -> void:
 	controller.ui_panel_open = pause.is_open() or info.is_open() or end_screen.visible
 	# a mid-screen banner ("Round 9") never shows over a window
 	if controller.overlay != null and controller.overlay.banners != null:
-		controller.overlay.banners.visible = not controller.ui_panel_open or (coop_hud != null and coop_hud.typing())
+		controller.overlay.banners.visible = not controller.ui_panel_open
+	# nor do the board's plates (a selected unit's dark plate backing showed through the scrim)
+	if controller.overlay != null and controller.overlay.plates != null:
+		controller.overlay.plates.visible = not controller.ui_panel_open or (coop_hud != null and coop_hud.typing())
 
 # ------------------------------------------------------------------ refresh
 

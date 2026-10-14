@@ -164,3 +164,34 @@ static func tag_line(tags: Array, size := 20, tint := "") -> String:
 			img = "[img=%dx%d color=%s]%s[/img] " % [size, size, col, TdTokens.SPRITES[icon_name][0]]
 		parts.append("%s[b]%s[/b]\u00a0%s" % [img.replace("[/img] ", "[/img]\u00a0"), value, label.replace(" ", "\u00a0")])
 	return "  ".join(parts)
+
+static var _retry_tex: Texture2D = null
+
+## A "↻" glyph for Retry (the kit has none, and the fonts have no arrows): a white open ring with an arrow head,
+## drawn once into a 64 px texture (tinted by the button like the kit's icons).
+static func retry_icon() -> Texture2D:
+	if _retry_tex != null: return _retry_tex
+	var n := 64
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	img.fill(Color(1, 1, 1, 0))
+	var c := Vector2(32, 34)
+	var r_out := 21.0
+	var r_in := 14.0
+	for y in n:
+		for x in n:
+			var p := Vector2(x + 0.5, y + 0.5) - c
+			var d := p.length()
+			var a := fposmod(atan2(p.y, p.x), TAU) # 0 = right, clockwise (y down)
+			# the ring, open between about 290° and 345° (top right, where the arrow head sits)
+			var on_ring := d <= r_out and d >= r_in and not (a > deg_to_rad(285.0) and a < deg_to_rad(350.0))
+			var alpha := 0.0
+			if on_ring: alpha = clampf(minf(r_out - d, d - r_in) + 0.5, 0.0, 1.0)
+			img.set_pixel(x, y, Color(1, 1, 1, alpha))
+	# the arrow head at the ring's open end (pointing clockwise, downwards-right)
+	var tip := c + Vector2(cos(deg_to_rad(350.0)), sin(deg_to_rad(350.0))) * ((r_out + r_in) / 2.0)
+	var head := PackedVector2Array([tip + Vector2(-12, -6), tip + Vector2(10, -8), tip + Vector2(2, 12)])
+	for y in n:
+		for x in n:
+			if Geometry2D.is_point_in_polygon(Vector2(x + 0.5, y + 0.5), head): img.set_pixel(x, y, Color.WHITE)
+	_retry_tex = ImageTexture.create_from_image(img)
+	return _retry_tex

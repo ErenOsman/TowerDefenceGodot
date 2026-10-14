@@ -198,8 +198,10 @@ func _process(delta: float) -> void:
 			spot = Vector2(ring.get_center().x, ring.position.y) if ring != null else null
 			bubble.target_below = Vector2(ring.get_center().x, ring.end.y) if ring != null else null
 			var strong := _guided_strong()
+			if find_hud_rects.is_valid(): strong.append_array(find_hud_rects.call()) # never on the tray, bar or End turn
 			bubble.avoid = _guided_avoid(ring) + strong
 			bubble.tail_avoid = strong
+			bubble.preview_avoid = controller.preview_rects
 		elif spot != null and line.point_at != SequencePointAt.UI:
 			var box_h: float = bubble.box_rect().size.y
 			var top: float = bubble.global_position.y + bubble.margin
@@ -405,7 +407,6 @@ func _guided_avoid(ring) -> Array:
 	var out: Array = []
 	if ring != null: out.append(ring.grow(6))
 	if controller != null: out.append_array(controller.preview_rects)
-	if find_hud_rects.is_valid(): out.append_array(find_hud_rects.call())
 	return out
 
 ## What neither the box nor its tail may cover: every unit's head and plate (a plate's height above the head down to

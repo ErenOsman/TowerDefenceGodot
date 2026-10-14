@@ -140,6 +140,10 @@ func _run() -> void:
 		hud.open_info(enemies[0].id)
 		await _wait(0.5)
 		await _shot("6b_enemy_info")
+		var esc: ScrollContainer = hud.info.find_children("*", "ScrollContainer", true, false)[0]
+		esc.scroll_vertical = 10000
+		await _frames(4)
+		await _shot("6c_enemy_info_statuses")
 		hud.info.close()
 		await _wait(0.4)
 	level.select(-1)
@@ -179,7 +183,8 @@ func _run() -> void:
 
 	# the tower's Info window, with statuses on the archer (as tools/level_scenes.gd applies them)
 	if archer.alive:
-		_apply_statuses(archer, [["burn", "3", "3"], ["shield", "2", ""]])
+		var src: int = level.session.enemies[0].id if level.session.enemies.size() > 0 else 0
+		_apply_statuses(archer, [["burn", "3", "3"], ["shield", "2", ""]], src)
 		await _settle()
 		hud.open_info(archer.id)
 		await _wait(0.5)
@@ -305,7 +310,7 @@ func _report_tail(what: String, c: Control) -> void:
 	var t := tail.get_global_rect().get_center().x if tail != null and tail.visible else -1.0
 	print("%s: anchor centre %.1f  tail centre %.1f  box %.1f..%.1f" % [what, c.get_global_rect().get_center().x, t, box.get_global_rect().position.x, box.get_global_rect().end.x])
 
-func _apply_statuses(unit: Entity, specs: Array) -> void:
+func _apply_statuses(unit: Entity, specs: Array, source := 0) -> void:
 	var app = root.get_node_or_null("GameApp")
 	var lib: ContentLibrary = app.lib if app != null else ContentLibrary.load("res://data/content")
 	for spec in specs:
@@ -318,7 +323,7 @@ func _apply_statuses(unit: Entity, specs: Array) -> void:
 		fx.stacks = Formula.new(spec[1])
 		if spec[2] != "": fx.duration = Formula.new(spec[2])
 		fx.target_id = unit.id
-		fx.source = 0
+		fx.source = source
 		level.session.resolver.run(fx)
 
 func _frames(n: int) -> void:

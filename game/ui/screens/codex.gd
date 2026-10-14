@@ -9,10 +9,11 @@ extends TdPopup
 
 const SECTIONS := [CodexSection.Towers, CodexSection.Enemies, CodexSection.Statuses, CodexSection.Tips]
 const TAB_NAMES := ["Towers", "Enemies", "Statuses", "Tips"]
-## The text column: about 60 characters of 24 px Nunito.
-const TEXT_W := 760.0
-const TAB_WIDTHS := [200.0, 236.0, 236.0, 190.0] # faces; TdButton adds its bleed room
-const WIDTH := 1600.0
+## The text column: at most ~60 characters of 22–24 px Nunito a line.
+const TEXT_W := 700.0
+const TAB_ICONS := ["icon_castle", "icon_wave", "icon_eye", "icon_info"]
+const TAB_WIDTHS := [210.0, 262.0, 262.0, 180.0] # faces; TdButton adds its bleed room
+const WIDTH := 1700.0
 const HEIGHT := 900.0
 const STAT_ICONS := {"MaxHp": "icon_heart", "Power": "icon_power", "Potency": "icon_del-spark", "Duration": "icon_clock",
 	"Speed": "icon_speed", "Range": "icon_range", "Radius": "icon_range"}
@@ -45,6 +46,11 @@ var _abilities: VBoxContainer
 var _body: RichTextLabel
 var _locked_card: PanelContainer
 var _locked_hint: Label
+var _locked_overlay: CenterContainer
+var _locked_pic: TextureRect
+var _locked_title: Label
+var _locked_kind: Label
+var _cols: Control
 var _pending: Array = []
 
 func _build() -> void:
@@ -68,7 +74,9 @@ func _build() -> void:
 	tabs.size_flags_horizontal = SIZE_EXPAND_FILL
 	tabs.alignment = BoxContainer.ALIGNMENT_BEGIN
 	head.add_child(tabs)
-	tab_buttons = TdMenu.tabs(tabs, TAB_NAMES, [], Vector2(220, 64), func(i): show_section(SECTIONS[i]))
+	var icons := []
+	for n in TAB_ICONS: icons.append(TdTheme.texture(n))
+	tab_buttons = TdMenu.tabs(tabs, TAB_NAMES, icons, Vector2(220, 64), func(i): show_section(SECTIONS[i]))
 	for k in TAB_WIDTHS.size(): # wide enough for the label + its "N new" pill with 16 px padding
 		tab_buttons[k].custom_minimum_size.x = TAB_WIDTHS[k]
 		tab_buttons[k].size.x = TAB_WIDTHS[k]
@@ -117,6 +125,37 @@ func _build() -> void:
 	cols.size_flags_horizontal = SIZE_EXPAND_FILL
 	cols.size_flags_vertical = SIZE_EXPAND_FILL
 	page.add_child(cols)
+	_cols = cols
+	# an undiscovered entry: one compact card in the middle of the page (silhouette, muted ???, kind, hint)
+	_locked_overlay = CenterContainer.new()
+	_locked_overlay.visible = false
+	page.add_child(_locked_overlay)
+	_locked_card = PanelContainer.new()
+	var lc := StyleBoxFlat.new()
+	lc.bg_color = Color(TdTheme.color("paper.edge"), 0.35)
+	lc.border_color = TdTheme.color("paper.edge")
+	lc.set_border_width_all(2)
+	lc.set_corner_radius_all(14)
+	lc.set_content_margin_all(28)
+	_locked_card.add_theme_stylebox_override("panel", lc)
+	_locked_card.custom_minimum_size = Vector2(480, 0)
+	_locked_overlay.add_child(_locked_card)
+	var lv := TdMenu.vbox(10)
+	lv.alignment = BoxContainer.ALIGNMENT_CENTER
+	_locked_card.add_child(lv)
+	var lcen := CenterContainer.new()
+	lv.add_child(lcen)
+	_locked_pic = TdMenu.picture(null, Vector2(128, 128))
+	lcen.add_child(_locked_pic)
+	_locked_title = TdMenu.label("???", "display", TdTheme.color("ink.2"), 44)
+	_locked_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lv.add_child(_locked_title)
+	_locked_kind = TdMenu.label("", "body", TdTheme.color("ink.2"), 22)
+	_locked_kind.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lv.add_child(_locked_kind)
+	_locked_hint = TdMenu.wrap_label("", "body", TdTheme.color("ink"), 24)
+	_locked_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lv.add_child(_locked_hint)
 	_left = TdMenu.vbox(16)
 	_left.custom_minimum_size = Vector2(276, 0)
 	cols.add_child(_left)
@@ -184,21 +223,7 @@ func _build() -> void:
 	right.add_child(_description)
 	_body = TdMenu.rich("", "body", TdTheme.color("ink"), 24)
 	right.add_child(_body)
-	_locked_card = PanelContainer.new()
-	var lc := StyleBoxFlat.new()
-	lc.bg_color = Color(TdTheme.color("paper.edge"), 0.35)
-	lc.border_color = TdTheme.color("paper.edge")
-	lc.set_border_width_all(2)
-	lc.set_corner_radius_all(12)
-	lc.set_content_margin_all(20)
-	_locked_card.add_theme_stylebox_override("panel", lc)
-	_locked_card.size_flags_horizontal = SIZE_SHRINK_CENTER
-	_locked_card.custom_minimum_size = Vector2(460, 0)
-	_locked_hint = TdMenu.wrap_label("", "body", TdTheme.color("ink"), 24)
-	_locked_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_locked_card.add_child(_locked_hint)
-	right.add_child(TdMenu.spacer(20))
-	right.add_child(_locked_card)
+
 	_abilities_head = TdMenu.hbox(16)
 	var ah := TdMenu.label("Abilities", "h2", TdTheme.color("ink"), 34)
 	_abilities_head.add_child(ah)
@@ -391,7 +416,8 @@ func _show_page(e: Dictionary) -> void:
 	for c in _abilities.get_children(): c.queue_free()
 	_description.text = ""
 	_body.text = ""
-	_locked_card.visible = false
+	_locked_overlay.visible = false
+	_cols.visible = true
 	_abilities_head.visible = false
 	_preview.clear()
 	_preview.visible = false
@@ -413,18 +439,13 @@ func _show_page(e: Dictionary) -> void:
 		_left.visible = false
 		return
 	if not _known(e):
-		# muted title, the unit's silhouette medallion, the hint in a compact card
-		_title.text = "???"
-		_title.add_theme_color_override("font_color", TdTheme.color("ink.2"))
-		_subtitle.text = MenuLogic.section_name(e.section)
-		_locked_card.visible = true
+		_cols.visible = false
+		_locked_overlay.visible = true
+		_locked_pic.texture = _locked_texture(e)
+		var n := _locked_pic.texture.get_size() * (0.5 if _locked_pic.texture == TdTheme.texture("lock_badge") else 1.0)
+		_locked_pic.custom_minimum_size = n
+		_locked_kind.text = MenuLogic.section_name(e.section)
 		_locked_hint.text = MenuLogic.locked_text(e.section)
-		# drawn at its native size (128 px; the badge 52), centred in the card: no upscaling, no clipping
-		_picture.texture = _locked_texture(e)
-		var n := _picture.texture.get_size() * (0.5 if _picture.texture == TdTheme.texture("lock_badge") else 1.0)
-		_picture.offset_left = -n.x / 2.0; _picture.offset_right = n.x / 2.0
-		_picture.offset_top = -n.y / 2.0 - 20.0; _picture.offset_bottom = n.y / 2.0 - 20.0
-		_picture.visible = true
 		return
 	var a = e.asset
 	if a is TowerAsset:

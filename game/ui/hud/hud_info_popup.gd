@@ -106,6 +106,7 @@ func _ready() -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.custom_minimum_size = Vector2(RIGHT_W + 20, BODY_H)
 	cols.add_child(scroll)
+	TdDragScroll.attach(scroll, true) # a visible paper scrollbar (Statuses can be below the fold), drag to scroll
 	_right = HudArt.vbox(16)
 	_right.custom_minimum_size = Vector2(RIGHT_W, 0)
 	scroll.add_child(_right)

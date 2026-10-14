@@ -8,7 +8,7 @@ extends TdPopup
 ## - Centre: "Chapter 1 · level 3 ✓ Won", the title, the description, four fact tiles (waves, enemies, towers in hand,
 ##   energy + "+N a round"), "Enemies in this level" as portrait chips "Slime ×3" whose tooltip has HP, Shield,
 ##   Speed, Power and the abilities with their cooldown; on the right the level's board as a rendered diorama
-##   (TdLevelPreview: cached per level, the minimap while it renders), the first-win reward card (teal) and Play
+##   (TdLevelPreview → CoopBoardPic: 35°, contain, blurred margin; cached per level, the minimap while it renders), the first-win reward card (teal) and Play
 ##   (bottom-right, flat cobalt). A locked level shows the same panel greyed with its requirement and Play disabled.
 ## - Bottom: "Your hand" with a note ("Two Roads takes the first 4 towers; the rest wait on the bench."), all 8 slots
 ##   (miniature, cost coin, slot number; empty slots dashed "Empty"), a gold divider after the level's hand cap, the
@@ -179,6 +179,7 @@ func _build_detail() -> void:
 	mask.mouse_filter = MOUSE_FILTER_IGNORE
 	map_frame.add_child(mask)
 	_preview = TdLevelPreview.new()
+	_preview.custom_minimum_size = MAP_SIZE
 	_preview.size = MAP_SIZE
 	mask.add_child(_preview)
 	_preview.set_anchors_and_offsets_preset(PRESET_FULL_RECT)

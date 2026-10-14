@@ -28,6 +28,9 @@ var avoid: Array = []
 ## tail_to_target: rects the tail must not cross either (HP bars, Kills / damage chips, unit heads): weighed far above
 ## crossing a previewed tile, so the box goes round (below, further) instead.
 var tail_avoid: Array = []
+## tail_to_target: board previews (range / area / placement tiles) the box itself keeps off, weighed above the HUD's
+## frames so the box nudges off a tile rather than sit on its corner.
+var preview_avoid: Array = []
 ## tail_to_target: where the tail ends when the box sits below (canvas; e.g. the bottom edge of a ring whose top edge
 ## is the point), null = the same point.
 var target_below = null
@@ -283,6 +286,8 @@ func _place_avoiding(r: Rect2, bs: Vector2, target: Vector2) -> void:
 	for a in avoid: keep.append(Rect2(a.position - global_position, a.size))
 	var strong := []
 	for a in tail_avoid: strong.append(Rect2(a.position - global_position, a.size))
+	var tiles := []
+	for a in preview_avoid: tiles.append(Rect2(a.position - global_position, a.size))
 	var inset := TdTooltipBox.TAIL_INSET
 	var best := Vector2.ZERO
 	var best_above := true
@@ -304,8 +309,10 @@ func _place_avoiding(r: Rect2, bs: Vector2, target: Vector2) -> void:
 				for a in keep:
 					if box.intersects(a): score += box.intersection(a).get_area()
 					if not a.grow(1.0).has_point(t) and tail_r.intersects(a): score += tail_r.intersection(a).get_area() * 3.0
+				for a in tiles:
+					if box.intersects(a): score += box.intersection(a).get_area() * 6.0
 				for a in strong:
-					if box.intersects(a): score += box.intersection(a).get_area()
+					if box.intersects(a): score += box.intersection(a).get_area() * 10.0
 					if tail_r.intersects(a): score += tail_r.intersection(a).get_area() * 40.0
 				if score < best_score:
 					best_score = score
