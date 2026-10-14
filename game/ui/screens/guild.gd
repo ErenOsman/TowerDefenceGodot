@@ -1,40 +1,54 @@
 extends Control
 ## The Guild (Missions & Guild — Design § The Guild; mockups screens-b/guild.html, guild-welcome.html): a second
-## place like the Camp, opened from the Camp's Signpost once Chapter 2 is cleared (SceneFlow.Guild). A warm-tinted
-## blurred diorama (TdGuildBackdrop, a placeholder until there is Guild art), "Guild · Missions and co-op", and a
-## ring of 4 stations round a "Notice board" centre: Missions (primary: the mission board, then a mission's detail),
-## Multiplayer (the co-op lobby, moved here from the Camp), Towers (the hand editor, the same hands and layouts as
-## the Camp's) and Camp (back). The first visit shows the welcome card once (PlayerProfile.guild_seen).
-## Back from a co-op match (Net.reopen_lobby) reopens the lobby. Texts: MissionUiLogic.
+## place like the Camp, opened from the Camp's Signpost once Chapter 2 is cleared (SceneFlow.Guild). A 3D guild hall
+## built from res://art/guild/layout.json exactly like the Camp (TdStationWorld: the Blender agent's Guild kit — floor,
+## hall walls, the Mission Board in the centre, Coop Table, Tower Rack, Guild Door; Idle loops; camp.gd's camera and
+## light, plus a warm hearth light), "Guild · Missions and co-op", and a station button over (or under) each prop:
+## Missions (primary, under the Mission Board: the mission board, then a mission's detail), Multiplayer (the co-op
+## lobby, moved here from the Camp), Towers (the hand editor, the same hands and layouts as the Camp's) and Camp
+## (the Guild Door: back). The first visit shows the welcome card once (PlayerProfile.guild_seen). Back from a co-op
+## match (Net.reopen_lobby) or the Camp's "Multiplayer → Guild" opens the lobby. Texts: MissionUiLogic.
 
 const SCREENS := "res://game/ui/screens/"
-## The ring (1920×1080 reference, centred): station centres (the medallion's centre).
-const RING := {"Missions": Vector2(960, 285), "Multiplayer": Vector2(542, 525), "Towers": Vector2(1378, 525), "Camp": Vector2(960, 775)}
-const CENTRE := Vector2(960, 545)
-const MEDAL := 124.0
-const FRAME := Vector2(1920, 1080)
+## Where the props stand: the Blender agent's Guild layout (the Camp's schema; its centre is the Missions station).
+const LAYOUT := "res://art/guild/layout.json"
+const FALLBACK_LAYOUT := {
+	"board": {"tiles": [14, 10]},
+	"ring": {"centre": [6.5, 4.5], "radius": [5.4, 4.65], "slots": 5, "first_angle_deg": 90},
+	"centre": {"prop": "Mission Board", "tile": [6.5, 4.5], "scale": 2.6, "yaw": 0, "station": "Missions", "row": "front"},
+	"slots": [
+		{"slot": 0, "tile": [6.5, 9.15], "face_yaw": 0.0, "row": "back", "station": "Camp", "prop": "Guild Door", "scale": 2.8},
+		{"slot": 1, "tile": [1.36, 5.94], "face_yaw": 0.0, "row": "back", "station": "Multiplayer", "prop": "Coop Table", "scale": 3.0},
+		{"slot": 4, "tile": [11.64, 5.94], "face_yaw": 0.0, "row": "back", "station": "Towers", "prop": "Tower Rack", "scale": 2.6},
+	],
+	"decor": [{"prop": "Guild Floor", "tile": [6.5, 4.5], "scale": 1.0, "yaw": 0}, {"prop": "Guild Hall", "tile": [6.5, 4.5], "scale": 1.0, "yaw": 0}],
+}
+## The hearth's warm light (Guild kit README: tile (3.1, 8.75), 0.5 high, range ~4, FFB24A).
+const HEARTH := Vector3(3.1, 0.5, -8.75)
+const ACTIONS := {"Missions": "open_missions", "Multiplayer": "open_multiplayer", "Towers": "open_towers", "Camp": "back_to_camp"}
 
-var backdrop: TdGuildBackdrop
-var stations := {}   # id → GuildStation
+var world: TdStationWorld
+var stations := {}   # id → TdMenuButton
 var welcome_card: Control
 var popups: Control
 var board: TdPopup = null
 var _lobby_pending := false
-var _frame: Control
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	theme = TdTheme.theme()
-	backdrop = TdGuildBackdrop.new()
-	add_child(backdrop)
-	_frame = Control.new()
-	_frame.mouse_filter = MOUSE_FILTER_IGNORE
-	_frame.set_anchors_preset(PRESET_CENTER)
-	_frame.offset_left = -FRAME.x / 2.0; _frame.offset_right = FRAME.x / 2.0
-	_frame.offset_top = -FRAME.y / 2.0; _frame.offset_bottom = FRAME.y / 2.0
-	add_child(_frame)
+	TdMenu.wood_background(self)
+	world = TdStationWorld.new()
+	add_child(world)
+	world.build(TdStationWorld.load_layout(LAYOUT, FALLBACK_LAYOUT), func(p): return GameApp.prop_scene("guild", p), false)
+	var hearth := OmniLight3D.new()
+	hearth.light_color = Color("FFB24A")
+	hearth.light_energy = 1.4
+	hearth.omni_range = 4.0
+	hearth.position = HEARTH
+	world.add_light(hearth)
 	_build_title()
-	_build_ring()
+	_build_stations()
 	popups = Control.new()
 	popups.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	popups.mouse_filter = MOUSE_FILTER_IGNORE
@@ -55,48 +69,50 @@ func _ready() -> void:
 		open_multiplayer.call_deferred()
 
 func _build_title() -> void:
-	var row := TdMenu.hbox(18)
-	row.position = Vector2(40, 22)
-	row.mouse_filter = MOUSE_FILTER_IGNORE
-	_frame.add_child(row)
-	var title := TdMenu.label(MissionUiLogic.GuildTitle, "display", TdTheme.color("cream.100"), 56)
+	# as the Camp's title
+	var title := TdMenu.label(MissionUiLogic.GuildTitle, "display", TdTheme.color("cream.100"), 64)
+	title.position = Vector2(58, 28)
 	title.add_theme_color_override("font_shadow_color", TdTheme.color("rim"))
 	title.add_theme_constant_override("shadow_offset_y", 3)
-	row.add_child(title)
-	var sub := TdMenu.label(MissionUiLogic.GuildSub, "body", TdTheme.color("cream.200"), 22)
-	sub.size_flags_vertical = SIZE_SHRINK_CENTER
-	row.add_child(sub)
+	title.mouse_filter = MOUSE_FILTER_IGNORE
+	add_child(title)
+	var sub := TdMenu.label(MissionUiLogic.GuildSub, "body", TdTheme.color("cream.200"), 24)
+	sub.position = Vector2(62, 112)
+	sub.mouse_filter = MOUSE_FILTER_IGNORE
+	add_child(sub)
 
-func _build_ring() -> void:
-	# the centre: the Notice board (decoration: the Guild's emblem)
-	var centre := Control.new()
-	centre.mouse_filter = MOUSE_FILTER_IGNORE
-	centre.position = CENTRE - Vector2(110, 40)
-	centre.size = Vector2(220, 110)
-	_frame.add_child(centre)
-	var emblem := TdDrops.token_texture("arcane-shard")
-	var em := TdMenu.picture(emblem, Vector2(80, 80))
-	em.position = Vector2(70, 0)
-	em.modulate = Color(1, 1, 1, 0.85)
-	centre.add_child(em)
-	var nl := TdMenu.label("Notice board", "body", Color(TdTheme.color("cream.200"), 0.7), 20)
-	nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	nl.position = Vector2(0, 84)
-	nl.size = Vector2(220, 26)
-	centre.add_child(nl)
+## One Camp-style station button per station (icon, name, the line under it), placed by the world each frame.
+func _build_stations() -> void:
 	for st in MissionUiLogic.Stations:
-		var s := GuildStation.new()
-		s.setup(st.label, st.sub, st.icon, bool(st.get("primary", false)))
-		var c: Vector2 = RING[st.id]
-		s.position = c - Vector2(GuildStation.W / 2.0, MEDAL / 2.0)
-		_frame.add_child(s)
-		stations[st.id] = s
-		s.clicked.connect(Callable(self, {"Missions": "open_missions", "Multiplayer": "open_multiplayer", "Towers": "open_towers", "Camp": "back_to_camp"}[st.id]))
+		var b := TdMenuButton.new()
+		b.style = TdButton.Style.MENU_PRIMARY if st.get("primary", false) else TdButton.Style.MENU_WOOD
+		var sub: String = st.sub if st.sub != "" else MissionUiLogic.missions_station_sub(0)
+		var w := maxf(236.0, 90.0 + TdTheme.font("nunito_bold").get_string_size(sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x)
+		b.custom_minimum_size = Vector2(w, 72)
+		b.size = b.custom_minimum_size
+		b.text = st.label
+		b.sub = st.sub
+		b.icon = TdDrops.icon_texture(st.icon)
+		b.selectable = true
+		b.left_pad = 20
+		b.font_size = 26
+		add_child(b)
+		stations[st.id] = b
+		b.clicked.connect(Callable(self, ACTIONS[st.id]))
+		if not world.props.has(st.id) or world.props[st.id] == null: b.visible = false
+	resized.connect(_place_buttons)
+	_place_buttons.call_deferred()
+
+func _place_buttons() -> void:
+	world.place_buttons(self, stations, MissionUiLogic.Stations.map(func(st): return st.id))
+
+func _process(_delta: float) -> void:
+	_place_buttons() # the 3D view's size settles late (as the Camp)
 
 ## Redraws the station lines (the Missions count).
 func refresh() -> void:
 	var n := MissionUiLogic.to_play_count(GameApp.missions(), SaveData.progress, SaveData.missions, GameApp.catalog)
-	if stations.has("Missions"): stations["Missions"].set_sub(MissionUiLogic.missions_station_sub(n))
+	if stations.has("Missions"): stations["Missions"].sub = MissionUiLogic.missions_station_sub(n)
 
 func _build_welcome() -> void:
 	welcome_card = Control.new()
@@ -198,74 +214,3 @@ func open_towers() -> TdPopup:
 func back_to_camp() -> void:
 	SaveData.save()
 	SceneFlow.go(SceneFlow.Camp)
-
-# ------------------------------------------------------------------ a station
-
-## A Guild station (guild.html .gst): a round wood medallion with a cream icon (primary: a cobalt ring), its name
-## and a line under it; hover lifts and lights the ring; a click opens it.
-class GuildStation extends Control:
-	signal clicked
-
-	const W := 420.0
-
-	var primary := false
-	var _hover := false
-	var _medal: Control
-	var _icon: TextureRect
-	var _name: Label
-	var _sub: Label
-
-	func _init() -> void:
-		mouse_filter = MOUSE_FILTER_STOP
-		mouse_default_cursor_shape = CURSOR_POINTING_HAND
-		size = Vector2(W, 220)
-		custom_minimum_size = size
-		mouse_entered.connect(func(): _hover = true; _restyle())
-		mouse_exited.connect(func(): _hover = false; _restyle())
-
-	func setup(label: String, sub: String, icon_name: String, is_primary: bool) -> void:
-		primary = is_primary
-		_medal = Control.new()
-		_medal.mouse_filter = MOUSE_FILTER_IGNORE
-		_medal.size = Vector2(124, 124)
-		_medal.position = Vector2((W - 124) / 2.0, 0)
-		_medal.draw.connect(_draw_medal)
-		add_child(_medal)
-		_icon = TdDrops.icon(icon_name, 56, TdTheme.color("cream.100"))
-		_icon.position = Vector2(34, 34)
-		_medal.add_child(_icon)
-		_name = TdMenu.label(label, "display", TdTheme.color("cream.100"), 32)
-		_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_name.add_theme_color_override("font_shadow_color", TdTheme.color("rim"))
-		_name.add_theme_constant_override("shadow_offset_y", 2)
-		_name.position = Vector2(0, 134)
-		_name.size = Vector2(W, 40)
-		add_child(_name)
-		_sub = TdMenu.label(sub, "body", TdTheme.color("cream.200"), 20)
-		_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_sub.position = Vector2(0, 176)
-		_sub.size = Vector2(W, 28)
-		add_child(_sub)
-		tooltip_text = label
-
-	func set_sub(text: String) -> void:
-		if _sub != null: _sub.text = text
-
-	func _restyle() -> void:
-		var tw := TdTheme.tween(_medal)
-		tw.tween_property(_medal, "position:y", -6.0 if _hover else 0.0, TdTheme.motion("quick"))
-		_medal.queue_redraw()
-
-	func _draw_medal() -> void:
-		var c := Vector2(62, 62)
-		_medal.draw_circle(c + Vector2(0, 6), 62, Color(0, 0, 0, 0.35))
-		var ring := TdTheme.color("accent.light") if primary else (TdTheme.color("gold") if _hover else Color("#120C09"))
-		_medal.draw_circle(c, 62, ring)
-		_medal.draw_circle(c, 62 - (5.0 if primary or _hover else 3.0), Color("#120C09"))
-		_medal.draw_circle(c, 56, Color("#4A372B") if _hover else Color("#3A2B22"))
-		_medal.draw_arc(c, 50, PI * 1.1, PI * 1.9, 24, Color(1, 1, 1, 0.06), 6.0, true)
-
-	func _gui_input(event: InputEvent) -> void:
-		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed \
-				and Rect2(Vector2.ZERO, size).has_point(event.position):
-			clicked.emit()

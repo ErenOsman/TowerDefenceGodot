@@ -12,6 +12,7 @@ extends SceneTree
 ## lobby_list, lobby_auto_left, room_tired, end_mission, end_mission_last.
 
 var out_dir := "user://guild"
+## Argument "guild": only the Guild's welcome and ring frames (no camp, board, details…).
 ## Second argument "720" (with --resolution 1280x720): only the board and the details (normal, all tired, co-op).
 var small := false
 var _n := 0
@@ -98,12 +99,15 @@ func _run() -> void:
 	# the Guild: the welcome card, then the ring
 	var guild = load("res://game/ui/screens/guild.tscn").instantiate()
 	root.add_child(guild)
-	await _until(func(): return guild.backdrop.is_ready(), 60.0)
-	await _frames(6)
+	await _frames(40) # the guild hall loads and the station buttons settle
 	if not small: await _shot("guild_welcome")
 	guild.close_welcome()
 	await _frames(10)
 	if not small: await _shot("guild")
+	if OS.get_cmdline_user_args().has("guild"): # only the Guild frames (welcome + ring)
+		print("GUILD SHOT DONE")
+		quit()
+		return
 	# the mission board
 	var board = guild.open_missions()
 	await _boards()

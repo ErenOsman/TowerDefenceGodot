@@ -156,7 +156,7 @@ static func _idle(model: Node) -> void:
 	var player: AnimationPlayer = model.find_child("AnimationPlayer", true, false)
 	if player == null: return
 	for n in player.get_animation_list():
-		if String(n).ends_with("|Idle"):
+		if String(n).ends_with("|Idle") or String(n) == "Idle":
 			var a := player.get_animation(n)
 			if a != null: a.loop_mode = Animation.LOOP_LINEAR
 			player.play(n)

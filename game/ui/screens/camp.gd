@@ -41,9 +41,6 @@ const FALLBACK_LAYOUT := {
 	"decor": [{"prop": "Tent", "tile": [0.9, 8.9], "scale": 2.6, "yaw": 15}, {"prop": "Supplies", "tile": [12.2, 8.9], "scale": 2.6, "yaw": -15}],
 }
 const BOARD := Vector2(14, 10)
-## Station buttons: the gap kept between them, and how far above its prop's top a button sits.
-const BUTTON_GAP := 16.0
-const BUTTON_LIFT := 28.0
 const TOUR := [
 	["Chapters", "Chapters: pick a chapter, then a level. Side chapters appear here as you open them."],
 	["Towers", "Towers: every tower you own. Choose which ones you bring in your hand."],
@@ -63,6 +60,7 @@ var bubble: TdTextBubble
 var welcome_card: Control
 var popups: Control
 
+var world: TdStationWorld
 var _vp: SubViewport
 var _cam: Camera3D
 var _highlighted: TdButton
@@ -82,103 +80,27 @@ func _ready() -> void:
 		get_node("/root/Net").reopen_lobby = false
 		open_multiplayer.call_deferred()
 
-# ------------------------------------------------------------------ the 3D camp
+# ------------------------------------------------------------------ the 3D camp (TdStationWorld, shared with the Guild)
 
 func _build_world() -> void:
-	var box := SubViewportContainer.new()
-	box.stretch = true
-	box.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	box.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(box)
-	_vp = SubViewport.new()
-	_vp.own_world_3d = true
-	_vp.msaa_3d = Viewport.MSAA_2X
-	box.add_child(_vp)
-	var root := Node3D.new()
-	_vp.add_child(root)
-	TdDiorama._add_light(root, TdTheme.color("wood.900"))
-	var layout := load_layout()
-	# the ground: the map kit's ground pieces with its frame (BoardView over an empty map of the layout's size)
-	var bt = layout.get("board", {}).get("tiles", [BOARD.x, BOARD.y])
-	_board = Vector2(float(bt[0]), float(bt[1]))
-	var level := LevelAsset.new()
-	var rows: Array[String] = []
-	for y in int(_board.y): rows.append(".".repeat(int(_board.x)))
-	level.terrain = rows
-	var board := BoardView.new()
-	root.add_child(board)
-	var kit: Array = GameApp.lib.rules.tiles if GameApp.lib.rules != null else []
-	board.build(BattleGrid.new(int(_board.x), int(_board.y)), level, kit, func(p): return GameApp.model_scene(p))
-	for slot in layout.get("slots", []):
-		if slot.get("prop") == null or slot.get("station") == null: continue
-		_front[str(slot.station)] = str(slot.get("row", "back")) == "front"
-		props[str(slot.station)] = _prop(root, str(slot.prop), _tile(slot.tile), float(slot.get("scale", 1.0)), float(slot.get("face_yaw", 0.0)))
-	var centre: Dictionary = layout.get("centre", {})
-	if not centre.is_empty(): _prop(root, str(centre.prop), _tile(centre.tile), float(centre.get("scale", 1.0)), float(centre.get("yaw", 0.0)))
-	for d in layout.get("decor", []): _prop(root, str(d.prop), _tile(d.tile), float(d.get("scale", 1.0)), float(d.get("yaw", 0.0)))
-	_cam = Camera3D.new()
-	_cam.fov = 34.0
-	root.add_child(_cam)
-	_cam.current = true
-	# framed on the ring round the fire (not the whole board)
-	var ring: Dictionary = layout.get("ring", {})
-	var fire := _tile(ring.get("centre", centre.get("tile", [_board.x / 2.0 - 0.5, _board.y / 2.0 - 0.5])))
-	var c := Vector3(fire.x, 0.0, -fire.y - 0.6)
-	_cam.position = c + Vector3(0, 14.5, 17.0)
-	_cam.look_at(c, Vector3.UP)
+	world = TdStationWorld.new()
+	add_child(world)
+	world.build(load_layout(), func(p): return GameApp.camp_scene(p), true)
+	props = world.props
+	_front = world.front
+	_vp = world.vp
+	_cam = world.cam
+	_board = world.board
 
 ## The camp layout (layout.json), or the built-in copy when it cannot be read.
 static func load_layout() -> Dictionary:
-	if FileAccess.file_exists(LAYOUT):
-		var d = JSON.parse_string(FileAccess.get_file_as_string(LAYOUT))
-		if d is Dictionary and d.has("slots"): return d
-	return FALLBACK_LAYOUT
+	return TdStationWorld.load_layout(LAYOUT, FALLBACK_LAYOUT)
 
 static func _tile(t) -> Vector2:
-	return Vector2(float(t[0]), float(t[1])) if t is Array and t.size() >= 2 else Vector2.ZERO
+	return TdStationWorld.tile_of(t)
 
-func _prop(root: Node3D, prop: String, at: Vector2, scale_by: float, yaw: float) -> Node3D:
-	var sc: PackedScene = GameApp.camp_scene(prop)
-	if sc == null: return null
-	var m: Node3D = sc.instantiate()
-	m.position = Vector3(at.x, 0.0, -at.y)
-	m.scale = Vector3.ONE * scale_by
-	m.rotation_degrees.y = yaw
-	root.add_child(m)
-	TdDiorama._idle(m)
-	var top := 0.5
-	for n in m.find_children("*", "MeshInstance3D", true, false):
-		var mi: MeshInstance3D = n
-		top = maxf(top, (mi.global_transform * mi.get_aabb()).end.y)
-	m.set_meta("top", top)
-	return m
-
-## A prop's screen rectangle in canvas coordinates (its meshes' boxes projected).
 func _prop_rect(n: Node3D) -> Rect2:
-	if n == null or _cam == null or _vp.size.x <= 0: return Rect2(size / 2.0, Vector2.ONE)
-	var k := size / Vector2(_vp.size)
-	var r := Rect2()
-	var first := true
-	for m in n.find_children("*", "MeshInstance3D", true, false):
-		var box: AABB = m.global_transform * m.get_aabb()
-		for i in 8:
-			var p := _cam.unproject_position(box.get_endpoint(i)) * k
-			if first: r = Rect2(p, Vector2.ZERO)
-			else: r = r.expand(p)
-			first = false
-	return r
-
-## A prop's foot (its position on the ground, a little in front) in canvas coordinates.
-func _screen_base(n: Node3D) -> Vector2:
-	if n == null or _cam == null: return Vector2.ZERO
-	var p := _cam.unproject_position(n.global_position + Vector3(0, 0, 0.5))
-	return p * (size / Vector2(_vp.size)) if _vp.size.x > 0 else p
-
-## A prop's top in canvas coordinates (where its station button goes).
-func _screen_of(n: Node3D) -> Vector2:
-	if n == null or _cam == null: return Vector2.ZERO
-	var p := _cam.unproject_position(n.global_position + Vector3(0, float(n.get_meta("top", 1.0)) + 0.15, 0))
-	return p * (size / Vector2(_vp.size)) if _vp.size.x > 0 else p
+	return world.prop_rect(n)
 
 # ------------------------------------------------------------------ the UI
 
@@ -264,74 +186,13 @@ func _build_ui() -> void:
 	_place_buttons.call_deferred()
 
 ## Each station's button sits above its prop with a leader line down to it (re-placed every frame: the 3D view's
-## size settles late). Buttons never overlap: laid out left to right along the row, pushed apart to keep BUTTON_GAP;
-## a button that would still collide moves to a second row above.
+## size settles late); TdStationWorld.place_buttons keeps them apart.
 func _place_buttons() -> void:
-	var items := []
-	for st in STATIONS:
-		var b: TdButton = buttons[st.id]
-		if not b.visible or not props.has(st.id): continue
-		var front: bool = _front.get(st.id, false)
-		items.append({"b": b, "front": front, "anchor": _screen_base(props[st.id]) if front else _screen_of(props[st.id])})
-	# back-row buttons above their props, front-row ones below (mirrored: the same layout with y flipped)
-	var back := items.filter(func(i): return not i.front)
-	var front_items := items.filter(func(i): return i.front)
-	var rb := layout_buttons(back.map(func(i): return [i.anchor, i.b.size]), size.x, BUTTON_GAP, BUTTON_LIFT)
-	var rf := layout_buttons(front_items.map(func(i): return [Vector2(i.anchor.x, -i.anchor.y), i.b.size]), size.x, BUTTON_GAP, BUTTON_LIFT)
-	for k in rf.size(): rf[k] = Rect2(Vector2(rf[k].position.x, -rf[k].end.y), rf[k].size)
-	items = back + front_items
-	var rects := rb + rf
-	for k in items.size():
-		var b: TdButton = items[k].b
-		var r: Rect2 = rects[k]
-		b.position = r.position
-		var line: Line2D = b.get_meta("leader") if b.has_meta("leader") else null
-		if line == null:
-			line = Line2D.new()
-			line.width = 3.0
-			line.default_color = Color(TdTheme.color("cream.100"), 0.7)
-			add_child(line)
-			move_child(line, b.get_index())
-			b.set_meta("leader", line)
-		var a: Vector2 = items[k].anchor
-		var from := Vector2(r.get_center().x, r.position.y if items[k].front else r.end.y)
-		line.points = PackedVector2Array([from, a])
+	if world != null: world.place_buttons(self, buttons, STATIONS.map(func(st): return st.id))
 
-## Places buttons (each [anchor point, size]) centred above their anchors, `lift` px up, without overlaps: sorted by
-## x and pushed right to keep `gap`; the row is then shifted back inside [gap, width - gap]; a button that still
-## collides goes to a second row above. Returns a Rect2 per input, in input order. (Static: tested.)
+## Places buttons without overlaps (TdStationWorld.layout_buttons; kept here for the tests and tools).
 static func layout_buttons(items: Array, width: float, gap: float, lift: float) -> Array:
-	var order := range(items.size())
-	order.sort_custom(func(a, b): return items[a][0].x < items[b][0].x)
-	var rects := []
-	rects.resize(items.size())
-	var row_y := 1e9
-	for i in order: row_y = minf(row_y, items[i][0].y - lift - items[i][1].y)
-	var xs := []
-	var prev_end := -1e9
-	for i in order:
-		var w: float = items[i][1].x
-		var x := maxf(items[i][0].x - w / 2.0, prev_end + gap)
-		xs.append(x)
-		prev_end = x + w
-	# shift the whole row back inside the screen
-	if not xs.is_empty():
-		var over: float = prev_end - (width - gap)
-		var under: float = gap - xs[0]
-		var shift := -over if over > 0.0 else (under if under > 0.0 else 0.0)
-		for k in xs.size(): xs[k] += shift
-	for k in order.size():
-		var i: int = order[k]
-		var sz: Vector2 = items[i][1]
-		var y := minf(items[i][0].y - lift - sz.y, row_y + 40.0) # roughly one row, following the anchors a little
-		var r := Rect2(Vector2(xs[k], y), sz)
-		# still colliding with an earlier button (after the shift): up to the second row
-		for j in range(k):
-			var other: Rect2 = rects[order[j]]
-			if other.grow(gap / 2.0).intersects(r.grow(gap / 2.0)):
-				r.position.y = other.position.y - sz.y - gap
-		rects[i] = r
-	return rects
+	return TdStationWorld.layout_buttons(items, width, gap, lift)
 
 func _process(_delta: float) -> void:
 	_place_buttons()

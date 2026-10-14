@@ -148,7 +148,12 @@ func model_scene(view_path: String) -> PackedScene:
 ## A Camp prop model (res://art/camp/<name>.fbx, else the map-kit piece res://art/tiles/<name>.fbx, e.g. the
 ## Signpost); null when missing.
 func camp_scene(prop_name: String) -> PackedScene:
-	var s := _scene(ArtPaths.camp(prop_name))
+	return prop_scene("camp", prop_name)
+
+## A place's prop model: res://art/<folder>/<name>.fbx ("camp", "guild"), else the map-kit piece
+## res://art/tiles/<name>.fbx; null when missing.
+func prop_scene(folder: String, prop_name: String) -> PackedScene:
+	var s := _scene("res://art/%s/%s.fbx" % [folder, prop_name])
 	return s if s != null else _scene("res://art/tiles/%s.fbx" % prop_name)
 
 ## A font from a content font reference or a file name ("Nunito-Bold"); null when missing.

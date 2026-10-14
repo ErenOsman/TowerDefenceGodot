@@ -149,10 +149,12 @@ Unity ids match the ones above or old Godot saves lose their forms/tokens/missio
   all towers), shown in the F1 panel and the TD Tools Save tab.
 
 ## Missions & Guild screens
-- `SceneFlow.Guild` → `game/ui/screens/guild.tscn`: a warm-tinted blurred board (`TdGuildBackdrop`: Rock Garden's
-  CoopBoardPic render, blurred by a mip shader; placeholder until there is Guild art) and a ring of 4 drawn round
-  stations (Missions primary, Multiplayer, Towers, Camp) round a "Notice board" emblem (the Arcane Shard token
-  sprite). First visit: the welcome card (`profile.guildSeen`). A co-op match goes back to `GameApp.lobby_scene()`
+- `SceneFlow.Guild` → `game/ui/screens/guild.tscn`: the Blender agent's 3D guild hall (`art/guild/`, layout.json in
+  the Camp's schema) built like the Camp by the shared `TdStationWorld` (camp.gd uses it too: ground, props, Idle
+  loops, camera, light, button placement); the Guild has no map-kit ground (Guild Floor + Guild Hall are decor), its
+  `centre` (Mission Board) is the Missions station (button below), plus the README's warm hearth light. Props load
+  through `GameApp.prop_scene(folder, name)` (`camp_scene` = folder "camp"; both fall back to `art/tiles/`). The
+  blurred `TdGuildBackdrop` remains only behind the full-screen mission detail. First visit: the welcome card (`profile.guildSeen`). A co-op match goes back to `GameApp.lobby_scene()`
   (the Guild once open, else the Camp) and reopens the lobby there.
 - Camp: the Signpost station "Missions" in layout slot 4 (prop `Signpost`, the map-kit piece: `GameApp.camp_scene`
   falls back to `res://art/tiles/<name>.fbx`); locked (lock icon, "Opens after Chapter 2", the Disabled look, like
