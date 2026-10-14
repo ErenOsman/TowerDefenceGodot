@@ -12,6 +12,8 @@ var find_ui: Callable
 ## The first hand piece still in the hand (Control) or null; the action bar's button for "move" / "attack" or null.
 var find_piece: Callable
 var find_ability: Callable
+## The HUD's own parts the bubble keeps clear of (hand tray, action bar, End turn): -> Array of canvas rects.
+var find_hud_rects: Callable
 var controller: LevelController
 
 var dialogue: TdDialogueBox
@@ -34,6 +36,8 @@ var _note_right := ""
 var _refusal_until := -1.0
 ## The board ring's size (canvas px at zoom 1); the bubble's tail ends on its edge.
 const BOARD_RING := Vector2(120, 64)
+## The piece ring stands this far outside the hand piece.
+const PIECE_RING_OUT := 8.0
 
 func _init() -> void:
 	name = "Sequence"
@@ -155,6 +159,8 @@ func _process(delta: float) -> void:
 		var how := HudText.how_it_goes_on(line.continue_on, line.wait_for, skip_key)
 		var text := TooltipText.from_rich(line.text)
 		var guided := _guided()
+		if guided != null: text = _color_tower_names(text)
+		bubble.set_skip_key("Esc" if guided != null else "")
 		if _pointing:
 			dialogue.hide_line()
 			var same := guided != null and text == _shown_text and bubble.is_shown()
@@ -183,13 +189,18 @@ func _process(delta: float) -> void:
 	var fade := clampf(_mode_t / 0.25, 0.0, 1.0)
 	if _pointing:
 		var spot = _target(line, false)
-		if _guided() != null and line.point_at != SequencePointAt.UI:
-			# the tail ends on the edge of the one ring (its top, or its bottom when the bubble must go below)
-			var ground = _target(line, true)
-			var half: float = BOARD_RING.y * 0.5 * _ring_zoom() + 2.0
-			spot = ground - Vector2(0, half) if ground != null else null
-			if spot != null and spot.y - bubble.gap - bubble.box_rect().size.y < bubble.global_position.y + bubble.margin:
-				spot = ground + Vector2(0, half)
+		var guided_now := _guided() != null
+		bubble.tail_to_target = guided_now
+		if not guided_now: bubble.target_below = null
+		if guided_now:
+			# the tail ends ON the one ring (its top edge) and the box keeps clear of the ring, the units' heads and
+			# plates, the previews and the Kills / damage chips
+			var ring = _guided_ring_rect(line)
+			spot = Vector2(ring.get_center().x, ring.position.y) if ring != null else null
+			bubble.target_below = Vector2(ring.get_center().x, ring.end.y) if ring != null else null
+			var strong := _guided_strong()
+			bubble.avoid = _guided_avoid(ring) + strong
+			bubble.tail_avoid = strong
 		elif spot != null and line.point_at != SequencePointAt.UI:
 			var box_h: float = bubble.box_rect().size.y
 			var top: float = bubble.global_position.y + bubble.margin
@@ -318,7 +329,7 @@ func _guided_marks(line: SequenceLine, dt: float) -> void:
 
 func _set_note(text: String, refusal: bool) -> void:
 	var left = bubble.get("_hint_left")
-	if left is Label: left.add_theme_color_override("font_color", TdTheme.color("bad") if refusal else TdTheme.color("ink.2"))
+	if left is Label: left.add_theme_color_override("font_color", TdTheme.color("bad.ink") if refusal else TdTheme.color("ink.2"))
 	bubble.set_hint(text, _note_right)
 
 ## The refusal shake (±7 px, like a denied hand piece), 0 when still.
@@ -367,7 +378,7 @@ func _place_piece_ring(piece: HudHandPiece) -> void:
 		if _piece_ring.get_parent() != null: _piece_ring.get_parent().remove_child(_piece_ring)
 		piece.add_child(_piece_ring)
 		piece.move_child(_piece_ring, 0)
-	var r := Rect2(Vector2(-6, -6), piece.size + Vector2(12, 12))
+	var r := Rect2(-Vector2(PIECE_RING_OUT, PIECE_RING_OUT), piece.size + Vector2(PIECE_RING_OUT, PIECE_RING_OUT) * 2.0)
 	var screen_bottom := get_viewport_rect().size.y
 	var bottom_global := piece.global_position.y + r.end.y * piece.get_global_transform().get_scale().y
 	var over := bottom_global - (screen_bottom - 12.0) # the glow (8 px) and a little air stay on screen
@@ -376,12 +387,70 @@ func _place_piece_ring(piece: HudHandPiece) -> void:
 	_piece_ring.size = r.size
 	_piece_ring.queue_redraw()
 
+## The ring of the guided line's target in canvas pixels: the HUD ring round a button / the piece ring, or the board
+## ring round a tile or unit's feet; null when it is not on screen.
+func _guided_ring_rect(line: SequenceLine):
+	var ui = _ui_control(line)
+	if ui != null:
+		if ui is HudHandPiece: return ui.get_global_rect().grow(PIECE_RING_OUT)
+		return HudSequence.ring_rect(ui.get_global_rect(), size)
+	if line.point_at == SequencePointAt.UI: return null
+	var ground = _target(line, true)
+	if ground == null: return null
+	var rs := BOARD_RING * _ring_zoom()
+	return Rect2(ground - rs * 0.5, rs)
+
+## What the bubble keeps clear of: its ring, every unit's head and plate (feet to a plate's height above the head),
+## the previewed tiles, the overlay's plates and markers (HP bars, Kills / damage chips).
+func _guided_avoid(ring) -> Array:
+	var out: Array = []
+	if ring != null: out.append(ring.grow(6))
+	if controller != null: out.append_array(controller.preview_rects)
+	if find_hud_rects.is_valid(): out.append_array(find_hud_rects.call())
+	return out
+
+## What neither the box nor its tail may cover: every unit's head and plate (a plate's height above the head down to
+## just above the ring round its feet, where a tail may end) and the overlay's plates and markers (HP bars, Kills /
+## damage chips).
+func _guided_strong() -> Array:
+	var out: Array = []
+	var c := controller
+	if c == null or c.camera == null: return out
+	var zoom := _ring_zoom()
+	if c.shown != null:
+		for f in c.shown.entities.values():
+			if f.life != LifeState.Alive or f.position == null: continue
+			var w := GridSpace.to_world(f.pos)
+			if c.camera.is_position_behind(w): continue
+			var feet := c.camera.unproject_position(w)
+			var head := c.camera.unproject_position(w + Vector3.UP * 1.4)
+			var half_w := 70.0 * zoom
+			var low := feet.y - BOARD_RING.y * 0.5 * zoom - 4.0
+			out.append(Rect2(Vector2(feet.x - half_w, head.y - 56.0 * zoom), Vector2(half_w * 2.0, maxf(8.0, low - head.y + 56.0 * zoom))))
+	if c.overlay != null:
+		for layer in [c.overlay.plates, c.overlay.markers]:
+			if layer == null: continue
+			for ch in layer.get_children():
+				if ch is Control and ch.is_visible_in_tree() and ch.size.x > 0.0 and ch.size.y > 0.0: out.append(ch.get_global_rect())
+	return out
+
+## Tower names in a line in accent.light ("Click your [Archer] to place it.").
+func _color_tower_names(text: String) -> String:
+	if controller == null or controller.session == null: return text
+	var names := {}
+	for t in controller.session.hand: names[t.name] = true
+	var col := TdTheme.color("accent.light").to_html(false)
+	for n in names:
+		var re := RegEx.create_from_string("\\b%s\\b" % n)
+		text = re.sub(text, "[color=#%s]%s[/color]" % [col, n], true)
+	return text
+
 func _draw_piece_ring() -> void:
 	var pulse := 0.5 + 0.5 * sin(_clock * 4.0)
 	var box := StyleBoxFlat.new()
 	box.draw_center = false
-	box.set_corner_radius_all(18)
-	box.set_border_width_all(5)
+	box.set_corner_radius_all(24)
+	box.set_border_width_all(4)
 	box.border_color = Color(TdTheme.color("gold.light"), 0.75 + 0.25 * pulse)
 	box.shadow_color = Color(TdTheme.color("gold"), 0.35 * pulse)
 	box.shadow_size = 8

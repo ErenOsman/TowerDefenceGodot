@@ -70,6 +70,11 @@ func _build() -> void:
 	sequence.find_ui = find_ui
 	sequence.find_piece = func(): return tray.first_in_hand()
 	sequence.find_ability = func(kind): return action_bar.button_for(kind) if action_bar.visible else null
+	sequence.find_hud_rects = func():
+		var rects := []
+		for part in [tray, action_bar, top_bar.end_turn if top_bar != null else null, inspector]:
+			if part != null and part.is_visible_in_tree(): rects.append(part.get_global_rect())
+		return rects
 	root.add_child(sequence)
 	pause = HudPause.new()
 	pause.name = "Pause"

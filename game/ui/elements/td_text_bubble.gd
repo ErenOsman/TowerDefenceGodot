@@ -25,11 +25,14 @@ signal skip_clicked
 ## target, slid sideways, further away when it must. Off: the plain rule (above at `gap`, below when no room).
 var tail_to_target := false
 var avoid: Array = []
+## tail_to_target: rects the tail must not cross either (HP bars, Kills / damage chips, unit heads): weighed far above
+## crossing a previewed tile, so the box goes round (below, further) instead.
+var tail_avoid: Array = []
 ## tail_to_target: where the tail ends when the box sits below (canvas; e.g. the bottom edge of a ring whose top edge
 ## is the point), null = the same point.
 var target_below = null
 ## How much further than its natural length the tail may stretch.
-const MAX_TAIL_STRETCH := 240.0
+const MAX_TAIL_STRETCH := 320.0
 
 enum Placement { NONE, POINT, CENTRE }
 
@@ -278,6 +281,8 @@ func _place_avoiding(r: Rect2, bs: Vector2, target: Vector2) -> void:
 	var inner := r.grow(-margin)
 	var keep := []
 	for a in avoid: keep.append(Rect2(a.position - global_position, a.size))
+	var strong := []
+	for a in tail_avoid: strong.append(Rect2(a.position - global_position, a.size))
 	var inset := TdTooltipBox.TAIL_INSET
 	var best := Vector2.ZERO
 	var best_above := true
@@ -299,6 +304,9 @@ func _place_avoiding(r: Rect2, bs: Vector2, target: Vector2) -> void:
 				for a in keep:
 					if box.intersects(a): score += box.intersection(a).get_area()
 					if not a.grow(1.0).has_point(t) and tail_r.intersects(a): score += tail_r.intersection(a).get_area() * 3.0
+				for a in strong:
+					if box.intersects(a): score += box.intersection(a).get_area()
+					if tail_r.intersects(a): score += tail_r.intersection(a).get_area() * 40.0
 				if score < best_score:
 					best_score = score
 					best = Vector2(x, y)
