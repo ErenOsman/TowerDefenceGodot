@@ -25,6 +25,20 @@ const GHOST_DELAY := 0.3
 @export var label_format := "{0} / {1}"
 ## Text over the board: outlined numbers.
 @export var outlined_label := false
+## Unity's UI_HealthBar colours, opt-in (the board plates set them from the Unity plate prefab): a smooth
+## gradient empty → half → full instead of the kit's steps, and the ghost colours. Defaults keep the kit look.
+var unity_gradient := false
+var full_color := Color(0.2, 0.85, 0.3)
+var half_color := Color(0.95, 0.85, 0.15)
+var empty_color := Color(0.9, 0.15, 0.15)
+## Alpha 0 = the kit's token (hp.ghost / fx.heal at 55 %).
+var ghost_damage_color := Color(0, 0, 0, 0)
+var ghost_heal_color := Color(0, 0, 0, 0)
+
+## UI_HealthBar.EvaluateGradient: half → full above 50 %, empty → half below.
+static func gradient_for(t: float, empty: Color, half: Color, full_c: Color) -> Color:
+	if t > 0.5: return half.lerp(full_c, (t - 0.5) * 2.0)
+	return empty.lerp(half, t * 2.0)
 
 var current_health := 1.0
 var max_health := 1.0
@@ -217,14 +231,16 @@ func _layout() -> void:
 	_fill_clip.size = Vector2(s.x * clampf(_display, 0.0, 1.0), s.y)
 	_fill.position = Vector2.ZERO
 	_fill.size = Vector2(maxf(_fill_clip.size.x, min_w), s.y)
-	_fill.self_modulate = color_for(clampf(_fill_to if _fill_t >= FILL_TIME else _display, 0.0, 1.0))
+	var shown_fill := clampf(_fill_to if _fill_t >= FILL_TIME else _display, 0.0, 1.0)
+	_fill.self_modulate = gradient_for(shown_fill, empty_color, half_color, full_color) if unity_gradient else color_for(shown_fill)
 	var g := maxf(_ghost_v, _display)
 	_ghost_clip.position = Vector2.ZERO
 	_ghost_clip.size = Vector2(s.x * clampf(g, 0.0, 1.0), s.y)
 	_ghost.position = Vector2.ZERO
 	_ghost.size = Vector2(maxf(_ghost_clip.size.x, min_w), s.y)
 	_ghost.visible = g > _display + 0.001
-	_ghost.self_modulate = Color(TdTheme.color("fx.heal"), 0.55) if _ghost_heal else TdTheme.color("hp.ghost")
+	if _ghost_heal: _ghost.self_modulate = ghost_heal_color if ghost_heal_color.a > 0.0 else Color(TdTheme.color("fx.heal"), 0.55)
+	else: _ghost.self_modulate = ghost_damage_color if ghost_damage_color.a > 0.0 else TdTheme.color("hp.ghost")
 	if _preview_hp >= 0.0 and max_health > 0.0:
 		var now := current_health / max_health
 		var then := _preview_hp / max_health

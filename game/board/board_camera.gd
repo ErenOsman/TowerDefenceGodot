@@ -84,15 +84,25 @@ func init(width: int, height: int) -> void:
 	_last_ticks = Time.get_ticks_usec()
 	apply()
 	# board UI is drawn at its designed size at this framing, whatever the board's size (WorldUi)
-	WorldUi.reference_tile = WorldUi.tile_width(self, focus)
+	_measure_reference_tile()
 	var vp := get_viewport()
 	if vp != null and not vp.size_changed.is_connected(refit): vp.size_changed.connect(refit)
 
-## Turns the view a quarter (dir −1 or +1) and frames the board for the new angle (a long board seen lengthwise
-## needs a different distance).
+## Turns the view a quarter (dir −1 or +1). The zoom and the pan stay as they are (user, 2026-10-14: rotating
+## must not change the zoom); only the limits follow the new angle: the zoom-out limit becomes the fit for it (a
+## long board seen lengthwise needs a different distance), a zoom beyond it is pulled in to it, and the focus is
+## clamped to the pan limits. The reference tile (board UI size) stays: plates keep their size across a turn.
 func rotate_step(dir: int) -> void:
 	yaw_target += 90.0 * signf(dir)
-	refit()
+	var fit := fit_distance()
+	max_distance = fit
+	distance_target = rotated_distance(distance_target, min_distance, fit)
+	focus_target = clamp_focus(focus_target)
+
+## The zoom distance after a turn: untouched, unless it is beyond the new zoom-out limit (the fit for the new
+## angle), then that limit.
+static func rotated_distance(current: float, min_d: float, new_fit: float) -> float:
+	return clampf(current, minf(min_d, new_fit), new_fit)
 
 ## Frames the board again for the viewport's size now (the window was resized, the editor's embedded game view
 ## changed): the fit, the zoom limit and the reference tile follow; the zoom keeps its ratio to the fit.
@@ -104,7 +114,32 @@ func refit() -> void:
 	distance_target = clampf(fit * ratio, min_distance, max_distance)
 	distance = distance_target
 	apply()
-	WorldUi.reference_tile = WorldUi.tile_width(self, Vector3(bounds.get_center().x, 0.0, -bounds.get_center().y))
+	_measure_reference_tile()
+
+## The board's centre on the ground.
+func board_centre() -> Vector3:
+	return Vector3(bounds.get_center().x, 0.0, -bounds.get_center().y)
+
+## WorldUi.reference_tile = a tile's on-screen width at the level's default framing (the board centred, unturned,
+## at the fit), as Unity measures it once in BoardCamera.Init; never at the current zoom or angle (measured at a
+## zoomed-in view, the plates shrank back to their designed size while zoomed in).
+func _measure_reference_tile() -> void:
+	if not is_inside_tree(): return
+	var keep_focus := focus
+	var keep_distance := distance
+	var keep_yaw := yaw
+	var keep_shake := _shake_left
+	focus = board_centre()
+	yaw = 0.0
+	distance = fit_distance(0.0)
+	_shake_left = 0.0
+	apply()
+	WorldUi.reference_tile = WorldUi.tile_width(self, focus)
+	focus = keep_focus
+	distance = keep_distance
+	yaw = keep_yaw
+	_shake_left = keep_shake
+	apply()
 
 ## Glides to centre the point (follow the action, select and show); the player's input cancels it.
 func glide(point: Vector3) -> void:
@@ -154,7 +189,7 @@ func set_hud_insets(top: float, bottom: float, right: float) -> void:
 	distance_target = clampf(fit * ratio, min_distance, max_distance)
 	distance = distance_target
 	apply()
-	WorldUi.reference_tile = WorldUi.tile_width(self, focus)
+	_measure_reference_tile()
 
 ## The part of the screen the HUD leaves free, as fractions (x from the left, y from the TOP), Rect2.
 func free_area() -> Rect2:
@@ -310,19 +345,22 @@ func apply() -> void:
 	frustum_offset = Vector2((0.5 - free.get_center().x) * h * _aspect(), (0.5 - centre_from_bottom) * h)
 
 ## The closest distance at which the whole board (its corners on the ground and a model's height above them) fits
-## in the free area at the current pitch and yaw.
-func fit_distance() -> float:
+## in the free area at the current pitch and yaw (at_yaw: another yaw, degrees), with the board centred: the
+## widest view, whatever the pan is now (measured from the focus, a panned view got a farther zoom-out limit).
+func fit_distance(at_yaw: float = INF) -> float:
 	var free := free_area()
 	var tan_v := tan(deg_to_rad(fov) * 0.5)
 	var half_w := tan_v * _aspect() * free.size.x
 	var half_h := tan_v * free.size.y
-	# at the angle the view is turning to (a rotate step refits before the turn has played)
-	var inv := Basis.from_euler(Vector3(deg_to_rad(-pitch), deg_to_rad(yaw_target), 0.0)).inverse()
+	# at the angle the view is turning to (a rotate step sets the limit before the turn has played)
+	var y := yaw_target if at_yaw == INF else at_yaw
+	var inv := Basis.from_euler(Vector3(deg_to_rad(-pitch), deg_to_rad(y), 0.0)).inverse()
+	var centre := board_centre()
 	var corners: Array[Vector3] = []
 	for i in 8:
 		var cx := bounds.position.x if (i & 1) == 0 else bounds.end.x
 		var cz := -bounds.position.y if (i & 2) == 0 else -bounds.end.y
-		corners.append(Vector3(cx, 0.0 if (i & 4) == 0 else MODEL_HEIGHT, cz) - focus)
+		corners.append(Vector3(cx, 0.0 if (i & 4) == 0 else MODEL_HEIGHT, cz) - centre)
 	var fits := func(d: float) -> bool:
 		for c in corners:
 			var v: Vector3 = inv * c + Vector3(0, 0, -d) # camera space, looking down −z

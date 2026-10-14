@@ -212,14 +212,22 @@ func plate_screen_position(cam: Camera3D) -> Vector3:
 	if plate_offset > 0.0:
 		var above := cam.unproject_position(centre + Vector3.UP * plate_offset)
 		return Vector3(at.x, at.y - absf(above.y - at.y), 1.0)
-	var highest := at.y
+	var ys: Array = []
 	var xf := global_transform
 	for p in _outline:
 		var w := xf * p
 		if cam.is_position_behind(w): continue
-		highest = minf(highest, cam.unproject_position(w).y)
-	var gap := PLATE_GAP_PIXELS * WorldUi.readable(WorldUi.zoom(cam, global_position))
-	return Vector3(at.x, highest - gap, 1.0)
+		ys.append(cam.unproject_position(w).y)
+	var a := plate_anchor(at, ys, WorldUi.zoom(cam, global_position))
+	return Vector3(a.x, a.y, 1.0)
+
+## The plate anchor's maths (Unity's PlateScreenPosition, canvas y down): x = the body centre's screen x (a point
+## over the head in the world would lean with the perspective), y = PLATE_GAP_PIXELS × readable(zoom) over the
+## highest of the centre and the outline points on screen. The plate's bar is centred on it (KitPlate).
+static func plate_anchor(centre: Vector2, outline_ys: Array, zoom: float) -> Vector2:
+	var highest := centre.y
+	for y in outline_ys: highest = minf(highest, y)
+	return Vector2(centre.x, highest - PLATE_GAP_PIXELS * WorldUi.readable(zoom))
 
 # ------------------------------------------------------------------ what presenters and syncs call
 

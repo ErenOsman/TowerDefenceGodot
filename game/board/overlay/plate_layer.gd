@@ -174,9 +174,25 @@ func _status_tooltip(mouse: Vector2, dt: float) -> void:
 
 ## Whether the entity's HP bar shows now (Unity's rule, see the class summary).
 func _bar_visible(id: int, f: EntityFrame, t: PresentationTimings) -> bool:
-	if f.life != LifeState.Alive: return true
-	if always_show_health or focused.has(id) or health_preview.has(id): return true
-	return _since_hit.has(id) and _since_hit[id] <= t.health_bar_after_hit
+	var since: float = _since_hit[id] if _since_hit.has(id) else -1.0
+	return bar_rule(f.life == LifeState.Alive, always_show_health, focused.has(id), health_preview.has(id), since, t.health_bar_after_hit)
+
+## Unity's HP bar rule (PlateLayer.Show): the bar shows with Always Show Health, while hovered or selected (focused),
+## while a hit or heal is previewed on it (alive only), for after_hit seconds after its HP + shield last went down
+## (since_hit < 0: never hit), and while it dies (the dying window itself is PlateLayer.refresh's).
+static func bar_rule(alive: bool, always: bool, is_focused: bool, previewed: bool, since_hit: float, after_hit: float) -> bool:
+	if not alive: return true
+	if always or is_focused or previewed: return true
+	return since_hit >= 0.0 and since_hit <= after_hit
+
+## A plate's form at a tile's on-screen width (canvas px) against the reference tile (WorldUi, PlateLayer.Form):
+## [scale, bar width before the scale]. Full: readable (never below 1), 164 wide; compact: fit (shrinks zoomed
+## out), the tile − 8 on screen at any zoom (at least 24).
+static func form_metrics(tile: float, reference: float, full: bool) -> Array:
+	var zoom := tile / maxf(1.0, reference)
+	var s := WorldUi.readable(zoom) if full else WorldUi.fit(zoom)
+	var width := KitPlate.FULL_WIDTH if full else maxf(24.0, (tile - 8.0) / maxf(0.01, s))
+	return [s, width]
 
 ## Whether an entity's HP bar showed at the last refresh (tests and tools).
 func bar_shown(id: int) -> bool:
@@ -184,9 +200,6 @@ func bar_shown(id: int) -> bool:
 
 ## Compact or full: the bar's width, the scale with the zoom, the draw order and the dimming of the others.
 func _form(plate, view: EntityView, full: bool) -> void:
-	var tile := WorldUi.tile_width(cam, view.global_position)
-	var zoom := tile / maxf(1.0, WorldUi.reference_tile)
-	var s := WorldUi.readable(zoom) if full else WorldUi.fit(zoom)
-	var width := BoardPlate.FULL_WIDTH if full else maxf(24.0, (tile - 8.0) / maxf(0.01, s))
-	plate.set_form(full, width, s, _any_full and not full)
+	var m := form_metrics(WorldUi.tile_width(cam, view.global_position), WorldUi.reference_tile, full)
+	plate.set_form(full, m[1], m[0], _any_full and not full)
 	if full: move_child(plate, get_child_count() - 1)

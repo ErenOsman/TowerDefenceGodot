@@ -15,6 +15,27 @@ Unity repo by `tools/sync_from_unity.sh` (the Unity repo is the single source of
 
 ## Decisions taken while testing the Godot build
 See `docs/Decisions.md` (2026-10-13 rows) — they are logged in the Unity repo and synced here.
+- HP bars (2026-10-14, now matching Unity's PlateLayer / EntityStatusBinder / UI_HealthBar / EntityStatus.prefab;
+  checked by `tests/test_plate.gd` and the live `tools/plate_check.gd`): (1) the bar was told the HP every frame, which
+  restarted its ease each frame — a hit crawled down, the ghost never trailed, a heal never filled; now only changes
+  reach it, as Unity's binder does. Unity's numbers (TdHealthBar has the same): fill 0.3 s smoothstep at once; ghost
+  waits 0.3 s, drains in 0.6 s; heal: ghost jumps ahead, fill follows after 0.3 s in 0.3 s; unscaled time.
+  (2) plate colours from the prefab: smooth gradient full (0.2, 0.85, 0.3) / half (0.95, 0.85, 0.15) / empty
+  (0.9, 0.15, 0.15) instead of the kit's 60/30 % steps; ghost white 35 % on a hit (was hp.ghost red 55 %), (0.3, 1,
+  0.5) 35 % on a heal (opt-in fields on TdHealthBar; the hand pieces and inspector keep the kit look). (3) the bar's
+  CENTRE sits on the anchor (Unity's centre pivot; it was the bottom edge, 5 px high); 10 thick in both forms (full
+  was 8). (4) layout owned by KitPlate (`plate_rects`): chip row 11 over the bar (compact 5), centred over the bar even
+  when wider (was pushed right), backing 8 / 6 round bar + chips + pills — no stale kit size can shift a plate after a
+  hover. (5) the reference tile (plate size at zoom 1) is the default framing's, as Unity measures it once at Init:
+  it was re-measured at the current zoom on a turn or a HUD change, so zoomed-in plates shrank back to designed size.
+  Unchanged and already equal: the show rule (Always Show Health / hovered or selected / previewed / 1.5 s
+  healthBarAfterHit / dying 1 s healthBarAfterDeath), anchor maths (12 px × readable(zoom) over the outline's top),
+  compact fit / full readable scale, 50 % dimming, full plate on top, preview stripes blinking.
+  Still different: Unity shows iconless statuses as words in a line over the plate (Godot: an empty chip; every status
+  has an icon today); the full plate's backing stays the darker 85 % panel (a neighbour's bar showed through Unity's 55 %).
+- Camera turn (2026-10-14): Q / E keep the zoom distance and the pan; only the limits follow the new angle (zoom-out
+  limit = the fit for it, a zoom beyond it is pulled in; the focus clamped to the pan limits). The fit is measured
+  with the board centred, whatever the pan (it was measured from the focus).
 - Level select hides the enemy chips until the level has one attempt recorded; the heading stays over one muted line "You'll see them when you play it." (UI Design Rules "Level select", 2026-10-14). The enemies fact tile waits for a generic enemy glyph from the kit (asked the UI/UX agent). No extra save field: `MenuLogic.has_played` reads the LevelRecord's `attempts`, which every result (win, loss, quit through Pause) increments.
 
 ## Co-op rules (sim) — Godot-only for now
