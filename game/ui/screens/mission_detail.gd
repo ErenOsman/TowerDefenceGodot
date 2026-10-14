@@ -297,13 +297,13 @@ func _draw_action(m: MissionDef, level: LevelAsset) -> void:
 		_note_row.add_child(w)
 	elif icon_name != "":
 		_note_row.add_child(TdDrops.icon(icon_name, 20, col))
-	# one line, left-aligned in the column, the icon next to it; a type step smaller when it would not fit
-	var nl := TdMenu.label(note.text, "plate", col, 19)
-	var font := nl.get_theme_font("font")
-	var fs := 19
-	while fs > 16 and font.get_string_size(note.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > MAP_SIZE.x - 34.0: fs -= 1
-	nl.add_theme_font_size_override("font_size", fs)
-	nl.size_flags_vertical = SIZE_SHRINK_CENTER
+	# left-aligned at 18 px (never smaller), up to two lines: the icon sits on the first line and the second line
+	# wraps under the text, not under the icon (the label is its own column beside the icon)
+	for ic in _note_row.get_children(): ic.size_flags_vertical = SIZE_SHRINK_BEGIN
+	var nl := TdMenu.wrap_label(note.text, "plate", col, 18)
+	nl.custom_minimum_size = Vector2(MAP_SIZE.x - 34.0, 0)
+	nl.size_flags_horizontal = SIZE_EXPAND_FILL
+	nl.max_lines_visible = 2
 	_note_row.add_child(nl)
 	_play.text = MissionUiLogic.primary_label(m)
 	_play.icon = TdTheme.texture("icon_play") if m.is_solo else TdDrops.icon_texture("users")

@@ -15,8 +15,9 @@ const HAND_EDITOR := "res://game/ui/screens/hand_editor.tscn"
 const BANNER_SECONDS := 8.0
 ## The chat panel's height (about nine lines plus the field).
 const CHAT_H := 350.0
-## The smallest chat (a mission room's taller level card leaves less room).
-const CHAT_MIN := 170.0
+## The level picture's height: a mission room's is shorter (its drop row sits under it; the chat keeps its size).
+const MAP_H := 116.0
+const MISSION_MAP_H := 72.0
 
 var net: Node = null
 ## Lines of the chat: [{name, text, color, system}].
@@ -112,14 +113,16 @@ func _build() -> void:
 	body.add_child(right)
 	_card = CoopUi.level_card(560, 116)
 	right.add_child(_card.panel)
-	_mission_box = TdMenu.vbox(8)
-	_card.extra.add_child(_mission_box)
+	# a mission room: one compact row of drop coins right under the level picture
+	_mission_box = TdMenu.vbox(0)
+	var card_v: Control = (_card.map as Control).get_parent().get_parent()
+	card_v.add_child(_mission_box)
+	card_v.move_child(_mission_box, 1)
 	_change_level = CoopUi.paper_action("icon_edit", "Change level", func(): open_settings())
 	_card.extra.add_child(_change_level)
 	var chat := TdMenu.panel(TdPanel.Kind.WOOD, 16)
-	# the chat takes what the level card leaves (a mission room's card is taller: drops, plays), at least CHAT_MIN
-	chat.custom_minimum_size = Vector2(0, CHAT_MIN)
-	chat.size_flags_vertical = SIZE_EXPAND_FILL
+	chat.custom_minimum_size = Vector2(0, CHAT_H) # fixed: the same for host and guest, every room (user rule)
+	chat.size_flags_vertical = SIZE_SHRINK_BEGIN
 	right.add_child(chat)
 	var cv := TdMenu.vbox(8)
 	chat.add_child(cv)
@@ -127,7 +130,7 @@ func _build() -> void:
 	_chat_scroll = ScrollContainer.new()
 	_chat_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_chat_scroll.size_flags_vertical = SIZE_EXPAND_FILL
-	_chat_scroll.custom_minimum_size = Vector2(0, CHAT_MIN - 120.0)
+	_chat_scroll.custom_minimum_size = Vector2(0, CHAT_H - 120.0)
 	cv.add_child(_chat_scroll)
 	_chat_box = TdMenu.vbox(2)
 	_chat_box.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -293,6 +296,9 @@ func refresh() -> void:
 	var mission := CoopLevels.mission_for_level(level)
 	var what := CoopLevels.level_name(level) if mission == null else "%s · plays %s" % [mission.name, CoopLevels.level_name(level)]
 	_sub.text = "%s · co-op · %d of %d player%s" % [what, players.size(), count, "" if count == 1 else "s"]
+	if mission != null: # the plays line in the header too (the side card stays short)
+		var sd = get_node_or_null("/root/SaveData")
+		_sub.text += " · " + MissionBoard.plays_text(mission, sd.missions if sd != null else null)
 	_code.text = "Room: [b][color=#%s]%s[/color][/b]  ·  Password: [b]%s[/b]" % [TdTheme.color("cream.100").to_html(false),
 		_esc(str(room.get("name", ""))), "•".repeat(6) if locked else "none"]
 	CoopUi.fill_level_card(_card, level, count, true)
@@ -424,19 +430,29 @@ func _slot_row(i: int, p, room: Dictionary, cap: int, h: float) -> Control:
 		holder.add_child(x)
 	return panel
 
-## The side card for a mission room: the mission's name, its plays note and its drops (as the create popup's).
+## The side card for a mission room: the mission's name and ONE compact row of drops under a shorter picture
+## ("Each win [coin]  First win [coin]"); the mission line and plays left are in the header.
 func _fill_mission(mission: MissionDef) -> void:
 	for c in _mission_box.get_children(): c.queue_free()
 	_mission_box.visible = mission != null
+	var map_frame: Control = (_card.map as Control).get_parent()
+	map_frame.custom_minimum_size.y = MISSION_MAP_H if mission != null else MAP_H
 	if mission == null: return
 	_card.title.text = mission.name
 	var sd = get_node_or_null("/root/SaveData")
 	var mp: MissionProgress = sd.missions if sd != null else null
-	var note := CoopUi.note_row("", MissionUiLogic.create_plays_note(mission, mp))
-	CoopUi.set_note_icon(note, TdDrops.icon_texture("hourglass"))
-	_mission_box.add_child(note)
-	var box := CoopUi.flat_panel(Color("2b201a"), 10, Color(0, 0, 0, 0), Vector4(12, 6, 12, 6))
-	box.add_child(TdDrops.rows(mission, MissionUiLogic.first_win_claimed(mission, mp), 34.0, 86.0, 18))
+	var box := CoopUi.flat_panel(Color("2b201a"), 10, Color(0, 0, 0, 0), Vector4(12, 4, 12, 4))
+	var row := TdMenu.hbox(8)
+	box.add_child(row)
+	var claimed := MissionUiLogic.first_win_claimed(mission, mp)
+	for r in MissionUiLogic.drop_rows(mission):
+		var first: bool = r[0] == "First win"
+		if row.get_child_count() > 0: row.add_child(TdMenu.spacer(0, 6))
+		var l := TdMenu.label(r[0], "plate", TdTheme.color("cream.200"), 18)
+		l.size_flags_vertical = SIZE_SHRINK_CENTER
+		row.add_child(l)
+		for c in TdDrops.coins(r[1], first, first and claimed, 34.0): row.add_child(c)
+		if first and claimed: row.add_child(TdDrops.claimed_tag(18))
 	_mission_box.add_child(box)
 
 ## Your strip in your row: the saved hand's first `cap` towers (tired ones dimmed with the moon badge: the match
