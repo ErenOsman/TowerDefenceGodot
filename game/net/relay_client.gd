@@ -218,9 +218,13 @@ func _set_state(s: int) -> void:
 # ------------------------------------------------------------------ client → relay
 
 func list_rooms() -> void: _send(NetProtocol.list())
-func create_room(room_name: String, level: String, count: int, password: String, hand: Array) -> void:
+## mission: the room's mission id (extra field, the relay ignores it); "" = the level's co-op mission, if any.
+func create_room(room_name: String, level: String, count: int, password: String, hand: Array, mission: String = "") -> void:
 	room_password = password
-	_send(NetProtocol.create(room_name, level, count, password, hand))
+	if mission == "":
+		var m := CoopLevels.mission_for_level(level)
+		if m != null: mission = m.id
+	_send(NetProtocol.create(room_name, level, count, password, hand, mission))
 func join_room(room_id: String, password: String, hand: Array) -> void:
 	room_password = password
 	_send(NetProtocol.join(room_id, password, hand))

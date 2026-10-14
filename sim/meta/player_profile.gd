@@ -13,6 +13,8 @@ var player_name: String = ""
 var tutorial: int = TutorialState.NotStarted
 ## The Camp's first visit (its welcome) has happened (Camp & Chapters — Design).
 var camp_seen: bool = false
+## The Guild's first visit (its welcome card) has happened (Missions & Guild — Design). Godot-first.
+var guild_seen: bool = false
 ## Level ids whose intro sequence has played, and meet_key(entity id) for entrance lines heard.
 var seen_intros: Array = []
 

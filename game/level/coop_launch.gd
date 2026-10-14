@@ -42,6 +42,7 @@ static func start_match(p_info: Dictionary) -> bool:
 		return false
 	LevelLaunch.request(level)
 	request(p_info)
+	CoopLevels.on_match_start(p_info) # a mission: today's play and the towers taken are spent now (Missions & Guild)
 	var tree := Engine.get_main_loop() as SceneTree
 	var flow = tree.root.get_node_or_null("SceneFlow") if tree != null else null
 	if flow != null: flow.go(flow.Game)

@@ -28,7 +28,7 @@ A screen of stations (panels for now; built so they can become places in a visua
 | --- | --- |
 | **Chapters** | Main chapters in a row, side chapters below; locked ones show what opens them. Picking one opens its levels (the level select panel: list, detail, hand, Play) |
 | **Towers** | Every owned tower and the hand: the hand editor, full size |
-| **Workshop** | Modify towers: a tower turns into one of its forms, unlocked with tokens found in levels (Workshop — Design). Locked ("coming later") until it is built |
+| **Workshop** | Modify towers: a tower turns into one of its forms, unlocked with tokens from missions (Workshop — Design). Locked with "Opens after Chapter 2" until Chapter 2's last level is won (`guildUnlock`, the same level that opens the Guild) |
 | **Codex** | Opens the Codex |
 | **Signpost → Missions** | Appears once Chapter 2's last level is won (`guildUnlock`): opens the Guild, where missions (the source of tokens) and multiplayer live (Missions & Guild — Design). Until then the Signpost is a plain prop |
 | **Multiplayer** | Moved to the Guild (2026-10-14); the Godot build's Camp station stays until the Guild exists there |

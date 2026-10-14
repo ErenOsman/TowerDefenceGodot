@@ -29,6 +29,7 @@ static func validate_asset(asset, vocab: Vocabulary = null) -> Array[String]:
 	if asset is GameCatalogAsset: return validate_catalog(asset)
 	if asset is FormAsset: return validate_form(asset)
 	if asset is TokenAsset: return validate_token(asset)
+	if asset is MissionAsset: return validate_mission(asset)
 	var none: Array[String] = []
 	return none
 
@@ -61,6 +62,9 @@ static func warnings(asset) -> Array[String]:
 		check.call(asset.display_name.is_empty() and (asset.entity == null or asset.entity.display_name.is_empty()), "display name (on the tower or its entity)")
 		check.call(asset.description.is_empty(), "description")
 		check.call(asset.icon.is_empty(), "icon")
+	elif asset is MissionAsset:
+		check.call(asset.display_name.is_empty(), "display name")
+		check.call(asset.description.is_empty(), "description")
 	elif asset is FormAsset or asset is TokenAsset:
 		check.call(asset.display_name.is_empty(), "display name")
 		check.call(asset.description.is_empty(), "description")
@@ -108,6 +112,50 @@ static func validate_form(f: FormAsset) -> Array[String]:
 static func validate_token(t: TokenAsset) -> Array[String]:
 	var errors: Array[String] = []
 	if t.id.is_empty(): errors.append("%s: has no token ID (saves would refer to the asset name, which breaks on rename)" % t.name)
+	return errors
+
+## The most players a co-op mission may have (the relay's room count limit).
+const MaxPlayers := 6
+
+## A mission (Missions & Guild — Design § Validation): its id, its level, playsPerDay ≥ 1, a co-op mission's player
+## range within 1–MaxPlayers and coopHandCap ≥ 1, its requirements (levels or missions, no empty entries, no cycle
+## through other missions' requirements) and its drops (a token each, positive amounts). Godot-first.
+static func validate_mission(m: MissionAsset) -> Array[String]:
+	var errors: Array[String] = []
+	var error := func(message: String) -> void: errors.append("%s: %s" % [m.name, message])
+	if m.id.is_empty(): error.call("has no mission ID (saves would refer to the asset name, which breaks on rename)")
+	if m.level == null: error.call("has no level")
+	if m.plays_per_day < 1: error.call("playsPerDay must be at least 1")
+	if m.mode == MissionMode.Coop or m.mode == MissionMode.Any:
+		var lo := m.players.min if m.players != null else 1
+		var hi := m.players.max if m.players != null else 1
+		if lo < 1 or hi > MaxPlayers or lo > hi: error.call("players %d–%d must be within 1–%d (min ≤ max)" % [lo, hi, MaxPlayers])
+		if m.mode == MissionMode.Coop and hi < 2: error.call("a Co-op mission needs room for 2 players (max ≥ 2)")
+		if m.coop_hand_cap < 1: error.call("coopHandCap must be at least 1")
+	for i in m.requires.size():
+		var r = m.requires[i]
+		if r == null: error.call("requires[%d] is empty" % i)
+		elif not (r is LevelAsset or r is MissionAsset): error.call("requires[%d] is not a level or a mission" % i)
+		elif r == m: error.call("requires itself")
+	# a cycle through other missions' requirements
+	var stack := [m]
+	var seen := {}
+	var cycle := false
+	while not stack.is_empty() and not cycle:
+		var cur = stack.pop_back()
+		for r in cur.requires:
+			if not (r is MissionAsset): continue
+			if r == m and cur != m: cycle = true
+			if not seen.has(r):
+				seen[r] = true
+				stack.append(r)
+	if cycle: error.call("its requirements make a cycle")
+	for list_name in ["firstWinTokens", "winTokens"]:
+		var list: Array = m.first_win_tokens if list_name == "firstWinTokens" else m.win_tokens
+		for i in list.size():
+			var u = list[i]
+			if u == null or u.token == null: error.call("%s[%d] has no token" % [list_name, i])
+			elif u.amount <= 0: error.call("%s[%d] needs a positive amount" % [list_name, i])
 	return errors
 
 static func validate_ability(a: AbilityAsset, vocab: Vocabulary) -> Array[String]:
@@ -213,6 +261,17 @@ static func validate_catalog(c: GameCatalogAsset) -> Array[String]:
 		var data: CatalogLevelData = e[0]
 		if data.level != null and data.first_clear_reward != null and not type_ids.has(data.first_clear_reward.get_id()):
 			error.call("%s: its first-clear reward %s is not in towerTypes (saves could not find it)" % [data.level.get_id(), data.first_clear_reward.name])
+	# Missions & Guild (Godot-first): the guild unlock is a catalog level; the board's missions are listed once
+	if c.guild_unlock != null and c.find_level(c.guild_unlock.get_id()) == null:
+		error.call("guildUnlock %s is not a level of the chapters" % c.guild_unlock.get_id())
+	var mission_ids := {}
+	for i in c.missions.size():
+		var m = c.missions[i]
+		if m == null:
+			error.call("missions[%d] is empty" % i)
+			continue
+		if mission_ids.has(m.get_id()): error.call("mission '%s' is listed twice" % m.get_id())
+		mission_ids[m.get_id()] = true
 	var starting := 0
 	for t in c.starting_towers:
 		if t != null: starting += 1

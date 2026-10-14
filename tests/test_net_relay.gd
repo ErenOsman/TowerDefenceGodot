@@ -248,5 +248,7 @@ func test_offline_practice() -> void:
 	c.start_match()
 	c.poll()
 	assert_eq(got.size(), 1)
-	assert_true(got[0].shared_pool, "chapter1-1 is a shared pool in data/coop.json")
+	# the practice relay asks the co-op list (the missions) for the pool rule: chapter1-1 is no mission → separate
+	assert_eq(got[0].shared_pool, CoopLevels.shared_pool("chapter1-1"))
+	assert_false(got[0].shared_pool, "chapter1-1 is not a co-op mission: separate pools")
 	c.free()

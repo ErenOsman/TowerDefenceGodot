@@ -62,8 +62,8 @@ func test_workshop_content_validates_and_converts() -> void:
 	var findings := ContentCheck.run(lib().all, ContentCheck.vocabulary_of(lib().rules))
 	var errors := findings.filter(func(f): return f.error).map(func(f): return f.message)
 	assert_eq(errors.size(), 0, "\n".join(errors))
-	var drop_warnings := findings.filter(func(f): return f.message.contains("no level drops it"))
-	assert_eq(drop_warnings.size(), 0, "every token drops somewhere")
+	var drop_warnings := findings.filter(func(f): return f.message.contains("no mission drops it"))
+	assert_eq(drop_warnings.size(), 0, "every token drops from some mission")
 	var c := AssetConverter.new()
 	for a in lib().all_of("FormAsset"): assert_not_null(c.form(a), a.name)
 	for a in lib().all_of("EntityAsset"): assert_not_null(c.entity(a), a.name)
@@ -112,19 +112,20 @@ func test_workshop_starter_numbers() -> void:
 	assert_eq(spiked.passives[0].display_name, "Spiked Counter-attack")
 	assert_eq(guardian.children_of(null).size(), 2)
 
-func test_workshop_drops_are_in_the_catalog() -> void:
+func test_workshop_drops_come_from_missions() -> void:
+	# Missions & Guild — Design: chapter levels drop nothing; "Found in" reads the missions' drops
 	var cat := lib().catalog.to_catalog()
-	assert_eq(cat.find("chapter1-1").first_win_tokens, {})
-	assert_eq(cat.find("chapter1-1").win_tokens, {"yew-bow": 1})
-	assert_eq(cat.find("chapter2-2").first_win_tokens, {"fire-arrow": 1, "arcane-shard": 1, "steel-plate": 2})
-	assert_eq(cat.find("chapter2-4").win_tokens, {"ember-core": 1})
-	assert_seq(Workshop.found_in("poison-gland", cat), ["chapter2-1", "chapter2-3"])
-	assert_seq(Workshop.found_in("ember-core", cat), ["chapter2-4"])
-	assert_seq(Workshop.found_in("nothing", cat), [])
+	assert_eq(cat.find("chapter1-1").win_tokens, {})
+	assert_eq(cat.find("chapter2-2").first_win_tokens, {})
+	var ms := lib().catalog.to_missions()
+	assert_seq(Workshop.found_in("poison-gland", ms), ["night-watch", "drum-line"])
+	assert_seq(Workshop.found_in("ember-core", ms), ["glutton-returns"])
+	assert_seq(Workshop.found_in("nothing", ms), [])
+	assert_seq(Workshop.found_in("ember-core", cat), ["chapter2-4"], "a LevelCatalog: the levels the missions play")
 
-func test_workshop_bad_drop_tables_are_reported() -> void:
+func test_workshop_bad_extras_are_reported() -> void:
 	var l := ContentLibrary.load()
-	l.apply_drops({"nowhere": {"winTokens": []}, "chapter1-1": {"winTokens": [{"token": "Tokens/Missing", "amount": 1}], "odd": 1}})
+	l.apply_extras({"nowhere": {}, "Assets/Resources/GameCatalog.asset": {"missions": ["Missions/Missing"], "odd": 1}})
 	assert_eq(l.problems.size(), 3, "\n".join(l.problems))
 
 func test_workshop_content_hash_includes_the_overlay() -> void:
@@ -236,17 +237,20 @@ func test_workshop_drops_first_win_once_win_every_time() -> void:
 	assert_eq(Workshop.drops(w, p2.record(w), e), {"fire-arrow": 1, "ember-core": 2})
 
 func test_workshop_catalog_grants_drops_into_the_wallet() -> void:
-	var p := LevelProgress.new()
+	var mission := MissionBoard.find(lib().catalog.to_missions(), "night-watch")
+	var p := MissionProgress.new()
 	var wallet := TokenWallet.new()
-	var r := _result("chapter2-4")
-	var got := lib().catalog.grant_drops(r, p.record(r), wallet)
-	assert_eq(got, {"fire-arrow": 1, "arcane-shard": 1, "ember-core": 2})
-	assert_eq(wallet.count("ember-core"), 2)
-	var r2 := _result("chapter2-4")
-	lib().catalog.grant_drops(r2, p.record(r2), wallet)
-	assert_eq(wallet.count("ember-core"), 3)
-	assert_eq(wallet.count("fire-arrow"), 1)
-	assert_eq(HudText.rewards_text(got, lib().catalog), "Rewards: Fire Arrow ×1, Arcane Shard ×1, Ember Core ×2")
+	var r := _result("chapter2-1")
+	var got := lib().catalog.grant_drops(r, p.record(r, mission.id), wallet, mission)
+	assert_eq(got, {"arcane-shard": 1, "fire-arrow": 1, "poison-gland": 1})
+	var r2 := _result("chapter2-1")
+	lib().catalog.grant_drops(r2, p.record(r2, mission.id), wallet, mission)
+	assert_eq(wallet.count("fire-arrow"), 2)
+	assert_eq(wallet.count("arcane-shard"), 1)
+	var lp := LevelProgress.new()
+	var r3 := _result("chapter2-4")
+	assert_eq(lib().catalog.grant_drops(r3, lp.record(r3), wallet), {}, "a chapter level drops nothing")
+	assert_eq(HudText.rewards_text(got, lib().catalog), "Rewards: Arcane Shard ×1, Fire Arrow ×1, Poison Gland ×1")
 	assert_eq(HudText.rewards_text({}, lib().catalog), "")
 	assert_eq(HudText.rewards_text({"x": 2}), "Rewards: x ×2")
 
@@ -368,10 +372,10 @@ func test_workshop_dev_cheats() -> void:
 	assert_true(SaveTools.run("add_tokens", g, lib().catalog, ["ember-core", 5]).contains("Ember Core"))
 	assert_eq(g.tokens.count("ember-core"), 5)
 	assert_true(SaveTools.run("add_tokens", g, lib().catalog, ["nope", 1]).begins_with("Unknown token"))
-	# the dev shortcuts win levels with their drops
+	# the dev shortcuts win levels; chapter levels drop no tokens (missions do)
 	var d := GameData.new()
 	DevShortcuts.complete_chapter1(d, lib().catalog)
-	assert_eq(d.tokens.count("yew-bow"), 4)
+	assert_eq(d.tokens.total(), 0)
 
 func test_workshop_menu_helpers() -> void:
 	var o := _owned()

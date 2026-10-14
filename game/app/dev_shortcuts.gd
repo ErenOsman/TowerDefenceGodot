@@ -16,6 +16,19 @@ static func complete_chapter1(data: GameData, catalog: GameCatalogAsset) -> int:
 			break
 	return win(data, catalog, levels)
 
+## Wins every level of the first n main chapters not won yet (with rewards); returns how many.
+static func complete_main_chapters(data: GameData, catalog: GameCatalogAsset, n: int) -> int:
+	if catalog == null: return 0
+	var levels := []
+	var k := 0
+	for c in catalog.chapters:
+		if c == null or c.kind != ChapterKind.Main: continue
+		k += 1
+		if k > n: break
+		for e in c.levels:
+			if e != null and e.level != null: levels.append(e.level)
+	return win(data, catalog, levels)
+
 ## Wins the first count levels of the main chapters, in order; returns how many it newly won.
 static func win_first_levels(data: GameData, catalog: GameCatalogAsset, count: int) -> int:
 	if catalog == null: return 0
@@ -28,6 +41,7 @@ static func win_first_levels(data: GameData, catalog: GameCatalogAsset, count: i
 	return win(data, catalog, levels)
 
 ## Wins the levels not won yet (1 round, nothing lost) with their first-clear rewards; finishes the tutorial first.
+## No tokens: chapter levels drop none (Missions & Guild — Design).
 static func win(data: GameData, catalog: GameCatalogAsset, levels: Array) -> int:
 	if data == null or catalog == null: return 0
 	if not data.profile.created: data.profile.create(PlayerProfile.DefaultName)
@@ -44,7 +58,6 @@ static func win(data: GameData, catalog: GameCatalogAsset, levels: Array) -> int
 		result.towers_lost = 0
 		result.when = Time.get_datetime_string_from_system(true) + "Z"
 		var record := data.progress.record(result)
-		catalog.grant_first_clear_reward(result, record, data.towers)
-		catalog.grant_drops(result, record, data.tokens)
+		catalog.grant_first_clear_reward(result, record, data.towers) # chapter levels drop no tokens (missions do)
 		won += 1
 	return won

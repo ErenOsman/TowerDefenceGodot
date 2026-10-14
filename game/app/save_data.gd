@@ -26,6 +26,9 @@ var codex: CodexProgress:
 ## The Workshop tokens (Workshop — Design).
 var tokens: TokenWallet:
 	get: return data.tokens
+## Mission records, today's plays and tired towers (Missions & Guild — Design).
+var missions: MissionProgress:
+	get: return data.missions
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS

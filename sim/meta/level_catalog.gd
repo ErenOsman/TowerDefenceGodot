@@ -8,6 +8,9 @@ extends RefCounted
 var entries: Array = []  # of CatalogEntry
 ## Per chapter index; a chapter without one is a main chapter.
 var chapters: Array = []  # of ChapterInfo
+## Missions & Guild (Godot-first): the board's missions in order (Array of MissionDef), for the Workshop's
+## "Found in" (Workshop.found_in). GameCatalogAsset.to_catalog fills it; nothing else here reads it.
+var missions: Array = []
 
 func _init(p_entries: Array = [], p_chapters = null) -> void:
 	entries.append_array(p_entries)

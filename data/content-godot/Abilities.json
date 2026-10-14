@@ -4,8 +4,8 @@
   "Abilities/Fire Shot": {
    "id": "fire-shot",
    "displayName": "Fire Shot",
-   "description": "Shoots a burning arrow up to Range tiles away: 1 less damage than Shoot, and the target burns (2 a turn for 2 turns).",
-   "icon": "Assets/Art/Icons/Abilities/Shoot.png#Shoot",
+   "description": "Shoots a burning arrow up to Range tiles away: the target burns (2 a turn for 2 turns).",
+   "icon": "Assets/Art/Icons/Abilities/FireShot.png#FireShot",
    "tags": [
     "Attack",
     "Projectile",
@@ -104,7 +104,7 @@
    "id": "fire-volley",
    "displayName": "Fire Volley",
    "description": "Rains burning arrows on a tile up to Range tiles away: every enemy on and around it is hit and burns (2 a turn for 2 turns). 2 turn cooldown.",
-   "icon": "Assets/Art/Icons/Abilities/Shoot.png#Shoot",
+   "icon": "Assets/Art/Icons/Abilities/FireVolley.png#FireVolley",
    "tags": [
     "Attack",
     "Projectile",
@@ -202,8 +202,8 @@
   "Abilities/Venom Shot": {
    "id": "venom-shot",
    "displayName": "Venom Shot",
-   "description": "Shoots a poisoned arrow up to Range tiles away: 2 less damage than Shoot, and acid eats the target (2 a turn for 3 turns).",
-   "icon": "Assets/Art/Icons/Abilities/Shoot.png#Shoot",
+   "description": "Shoots a poisoned arrow up to Range tiles away: acid eats the target (2 a turn for 3 turns).",
+   "icon": "Assets/Art/Icons/Abilities/VenomShot.png#VenomShot",
    "tags": [
     "Attack",
     "Projectile",
@@ -302,7 +302,7 @@
    "id": "long-shot",
    "displayName": "Long Shot",
    "description": "Shoots a heavy arrow at an enemy up to Range tiles away.",
-   "icon": "Assets/Art/Icons/Abilities/Shoot.png#Shoot",
+   "icon": "Assets/Art/Icons/Abilities/LongShot.png#LongShot",
    "tags": [
     "Attack",
     "Projectile"
@@ -392,7 +392,7 @@
    "id": "shield-bash",
    "displayName": "Shield Bash",
    "description": "Slams an adjacent enemy with the shield and pushes it back 1 tile.",
-   "icon": "Assets/Art/Icons/Abilities/Bash.png#Bash",
+   "icon": "Assets/Art/Icons/Abilities/ShieldBash.png#ShieldBash",
    "tags": [
     "Attack",
     "Melee"
@@ -488,7 +488,7 @@
    "id": "fireball",
    "displayName": "Fireball",
    "description": "Hurls a big fireball up to Range tiles away: everyone on and around the tile it hits is hit and burns (placeholder).",
-   "icon": "Assets/Art/Icons/Abilities/Firebolt.png#Firebolt",
+   "icon": "Assets/Art/Icons/Abilities/PyroBlast.png#PyroBlast",
    "tags": [
     "Attack",
     "Spell",
@@ -587,7 +587,7 @@
    "id": "frost-bolt",
    "displayName": "Frost Bolt",
    "description": "Hurls an icy bolt at an enemy up to Range tiles away and pushes it back 1 tile (placeholder).",
-   "icon": "Assets/Art/Icons/Abilities/Firebolt.png#Firebolt",
+   "icon": "Assets/Art/Icons/Abilities/FrostBolt.png#FrostBolt",
    "tags": [
     "Attack",
     "Spell"
@@ -683,7 +683,7 @@
    "id": "chain-spark",
    "displayName": "Chain Spark",
    "description": "Zaps an enemy up to Range tiles away; the spark jumps to 2 more enemies nearby (placeholder).",
-   "icon": "Assets/Art/Icons/Abilities/Firebolt.png#Firebolt",
+   "icon": "Assets/Art/Icons/Abilities/ChainSpark.png#ChainSpark",
    "tags": [
     "Attack",
     "Spell"

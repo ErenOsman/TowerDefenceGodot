@@ -73,7 +73,7 @@ func test_round_trip_keeps_everything() -> void:
 
 func test_json_uses_unity_field_names() -> void:
 	var d: Dictionary = JSON.parse_string(_sample().to_json())
-	assert_seq(d.keys(), ["settings", "towers", "progress", "profile", "codex", "handLayouts", "tokens"])
+	assert_seq(d.keys(), ["settings", "towers", "progress", "profile", "codex", "handLayouts", "tokens", "missions"])
 	for k in ["masterVolume", "musicVolume", "sfxVolume", "otherVolume", "resolutionWidth", "resolutionHeight",
 			"isFullscreen", "gameSpeed", "followAction", "followSelection", "dragToPan", "instantPlayback",
 			"alwaysShowHealth", "keyBinds", "modifierBinds"]:

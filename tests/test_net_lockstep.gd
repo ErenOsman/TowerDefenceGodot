@@ -22,7 +22,9 @@ func teardown() -> void:
 
 func _setup_match(level_id: String, names: Array, hands: Array) -> void:
 	relay = FakeRelay.new()
-	relay.shared_pool_of = func(l): return CoopLevels.shared_pool(l)
+	# chapter1-1 stands for a shared-pool level (no starter mission shares a pool since the co-op list became the
+	# missions); the others follow the co-op list
+	relay.shared_pool_of = func(l): return l == "chapter1-1" or CoopLevels.shared_pool(l)
 	for n in names:
 		var c := RelayClient.new()
 		c.auto_poll = false

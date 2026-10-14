@@ -21,6 +21,7 @@ today cannot be joined, and a room that switches to it drops you.
 | Tokens | **Missions are the only source of tokens.** Chapter levels drop none (their prize is the first-clear tower). A mission lists what it drops: `winTokens` on every win and `firstWinTokens` once | Eren (missions = token source) · agents (chapters drop nothing) |
 | Daily limit | A mission can be **played `playsPerDay` times a day** (default 1; content may say 2, 3…). A play is **consumed when the mission starts** (the level starts; in co-op, when the match starts), so a loss or a quit counts too. The count resets at **local midnight** | Eren (once a day or a set number) · agents (consumed at start, local midnight) |
 | Multiplayer | **Every multiplayer level is a mission**; the lobby lists only missions. A player whose plays of a mission are used up **cannot create or join** a room set to it ("Done today · resets in 5 h"); if the host **switches the room to** such a mission, that player **leaves the room automatically** with the same message. The match start consumes one play for everyone in the room | Eren |
+| Tower energy | **Every tower has 1 energy a day for missions**: a tower that went on a mission today is **tired** and cannot go on another until the reset. Energy is spent when the mission starts, by the towers the mission takes from the hand (the first ones up to its cap; the bench keeps its energy). Chapter levels never tire towers. The hand editor and the mission detail show tired towers (dimmed, "Tired · rests in 5 h"); a mission cannot start when every tower it would take is tired, and offers Change hand | Eren 2026-10-14 (1 energy per tower per day) · agents (spent at start by the towers taken; shown in the hand) |
 | Solo and co-op | A mission's `mode` is **Solo**, **Co-op** (with a player range, 1–6) or **Any** (playable alone from the board or in a room). Co-op missions carry the co-op rules the Multiplayer doc gives the level (`sharedPool`, `coopHandCap`): `Content/Missions.json` replaces the co-op list | agents |
 | Unlock | A mission has a requirement like a level: open when the Guild opens (default), or a list of levels / missions that must be won first (all / any). No daily rotation for now: the board shows every unlocked mission every day | agents |
 | Records | Missions keep their own records (attempts, wins, best) under the **mission id**, separate from the chapter level they reuse; co-op wins count as wins for every player in the match. Missions never change chapter progress | agents |
@@ -42,13 +43,23 @@ player once (a short card, like the Camp's first visit: `profile.guildSeen`) and
 
 ## The Guild
 
+Reference mockups (UI/UX agent, 2026-10-14, approved as the UI direction): http://92.5.94.11/art/ui/screens-b/
+(camp-signpost, guild, guild-welcome, mission-board, mission-detail / -done / -coop / -tired / -all-tired,
+lobby-mission-picker, lobby-list-mission, lobby-auto-left, lobby-room-tired, hand-select-mission,
+end-screen-mission; sheet `shots/missions-sheet.png`). Their choices: drops in two rows, "Each win" and "First win"
+(first-win coins with a gold rim, dimmed "claimed" once taken); plays left as pips ("1 of 1 play left today"); board
+cards carry small secondary Play / Find a room buttons, the primary button lives in the detail; tired towers at 50 %
+with a moon "z" badge and "Tired · rests in 5 h"; the cap divider counts rested towers, "▲ goes" under the towers
+that will come; the co-op room row says "1 tired: the next rested tower goes"; the Guild backdrop is a warm-tinted
+blurred diorama with a ring of 4 stations.
+
 A place like the Camp (stations on a ring; panels until there is art):
 
 | Station | What it does |
 | --- | --- |
 | **Missions** | The mission board: every unlocked mission as a card: name, mode chip (Solo / Co-op 2–4 / Any), the tokens it drops, and its state: **Play** (plays left: "1 play left today"), **Done today · resets in 5 h** (greyed), **Find a room** for co-op missions, or the lock reason. Picking a card opens the mission detail: the level's preview, facts and enemies as in level select, the drops, the plays left, the hand strip with Change hand, and Play / Find a room |
 | **Multiplayer** | The co-op lobby as the Multiplayer doc describes it; the room's level picker lists missions only, each with the player's plays left; missions used up today are listed greyed with "Done today" and cannot be picked |
-| **Towers** | The hand editor, full size (the same collection, hands and layouts as the Camp's Towers) |
+| **Towers** | The hand editor, full size (the same collection, hands and layouts as the Camp's Towers); tired towers are dimmed with "Tired · rests in 5 h" so a rested hand can be built for the next mission |
 | **Camp** | Back to the Camp |
 
 ## Rules
@@ -57,6 +68,12 @@ A place like the Camp (stations on a ring; panels until there is art):
   calendar date of `now`. Starting a mission records one play (`day`, `count`); a new date resets the count. A play
   is spent at start, never refunded. The time until the reset is shown as hours ("resets in 5 h", "resets in 20 min"
   under an hour).
+- **Tower energy.** `MissionProgress.is_tired(tower id, now)`: the tower's last mission day equals today's date.
+  Starting a mission marks every tower it takes (the hand's first ones up to the cap, tired ones skipped: the level
+  takes the first **rested** towers) with today's date. The reset is the daily one. Selling or losing a tower in a
+  level changes nothing. In co-op each player's own towers tire the same way. A mission's detail and the room's
+  hand strip show "Tired" towers; Play / Ready is refused when no rested tower would come in ("All your towers are
+  tired: change your hand or come back tomorrow").
 - **Co-op.** Creating or joining a room needs a play left for its mission; the client checks before sending `create`
   / `join` (the relay stays dumb and does not know saves). On `room` with a level the player has used up (the host
   changed it), the client sends `leave` and shows "Done today: the room switched to <mission>". `match_start`
@@ -90,10 +107,13 @@ drop fields `firstWinTokens` / `winTokens` on chapter levels are dropped: tokens
 
 ### Saves
 
-- `MissionProgress`: records per mission id (attempts, wins, won, best base HP, fewest rounds, last played) and
-  `plays`: `[{ "id", "day": "2026-10-14", "count": 1 }]`. `PlayerProfile.guildSeen`.
+- `MissionProgress`: records per mission id (attempts, wins, won, best base HP, fewest rounds, last played),
+  `plays`: `[{ "id", "day": "2026-10-14", "count": 1 }]` and `tired`: `[{ "tower": "<tower id>", "day": "2026-10-14" }]`.
+  `PlayerProfile.guildSeen`.
 - Engine-free rules in `Game.Meta` (`MissionBoard`): `IsGuildUnlocked(progress)`, `IsUnlocked(mission, progress,
-  missions)`, `PlaysLeft(mission, now)`, `StartPlay(mission, now)`, `ResetsIn(now)`, `Drops(result, record)`.
+  missions)`, `PlaysLeft(mission, now)`, `StartPlay(mission, hand, cap, now)` (spends the play and tires the towers
+  taken; returns them), `IsTired(tower, now)`, `RestedHand(hand, now)`, `ResetsIn(now)`, `Drops(result, record)`.
+- Rule data: `towerEnergyPerDay` = 1 in the game rules (one field, so it can change without code).
 
 ## Starter content (placeholders, Eren rewrites)
 

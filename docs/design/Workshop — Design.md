@@ -13,7 +13,7 @@ passives, look and name. The tower keeps its ID, its name tag and its place in t
 
 | Topic | Decision | Source |
 | --- | --- | --- |
-| Where | Camp station **Workshop** (unlocked with the Camp; was "coming later"). Picker first, then the Modify view slides in from the right; the Modify view may be its own scene | Eren 2026-10-13 |
+| Where | Camp station **Workshop**, **opened when Chapter 2 is cleared** (the same level as the Guild: `guildUnlock`); until then the station is locked with "Opens after Chapter 2". Picker first, then the Modify view slides in from the right; the Modify view may be its own scene | Eren 2026-10-13 · Eren 2026-10-14 (after Chapter 2) |
 | Picker | The collection like Hand select (search, Role / Delivery / Cost filters, Sort), no hand row; a detail card with **Modify** (or double-click) | Eren 2026-10-13 |
 | Modify view | **Left** the tower as it is now, **centre** the forms tree, **right** the selected node: what changes, what it costs, one action | Eren 2026-10-13 |
 | The tree | The tower's default form is the root in the middle; 2–3 nodes branch off it, each a different form of that tower. Forms may have children (Fire Archer → Inferno Archer): depth is allowed | Eren 2026-10-13 |
@@ -25,6 +25,7 @@ passives, look and name. The tower keeps its ID, its name tag and its place in t
 | What a form changes | Anything the tower's entity has: stats, abilities (added, changed, removed), passives, model and portrait, name, and optionally the **energy cost** (default: the base tower's) | Eren (stats/abilities/looks) · agents (cost field, default unchanged) |
 | Elsewhere | A formed tower shows its form name and a small **form badge** on its hand card, tray piece, board medallion and Codex entry | UI/UX agent, mockup workshop-badge |
 | Codex | A tower's Codex page has page tabs **Overview · Abilities** (passives included) **· Forms** (more pages may come). Forms is a **list** of rows, not a tree, showing **only forms the player has unlocked** on any of their towers (locked forms do not appear in the Codex at all); the base form is a row like the others ("Archer · Base form", first, no special styling). Selecting a row switches the whole page (header with the badge, Overview, Abilities) to that form; going back is selecting the base row (no Back button). The tab label is just "Forms", no count. No "Open in Workshop" link: the Codex is read-only reference. Empty state: the default row plus "Unlock more forms in the Workshop." A 4th tab **Immunities** sits after Forms, disabled for now: label dimmed to ~45 %, not clickable, hover tooltip "Coming later"; it becomes a real page once immunities exist in the data. Enemy pages have the same four tabs, Overview · Abilities · Forms · Immunities, with Forms disabled the same way (enemies may get forms later) and Immunities disabled as on towers. The Workshop tree still shows every form's real portrait. Mockup: screens-b/codex2.html | Eren 2026-10-14 |
+| Locked nodes | A form not yet unlocked shows its token coin in the tree node instead of a grey portrait; the portrait appears once unlocked | Eren 2026-10-14 |
 | No comparison | The form card shows the form's own stats and abilities; nothing is compared against the current form (no arrows, no Changed/Same tags) | Eren 2026-10-14 |
 | Confirm | Unlocking asks once ("Unlock Fire Archer for this Archer? Spends 1 Fire Arrow (you have 2 → 1)"); switching does not | mockup workshop-confirm |
 | Content | Forms and tokens are content JSON like everything else (`Content/Forms.json`, `Content/Tokens.json`); drops live in `Catalog.json`; no numbers in code | agents |
@@ -73,9 +74,12 @@ Reference mockup (approved as the UI direction): http://92.5.94.11/art/ui/screen
 ```
 
 - **Node states:** Current (cobalt ring, the path from the root to it is cobalt), Unlocked (green ✓ check on the
-  node, no ring), Can unlock (gold ring + glow: the parent is unlocked and the tokens are there), Needs tokens (grey
-  portrait, red "0/1" chip), Locked behind a parent (grey, "needs Fire Archer"). Rings are only for Current and
-  Can unlock. Every node shows its real portrait, locked or not.
+  node, no ring), Can unlock (gold ring + glow: the parent is unlocked and the tokens are there), Needs tokens (red
+  "0/1" chip), Locked behind a parent ("needs Fire Archer"). Rings are only for Current and Can unlock.
+  **A form that is not unlocked yet shows its token in the node** (the coin of the first token of its cost, large,
+  in place of the portrait; a two-token cost keeps both count chips below), not a grey portrait; the portrait appears
+  once the form is unlocked (Eren, 2026-10-14). The right card still shows the form's real portrait when a locked
+  node is selected.
 - **Right card, one action:** `Unlock · 1 Fire Arrow` (enabled only in Can unlock; under it "Unlocks for this Archer
   (tower 3)"), or `Use this form` (unlocked, not current; under it "Free: switch back any time"), or nothing for the
   current form ("This is the tower's current form"). Missing tokens: the button is disabled and a red line says what
@@ -182,8 +186,8 @@ Workshop.CanUnlock(tower, form, wallet): "Needs Fire Archer first" | "Needs 1 mo
 | Arcane Shard | Common | Drum Line (win), Night Watch (first win) |
 | Ember Core | Rare | The Glutton Returns (win and first win, co-op) |
 
-Chapters drop nothing: the Workshop is open from the Camp's first visit, but its tokens arrive once Chapter 2 is
-cleared and the Guild's missions open, so the first form is a Chapter 2 reward in effect.
+Chapters drop nothing: the Workshop and the Guild's missions both open when Chapter 2 is cleared, so the first
+form is a Chapter 2 reward in effect.
 
 ## Build plan
 

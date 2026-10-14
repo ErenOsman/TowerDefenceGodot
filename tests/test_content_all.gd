@@ -145,6 +145,10 @@ func test_json_round_trips() -> void:
 			var diff := _diff(root["assets"][key], written, key)
 			assert_eq(diff, "", "%s: %s" % [f, diff])
 
+## Godot-first fields with a non-zero default that the synced content leaves out (Missions & Guild: the rules'
+## towerEnergyPerDay = 1, set by the overlay's Extras.json until Unity's Rules.json carries it).
+const GODOT_FIRST_DEFAULTS := {"towerEnergyPerDay": 1}
+
 func _diff(a, b, path: String) -> String:
 	if a is Dictionary and b is Dictionary:
 		for k in a:
@@ -153,6 +157,8 @@ func _diff(a, b, path: String) -> String:
 			if d != "": return d
 		for k in b:
 			# a field the file leaves out (written before the field existed) must hold its default
+			# Godot-first fields the synced files do not have yet keep their own default (GODOT_FIRST_DEFAULTS)
+			if not a.has(k) and GODOT_FIRST_DEFAULTS.has(k) and b[k] == GODOT_FIRST_DEFAULTS[k]: continue
 			if not a.has(k) and not (b[k] == null or b[k] is Array and b[k].is_empty() or b[k] is String and b[k] == "" or (b[k] is float or b[k] is int) and b[k] == 0):
 				return "%s.%s extra" % [path, k]
 		return ""

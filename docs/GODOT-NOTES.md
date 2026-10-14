@@ -80,34 +80,67 @@ End turn shows at 60 % on lines that do not allow it.
 - `hint` (optional): replaces the generated refusal text.
 - A line that goes on at `event:aiming` refuses aim clicks (one step = one action: the button, then the target).
 
-## Workshop content — Godot-only until the Unity repo has Forms.json/Tokens.json
+## Workshop & Missions content — Godot-only overlay
 `data/content/*.json` is synced from the Unity repo and never edited here, so the Workshop's starter content
-(Workshop — Design § Starter content: placeholder names and numbers) lives in an **overlay**, `data/content-godot/`:
+(Workshop — Design § Starter content) and the missions (Missions & Guild — Design § Starter content; placeholder
+names and numbers) live in an **overlay**, `data/content-godot/`:
 
 | File | What |
 | --- | --- |
 | `Forms.json` (`FormAsset`) | the 9 starter forms: `archer-fire`, `archer-inferno` (child of Fire Archer), `archer-poison`, `archer-longbow`, `guardian-bastion`, `guardian-spiked`, `mage-pyro`, `mage-frost`, `mage-storm`. Fields: `id, displayName, description, icon, badge, tower, parent, entity, cost (-1 = base), unlock [{token, amount}], order`. Icons = the base tower's portrait; badges `Assets/Art/UI/KitB/forms/<form id>.png` (→ `res://art/ui/KitB/forms/`) |
 | `Tokens.json` (`TokenAsset`) | `fire-arrow, poison-gland, yew-bow, steel-plate, arcane-shard, ember-core` (`id, displayName, description, icon, rarity`); icons `Assets/Art/UI/KitB/tokens/<token id>.png` |
+| `Missions.json` (`MissionAsset`) | the 5 starter missions: `patrol` (Two Roads, Any 1–4), `night-watch` (Rock Garden, Any 1–4), `hold-the-gate` (Three at the Gate, Coop 2–6), `drum-line` (The Drummer, Any 1–4, 2 plays a day), `glutton-returns` (The Glutton, Coop 2–6); all separate energy pools (sharedPool false, as data/coop.json had for these levels), coopHandCap 3. Fields: `id, displayName, description, icon ("" until the kit has mission art), level, mode (Solo/Coop/Any), players {min, max}, playsPerDay, requires [level or mission keys], requireAll, sharedPool, coopHandCap, firstWinTokens, winTokens` |
+| `Extras.json` | field patches for assets the synced content already has: `{ "<asset key>": { "<field>": value } }`. Now: the catalog's `guildUnlock` (= `Levels/Chapter 2/4 The Glutton`) and `missions` (the board order), and the rules' `towerEnergyPerDay` = 1. Replaces the old `CatalogDrops.json`: **chapter levels drop no tokens any more**, missions are the only token source |
 | `Units.json`, `Abilities.json`, `Passives.json`, `Reactions.json` | the form entities (`Units/Towers/Forms/*`: copies of the base tower with the doc's stat changes, base model/icon/miniature) and their abilities (Fire Shot, Fire Volley, Venom Shot, Long Shot, Shield Bash, Fireball, Frost Bolt, Chain Spark), the Spiked Counter-attack passive and its 8-damage reaction. Same shape as the Unity files |
-| `CatalogDrops.json` | `{ "<level id>": { "firstWinTokens": [...], "winTokens": [...] } }`: Chapter 1 levels win drop 1 Yew Bow; every Chapter 2 level first win 1 Fire Arrow + 1 Arcane Shard; Rock Garden win Fire Arrow + Poison Gland; Three at the Gate first win +2 Steel Plate, win 1 Steel Plate; The Drummer win Poison Gland + Arcane Shard; The Glutton first win +1 Ember Core, win 1 Ember Core |
 
 How it is read:
 - `ContentLibrary.load_game()` (GameApp, the level's fallback, the save-action tool job) = `load(data/content, data/content-godot)`:
   an overlay file with the name of a content file adds its entries to that file (same key → the overlay's wins), other
-  files are added, and `CatalogDrops.json` fills `CatalogLevelData.firstWinTokens / winTokens` (the fields Unity's
-  `Catalog.json` will carry; they are in `ContentSerializer.SCHEMA` already). `ContentLibrary.load(folder)` alone (tests of
-  the synced content, golden, Validate All in the TD Tools dock) does not read the overlay.
+  files are added, and `Extras.json` patches fields with `ContentLibrary.apply_extras` (unknown keys/fields reported in
+  `problems`). The new fields are in `ContentSerializer.SCHEMA` (`GameCatalogAsset.guildUnlock/missions`,
+  `GameRulesAsset.towerEnergyPerDay`, `MissionAsset`, `PlayerRange`), so Unity's JSON can carry them as they are.
+  `CatalogLevelData.firstWinTokens / winTokens` stay in the schema (empty everywhere). `ContentLibrary.load(folder)` alone
+  (tests of the synced content, golden, Validate All in the TD Tools dock) does not read the overlay.
 - `ContentHash.compute()` hashes the overlay files too (as `content-godot/<name>`, after the content's), so co-op clients
-  must have the same forms.
+  must have the same forms and missions.
+- Validate All (`ContentCheck` + `AssetValidator.validate_mission`): a mission's level exists, playsPerDay ≥ 1, a Coop/Any
+  mission's players within 1–6 (min ≤ max; Coop max ≥ 2) and coopHandCap ≥ 1, requires are levels/missions without empty
+  entries, self-reference or cycles, drop entries have a token and a positive amount; mission ids unique; the catalog's
+  `guildUnlock` is a chapter level and its `missions` list has no empty/duplicate entry. Warnings: a token kind no mission
+  drops, a mission not on the board.
 - Not serialized, linked by the library: `TowerAsset.forms` (its FormAssets in content order), `GameCatalogAsset.forms /
   tokens`. The Unity build should derive them the same way (or add `forms` lists to the catalog).
-- Saves (Godot-first, also missing in Unity's GameData): `towers.towers[i].form` (current form id, "" = default) and
-  `.forms` (unlocked ids); `tokens: {"tokens": [{id, count}], "earned": [{id, count}]}`. Old saves load with no forms and no tokens.
+- Saves (Godot-first, also missing in Unity's GameData): `towers.towers[i].form` / `.forms`; `tokens: {"tokens": [{id,
+  count}], "earned": [...]}`; `missions: {"records": [{missionId, attempts, wins, won, bestBaseHpPct, fewestRounds,
+  fewestTowersLost, lastPlayed}], "plays": [{id, day, count}], "tired": [{tower, day, count}]}` (`count` is the doc's
+  shape plus a count so `towerEnergyPerDay` > 1 works; a missing count reads 1); `profile.guildSeen`. Old saves load
+  with no forms, no tokens, no mission history.
 - Co-op hand entries are `"<type id>@<form id>"` for formed towers (docs/COOP-PROTOCOL.md).
+- **Duplication:** `data/coop.json` is no longer the co-op list (`CoopLevels.list()` = `CoopList.from_missions`, the
+  Coop/Any missions) but stays for the relay, which reads `sharedPool` from it by level id. It is generated from the
+  missions (`godot --headless --path . -s tools/coop_json.gd`); `test_missions` fails while they disagree.
 
-**When Unity adopts the Workshop:** move `Forms.json`, `Tokens.json` and the form units/abilities into `Content/`, put the
-drop lists on the catalog's level entries, sync, then delete `data/content-godot/` (and `CatalogDrops.json` handling can
-stay harmlessly or go). Check that the Unity ids match the ones above or old Godot saves lose their forms/tokens.
+**When Unity adopts the Workshop and missions:** move `Forms.json`, `Tokens.json`, `Missions.json` and the form
+units/abilities into `Content/`, put `guildUnlock` / `missions` in `Catalog.json` and `towerEnergyPerDay` in
+`Rules.json`, sync, then delete `data/content-godot/` (`Extras.json` handling can stay harmlessly or go). Check that the
+Unity ids match the ones above or old Godot saves lose their forms/tokens/mission records.
+
+## Missions & Guild rules — Godot-first
+- Engine-free in `sim/meta`: `MissionDef` (converter: `AssetConverter.mission`), `MissionProgress` (saved), `MissionBoard`
+  (static rules, `last_reason`; `now` injectable: null = local system time, a datetime Dictionary or "YYYY-MM-DD[THH:MM:SS]").
+  Days are local calendar dates; the reset is local midnight (daylight-saving shifts ignored in `resets_in`).
+- A solo mission starts through `GameApp.play_mission(id)` → `LevelLaunch.request(level, mission_id)`; the level
+  (`LevelController._setup`) calls `MissionBoard.start_play` (spends the play, tires the towers taken = the hand's first
+  rested ones up to the level's hand cap) and builds only those towers. Retry re-requests the mission (another play).
+  The result goes to `MissionProgress` under the mission id with the mission's drops (`MissionBoard.finish`), never to
+  the chapter progress (no first-clear tower). Chapter levels never tire towers or drop tokens.
+- Co-op: rooms still carry level ids; `CoopLevels.mission_for_level` maps them to the Coop/Any mission. `create` adds
+  the extra field `mission` (the relay ignores unknown fields; it does not store or echo it). `CoopLaunch.start_match`
+  → `CoopLevels.on_match_start` spends the local player's play and tires the towers sent (`my_hand_types` skips tired
+  ones). A mission match records the mission result and drops for every player (each client for itself); leaving it
+  while running counts as a quit attempt. Rooms whose level is no mission give nothing (as before).
+- Dev: SaveTools actions `chapter2` (Clear Chapter 2: opens the Guild) and `rest_missions` (Reset today's plays / rest
+  all towers), shown in the F1 panel and the TD Tools Save tab.
 
 ## Workshop screens (game/ui/screens/workshop.gd)
 - Opened from the Camp's Workshop station (`camp.gd` STATIONS: `open_workshop`, a TdPopup like Codex / Towers; the tour

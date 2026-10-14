@@ -73,10 +73,14 @@ const SCHEMA := {
 		"facingEnabled": "bool", "relations": "list:obj:TeamRelation", "tiles": "list:ref:TileAsset",
 		"reactions": "list:ref:ReactionAsset", "replacements": "list:obj:ReplacementData", "modifiers": "list:obj:Modifier",
 		"maxDepth": "int",
+		# Missions & Guild (Godot-first: set by the overlay's Extras.json until Rules.json has it)
+		"towerEnergyPerDay": "int",
 	},
 	"GameCatalogAsset": {
 		"chapters": "list:obj:ChapterData", "towerTypes": "list:ref:TowerAsset", "startingTowers": "list:ref:TowerAsset",
 		"tutorial": "ref:LevelAsset", "tutorialReward": "ref:TowerAsset", "campUnlock": "ref:LevelAsset", "codex": "ref:CodexAsset",
+		# Missions & Guild (Godot-first: set by the overlay's Extras.json until Catalog.json has them)
+		"guildUnlock": "ref:LevelAsset", "missions": "list:ref:MissionAsset",
 	},
 	"CodexAsset": {
 		"towers": "list:ref:TowerAsset", "enemies": "list:ref:EntityAsset", "statuses": "list:ref:StatusAsset", "tips": "list:obj:CodexTip",
@@ -89,6 +93,13 @@ const SCHEMA := {
 		"unlock": "list:obj:TokenAmount", "order": "int",
 	},
 	"TokenAsset": {"id": "string", "displayName": "string", "description": "string", "icon": "art", "rarity": "enum:TokenRarity"},
+	# Missions & Guild — Design: Godot-first, from res://data/content-godot until the Unity repo has Missions.json
+	"MissionAsset": {
+		"id": "string", "displayName": "string", "description": "string", "icon": "art", "level": "ref:LevelAsset",
+		"mode": "enum:MissionMode", "players": "obj:PlayerRange", "playsPerDay": "int", "requires": "list:ref:ContentAsset",
+		"requireAll": "bool", "sharedPool": "bool", "coopHandCap": "int", "firstWinTokens": "list:obj:TokenAmount",
+		"winTokens": "list:obj:TokenAmount",
+	},
 	"AbilityPresentationAsset": {
 		"number": "int", "casterAnimation": "enum:CasterAnimation", "customTrigger": "string", "projectile": "art",
 		"projectileSpeed": "float", "castVfx": "art", "impactVfx": "art", "hitVfx": "art", "vfxLifetime": "float",
@@ -127,6 +138,7 @@ const SCHEMA := {
 		"winTokens": "list:obj:TokenAmount",
 	},
 	"TokenAmount": {"token": "ref:TokenAsset", "amount": "int"},
+	"PlayerRange": {"min": "int", "max": "int"},
 	"CodexTip": {"id": "string", "title": "string", "text": "string", "image": "art"},
 	# ------------------------------------------------------------------ core classes the assets embed (other slices own them)
 	"PatternDef": {
@@ -188,7 +200,7 @@ const SCHEMA := {
 const ASSET_TYPES := [
 	"AbilityAsset", "StatusAsset", "ReactionAsset", "PassiveAsset", "EntityAsset", "ItemAsset", "TowerAsset", "LevelAsset",
 	"TerrainAsset", "TileAsset", "GameRulesAsset", "GameCatalogAsset", "CodexAsset", "SequenceAsset", "AbilityPresentationAsset",
-	"FormAsset", "TokenAsset",
+	"FormAsset", "TokenAsset", "MissionAsset",
 ]
 
 ## A new object of a content class by name (C# Activator.CreateInstance), or null for an unknown name.
@@ -212,6 +224,8 @@ static func create(type_name: String) -> Object:
 		"FormAsset": return FormAsset.new()
 		"TokenAsset": return TokenAsset.new()
 		"TokenAmount": return TokenAmount.new()
+		"MissionAsset": return MissionAsset.new()
+		"PlayerRange": return PlayerRange.new()
 		"StepList": return StepList.new()
 		"LibraryEntry": return LibraryEntry.new()
 		"ReplacementData": return ReplacementData.new()
@@ -298,6 +312,7 @@ static func enum_class(enum_name: String):
 		"TileKind": return TileKind
 		"CasterAnimation": return CasterAnimation
 		"TokenRarity": return TokenRarity
+		"MissionMode": return MissionMode
 	return null
 
 ## The C# class name of a content object (its GDScript class_name), or "" for none.

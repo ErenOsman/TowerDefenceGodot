@@ -91,7 +91,7 @@ func test_lines() -> void:
 	assert_eq(WorkshopLogic.form_line(_owned("priest"), _type("Towers/Priest Tower")), "Default form · no forms yet")
 	assert_eq(WorkshopLogic.now_line(o, t), "Form: Fire Archer")
 	assert_eq(WorkshopLogic.now_line(_owned(), t), "Form: Default")
-	assert_eq(WorkshopLogic.subtitle(t, ""), "Default form")
+	assert_eq(WorkshopLogic.subtitle(t, ""), "Base form")
 	assert_eq(WorkshopLogic.subtitle(t, "archer-fire"), "Form of Archer")
 	assert_eq(WorkshopLogic.subtitle(t, "archer-inferno"), "Form of Fire Archer")
 	assert_eq(WorkshopLogic.leads_to(t, "archer-fire"), "Leads to: Inferno Archer")
@@ -103,14 +103,29 @@ func test_lines() -> void:
 	assert_eq(WorkshopLogic.toast(t, "archer-fire"), "Fire Archer unlocked")
 	assert_eq(WorkshopLogic.node_hint(t, "archer-inferno", "locked"), "Inferno Archer: Unlock Fire Archer first")
 	assert_eq(WorkshopLogic.spend_text(t.find_form("archer-inferno")), "1 Ember Core + 1 Fire Arrow")
+	assert_seq(WorkshopLogic.unlock_parts(t.find_form("archer-fire")), [["fire-arrow", "1 Fire Arrow"]])
+	assert_seq(WorkshopLogic.unlock_parts(t.find_form("archer-inferno")), [["ember-core", "1"], ["fire-arrow", "1"]], "two tokens: coins and counts")
 
 func test_found_in() -> void:
 	var c := lib().catalog
+	# Transitional (Missions & Guild): WorkshopLogic still names LEVELS — Workshop.found_in(LevelCatalog) now gives
+	# the levels the dropping missions play. The UI agent switches it to MissionBoard.found_in_text (mission names).
 	assert_eq(WorkshopLogic.found_in_text("poison-gland", c), "Rock Garden and The Drummer")
 	assert_eq(WorkshopLogic.found_in_text("ember-core", c), "The Glutton (boss)")
-	assert_eq(WorkshopLogic.found_in_text("fire-arrow", c), "Chapter 2 levels", "every level of the chapter")
-	assert_eq(WorkshopLogic.found_in_text("yew-bow", c), "Chapter 1 levels")
+	assert_eq(WorkshopLogic.found_in_text("fire-arrow", c), "Two Roads, Rock Garden and The Drummer")
+	assert_eq(WorkshopLogic.found_in_text("yew-bow", c), "Two Roads")
 	assert_eq(WorkshopLogic.found_in_text("nothing", c), "")
+
+func test_trait_lines() -> void:
+	lib()
+	var vocab := _conv.rules(lib().rules).vocabulary
+	var t := _type()
+	assert_seq(WorkshopLogic.trait_lines(t.entity, vocab), [], "the plain Archer applies nothing")
+	assert_seq(WorkshopLogic.trait_lines(t.find_form("archer-fire").entity, vocab), ["Burn on hit"])
+	assert_seq(WorkshopLogic.trait_lines(t.find_form("archer-inferno").entity, vocab), ["Burn around the target"])
+	assert_seq(WorkshopLogic.trait_lines(t.find_form("archer-poison").entity, vocab), ["Acid on hit"])
+	assert_seq(WorkshopLogic.trait_lines(t.find_form("archer-longbow").entity, vocab), [])
+	assert_seq(WorkshopLogic.trait_lines(_type("Towers/Guardian Tower").entity, vocab), ["Applies Taunted"])
 
 # ------------------------------------------------------------------ the Codex Forms page
 
@@ -124,9 +139,9 @@ func test_codex_form_rows() -> void:
 	a.forms = ["archer-longbow"]
 	assert_seq(WorkshopLogic.codex_form_ids(c, t), ["", "archer-fire", "archer-inferno", "archer-longbow"],
 		"base first, then any tower's unlocked forms in content order; locked ones are not listed")
-	assert_eq(WorkshopLogic.codex_row_name(t, ""), "Archer · Base form")
+	assert_eq(WorkshopLogic.codex_row_name(t, ""), "Archer")
 	assert_eq(WorkshopLogic.codex_row_name(t, "archer-fire"), "Fire Archer")
-	assert_eq(WorkshopLogic.codex_row_sub(t, ""), "The tower as it comes")
+	assert_eq(WorkshopLogic.codex_row_sub(t, ""), "Base form")
 	assert_eq(WorkshopLogic.codex_row_sub(t, "archer-inferno"), "Form of Fire Archer")
 
 # ------------------------------------------------------------------ the action
@@ -183,7 +198,7 @@ func test_formed_towers_in_the_collection() -> void:
 	assert_eq(es[1].def.name, "fire-archer")
 	assert_true(str(es[1].badge).ends_with("forms/archer-fire.png"))
 	assert_eq(es[0].badge, "")
-	assert_true(str(es[1].description).begins_with("Shoots burning arrows"))
+	assert_true(str(es[1].description).begins_with("Arrows catch fire"))
 	var f := HandLogic.default_filter()
 	f.q = "archer"
 	assert_eq(HandLogic.visible(es, f, []).size(), 2)
@@ -207,3 +222,15 @@ func test_token_rows() -> void:
 	assert_eq(rows[0][2], 2)
 	assert_null(rows[1][0])
 	assert_eq(rows[1][1], "nope")
+
+func test_workshop_opens_after_chapter2() -> void:
+	var c := lib().catalog
+	var last := MenuLogic.main_chapter_last_level(c, 2)
+	assert_eq(last.get_id(), "chapter2-4", "Chapter 2's last level (from the catalog)")
+	var d := GameData.new()
+	assert_false(MenuLogic.workshop_unlocked(c, d.progress))
+	DevShortcuts.complete_main_chapters(d, c, 1)
+	assert_false(MenuLogic.workshop_unlocked(c, d.progress), "Chapter 1 is not enough")
+	DevShortcuts.complete_main_chapters(d, c, 2)
+	assert_true(MenuLogic.workshop_unlocked(c, d.progress))
+	assert_eq(MenuLogic.workshop_locked_text(c), "Opens after Chapter 2")

@@ -211,6 +211,34 @@ func token(a: TokenAsset) -> TokenDef:
 	d.rarity = a.rarity
 	return d
 
+## A mission (Missions & Guild — Design). Not in the C# yet (Godot-first). Token amounts of the same kind add up;
+## requires keep the ids of the levels / missions listed (empty entries skipped).
+func mission(a: MissionAsset) -> MissionDef:
+	if a == null: return null
+	if _cache.has(a): return _cache[a]
+	var d := MissionDef.new()
+	_remember(a, d)
+	d.id = a.get_id()
+	d.name = a.get_display_name()
+	d.description = a.description
+	d.icon = a.icon
+	d.level_id = a.level.get_id() if a.level != null else ""
+	d.mode = a.mode
+	if a.players != null:
+		d.min_players = a.players.min
+		d.max_players = a.players.max
+	d.plays_per_day = a.plays_per_day
+	var req := []
+	for r in a.requires:
+		if r != null and r.has_method("get_id"): req.append(r.get_id())
+	d.requires = req
+	d.require_all = a.require_all
+	d.shared_pool = a.shared_pool
+	d.coop_hand_cap = a.coop_hand_cap
+	d.first_win_tokens = GameCatalogAsset._amounts(a.first_win_tokens)
+	d.win_tokens = GameCatalogAsset._amounts(a.win_tokens)
+	return d
+
 ## One individual tower of a type, for a level's hand (tests and tools; the game builds it from the save).
 func tower(type: TowerAsset, tower_id: String, custom_name: String = "") -> TowerDef:
 	if type == null: return null

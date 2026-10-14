@@ -45,15 +45,16 @@ var rules: GameRulesAsset:
 ## Loads every *.json file in the folder (res://data/content), in ordinal file-name order. With an overlay folder
 ## (Godot-only content, ContentFiles.OverlayFolder), its files are merged over the folder's: a file of the same name
 ## adds its entries to that file's (an entry with the same key replaces the folder's), other files are added, and
-## the overlay's CatalogDrops.json fills the catalog's drop lists (apply_drops).
+## the overlay's Extras.json patches fields of assets already loaded (apply_extras: the catalog's guildUnlock and
+## missions, the rules' towerEnergyPerDay).
 static func load(folder: String = ContentFiles.Folder, overlay: String = "") -> ContentLibrary:
 	var library := ContentLibrary.new()
 	var texts := _texts_of(folder)
-	var drops = null
+	var extras = null
 	if overlay != "" and DirAccess.dir_exists_absolute(overlay):
 		for pair in _texts_of(overlay):
-			if pair[0] == ContentFiles.DropsFile:
-				drops = pair
+			if pair[0] == ContentFiles.ExtrasFile:
+				extras = pair
 				continue
 			var merged := false
 			for i in texts.size():
@@ -64,10 +65,10 @@ static func load(folder: String = ContentFiles.Folder, overlay: String = "") -> 
 			if not merged: texts.append(pair)
 		texts.sort_custom(func(a, b): return a[0] < b[0])
 	library.add(texts)
-	if drops != null:
+	if extras != null:
 		var json := JSON.new()
-		if json.parse(drops[1]) != OK: library.problems.append("%s: line %d: %s" % [drops[0], json.get_error_line(), json.get_error_message()])
-		else: library.apply_drops(json.data, drops[0])
+		if json.parse(extras[1]) != OK: library.problems.append("%s: line %d: %s" % [extras[0], json.get_error_line(), json.get_error_message()])
+		else: library.apply_extras(json.data, extras[0])
 	return library
 
 ## The game's content: res://data/content with the Godot-only overlay (res://data/content-godot) merged over it.
@@ -94,31 +95,22 @@ static func _merge(base_text: String, overlay_text: String) -> String:
 	for key in b["assets"]: a["assets"][key] = b["assets"][key]
 	return JSON.stringify(a)
 
-## Fills the catalog's level entries' drop lists from the overlay's drop table
-## ({ "<level id>": { "firstWinTokens": [{token, amount}], "winTokens": [...] } }); problems are reported.
-func apply_drops(root, file: String = ContentFiles.DropsFile) -> void:
+## Patches fields of loaded assets from the overlay's extras table ({ "<asset key>": { "<field>": value } }, field
+## names and values as in the content JSON; fields the table leaves out keep their value). Unknown keys, unknown
+## fields and bad values are reported in problems. Godot-only (Unity: the fields live in Catalog.json / Rules.json).
+func apply_extras(root, file: String = ContentFiles.ExtrasFile) -> void:
 	if not (root is Dictionary):
 		problems.append("%s: not a JSON object" % file)
 		return
-	var c := catalog
-	if c == null:
-		problems.append("%s: no catalog to put the drops in" % file)
-		return
 	var list: Array = problems
-	for level_id in root:
-		var entry: CatalogLevelData = null
-		for e in c.entries():
-			if e[0].level != null and e[0].level.get_id() == level_id: entry = e[0]
-		var o = root[level_id]
-		if entry == null or not (o is Dictionary):
-			problems.append("%s: %s: %s" % [file, level_id, "no such level in the catalog" if entry == null else "not an object"])
+	for key in root:
+		var asset = get_asset(key)
+		var o = root[key]
+		if asset == null or not (o is Dictionary):
+			problems.append("%s: %s: %s" % [file, key, "no such asset" if asset == null else "not an object"])
 			continue
-		var only := {}
-		for k in ["firstWinTokens", "winTokens"]:
-			if o.has(k): only[k] = o[k]
-		for k in o:
-			if not only.has(k): problems.append("%s: %s.%s: no such field" % [file, level_id, k])
-		ContentSerializer.load_into(entry, only, self, list, "%s: %s" % [file, level_id])
+		ContentSerializer.load_into(asset, o, self, list, "%s: %s" % [file, key])
+	_link_forms()
 
 ## Loads files given as text: an Array of [file name, JSON text].
 func add(texts: Array) -> void:

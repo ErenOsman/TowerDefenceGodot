@@ -38,6 +38,10 @@ var modifiers: Array = []
 
 var max_depth: int = 16
 
+## Missions & Guild — Design ("Tower energy"): how many missions a tower can go on a day (it is tired after that until
+## local midnight). Godot-first: set by the overlay's Extras.json (Rules.json has no such field yet).
+var tower_energy_per_day: int = 1
+
 func create_vocabulary() -> Vocabulary:
 	var v: Vocabulary = CombatVocabulary.create(stats if stats != null else [])
 	for entry in library:

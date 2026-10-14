@@ -4,7 +4,7 @@
   "Forms/Fire Archer": {
    "id": "archer-fire",
    "displayName": "Fire Archer",
-   "description": "Shoots burning arrows: Fire Shot does 1 less damage and sets the target burning for 2 turns.",
+   "description": "Arrows catch fire: every hit sets the enemy burning.",
    "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
    "badge": "Assets/Art/UI/KitB/forms/archer-fire.png",
    "tower": "Towers/Archer Tower",
@@ -22,7 +22,7 @@
   "Forms/Inferno Archer": {
    "id": "archer-inferno",
    "displayName": "Inferno Archer",
-   "description": "Fire Shot becomes Fire Volley: it burns every enemy around the tile it hits. 2 turn cooldown.",
+   "description": "Flaming volleys: each shot burns the target and everything next to it.",
    "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
    "badge": "Assets/Art/UI/KitB/forms/archer-inferno.png",
    "tower": "Towers/Archer Tower",
@@ -44,7 +44,7 @@
   "Forms/Poison Archer": {
    "id": "archer-poison",
    "displayName": "Poison Archer",
-   "description": "Shoots poisoned arrows: Venom Shot does 2 less damage and coats the target in acid for 3 turns.",
+   "description": "Tipped arrows: acid keeps eating the target for three turns.",
    "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
    "badge": "Assets/Art/UI/KitB/forms/archer-poison.png",
    "tower": "Towers/Archer Tower",
@@ -62,7 +62,7 @@
   "Forms/Longbow": {
    "id": "archer-longbow",
    "displayName": "Longbow",
-   "description": "+2 Power and +1 Range, but -1 Speed (Long Shot).",
+   "description": "A tall bow that hits hard from far away, on slow feet.",
    "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
    "badge": "Assets/Art/UI/KitB/forms/archer-longbow.png",
    "tower": "Towers/Archer Tower",
@@ -80,7 +80,7 @@
   "Forms/Bastion": {
    "id": "guardian-bastion",
    "displayName": "Bastion",
-   "description": "+15 Max HP and +1 Taunt range, but -1 Speed (Shield Bash pushes back).",
+   "description": "A walking wall: heavy armour, a long taunt and a shield that pushes enemies back.",
    "icon": "Assets/Art/Icons/Units/Guardian.png#Guardian",
    "badge": "Assets/Art/UI/KitB/forms/guardian-bastion.png",
    "tower": "Towers/Guardian Tower",
@@ -98,7 +98,7 @@
   "Forms/Spiked Guardian": {
    "id": "guardian-spiked",
    "displayName": "Spiked Guardian",
-   "description": "+3 Power, and its counter-attack hits for 8.",
+   "description": "Spikes on the shield: whatever hits it gets hit back for 8.",
    "icon": "Assets/Art/Icons/Units/Guardian.png#Guardian",
    "badge": "Assets/Art/UI/KitB/forms/guardian-spiked.png",
    "tower": "Towers/Guardian Tower",
@@ -120,7 +120,7 @@
   "Forms/Pyromancer": {
    "id": "mage-pyro",
    "displayName": "Pyromancer",
-   "description": "Bigger fireballs (placeholder).",
+   "description": "Hurls big fireballs that burn everything around the tile they hit (placeholder).",
    "icon": "Assets/Art/Icons/Units/Mage.png#Mage",
    "badge": "Assets/Art/UI/KitB/forms/mage-pyro.png",
    "tower": "Towers/Mage Tower",

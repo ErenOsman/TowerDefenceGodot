@@ -44,6 +44,7 @@ func ensure_loaded() -> void:
 	_lib = ContentLibrary.load_game() # data/content + the Godot-only overlay data/content-godot (Workshop)
 	_convert = AssetConverter.new()
 	_rules = _convert.rules(_lib.rules) if _lib.rules != null else null
+	MissionBoard.energy_per_day = maxi(1, _lib.rules.tower_energy_per_day) if _lib.rules != null else 1
 	for p in _lib.problems: push_warning("[GameApp] content: " + p)
 	print("[GameApp] content loaded: %d assets in %d ms" % [_lib.all.size(), Time.get_ticks_msec() - t])
 
@@ -57,6 +58,65 @@ func tower_type(type_id: String) -> TowerType:
 ## What a level builds for an owned tower: its type as its current form (Workshop.resolve), or null.
 func resolved_type(owned: OwnedTower) -> TowerType:
 	return Workshop.resolve(owned, tower_type(owned.type)) if owned != null else null
+
+# ---------------------------------------------------------------- Missions & Guild
+
+var _missions: Array = []
+
+## The mission board's missions (MissionDef, board order), converted once.
+func missions() -> Array:
+	if _missions.is_empty() and catalog != null: _missions = catalog.to_missions(convert)
+	return _missions
+
+## A mission by id, or null.
+func mission(mission_id: String) -> MissionDef:
+	return MissionBoard.find(missions(), mission_id)
+
+## A mission's level asset, or null.
+func mission_level(m: MissionDef) -> LevelAsset:
+	if m == null or catalog == null: return null
+	var a: MissionAsset = catalog.find_mission(m.id)
+	return a.level if a != null else catalog.find_level(m.level_id)
+
+## How many towers a mission takes from the hand when played alone: its level's hand cap.
+func mission_cap(m: MissionDef) -> int:
+	var l := mission_level(m)
+	return l.hand_cap if l != null else 0
+
+## The Guild is open (Chapter 2's last level won).
+func guild_unlocked() -> bool:
+	return MissionBoard.is_guild_unlocked(SaveData.progress, catalog)
+
+## Whether a mission can be started alone now (unlocked, a Solo/Any mission, a play left, a rested tower in the
+## hand); MissionBoard.last_reason says why not.
+func can_play_mission(m: MissionDef, now = null) -> bool:
+	if m == null:
+		MissionBoard.last_reason = "No mission"
+		return false
+	if not MissionBoard.is_unlocked(m, SaveData.progress, SaveData.missions, catalog): return false
+	if not m.is_solo:
+		MissionBoard.last_reason = "Co-op only: find a room"
+		return false
+	return MissionBoard.can_start(m, SaveData.missions, SaveData.towers.hand, mission_cap(m), now)
+
+## Plays a mission alone: checks can_play_mission, then requests its level with the mission context and loads the
+## Game scene; the level spends the play and tires the towers it takes when it starts (LevelController._setup).
+## false (MissionBoard.last_reason) when refused.
+func play_mission(mission_id: String) -> bool:
+	var m := mission(mission_id)
+	if not can_play_mission(m): return false
+	var l := mission_level(m)
+	if l == null:
+		MissionBoard.last_reason = "The mission's level is missing"
+		return false
+	LevelLaunch.request(l, m.id)
+	SceneFlow.go(SceneFlow.Game)
+	return true
+
+## The scene a mission's end screen leads to: the Guild once SceneFlow has one, else home.
+func guild_scene() -> int:
+	var i: int = SceneFlow.NAMES.find("Guild")
+	return i if i >= 0 else home()
 
 # ---------------------------------------------------------------- art
 
@@ -185,6 +245,12 @@ func continue_game() -> bool:
 ## Wins every level of Chapter 1 not won yet (with rewards), saves; returns how many. Then go_home() opens the Camp.
 func complete_chapter1() -> int:
 	var n := DevShortcuts.complete_chapter1(SaveData.data, catalog)
+	SaveData.save()
+	return n
+
+## Wins every level of Chapters 1 and 2 not won yet (with rewards), saves; returns how many. Opens the Workshop.
+func complete_chapter2() -> int:
+	var n := DevShortcuts.complete_main_chapters(SaveData.data, catalog, 2)
 	SaveData.save()
 	return n
 

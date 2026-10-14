@@ -4,7 +4,7 @@
   "Units/Towers/Forms/Fire Archer": {
    "id": "fire-archer",
    "displayName": "Fire Archer",
-   "description": "Shoots burning arrows: a little less damage, but the target burns.",
+   "description": "Arrows catch fire: every hit sets the enemy burning.",
    "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
    "view": "Assets/Art/Models/Archer/Archer Blender.prefab",
    "kind": "Unit",
@@ -46,7 +46,7 @@
   "Units/Towers/Forms/Inferno Archer": {
    "id": "inferno-archer",
    "displayName": "Inferno Archer",
-   "description": "Rains fire on groups: Fire Volley burns every enemy around the tile it hits.",
+   "description": "Flaming volleys: each shot burns the target and everything next to it.",
    "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
    "view": "Assets/Art/Models/Archer/Archer Blender.prefab",
    "kind": "Unit",
@@ -88,7 +88,7 @@
   "Units/Towers/Forms/Poison Archer": {
    "id": "poison-archer",
    "displayName": "Poison Archer",
-   "description": "Shoots poisoned arrows: less damage up front, acid does the rest.",
+   "description": "Tipped arrows: acid keeps eating the target for three turns.",
    "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
    "view": "Assets/Art/Models/Archer/Archer Blender.prefab",
    "kind": "Unit",
@@ -130,7 +130,7 @@
   "Units/Towers/Forms/Longbow": {
    "id": "longbow",
    "displayName": "Longbow",
-   "description": "A heavier bow: hits harder and farther, but moves slower.",
+   "description": "A tall bow that hits hard from far away, on slow feet.",
    "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
    "view": "Assets/Art/Models/Archer/Archer Blender.prefab",
    "kind": "Unit",
@@ -172,7 +172,7 @@
   "Units/Towers/Forms/Bastion": {
    "id": "bastion",
    "displayName": "Bastion",
-   "description": "A wall of a tower: much more HP and a longer taunt, but slow.",
+   "description": "A walking wall: heavy armour, a long taunt and a shield that pushes enemies back.",
    "icon": "Assets/Art/Icons/Units/Guardian.png#Guardian",
    "view": "Assets/Art/Models/Guardian/Guardian Blender.prefab",
    "kind": "Unit",
@@ -217,7 +217,7 @@
   "Units/Towers/Forms/Spiked Guardian": {
    "id": "spiked-guardian",
    "displayName": "Spiked Guardian",
-   "description": "Covered in spikes: hits harder, and its counter-attack hits for 8.",
+   "description": "Spikes on the shield: whatever hits it gets hit back for 8.",
    "icon": "Assets/Art/Icons/Units/Guardian.png#Guardian",
    "view": "Assets/Art/Models/Guardian/Guardian Blender.prefab",
    "kind": "Unit",
@@ -262,7 +262,7 @@
   "Units/Towers/Forms/Pyromancer": {
    "id": "pyromancer",
    "displayName": "Pyromancer",
-   "description": "A fire mage: bigger fireballs (placeholder).",
+   "description": "Hurls big fireballs that burn everything around the tile they hit (placeholder).",
    "icon": "Assets/Art/Icons/Units/Mage.png#Mage",
    "view": "Assets/Art/Models/Mage/Mage Blender.prefab",
    "kind": "Unit",
@@ -312,7 +312,7 @@
   "Units/Towers/Forms/Frost Mage": {
    "id": "frost-mage",
    "displayName": "Frost Mage",
-   "description": "An ice mage: bolts that push enemies back (placeholder).",
+   "description": "Icy bolts that push enemies back (placeholder).",
    "icon": "Assets/Art/Icons/Units/Mage.png#Mage",
    "view": "Assets/Art/Models/Mage/Mage Blender.prefab",
    "kind": "Unit",
@@ -362,7 +362,7 @@
   "Units/Towers/Forms/Storm Mage": {
    "id": "storm-mage",
    "displayName": "Storm Mage",
-   "description": "A storm mage: sparks that jump between enemies (placeholder).",
+   "description": "Sparks that jump between enemies (placeholder).",
    "icon": "Assets/Art/Icons/Units/Mage.png#Mage",
    "view": "Assets/Art/Models/Mage/Mage Blender.prefab",
    "kind": "Unit",

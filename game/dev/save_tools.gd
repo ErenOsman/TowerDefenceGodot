@@ -14,6 +14,8 @@ const ACTIONS := [
 	["tutorial_done", "Mark tutorial done"],
 	["clear_codex", "Clear codex"],
 	["unlock_forms", "Unlock all forms"],
+	["chapter2", "Clear Chapter 2"],
+	["rest_missions", "Reset today's plays / rest all towers"],
 ]
 
 ## The file's text ("" when there is none).
@@ -104,6 +106,14 @@ static func run(action: String, data: GameData, catalog: GameCatalogAsset, arg =
 			clear_codex(data)
 			return "Codex cleared."
 		"unlock_forms": return "Unlocked %d form(s) on your towers." % unlock_all_forms(data, catalog)
+		"chapter2":
+			var n := DevShortcuts.complete_main_chapters(data, catalog, 2)
+			return "Chapters 1–2: won %d level(s); the Guild is %s." % [n, "open" if catalog != null and catalog.guild_unlocked(data.progress) else "still closed"]
+		"rest_missions":
+			var plays := data.missions.plays.size()
+			var tired := data.missions.tired.size()
+			data.missions.rest_all()
+			return "Missions: today's plays reset (%d), every tower rested (%d)." % [plays, tired]
 		"add_tokens":
 			# arg: [token id, amount] (the F1 panel's Tokens line)
 			var a: Array = arg if arg is Array and arg.size() >= 2 else ["", 0]
@@ -132,6 +142,9 @@ static func summary(data: GameData) -> String:
 	var won := 0
 	for r in data.progress.levels:
 		if r.won: won += 1
-	return "%s · tutorial %s · %d towers (%d in hand) · %d levels won · codex %d · tokens %d" % [
+	var missions_won := 0
+	for r in data.missions.records:
+		if r.won: missions_won += 1
+	return "%s · tutorial %s · %d towers (%d in hand) · %d levels won · codex %d · tokens %d · missions won %d" % [
 		data.profile.player_name if data.profile.created else "(no profile)", TutorialState.name_of(data.profile.tutorial),
-		data.towers.towers.size(), data.towers.hand.size(), won, data.codex.discovered.size(), data.tokens.total()]
+		data.towers.towers.size(), data.towers.hand.size(), won, data.codex.discovered.size(), data.tokens.total(), missions_won]

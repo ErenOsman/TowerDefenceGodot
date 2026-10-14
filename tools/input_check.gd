@@ -134,8 +134,12 @@ func _run() -> void:
 	_check(inside and on_edge, "a long drag stops with the board's edge at the free area's centre")
 	var g = GridSpace.ground_under(cam, cam.free_centre())
 	_check(g != null and Rect2(b.position - Vector2(0.05, 0.05), b.size + Vector2(0.1, 0.1)).has_point(Vector2(g.x, -g.z)), "the free area's centre is on the board's edge, not past it")
-	# rotate a quarter: the board (and a model's height over it) fits the free area at the new angle
+	# rotate a quarter: the zoom stays (only clamped to the new zoom-out limit); zoomed all the way out, the board
+	# (and a model's height over it) fits the free area at the new angle
+	var d_before := cam.distance_target
 	cam.rotate_step(1)
+	_check(is_equal_approx(cam.distance_target, minf(d_before, cam.max_distance)), "a turn keeps the zoom (%.2f → %.2f, limit %.2f)" % [d_before, cam.distance_target, cam.max_distance])
+	cam.distance_target = cam.max_distance
 	cam.glide(Vector3(b.get_center().x, 0, -b.get_center().y))
 	await _wait_seconds(2.5)
 	var vis2 := root.get_visible_rect().size

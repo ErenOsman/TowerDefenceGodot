@@ -53,10 +53,13 @@ static func hello(version: String, player_name: String) -> Dictionary:
 static func list() -> Dictionary:
 	return {"t": "list"}
 
-static func create(room_name: String, level: String, count: int, password: String, hand: Array) -> Dictionary:
+## mission (optional): the mission id the room is for, sent as an extra field the relay ignores (it keeps and
+## broadcasts only `level`; clients map the level back with CoopLevels.mission_for_level).
+static func create(room_name: String, level: String, count: int, password: String, hand: Array, mission: String = "") -> Dictionary:
 	var m := {"t": "create", "name": clamp_text(room_name, MAX_ROOM_NAME), "level": level,
 		"count": clampi(count, MIN_COUNT, MAX_COUNT), "hand": hand.duplicate()}
 	if password != "": m["password"] = password
+	if mission != "": m["mission"] = mission
 	return m
 
 static func join(room_id: String, password: String, hand: Array) -> Dictionary:

@@ -466,18 +466,18 @@ func test_fnv1a64_vectors() -> void:
 	assert_eq(CoopSession.fnv1a64("a".to_utf8_buffer()), "af63dc4c8601ec8c")
 	assert_eq(CoopSession.fnv1a64("foobar".to_utf8_buffer()), "85944171f73967e8")
 
-func test_the_coop_list_holds_every_chapter_level() -> void:
+func test_the_coop_list_holds_the_coop_missions() -> void:
+	# Missions & Guild — Design: every multiplayer level is a mission; data/coop.json mirrors them for the relay
 	var list := CoopList.load()
 	assert_eq(list.last_error, "")
-	assert_seq(list.level_ids(), ["chapter1-1", "chapter1-2", "chapter1-3", "chapter1-4", "chapter2-1", "chapter2-2", "chapter2-3", "chapter2-4"])
-	assert_true(list.shared_pool("chapter1-1"))
-	assert_true(list.shared_pool("chapter1-2"))
+	assert_seq(list.level_ids(), ["chapter1-3", "chapter2-1", "chapter2-2", "chapter2-3", "chapter2-4"])
 	assert_false(list.shared_pool("chapter1-3"))
+	assert_false(list.shared_pool("chapter2-1"))
 	assert_false(list.shared_pool("chapter2-4"))
 	for id in list.level_ids():
 		assert_eq(list.hand_cap(id), 3)
 		assert_true(list.is_unlocked(id))
-	assert_eq(list.level_assets(lib().catalog).size(), 8, "every entry is a catalog level")
+	assert_eq(list.level_assets(lib().catalog).size(), 5, "every entry is a catalog level")
 	assert_false(list.is_unlocked("tutorial"))
 	var parsed := CoopList.parse('{"levels": [{"level": "x"}]}')
 	assert_eq(parsed.hand_cap("x"), 3, "coopHandCap defaults to 3")

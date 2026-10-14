@@ -66,9 +66,14 @@ func move_in_hand(id: String, index: int) -> void:
 ## Each tower is built as its current Workshop form (Workshop.resolve): the form's entity, name and cost, keeping
 ## the tower's own ID; a form the content no longer has is reported and the default form is used.
 func build_hand(type_by_id: Callable, problems = null) -> Array:
+	return build_towers(hand, type_by_id, problems)
+
+## Like build_hand for any list of owned tower ids (a mission takes only the hand's first rested towers:
+## MissionBoard.start_play), in the given order. Godot-first.
+func build_towers(ids: Array, type_by_id: Callable, problems = null) -> Array:
 	var result := []
 	var seen := {}
-	for id in hand:
+	for id in ids:
 		if seen.has(id): continue
 		seen[id] = true
 		var owned := find(id)

@@ -30,6 +30,12 @@ var camp_unlock: LevelAsset = null
 ## What the Codex lists (towers, enemies, statuses, tips).
 var codex: CodexAsset = null
 
+# Missions & Guild (Godot-first: the overlay's Extras.json sets them)
+## The level whose win opens the Guild (the Camp's Signpost: Missions) — Chapter 2's last level. Null: no Guild.
+var guild_unlock: LevelAsset = null
+## The mission board's missions, in board order: Array of MissionAsset.
+var missions: Array = []
+
 # Workshop (not serialized: ContentLibrary links them from Forms.json / Tokens.json)
 ## Every token kind, in content order: Array of TokenAsset.
 var tokens: Array = []
@@ -83,7 +89,28 @@ func to_catalog() -> LevelCatalog:
 		info.requires = req
 		info.require_all = c == null or c.require_all
 		infos.append(info)
-	return LevelCatalog.new(list, infos)
+	var lc := LevelCatalog.new(list, infos)
+	lc.missions = to_missions()
+	return lc
+
+## The mission board's missions as MissionDefs, in board order (the catalog's missions list; empty entries skipped).
+## convert: the app's converter (one is made when null).
+func to_missions(convert: AssetConverter = null) -> Array:
+	var c := convert if convert != null else AssetConverter.new()
+	var out := []
+	for m in missions:
+		if m != null: out.append(c.mission(m))
+	return out
+
+## A mission of the board by its id, or null.
+func find_mission(mission_id: String) -> MissionAsset:
+	for m in missions:
+		if m != null and m.get_id() == mission_id: return m
+	return null
+
+## The Guild is open: its unlock level (Chapter 2's last) has been won (Missions & Guild — Design).
+func guild_unlocked(progress: LevelProgress) -> bool:
+	return guild_unlock != null and progress != null and progress.is_won(guild_unlock.get_id())
 
 ## The Camp is open: its unlock level has been won (Camp & Chapters — Design).
 func camp_unlocked(progress: LevelProgress) -> bool:
@@ -97,11 +124,12 @@ func next_main_level(progress: LevelProgress) -> LevelAsset:
 
 ## The saved hand as level towers: each owned tower's type looked up in tower_types. Hand
 ## entries that are not owned or whose type is not listed are skipped and reported.
-func build_hand(towers: TowerCollection, convert: AssetConverter, problems = null) -> Array:
+## ids (Godot-first): build these owned tower ids instead of the whole hand (a mission's towers taken).
+func build_hand(towers: TowerCollection, convert: AssetConverter, problems = null, ids = null) -> Array:
 	var type_by_id := func(type_id: String) -> TowerType:
 		var t := find_tower(type_id)
 		return convert.tower_type(t) if t != null else null
-	return towers.build_hand(type_by_id, problems)
+	return towers.build_towers(ids if ids is Array else towers.hand, type_by_id, problems)
 
 ## The first-clear reward: call right after recording a result (LevelProgress.record returned
 ## record). On the level's first win (record.wins == 1) it gives the player a new tower of the
@@ -131,11 +159,14 @@ func grant_starting_towers(towers: TowerCollection) -> bool:
 		if t != null: _give(towers, t)
 	return towers.towers.size() > 0
 
-## A level's token drops (Workshop — Design): call right after recording a result, like grant_first_clear_reward.
-## Adds them to the wallet and returns them ({token id: amount}, first-win drops first; {} on a loss or quit).
-func grant_drops(result: LevelResult, record: LevelRecord, wallet: TokenWallet) -> Dictionary:
+## The token drops of a result (Workshop / Missions & Guild — Design): call right after recording it, like
+## grant_first_clear_reward. With a mission (record = its MissionProgress record) the mission's drops; without one
+## the level entry's (chapter levels carry none now: tokens come from missions only). Adds them to the wallet and
+## returns them ({token id: amount}, first-win drops first; {} on a loss or quit).
+func grant_drops(result: LevelResult, record: LevelRecord, wallet: TokenWallet, mission: MissionDef = null) -> Dictionary:
 	if result == null: return {}
-	var drops := Workshop.drops(result, record, to_catalog().find(result.level_id))
+	var drops := MissionBoard.drops(result, record, mission) if mission != null \
+		else Workshop.drops(result, record, to_catalog().find(result.level_id))
 	if wallet != null: wallet.add_all(drops)
 	return drops
 

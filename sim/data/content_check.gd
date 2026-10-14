@@ -23,6 +23,7 @@ class Finding:
 const Types := [
 	"AbilityAsset", "StatusAsset", "ReactionAsset", "PassiveAsset", "GameRulesAsset", "EntityAsset", "ItemAsset",
 	"TowerAsset", "LevelAsset", "GameCatalogAsset", "TerrainAsset", "TileAsset", "FormAsset", "TokenAsset",
+	"MissionAsset",
 ]
 
 ## Checks the assets (any others are skipped). The vocabulary comes from the rules asset (or the default).
@@ -42,22 +43,32 @@ static func run(assets: Array, vocab: Vocabulary) -> Array:
 		if ids.has(tower.get_id()): findings.append(Finding.new(tower, "%s: tower type ID '%s' is also used by %s" % [tower.name, tower.get_id(), ids[tower.get_id()].name], true))
 		else: ids[tower.get_id()] = tower
 
-	# Workshop (Godot-first): form and token ids unique; every token kind drops somewhere (else a warning)
-	for type_name in ["FormAsset", "TokenAsset"]:
+	# Workshop & Missions (Godot-first): form, token and mission ids unique; every token kind drops from some mission
+	# (else a warning: missions are the only token source); a mission the catalog's board does not list is a warning
+	for type_name in ["FormAsset", "TokenAsset", "MissionAsset"]:
 		var seen := {}
+		var what: String = {"FormAsset": "form", "TokenAsset": "token", "MissionAsset": "mission"}[type_name]
 		for a in list:
 			if ContentSerializer.type_of(a) != type_name: continue
-			if seen.has(a.get_id()): findings.append(Finding.new(a, "%s: %s ID '%s' is also used by %s" % [a.name, "form" if type_name == "FormAsset" else "token", a.get_id(), seen[a.get_id()].name], true))
+			if seen.has(a.get_id()): findings.append(Finding.new(a, "%s: %s ID '%s' is also used by %s" % [a.name, what, a.get_id(), seen[a.get_id()].name], true))
 			else: seen[a.get_id()] = a
 	var dropped := {}
+	var listed := {}
+	var has_catalog := false
 	for c in list:
 		if not (c is GameCatalogAsset): continue
-		for e in c.entries():
-			for amt in e[0].first_win_tokens + e[0].win_tokens:
-				if amt != null and amt.token != null: dropped[amt.token] = true
+		has_catalog = true
+		for m in c.missions:
+			if m != null: listed[m] = true
+	for m in list:
+		if not (m is MissionAsset): continue
+		for amt in m.first_win_tokens + m.win_tokens:
+			if amt != null and amt.token != null: dropped[amt.token] = true
+		if has_catalog and not listed.has(m):
+			findings.append(Finding.new(m, "%s: not on the mission board (add it to the catalog's missions)" % m.name, false))
 	for t in list:
 		if t is TokenAsset and not dropped.has(t):
-			findings.append(Finding.new(t, "%s: no level drops it (add it to a level's firstWinTokens or winTokens)" % t.name, false))
+			findings.append(Finding.new(t, "%s: no mission drops it (add it to a mission's firstWinTokens or winTokens)" % t.name, false))
 
 	# the levels' look (Tiles — Design): layer cells name Tiles of the right kind, and the automatic look finds a piece
 	var kit = null
@@ -96,6 +107,7 @@ static func run(assets: Array, vocab: Vocabulary) -> Array:
 		elif asset is FormAsset: made = converter.form(asset)
 		elif asset is EntityAsset: made = converter.entity(asset)
 		elif asset is GameRulesAsset: made = converter.rules(asset)
+		elif asset is MissionAsset: made = converter.mission(asset)
 		if made == null: findings.append(Finding.new(asset, "%s: converting it failed" % asset.name, true))
 	return findings
 

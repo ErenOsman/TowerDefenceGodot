@@ -15,6 +15,9 @@ var profile: PlayerProfile = PlayerProfile.new()
 var codex: CodexProgress = CodexProgress.new()
 ## The Workshop tokens owned (and earned) per kind (Workshop — Design). Godot-first: saved under "tokens".
 var tokens: TokenWallet = TokenWallet.new()
+## Mission records, plays spent per day and tired towers (Missions & Guild — Design). Godot-first: saved under
+## "missions"; a save without it has no mission history.
+var missions: MissionProgress = MissionProgress.new()
 
 ## The saved hand layouts (Godot-only: the Unity GameData has no such field; see docs/GODOT-NOTES.md): LAYOUTS fixed
 ## entries {"name": String, "hand": [owned tower ids]}; the active one is the hand levels use (towers.hand mirrors it).
@@ -38,6 +41,7 @@ func to_dict() -> Dictionary:
 		"codex": {"discovered": codex.discovered.duplicate(), "viewed": codex.viewed.duplicate()},
 		"handLayouts": {"active": active_layout, "layouts": layouts},
 		"tokens": tokens.to_dict(),
+		"missions": missions.to_dict(),
 	}
 
 func to_json() -> String:
@@ -56,6 +60,7 @@ static func from_dict(d) -> GameData:
 		g.codex.discovered = _strings(c.get("discovered"))
 		g.codex.viewed = _strings(c.get("viewed"))
 	g.tokens = TokenWallet.from_dict(d.get("tokens")) # a save from before the Workshop: no tokens
+	g.missions = MissionProgress.from_dict(d.get("missions")) # a save from before missions: none played
 	var hl = d.get("handLayouts")
 	if hl is Dictionary:
 		g.active_layout = int(hl.get("active", 0))
@@ -133,7 +138,7 @@ static func progress_from_dict(d) -> LevelProgress:
 
 static func profile_to_dict(p: PlayerProfile) -> Dictionary:
 	return {"created": p.created, "playerName": p.player_name, "tutorial": p.tutorial,
-		"campSeen": p.camp_seen, "seenIntros": p.seen_intros.duplicate()}
+		"campSeen": p.camp_seen, "guildSeen": p.guild_seen, "seenIntros": p.seen_intros.duplicate()}
 
 static func profile_from_dict(d) -> PlayerProfile:
 	var p := PlayerProfile.new()
@@ -143,6 +148,7 @@ static func profile_from_dict(d) -> PlayerProfile:
 	var t = d.get("tutorial", 0)
 	p.tutorial = maxi(0, TutorialState.parse(t)) if t is String else clampi(int(t), 0, TutorialState.Skipped)
 	p.camp_seen = bool(d.get("campSeen", false))
+	p.guild_seen = bool(d.get("guildSeen", false))
 	p.seen_intros = _strings(d.get("seenIntros"))
 	return p
 
