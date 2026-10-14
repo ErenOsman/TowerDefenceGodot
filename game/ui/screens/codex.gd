@@ -9,6 +9,8 @@ extends TdPopup
 
 const SECTIONS := [CodexSection.Towers, CodexSection.Enemies, CodexSection.Statuses, CodexSection.Tips]
 const TAB_NAMES := ["Towers", "Enemies", "Statuses", "Tips"]
+## The text column: about 60 characters of 24 px Nunito.
+const TEXT_W := 760.0
 const TAB_WIDTHS := [200.0, 236.0, 236.0, 190.0] # faces; TdButton adds its bleed room
 const WIDTH := 1600.0
 const HEIGHT := 900.0
@@ -41,6 +43,8 @@ var _description: RichTextLabel
 var _abilities_head: Control
 var _abilities: VBoxContainer
 var _body: RichTextLabel
+var _locked_card: PanelContainer
+var _locked_hint: Label
 var _pending: Array = []
 
 func _build() -> void:
@@ -108,19 +112,11 @@ func _build() -> void:
 	var page := TdMenu.panel(TdPanel.Kind.PAPER, 24)
 	page.size_flags_horizontal = SIZE_EXPAND_FILL
 	body.add_child(page)
-	_page_scroll = ScrollContainer.new()
-	_page_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	page.add_child(_page_scroll)
-	TdDragScroll.attach(_page_scroll, true)
+	# the model box and stat tiles stay put on the left; only the text column on the right scrolls
 	var cols := TdMenu.hbox(30)
 	cols.size_flags_horizontal = SIZE_EXPAND_FILL
 	cols.size_flags_vertical = SIZE_EXPAND_FILL
-	# room for the tiles' and cards' rims (sprite outsets): the scroll area clips what hangs past its edge
-	var pad := MarginContainer.new()
-	pad.size_flags_horizontal = SIZE_EXPAND_FILL
-	for side in ["left", "top", "right", "bottom"]: pad.add_theme_constant_override("margin_" + side, 6)
-	_page_scroll.add_child(pad)
-	pad.add_child(cols)
+	page.add_child(cols)
 	_left = TdMenu.vbox(16)
 	_left.custom_minimum_size = Vector2(276, 0)
 	cols.add_child(_left)
@@ -165,9 +161,21 @@ func _build() -> void:
 	_stats.add_theme_constant_override("v_separation", int(TILE_GAP))
 	_stats.size_flags_horizontal = SIZE_SHRINK_BEGIN
 	_left.add_child(_stats)
+	_page_scroll = ScrollContainer.new()
+	_page_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_page_scroll.size_flags_horizontal = SIZE_EXPAND_FILL
+	cols.add_child(_page_scroll)
+	TdDragScroll.attach(_page_scroll, true)
+	# room for rims (sprite outsets) the scroll area would clip, and the text column capped at ~60 characters a line
+	var pad := MarginContainer.new()
+	pad.size_flags_horizontal = SIZE_EXPAND_FILL
+	for side in ["left", "top", "bottom"]: pad.add_theme_constant_override("margin_" + side, 6)
+	pad.add_theme_constant_override("margin_right", 22)
+	_page_scroll.add_child(pad)
 	var right := TdMenu.vbox(10)
-	right.size_flags_horizontal = SIZE_EXPAND_FILL
-	cols.add_child(right)
+	right.size_flags_horizontal = SIZE_SHRINK_BEGIN
+	right.custom_minimum_size = Vector2(TEXT_W, 0)
+	pad.add_child(right)
 	_title = TdMenu.label("", "display", TdTheme.color("accent.ink"), 50)
 	right.add_child(_title)
 	_subtitle = TdMenu.rich("", "body", TdTheme.color("ink.2"), 26)
@@ -176,6 +184,21 @@ func _build() -> void:
 	right.add_child(_description)
 	_body = TdMenu.rich("", "body", TdTheme.color("ink"), 24)
 	right.add_child(_body)
+	_locked_card = PanelContainer.new()
+	var lc := StyleBoxFlat.new()
+	lc.bg_color = Color(TdTheme.color("paper.edge"), 0.35)
+	lc.border_color = TdTheme.color("paper.edge")
+	lc.set_border_width_all(2)
+	lc.set_corner_radius_all(12)
+	lc.set_content_margin_all(20)
+	_locked_card.add_theme_stylebox_override("panel", lc)
+	_locked_card.size_flags_horizontal = SIZE_SHRINK_CENTER
+	_locked_card.custom_minimum_size = Vector2(460, 0)
+	_locked_hint = TdMenu.wrap_label("", "body", TdTheme.color("ink"), 24)
+	_locked_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_locked_card.add_child(_locked_hint)
+	right.add_child(TdMenu.spacer(20))
+	right.add_child(_locked_card)
 	_abilities_head = TdMenu.hbox(16)
 	var ah := TdMenu.label("Abilities", "h2", TdTheme.color("ink"), 34)
 	_abilities_head.add_child(ah)
@@ -235,14 +258,17 @@ func show_section(s: int) -> void:
 		var n := _new_count(SECTIONS[i])
 		_tab_new(i, n)
 	entries = MenuLogic.codex_entries(GameApp.catalog.codex if GameApp.catalog != null else null, s)
+	# no locked towers: only the ones the player has met are listed ("???" rows stay for enemies and statuses)
+	var total := entries.size()
+	if s == CodexSection.Towers: entries = entries.filter(func(e): return _known(e))
 	for r in rows: r.queue_free()
 	rows.clear()
 	for e in entries: rows.append(_make_row(e))
 	var known := 0
 	for e in entries: if _known(e): known += 1
-	_progress.text = MenuLogic.codex_progress_text(s, known, entries.size())
+	_progress.text = MenuLogic.codex_progress_text(s, known, total)
 	_bar.visible = s != CodexSection.Tips and entries.size() > 0
-	_bar_fill.size = Vector2(_bar.custom_minimum_size.x * (float(known) / maxf(1.0, entries.size())), 10)
+	_bar_fill.size = Vector2(_bar.custom_minimum_size.x * (float(known) / maxf(1.0, total)), 10)
 	_bar_fill.visible = known > 0
 	TdMenu.pop_in(rows, 0.02)
 	var first: Dictionary = entries[0] if not entries.is_empty() else {}
@@ -365,6 +391,7 @@ func _show_page(e: Dictionary) -> void:
 	for c in _abilities.get_children(): c.queue_free()
 	_description.text = ""
 	_body.text = ""
+	_locked_card.visible = false
 	_abilities_head.visible = false
 	_preview.clear()
 	_preview.visible = false
@@ -386,9 +413,12 @@ func _show_page(e: Dictionary) -> void:
 		_left.visible = false
 		return
 	if not _known(e):
+		# muted title, the unit's silhouette medallion, the hint in a compact card
 		_title.text = "???"
+		_title.add_theme_color_override("font_color", TdTheme.color("ink.2"))
 		_subtitle.text = MenuLogic.section_name(e.section)
-		_body.text = MenuLogic.locked_text(e.section)
+		_locked_card.visible = true
+		_locked_hint.text = MenuLogic.locked_text(e.section)
 		# drawn at its native size (128 px; the badge 52), centred in the card: no upscaling, no clipping
 		_picture.texture = _locked_texture(e)
 		var n := _picture.texture.get_size() * (0.5 if _picture.texture == TdTheme.texture("lock_badge") else 1.0)
@@ -427,8 +457,7 @@ func _show_page(e: Dictionary) -> void:
 		_subtitle.text = ""
 		_subtitle.visible = false
 		_description.text = TooltipText.describe(KeyBinds.fill_keys(tip.text).replace("End Turn", "End turn"))
-		_description.size_flags_horizontal = SIZE_SHRINK_BEGIN
-		_description.custom_minimum_size = Vector2(760, 0) # ~60 characters a line
+
 		var img: Texture2D = GameApp.icon_texture(tip.image) if tip.image != "" else null
 		_picture.texture = img
 		_picture.visible = img != null
@@ -457,13 +486,25 @@ func _unit_page(entity: EntityAsset, description: String) -> void:
 		var asset = GameApp.convert.asset_of(ab, "AbilityAsset")
 		var icon: Texture2D = TdTheme.ability_icon(MenuLogic.icon_name(asset.icon)) if asset != null and asset.icon != "" else null
 		var pips := 0 if ab.cooldown_until_reset else maxi(1, ab.cooldown)
-		_abilities.add_child(_ability_row(icon, ab.display_name, " · ".join(PackedStringArray(ab.tags)),
+		_abilities.add_child(_ability_row(icon, ab.display_name, ability_kind(ab),
 			TooltipText.describe(MenuLogic.fill_stat_words(ab.description, values)), TooltipText.cooldown_words(ab.cooldown, ab.cooldown_until_reset), pips,
 			AbilityText.tags(ab, me, vocab), false))
 	for pv in passives:
 		var asset = GameApp.convert.asset_of(pv.def, "PassiveAsset")
 		var icon: Texture2D = GameApp.icon_texture(asset.icon) if asset != null and asset.icon != "" else null
 		_abilities.add_child(_ability_row(icon, pv.name, "Passive", TooltipText.describe(MenuLogic.fill_stat_words(pv.def.description, values)), "Always on", 0, [], true))
+
+## An ability's type words ("Attack · Projectile"); an ability without tags is named from what it does: a status
+## that controls (taunt, stun, root…) → "Control", healing → "Support", a move → "Movement".
+static func ability_kind(ab: AbilityDef) -> String:
+	if not ab.tags.is_empty(): return " · ".join(PackedStringArray(ab.tags))
+	for st in AbilityText.all_steps(ab.steps):
+		if st is ApplyStatusStep and st.status != null:
+			for t in st.status.tags:
+				if t in [Tags.Taunted, Tags.Stunned, Tags.Rooted] or Tags.PreventActing.has(t): return "Control"
+		if st is HealStep: return "Support"
+		if st is JumpStep or st is TeleportStep or st is WalkStep: return "Movement"
+	return ""
 
 ## The stat tiles (EntityText.StatTiles): Max HP first, then Power, Potency, Duration, Speed, Range, Radius the unit
 ## has. Array of [stat, label, value text].
@@ -523,7 +564,7 @@ func _ability_row(icon: Texture2D, name_text: String, tags: String, description:
 	var icon_box := CenterContainer.new()
 	left.add_child(icon_box)
 	if passive:
-		icon_box.add_child(TdMenu.medallion(icon, 80, false))
+		icon_box.add_child(TdMenu.picture(icon, Vector2(88, 88))) # the passive's double-rim square chip (circles are statuses)
 	else:
 		var ic := TdMenu.picture(icon, Vector2(88, 88))
 		icon_box.add_child(ic)

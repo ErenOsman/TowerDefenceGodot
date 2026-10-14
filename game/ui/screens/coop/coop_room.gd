@@ -78,7 +78,9 @@ func _build() -> void:
 	_code.size_flags_horizontal = SIZE_SHRINK_END
 	_code.size_flags_vertical = SIZE_SHRINK_CENTER
 	hh.add_child(_code)
-	var copy := TdMenu.wood_button("Copy", Vector2(130, 56))
+	var copy := TdMenu.wood_button("Copy", Vector2(150, 56))
+	copy.icon = TdTheme.texture("icon_cards")
+	copy.add_theme_constant_override("icon_max_width", 26)
 	copy.size_flags_vertical = SIZE_SHRINK_CENTER
 	copy.tooltip_text = "Copy the room name and password to send to a friend."
 	copy.pressed.connect(func(): DisplayServer.clipboard_set(invite_text()))
@@ -106,7 +108,6 @@ func _build() -> void:
 	right.custom_minimum_size = Vector2(560, 0)
 	body.add_child(right)
 	_card = CoopUi.level_card(560, 116)
-	(_card.map as CoopBoardPic).pitch = 66.0
 	right.add_child(_card.panel)
 	_change_level = CoopUi.paper_action("icon_edit", "Change level", func(): open_settings())
 	_card.extra.add_child(_change_level)
@@ -136,7 +137,9 @@ func _build() -> void:
 	# bottom row
 	var bottom := TdMenu.hbox(18)
 	col.add_child(bottom)
-	var leave := TdMenu.wood_button("Leave room", Vector2(250, 66))
+	var leave := TdMenu.wood_button("Leave room", Vector2(260, 66))
+	leave.icon = TdTheme.texture("icon_back")
+	leave.add_theme_constant_override("icon_max_width", 28)
 	leave.pressed.connect(leave_room)
 	bottom.add_child(leave)
 	_wait = TdMenu.label("", "body", TdTheme.color("cream.100"), 23)
@@ -238,7 +241,9 @@ func _draw_chat_line(line: Dictionary) -> void:
 	var t: String
 	if line.system: t = "[i][color=#%s]%s[/color][/i]" % [TdTheme.color("cream.300").to_html(false), _esc(line.text)]
 	else: t = "[b][color=#%s]%s[/color][/b] %s" % [TdTheme.color("accent.light").to_html(false), _esc(line.name), _esc(line.text)]
-	_chat_box.add_child(TdMenu.rich(t, "body", TdTheme.color("cream.100"), 21))
+	var r := TdMenu.rich(t, "body", TdTheme.color("cream.100"), 21)
+	r.add_theme_font_override("italics_font", CoopUi.italic_font())
+	_chat_box.add_child(r)
 	while _chat_box.get_child_count() > 60: _chat_box.get_child(0).free()
 	_scroll_chat.call_deferred()
 
@@ -378,9 +383,10 @@ func _slot_row(i: int, p, room: Dictionary, cap: int, h: float) -> Control:
 		tail.add_child(ch)
 	elif net.is_host:
 		var x := TdMenu.close_button()
-		x.custom_minimum_size = Vector2(44, 44)
-		x.size = Vector2(44, 44)
-		x.position = Vector2(146, (h - 12 - 44) / 2.0)
+		x.custom_minimum_size = Vector2(36, 36)
+		x.size = Vector2(36, 36)
+		x.bleed_mode = TdButton.Bleed.OFF
+		x.position = Vector2(154, (h - 12 - 36) / 2.0)
 		TdTooltipTrigger.attach(x, "", "Remove %s from the room" % p.get("name", ""))
 		x.clicked.connect(func(): net.kick(pid))
 		tail.add_child(x)

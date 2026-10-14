@@ -105,7 +105,6 @@ static func thumb_rect(level_id: String, size: Vector2, _pixels := 6) -> Control
 	frame.clip_contents = true
 	var pic := CoopBoardPic.new()
 	pic.custom_minimum_size = size - Vector2(4, 4)
-	pic.pitch = 68.0 # steeper: the long board fills a wide thumbnail better
 	frame.add_child(pic)
 	pic.show_level(level_id)
 	return frame
@@ -358,6 +357,12 @@ static func glyph(kind: String) -> Texture2D:
 					a = 1.0 - clampf(absf(p.distance_to(cc) - 12.0) - 2.2, 0.0, 1.0)
 					var d := Geometry2D.get_closest_point_to_segment(p, Vector2(29, 29), Vector2(41, 41)).distance_to(p)
 					a = maxf(a, 1.0 - clampf(d - 3.0, 0.0, 1.0))
+				"players":
+					# two heads and shoulders
+					for h in [[Vector2(18, 17), 7.0, Vector2(18, 40), 12.0], [Vector2(32, 15), 6.0, Vector2(33, 36), 10.0]]:
+						if p.distance_to(h[0]) <= h[1]: a = 1.0
+						var sh: Vector2 = h[2]
+						if p.y <= 42.0 and p.y >= sh.y - h[3] + 6.0 and p.distance_to(Vector2(sh.x, sh.y + 2.0)) <= h[3]: a = 1.0
 				"refresh":
 					var ang := fposmod(atan2(p.y - c.y, p.x - c.x), TAU)
 					var ring := 1.0 - clampf(absf(p.distance_to(c) - 15.0) - 2.2, 0.0, 1.0)
@@ -423,3 +428,13 @@ static func style_scrollbar(scroll: ScrollContainer) -> void:
 	bar.add_theme_stylebox_override("scroll", box(Color(0.1, 0.075, 0.06, 0.8), 6, Color(0, 0, 0, 0), 0, Vector4(2, 2, 2, 2)))
 	var grab := box(Color(TdTheme.color("cream.300"), 0.8), 6, Color(0, 0, 0, 0), 0, Vector4(4, 4, 4, 4))
 	for k in ["grabber", "grabber_highlight", "grabber_pressed"]: bar.add_theme_stylebox_override(k, grab)
+
+static var _italic: FontVariation = null
+
+## The body font slanted (the fonts have no italic face): chat system lines, notes.
+static func italic_font() -> Font:
+	if _italic == null:
+		_italic = FontVariation.new()
+		_italic.base_font = TdTheme.font("body")
+		_italic.variation_transform = Transform2D(Vector2(1, 0), Vector2(0.22, 1), Vector2.ZERO)
+	return _italic

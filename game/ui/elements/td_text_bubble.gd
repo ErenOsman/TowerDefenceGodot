@@ -20,6 +20,16 @@ signal skip_clicked
 @export var bottom_offset := 230.0
 ## A bubble pointing at something stays inside the area; off: it follows its target off screen (always above).
 @export var keep_inside := true
+## The tail ends exactly on the target point (stretched when the box has to sit further away), and the box keeps
+## clear of `avoid` (canvas rects: the target itself, unit heads and plates, previewed tiles): above or below the
+## target, slid sideways, further away when it must. Off: the plain rule (above at `gap`, below when no room).
+var tail_to_target := false
+var avoid: Array = []
+## tail_to_target: where the tail ends when the box sits below (canvas; e.g. the bottom edge of a ring whose top edge
+## is the point), null = the same point.
+var target_below = null
+## How much further than its natural length the tail may stretch.
+const MAX_TAIL_STRETCH := 240.0
 
 enum Placement { NONE, POINT, CENTRE }
 
@@ -246,6 +256,9 @@ func _place() -> void:
 		centre = r.get_center()
 	elif not has_target:
 		centre = Vector2(r.get_center().x, r.end.y - bottom_offset - bs.y / 2.0)
+	elif tail_to_target:
+		_place_avoiding(r, bs, target)
+		return
 	else:
 		above = not keep_inside or target.y - gap - bs.y >= r.position.y + margin
 		centre = Vector2(target.x, target.y - gap - bs.y / 2.0 if above else target.y + gap + bs.y / 2.0)
@@ -257,6 +270,50 @@ func _place() -> void:
 	_patch.visible = has_target
 	if has_target:
 		TdTooltipBox.place_tail(_tail, _patch, bs, target.x - _box.position.x, above, TdTheme.color("paper.bottom"))
+
+## tail_to_target: the place (above / below, slid, the tail stretched) that covers the least of `avoid` and spills
+## nothing past the area; ties go to a short tail, the tail near the box's middle, above.
+func _place_avoiding(r: Rect2, bs: Vector2, target: Vector2) -> void:
+	var natural := TdTheme.sprite_size("tooltip_tail_down").y - TdTooltipBox.TAIL_TUCK - TdTooltipBox.TAIL_EMPTY
+	var inner := r.grow(-margin)
+	var keep := []
+	for a in avoid: keep.append(Rect2(a.position - global_position, a.size))
+	var inset := TdTooltipBox.TAIL_INSET
+	var best := Vector2.ZERO
+	var best_above := true
+	var best_score := INF
+	var below_target: Vector2 = (target_below - global_position) if target_below is Vector2 else target
+	for above in [true, false]:
+		var t: Vector2 = target if above else below_target
+		for k in 13:
+			var extra := k * MAX_TAIL_STRETCH / 12.0
+			var y: float = t.y - natural - extra - bs.y if above else t.y + natural + extra
+			for j in 9:
+				var fx := 0.1 + j * 0.1
+				var x: float = t.x - clampf(bs.x * fx, inset, bs.x - inset)
+				var box := Rect2(x, y, bs.x, bs.y)
+				var inside := box.intersection(inner).get_area() if box.intersects(inner) else 0.0
+				var score := (box.get_area() - inside) * 50.0 + extra * 2.0 + absf(fx - 0.5) * 120.0 + (0.0 if above else 150.0)
+				# the tail must not cross what is kept clear either (but what holds its tip — the target's own ring)
+				var tail_r := Rect2(t.x - 8.0, y + bs.y, 16.0, t.y - y - bs.y) if above else Rect2(t.x - 8.0, t.y, 16.0, y - t.y)
+				for a in keep:
+					if box.intersects(a): score += box.intersection(a).get_area()
+					if not a.grow(1.0).has_point(t) and tail_r.intersects(a): score += tail_r.intersection(a).get_area() * 3.0
+				if score < best_score:
+					best_score = score
+					best = Vector2(x, y)
+					best_above = above
+	_box.position = best.round()
+	if not best_above: target = below_target
+	_tail.visible = true
+	_patch.visible = true
+	TdTooltipBox.place_tail(_tail, _patch, bs, target.x - _box.position.x, best_above, TdTheme.color("paper.bottom"))
+	# stretch the tail so its tip lands on the target
+	var ts := _tail.size
+	var reach: float = (target.y - (_box.position.y + bs.y)) if best_above else (_box.position.y - target.y)
+	var k2 := maxf(0.2, (reach + TdTooltipBox.TAIL_TUCK) / maxf(1.0, ts.y - TdTooltipBox.TAIL_EMPTY))
+	_tail.size.y = roundf(ts.y * k2)
+	_tail.position.y = roundf(bs.y - TdTooltipBox.TAIL_TUCK) if best_above else roundf(-_tail.size.y + TdTooltipBox.TAIL_TUCK)
 
 func _process(delta: float) -> void:
 	if not is_shown(): return

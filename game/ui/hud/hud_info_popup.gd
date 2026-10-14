@@ -27,6 +27,7 @@ var _stats: GridContainer
 var _right: VBoxContainer
 var _values := {}
 var _codex_target := []
+var _rim: Panel
 
 func _ready() -> void:
 	make("", WIDTH, true)
@@ -108,7 +109,28 @@ func _ready() -> void:
 	_right = HudArt.vbox(16)
 	_right.custom_minimum_size = Vector2(RIGHT_W, 0)
 	scroll.add_child(_right)
+	# the enemy window's red rim
+	_rim = Panel.new()
+	_rim.mouse_filter = MOUSE_FILTER_IGNORE
+	var rim := StyleBoxFlat.new()
+	rim.draw_center = false
+	rim.border_color = TdTheme.color("bad")
+	rim.set_border_width_all(3)
+	rim.set_corner_radius_all(24)
+	rim.anti_aliasing = true
+	_rim.add_theme_stylebox_override("panel", rim)
+	_rim.visible = false
+	add_child(_rim)
 	visible = false
+
+func _process(delta: float) -> void:
+	super._process(delta)
+	if panel == null or _rim == null: return
+	_rim.position = panel.position - Vector2(2, 2)
+	_rim.size = panel.size + Vector2(4, 4)
+	_rim.scale = panel.scale
+	_rim.pivot_offset = _rim.size / 2.0
+	_rim.modulate.a = panel.modulate.a
 
 static func _box(bg: Color, border: Color, radius: int, width: int) -> StyleBoxFlat:
 	var b := StyleBoxFlat.new()
@@ -181,9 +203,11 @@ func show_entity(id: int) -> void:
 	var statuses := []
 	for st in OverlayStyle.ordered_statuses(f.statuses):
 		if st.def == null or not st.def.has_tag(Tags.Hidden): statuses.append(st)
-	if not statuses.is_empty():
-		_right.add_child(_heading("Statuses", enemy))
-		for st in statuses: _right.add_child(_status_row(st))
+	_right.add_child(_heading("Statuses", enemy))
+	if statuses.is_empty():
+		_right.add_child(HudArt.label("No statuses", "body", TdTheme.color("ink.2")))
+	for st in statuses: _right.add_child(_status_row(st))
+	_rim.visible = enemy
 	open()
 
 func _open_codex() -> void:
@@ -301,6 +325,11 @@ func _pill(value: String, label: String) -> Control:
 	p.mouse_filter = MOUSE_FILTER_IGNORE
 	var h := HudArt.hbox(6)
 	p.add_child(h)
+	var icon_name := HudArt.tag_icon(label)
+	if icon_name != "":
+		var ic := HudArt.sprite(icon_name, Vector2(18, 18), TdTheme.color("ink.2"))
+		ic.size_flags_vertical = SIZE_SHRINK_CENTER
+		h.add_child(ic)
 	h.add_child(HudArt.label(value, "micro", TdTheme.color("ink"), 22))
 	var n := HudArt.label(label, "small", TdTheme.color("ink.2"), 18)
 	n.size_flags_vertical = SIZE_SHRINK_CENTER

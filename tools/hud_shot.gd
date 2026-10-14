@@ -177,11 +177,17 @@ func _run() -> void:
 	Engine.time_scale = 1.0
 	await _settle()
 
-	# the tower's Info window
+	# the tower's Info window, with statuses on the archer (as tools/level_scenes.gd applies them)
 	if archer.alive:
+		_apply_statuses(archer, [["burn", "3", "3"], ["shield", "2", ""]])
+		await _settle()
 		hud.open_info(archer.id)
 		await _wait(0.5)
 		await _shot("8_tower_info")
+		var sc: ScrollContainer = hud.info.find_children("*", "ScrollContainer", true, false)[0]
+		sc.scroll_vertical = 10000
+		await _frames(4)
+		await _shot("8b_tower_info_statuses")
 		hud.info.close()
 		await _wait(0.4)
 
@@ -204,6 +210,13 @@ func _run() -> void:
 		await _settle()
 	await _wait(1.0)
 	await _shot("10_end_screen")
+	# the victory window as it looks with a reward (shown over the same board; the outcome is the screen's input)
+	hud.end_screen.visible = false
+	var app = root.get_node_or_null("GameApp")
+	if app != null and app.catalog != null: level.reward = app.catalog.find_tower("guardian")
+	hud.end_screen.show_outcome(Outcome.Won)
+	await _wait(0.6)
+	await _shot("11_victory")
 	print("outcome ", level.session.outcome, " round ", level.session.round, " panel open ", level.ui_panel_open)
 	quit(0)
 
@@ -291,6 +304,22 @@ func _report_tail(what: String, c: Control) -> void:
 	var tail: Control = box.get("_tail")
 	var t := tail.get_global_rect().get_center().x if tail != null and tail.visible else -1.0
 	print("%s: anchor centre %.1f  tail centre %.1f  box %.1f..%.1f" % [what, c.get_global_rect().get_center().x, t, box.get_global_rect().position.x, box.get_global_rect().end.x])
+
+func _apply_statuses(unit: Entity, specs: Array) -> void:
+	var app = root.get_node_or_null("GameApp")
+	var lib: ContentLibrary = app.lib if app != null else ContentLibrary.load("res://data/content")
+	for spec in specs:
+		var asset: StatusAsset = null
+		for a in lib.all_of("StatusAsset"):
+			if a.get_id().to_lower() == spec[0] or a.name.get_file().to_lower() == spec[0]: asset = a
+		if asset == null: continue
+		var fx := ApplyStatusEffect.new()
+		fx.status = level.converter.status(asset)
+		fx.stacks = Formula.new(spec[1])
+		if spec[2] != "": fx.duration = Formula.new(spec[2])
+		fx.target_id = unit.id
+		fx.source = 0
+		level.session.resolver.run(fx)
 
 func _frames(n: int) -> void:
 	for i in n: await process_frame

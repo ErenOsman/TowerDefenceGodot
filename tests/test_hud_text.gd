@@ -125,3 +125,7 @@ func test_info_tags_and_pips() -> void:
 	assert_eq(HudInfoPopup.pip_names(0, false, 2), ["pip_mini_ready", "pip_mini_ready"])
 	assert_eq(HudInfoPopup.pip_names(1, false, 2), ["pip_mini_ready", "pip_mini_wait"])
 	assert_eq(HudInfoPopup.pip_names(0, true, 1), ["pip_mini_held"])
+
+func test_fill_stats_plural() -> void:
+	assert_eq(HudText.fill_stats("Walks along its path, up to Speed tiles.", {"Speed": 1.0}), "Walks along its path, up to [b]1[/b] tile.")
+	assert_eq(HudText.fill_stats("Walks along its path, up to Speed tiles.", {"Speed": 2.0}), "Walks along its path, up to [b]2[/b] tiles.")

@@ -15,6 +15,8 @@ const WIDTH := 900.0
 const CONTROL_W := 520.0
 ## The window's top edge (reference px): the tallest tab (Controls) is then centred on the screen.
 const TOP := 130.0
+## Every page's height (the Controls page: its header row and the 520 px list).
+const PAGE_H := 560.0
 
 var tab_buttons: Array = []
 var pages: Array = []
@@ -56,18 +58,24 @@ func _build() -> void:
 	var head := TdMenu.hbox(16)
 	col.add_child(head)
 	var title := TdMenu.label("Settings", "h2", TdTheme.color("cream.100"), 40)
-	title.size_flags_horizontal = SIZE_EXPAND_FILL
 	head.add_child(title)
+	var subtitle := TdMenu.label("Changes apply and save at once", "small", TdTheme.color("cream.300"), 20)
+	subtitle.size_flags_horizontal = SIZE_EXPAND_FILL
+	subtitle.size_flags_vertical = SIZE_SHRINK_CENTER
+	head.add_child(subtitle)
 	var x := TdMenu.close_button()
 	x.clicked.connect(close)
 	head.add_child(x)
 	var tabs_row := TdMenu.hbox(10)
 	col.add_child(tabs_row)
-	tab_buttons = TdMenu.tabs(tabs_row, TABS, [], Vector2((WIDTH - 48 - 30) / 4.0 - 22.0, 56), show_tab)
+	var icons := []
+	for n in TAB_ICONS: icons.append(TdTheme.texture(n))
+	tab_buttons = TdMenu.tabs(tabs_row, TABS, icons, Vector2((WIDTH - 48 - 30) / 4.0 - 22.0, 56), show_tab)
 	if OS.has_feature("web"): tab_buttons[1].visible = false
 	var well := TdMenu.panel(TdPanel.Kind.WELL, 18)
 	col.add_child(well)
-	var stack := VBoxContainer.new() # hidden pages take no room: the window hugs the shown page
+	var stack := VBoxContainer.new()
+	stack.custom_minimum_size = Vector2(0, PAGE_H) # one height for every tab (the tallest, Controls): nothing jumps
 	well.add_child(stack)
 	for page in [_audio_page(), _display_page(), _gameplay_page(), _controls_page()]:
 		stack.add_child(page)
@@ -113,7 +121,6 @@ func show_tab(i: int) -> void:
 	for k in pages.size():
 		pages[k].visible = k == i
 		tab_buttons[k].selected = k == i
-	if window != null: window.reset_size.call_deferred()
 	reset_button.get_parent().visible = i == 3
 	if i == 3: refresh_controls()
 
@@ -154,7 +161,7 @@ func _row(page: Container, text: String, control: Control, sub := "") -> HBoxCon
 	page.add_child(row)
 	return row
 
-func _slider_row(page: Container, text: String, setting: String, setter: Callable) -> void:
+func _slider_row(page: Container, text: String, setting: String, setter: Callable, sub := "") -> void:
 	var h := TdMenu.hbox(16)
 	var sl := HSlider.new()
 	sl.min_value = 0
@@ -173,7 +180,7 @@ func _slider_row(page: Container, text: String, setting: String, setter: Callabl
 		val.text = str(int(v))
 		setter.call(v / 100.0))
 	_sliders[setting] = [sl, val]
-	_row(page, text, h)
+	_row(page, text, h, sub)
 
 func _toggle_row(page: Container, text: String, setting: String, setter: Callable, sub := "") -> void:
 	var t := CheckButton.new()
@@ -184,10 +191,10 @@ func _toggle_row(page: Container, text: String, setting: String, setter: Callabl
 
 func _audio_page() -> Control:
 	var p := _page()
-	_slider_row(p, "Master volume", "master_volume", func(v): SettingsMgr.set_master_volume(v))
-	_slider_row(p, "Music volume", "music_volume", func(v): SettingsMgr.set_music_volume(v))
-	_slider_row(p, "Sound effects", "sfx_volume", func(v): SettingsMgr.set_sfx_volume(v))
-	_slider_row(p, "Other volume", "other_volume", func(v): SettingsMgr.set_other_volume(v))
+	_slider_row(p, "Master volume", "master_volume", func(v): SettingsMgr.set_master_volume(v), "Everything at once")
+	_slider_row(p, "Music volume", "music_volume", func(v): SettingsMgr.set_music_volume(v), "Level and menu music")
+	_slider_row(p, "Sound effects", "sfx_volume", func(v): SettingsMgr.set_sfx_volume(v), "Hits, spells, footsteps")
+	_slider_row(p, "Other volume", "other_volume", func(v): SettingsMgr.set_other_volume(v), "Clicks and the rest")
 	return p
 
 func _display_page() -> Control:
@@ -239,12 +246,12 @@ func _gameplay_page() -> Control:
 		var speed: float = MenuLogic.GAME_SPEEDS[clampi(int(v), 0, MenuLogic.GAME_SPEEDS.size() - 1)]
 		_speed_value.text = MenuLogic.speed_text(speed)
 		SettingsMgr.set_game_speed(speed))
-	_row(p, "Game speed", h)
-	_toggle_row(p, "Follow action", "follow_action", func(v): SettingsMgr.set_follow_action(v))
-	_toggle_row(p, "Camera follows selection", "follow_selection", func(v): SettingsMgr.set_follow_selection(v))
-	_toggle_row(p, "Drag with the mouse", "drag_to_pan", func(v): SettingsMgr.set_drag_to_pan(v))
-	_toggle_row(p, "Instant playback", "instant_playback", func(v): SettingsMgr.set_instant_playback(v))
-	_toggle_row(p, "Always show health", "always_show_health", func(v): SettingsMgr.set_always_show_health(v))
+	_row(p, "Game speed", h, "How fast moves and attacks play")
+	_toggle_row(p, "Follow action", "follow_action", func(v): SettingsMgr.set_follow_action(v), "The camera follows whoever acts")
+	_toggle_row(p, "Camera follows selection", "follow_selection", func(v): SettingsMgr.set_follow_selection(v), "The camera glides to the unit you select")
+	_toggle_row(p, "Drag with the mouse", "drag_to_pan", func(v): SettingsMgr.set_drag_to_pan(v), "Hold the left button and move to pan the map")
+	_toggle_row(p, "Instant playback", "instant_playback", func(v): SettingsMgr.set_instant_playback(v), "Skip every animation: results at once")
+	_toggle_row(p, "Always show health", "always_show_health", func(v): SettingsMgr.set_always_show_health(v), "Health bars over every unit, not only hurt ones")
 	return p
 
 ## The knob's centre reaches both ends of the track: the track spans the whole slider, the knob overhangs half its

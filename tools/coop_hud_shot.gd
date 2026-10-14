@@ -68,6 +68,7 @@ func _run() -> void:
 		return
 	hud = level.hud as Hud
 	_check(level.is_coop, "co-op launch")
+	_check(hud.coop_hud.dial.get_index() < hud.top_bar.end_turn.get_index(), "Pass coin under End turn (%d < %d)" % [hud.coop_hud.dial.get_index(), hud.top_bar.end_turn.get_index()])
 	_check(level.hand_towers.size() == 3, "only my hand in the tray (%d)" % level.hand_towers.size())
 	_park_mouse()
 	await _settle()

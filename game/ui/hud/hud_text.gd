@@ -210,7 +210,7 @@ static func fill_stats(description: String, values: Dictionary) -> String:
 	for m in re.search_all(description):
 		out += description.substr(at, m.get_start() - at) + "[b]%s[/b]" % num(values[m.get_string(1)])
 		at = m.get_end()
-	return out + description.substr(at)
+	return singular_after_one(out + description.substr(at))
 
 ## "[b]1[/b] tiles" → "[b]1[/b] tile" (the counted words descriptions use after a filled-in number).
 static func singular_after_one(text: String) -> String:

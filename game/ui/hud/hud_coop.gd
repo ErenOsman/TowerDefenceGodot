@@ -28,6 +28,8 @@ var toast: PanelContainer
 var toast_title: Label
 var toast_sub: Label
 var chat_feed: VBoxContainer
+## The dark strip behind the chat lines (readable over a light board at any size).
+var chat_strip: PanelContainer
 var chat_hint: Label
 var chat_input: LineEdit
 
@@ -70,10 +72,21 @@ func _build() -> void:
 	toast_sub = HudArt.label("", "body", TdTheme.color("cream.200"), 21)
 	tv.add_child(toast_sub)
 
+	chat_strip = PanelContainer.new()
+	chat_strip.name = "ChatStrip"
+	chat_strip.mouse_filter = MOUSE_FILTER_IGNORE
+	var cs := StyleBoxFlat.new()
+	cs.bg_color = Color(TdTheme.color("wood.900"), 0.72)
+	cs.set_corner_radius_all(10)
+	cs.content_margin_left = 12; cs.content_margin_right = 14
+	cs.content_margin_top = 6; cs.content_margin_bottom = 8
+	chat_strip.add_theme_stylebox_override("panel", cs)
+	chat_strip.visible = false
+	add_child(chat_strip)
 	chat_feed = HudArt.vbox(2)
 	chat_feed.name = "ChatFeed"
 	chat_feed.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(chat_feed)
+	chat_strip.add_child(chat_feed)
 	chat_hint = HudArt.label("", "small", Color(TdTheme.color("cream.200"), 0.8), 18)
 	_outline(chat_hint)
 	add_child(chat_hint)
@@ -238,22 +251,36 @@ func _chat() -> void:
 	if key == _chat_key: return
 	_chat_key = key
 	for ch in chat_feed.get_children(): ch.free()
+	var top := 0.0
+	for a in alphas: top = maxf(top, a)
+	chat_strip.visible = top > 0.0
+	chat_strip.modulate.a = top
 	for i in lines.size():
 		if alphas[i] <= 0.0: continue
 		var line: Dictionary = lines[i]
 		var r := HudArt.rich("body", TdTheme.color("cream.100"), 21)
 		r.custom_minimum_size = Vector2(CHAT_W, 0)
 		r.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-		r.add_theme_constant_override("outline_size", 6)
+		r.add_theme_constant_override("outline_size", 4)
+		r.add_theme_font_override("italics_font", _italic())
 		var t := str(line.text).replace("[", "[lb]")
-		if line.system: r.text = "[i][color=#%s]%s[/color][/i]" % [TdTheme.color("cream.300").to_html(false), t] # text.muted
+		if line.system: r.text = "[i][color=#%s]%s[/color][/i]" % [TdTheme.color("cream.200").to_html(false), t] # muted cream, italic
 		else: r.text = "[b][color=#%s]%s[/color][/b] %s" % [TdTheme.color("accent.light").to_html(false), str(line.name).replace("[", "[lb]"), t]
-		r.modulate.a = alphas[i]
+		r.modulate.a = alphas[i] / top
 		chat_feed.add_child(r)
 	var keys = get_tree().root.get_node_or_null("KeyBinds")
 	var k: String = keys.first("Chat") if keys != null else "T"
 	chat_hint.text = "%s · chat" % k if k != "" else ""
 	chat_hint.visible = not chat_input.visible and chat_hint.text != ""
+
+static var _italic_font: FontVariation = null
+## Nunito slanted (the kit has no italic cut): the chat's system lines.
+static func _italic() -> Font:
+	if _italic_font == null:
+		_italic_font = FontVariation.new()
+		_italic_font.base_font = TdTheme.font("body")
+		_italic_font.variation_transform = Transform2D(Vector2(1, 0), Vector2(0.2, 1), Vector2.ZERO)
+	return _italic_font
 
 static func _outline(l: Label) -> void:
 	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
@@ -273,8 +300,8 @@ func _layout() -> void:
 	if chat_input.visible:
 		chat_input.position = Vector2(HudLayout.MARGIN, tray_top - 10.0 - chat_input.size.y)
 		bottom = chat_input.position.y - 6.0
-	chat_feed.size = Vector2(CHAT_W, chat_feed.get_combined_minimum_size().y)
-	chat_feed.position = Vector2(HudLayout.MARGIN + 6.0, bottom - chat_feed.size.y)
+	chat_strip.size = chat_strip.get_combined_minimum_size()
+	chat_strip.position = Vector2(HudLayout.MARGIN, bottom - chat_strip.size.y)
 
 # ------------------------------------------------------------------ texts the parts share
 
@@ -352,6 +379,7 @@ class PassDial extends Control:
 	const R := 36.0                         # coin radius (72 px)
 	const OFFSET := Vector2(-100, 45)       # coin centre from End turn's centre (rim 20 px above the screen edge)
 	const NECK := 16.0
+	const TAIL_X := 340.0 - 28.0            # battle tooltip width - TdTooltipBox.TAIL_INSET
 	var hud: HudCoop
 	var end_turn: Control
 	var hovered := false
@@ -361,9 +389,10 @@ class PassDial extends Control:
 	func _init() -> void:
 		name = "PassButton"
 		mouse_filter = MOUSE_FILTER_STOP
-		# wide to the left on purpose: the tooltip opens ABOVE starting at this control's left edge, so it ends just
-		# left of End turn (never over it); only the coin takes the pointer (_has_point)
-		size = Vector2(340.0 + 4.0 + 84.0 + 30.0, 160) # battle tooltip 340 + gap + End turn radius + 30
+		# the tooltip opens ABOVE starting at this control's left edge, and its tail points at this control's centre:
+		# the control is centred on the coin and starts 312 px left of it (the 340 px battle box's last tail spot), so
+		# the tail sits on the coin and the box ends at End turn's rim. Only the coin takes the pointer (_has_point).
+		size = Vector2(TAIL_X * 2.0, 160)
 		mouse_entered.connect(func(): hovered = true; queue_redraw())
 		mouse_exited.connect(func(): hovered = false; pressed_in = false; queue_redraw())
 	func _ready() -> void:
@@ -376,9 +405,9 @@ class PassDial extends Control:
 		add_child(anchor)
 		_trigger = TdTooltipTrigger.attach(self)
 		_trigger.set_placement(TdTooltipPlacement.Side.ABOVE, anchor)
-	## The coin's centre in this control; End turn's centre is (size.x - 30, 50).
-	func coin() -> Vector2: return end_centre() + OFFSET
-	func end_centre() -> Vector2: return Vector2(size.x - 30.0, 50.0)
+	## The coin's centre in this control (horizontally its centre); End turn's centre is coin - OFFSET.
+	func coin() -> Vector2: return Vector2(TAIL_X, 50.0 + OFFSET.y)
+	func end_centre() -> Vector2: return coin() - OFFSET
 	func _has_point(p: Vector2) -> bool:
 		return p.distance_to(coin()) <= R + 3.0
 	func _gui_input(e: InputEvent) -> void:

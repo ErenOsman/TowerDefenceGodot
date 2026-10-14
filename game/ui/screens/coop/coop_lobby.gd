@@ -21,7 +21,7 @@ var _empty_text: Label
 var _empty_actions: HBoxContainer
 var _detail: VBoxContainer
 var _detail_title: Label
-var _detail_sub: Label
+var _detail_sub: HBoxContainer
 var _card: Dictionary
 var _not_connected: Label
 var _join: TdButton
@@ -58,13 +58,20 @@ func _build() -> void:
 	_search.add_child(lens)
 	_search.text_changed.connect(func(_t): _draw_list())
 	tools.add_child(_search)
+	var toggle_row := TdMenu.hbox(8) # the switch first, then its label (clicking the label flips it too)
+	tools.add_child(toggle_row)
 	_show_full = CheckButton.new()
-	_show_full.text = "Show full rooms"
 	_show_full.button_pressed = true
 	_show_full.focus_mode = Control.FOCUS_NONE
-	TdTheme.apply_type(_show_full, "body", TdTheme.color("cream.100"), 22)
+	_show_full.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_show_full.toggled.connect(func(_v): _draw_list())
-	tools.add_child(_show_full)
+	toggle_row.add_child(_show_full)
+	var toggle_label := TdMenu.label("Show full rooms", "body", TdTheme.color("cream.100"), 22)
+	toggle_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	toggle_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	toggle_label.gui_input.connect(func(ev):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT: _show_full.button_pressed = not _show_full.button_pressed)
+	toggle_row.add_child(toggle_label)
 	var refresh := TdMenu.wood_button("Refresh", Vector2(190, 56))
 	refresh.icon = CoopUi.glyph("refresh")
 	refresh.expand_icon = false
@@ -129,7 +136,7 @@ func _build() -> void:
 	right.add_child(_detail)
 	_detail_title = TdMenu.label("", "h2", TdTheme.color("cream.100"), 34)
 	_detail.add_child(_detail_title)
-	_detail_sub = TdMenu.label("", "body", TdTheme.color("cream.200"), 21)
+	_detail_sub = TdMenu.hbox(6)
 	_detail.add_child(_detail_sub)
 	_card = CoopUi.level_card(440, 200)
 	_card.turns.visible = false
@@ -312,7 +319,11 @@ func _room_row(r: Dictionary) -> PanelContainer:
 	count.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(count)
 	var state := "Playing" if started else ("Full" if full else "Waiting")
-	var pill := CoopUi.state_pill(state, Color("2f7d3a") if state == "Waiting" else Color(0.2, 0.16, 0.13), Color.WHITE if state == "Waiting" else TdTheme.color("cream.300"))
+	# only the selected row's Waiting is filled; the others are outlined
+	var pill: PanelContainer
+	if state == "Waiting" and sel: pill = CoopUi.state_pill(state, Color("2f7d3a"), Color.WHITE)
+	elif state == "Waiting": pill = TdMenu.pill("[b]Waiting[/b]", Color(0, 0, 0, 0), CoopUi.GOOD.lightened(0.15), 20, CoopUi.GOOD)
+	else: pill = CoopUi.state_pill(state, Color(0.2, 0.16, 0.13), TdTheme.color("cream.300"))
 	pill.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(TdMenu.spacer(0, 24))
 	h.add_child(pill)
@@ -345,17 +356,27 @@ func _draw_detail(online: bool) -> void:
 		_join.set_interactable(false, "Pick a room")
 		return
 	_detail_title.text = str(r.get("name", ""))
-	var bits := []
-	bits.append("Password" if r.get("locked", false) else "Open")
-	if str(r.get("host_name", "")) != "": bits.append("host " + str(r.host_name))
-	bits.append("%d of %d" % [NetProtocol.int_of(r, "players"), NetProtocol.int_of(r, "count")])
-	_detail_sub.text = " · ".join(bits)
+	# "🔒 Password · host Şule · 👥 2 of 4" (icons from the kit / drawn)
+	CoopUi.clear(_detail_sub)
+	var locked := bool(r.get("locked", false))
+	if locked: _detail_sub.add_child(_detail_icon(TdTheme.texture("icon_lock")))
+	var bits := "Password" if locked else "Open"
+	if str(r.get("host_name", "")) != "": bits += " · host " + str(r.host_name)
+	_detail_sub.add_child(TdMenu.label(bits + " · ", "body", TdTheme.color("cream.200"), 21))
+	_detail_sub.add_child(_detail_icon(CoopUi.glyph("players")))
+	_detail_sub.add_child(TdMenu.label("%d of %d" % [NetProtocol.int_of(r, "players"), NetProtocol.int_of(r, "count")], "body", TdTheme.color("cream.200"), 21))
 	CoopUi.fill_level_card(_card, str(r.get("level", "")), NetProtocol.int_of(r, "count"))
 	var full: bool = NetProtocol.int_of(r, "players") >= NetProtocol.int_of(r, "count")
 	var started := bool(r.get("started", false))
 	_join.set_interactable(not full and not started, "This room is full." if full else "The match has started.")
 
 ## Join: a password room asks for it first; an open room joins at once.
+func _detail_icon(tex: Texture2D) -> TextureRect:
+	var i := TdMenu.picture(tex, Vector2(22, 22))
+	i.modulate = TdTheme.color("cream.200")
+	i.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return i
+
 func join_selected() -> void:
 	var r := _selected()
 	var n := _net()

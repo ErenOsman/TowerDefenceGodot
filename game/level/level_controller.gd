@@ -1110,7 +1110,10 @@ func _handle_pause_keys() -> void:
 		version += 1
 		pause_requested.emit()
 		return
-	if _back_pressed() and _placing == null and _aiming == null and _quick_key < 0: pause_requested.emit()
+	if _back_pressed() and _placing == null and _aiming == null and _quick_key < 0:
+		# the guided tutorial's bubble shows Skip [Esc]: Esc with nothing to cancel ends the guidance (P still pauses)
+		if guided != null and not guided.finished: skip_sequence()
+		else: pause_requested.emit()
 
 func _handle_input() -> void:
 	var vp := get_viewport()

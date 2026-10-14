@@ -17,13 +17,28 @@ var leave_button: TdButton
 var quit_button: TdButton
 var _resume_scale := 1.0
 var _sub: Node = null
+var _subtitle: Label
+
+## "Two Roads · Round 4 · Wave 2/3": the level, the round and the waves as shown now.
+static func pause_subtitle(c: LevelController) -> String:
+	if c == null or c.session == null: return ""
+	var parts: Array[String] = []
+	if c.level != null and c.level.display_name != "": parts.append(c.level.display_name)
+	var f: ViewFrame = c.shown
+	parts.append("Round %d" % (f.round if f != null else c.session.round))
+	if f != null and not f.waves.is_empty(): parts.append("Wave " + HudText.wave_text(f.waves))
+	return " · ".join(parts)
 
 func _ready() -> void:
 	make("Paused", 520, false, true)
 	title_label.add_theme_color_override("font_color", TdTheme.color("cream.100"))
 	body.add_theme_constant_override("separation", 22)
 	body.alignment = BoxContainer.ALIGNMENT_CENTER
+	_subtitle = HudArt.label("", "small", TdTheme.color("cream.300"))
+	_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.add_child(_subtitle)
 	continue_button = _add(wide_button("Continue", TdButton.Style.PRIMARY, "icon_play"))
+	continue_button.set_key_hint("Esc")
 	continue_button.clicked.connect(close)
 	settings_button = _add(wide_button("Settings", TdButton.Style.SECONDARY, "icon_settings"))
 	settings_button.clicked.connect(_open_settings)
@@ -31,7 +46,7 @@ func _ready() -> void:
 	codex_button.clicked.connect(func(): _open_sub(CODEX_SCENE))
 	leave_button = _add(wide_button("Quit to level select", TdButton.Style.SECONDARY, "icon_back"))
 	leave_button.clicked.connect(_leave)
-	quit_button = _add(wide_button("Quit game", TdButton.Style.DANGER, "icon_quit"))
+	quit_button = _add(wide_button("Quit game", TdButton.Style.SECONDARY, "icon_quit"))
 	quit_button.clicked.connect(_quit)
 	visible = false
 
@@ -43,6 +58,7 @@ func _add(b: TdButton) -> TdButton:
 func open() -> void:
 	var c := controller
 	leave_button.text = "Quit to " + (c.leave_label.to_lower() if c != null else "level select")
+	_subtitle.text = pause_subtitle(c)
 	codex_button.visible = ResourceLoader.exists(CODEX_SCENE) and not (c != null and c.is_tutorial)
 	_resume_scale = Engine.time_scale if Engine.time_scale > 0.0 else 1.0
 	Engine.time_scale = 0.0

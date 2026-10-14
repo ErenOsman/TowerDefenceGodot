@@ -314,11 +314,15 @@ func _show_end_turn(f: ViewFrame) -> void:
 	var label := HudText.end_turn_label(f.phase, f.outcome)
 	var chip: String = (keys.first("EndRound") if keys != null else "Enter") if f.phase == Phase.Player and f.outcome == Outcome.Running else ""
 	var wait: String = controller.wait_reason if controller.is_coop and f.phase == Phase.Player else ""
-	var state := [label, can_end, chip, f.phase, wait]
+	# the guided tutorial: on its lines End turn keeps its cobalt face (at 60 % when the line does not allow it; a
+	# click is refused with the line's reason) instead of the disabled wood one
+	var guided_live: bool = controller.guided != null and not controller.guided.finished
+	var face := can_end or (guided_live and f.phase == Phase.Player and f.outcome == Outcome.Running and not busy)
+	var state := [label, face, chip, f.phase, wait]
 	if state != _end_state:
 		_end_state = state
 		end_turn.text = label
-		end_turn.set_interactable(can_end, "Enemies are moving" if f.phase != Phase.Player else (wait if wait != "" else "Wait for the action to finish"))
+		end_turn.set_interactable(face, "Enemies are moving" if f.phase != Phase.Player else (wait if wait != "" else "Wait for the action to finish"))
 		end_turn.set_key_hint(chip)
 	if _skip.interactable != busy:
 		_skip.set_interactable(busy)
