@@ -5,9 +5,8 @@ extends SubViewportContainer
 ## view in its own world: the ground (a map-kit BoardView of the board's size, unless the layout brings its own floor
 ## as decor), the station props on their slots, the centre piece (a station too when it has a `station` field), the
 ## decor, all playing their Idle loops; TdDiorama's light, and camp.gd's camera (fov 34, framed on the ring centre).
-## Station buttons are placed by place_buttons(): ON THE FLOOR just in front of (below) their prop, whatever its
-## row (UI/UX ruling 2026-10-14: never above a prop or on a back wall), never overlapping, with a short leader line
-## up to the prop's foot. A prop can also be a hotspot (hover: highlight + tooltip, click: an action).
+## Station buttons are placed by place_buttons(): in front of the prop, else beside it, else above it — the first
+## spot that covers no prop and no other button (UI/UX ruling 2026-10-14: props never move for buttons). A prop can also be a hotspot (hover: highlight + tooltip, click: an action).
 ##   var w := TdStationWorld.new(); add_child(w); w.build(layout, func(p): return GameApp.prop_scene("guild", p), false)
 
 const BOARD := Vector2(14, 10)
@@ -17,11 +16,8 @@ const BUTTON_LIFT := 28.0
 ## How far below a prop's foot its floor button starts.
 const FLOOR_DROP := 6.0
 
-## Buttons on the floor in front of their props (the Guild); off = back-row buttons above their props, front-row
-## ones below (the Camp: its back-row props stand behind the campfire and the Workshop table, which floor buttons
-## would cover).
-var floor_buttons := true
 var props := {}   # station id → Node3D
+var _all: Array = []   # every prop placed (stations, centre, decor): what buttons keep clear of
 var front := {}   # station id → true when its button goes below the prop (row "front")
 var board := BOARD
 var vp: SubViewport
@@ -60,7 +56,7 @@ func build(layout: Dictionary, prop_loader: Callable, map_ground := true) -> voi
 		front[str(slot.station)] = str(slot.get("row", "back")) == "front"
 		props[str(slot.station)] = add_prop(prop_loader, str(slot.prop), tile_of(slot.tile), float(slot.get("scale", 1.0)), float(slot.get("face_yaw", 0.0)))
 	var centre: Dictionary = layout.get("centre", {})
-	if not centre.is_empty():
+	if not centre.is_empty() and centre.get("prop") != null: # a centre may be empty (the Guild's rug)
 		var c := add_prop(prop_loader, str(centre.prop), tile_of(centre.tile), float(centre.get("scale", 1.0)), float(centre.get("yaw", 0.0)))
 		if centre.get("station") != null: # the centre piece is a station too (the Guild's Mission Board)
 			props[str(centre.station)] = c
@@ -96,6 +92,7 @@ func add_prop(prop_loader: Callable, prop: String, at: Vector2, scale_by: float,
 	m.scale = Vector3.ONE * scale_by
 	m.rotation_degrees.y = yaw
 	root3d.add_child(m)
+	_all.append(m)
 	TdDiorama._idle(m)
 	var top := 0.5
 	for n in m.find_children("*", "MeshInstance3D", true, false):
@@ -139,47 +136,79 @@ func screen_top(n: Node3D) -> Vector2:
 
 # ------------------------------------------------------------------ station buttons
 
-## Places each station's button (ids in order; buttons: id → Control) on the floor just below its prop's foot, with
-## a short leader line drawn on `host` under the button. Back-row and front-row buttons are laid out as two rows
-## (each without overlaps, layout_buttons); a back-row button that would still hit a front-row one moves up beside
-## its prop's foot no further than needed.
+## Places each station's button (ids in order; buttons: id → Control) by the shared rule (UI/UX ruling 2026-10-14:
+## props never move for buttons). For each station, in order, the first candidate that overlaps no prop and no
+## button already placed and stays on screen: (1) on the floor in front of (below) its prop; (2) beside it on the
+## floor, left or right, the side facing more free space first; (3) above the prop. Nothing fits: the candidate that
+## covers the least.
+## A short leader line joins the button to its prop when there is a gap.
 func place_buttons(host: Control, buttons: Dictionary, ids: Array) -> void:
-	if not floor_buttons:
-		_place_above(host, buttons, ids)
-		return
-	var groups := [[], []]
-	for id in ids:
-		var b: Control = buttons.get(id)
-		if b == null or not b.visible or not props.has(id) or props[id] == null: continue
-		var fr: bool = front.get(id, false)
-		groups[1 if fr else 0].append({"b": b, "anchor": screen_base(props[id])})
+	var obstacles := obstacle_rects(host.size)
 	var placed := []
-	for g in [groups[1], groups[0]]: # front row first: back-row buttons yield to it
-		var rs := layout_buttons(g.map(func(i): return [Vector2(i.anchor.x, -i.anchor.y), i.b.size]), host.size.x, BUTTON_GAP, FLOOR_DROP)
-		for k in rs.size():
-			var r: Rect2 = Rect2(Vector2(rs[k].position.x, -rs[k].end.y), rs[k].size)
-			for other in placed:
-				if other.grow(BUTTON_GAP / 2.0).intersects(r.grow(BUTTON_GAP / 2.0)):
-					r.position.y = other.position.y - r.size.y - BUTTON_GAP
-			placed.append(r)
-			_put(host, g[k].b, r, g[k].anchor)
-
-## The Camp's placement: back-row buttons above their props' tops, front-row ones below their feet.
-func _place_above(host: Control, buttons: Dictionary, ids: Array) -> void:
-	var items := []
+	var screen := Rect2(Vector2(BUTTON_GAP, BUTTON_GAP), host.size - Vector2(BUTTON_GAP, BUTTON_GAP) * 2.0)
 	for id in ids:
 		var b: Control = buttons.get(id)
 		if b == null or not b.visible or not props.has(id) or props[id] == null: continue
-		var fr: bool = front.get(id, false)
-		items.append({"b": b, "front": fr, "anchor": screen_base(props[id]) if fr else screen_top(props[id])})
-	var back := items.filter(func(i): return not i.front)
-	var front_items := items.filter(func(i): return i.front)
-	var rb := layout_buttons(back.map(func(i): return [i.anchor, i.b.size]), host.size.x, BUTTON_GAP, BUTTON_LIFT)
-	var rf := layout_buttons(front_items.map(func(i): return [Vector2(i.anchor.x, -i.anchor.y), i.b.size]), host.size.x, BUTTON_GAP, BUTTON_LIFT)
-	for k in rf.size(): rf[k] = Rect2(Vector2(rf[k].position.x, -rf[k].end.y), rf[k].size)
-	items = back + front_items
-	var rects := rb + rf
-	for k in items.size(): _put(host, items[k].b, rects[k], items[k].anchor)
+		var cands := candidates(prop_rect(props[id]), b.size, obstacles)
+		var pick: Dictionary = {}
+		for c in cands:
+			if screen.encloses(c.rect) and is_free(c.rect, obstacles, placed):
+				pick = c
+				break
+		if pick.is_empty(): # nothing is free: the candidate covering the least (buttons count heavily)
+			var best := 1e18
+			for c in cands:
+				var cost := overlap(c.rect, obstacles, placed) + (0.0 if screen.encloses(c.rect) else 1e9)
+				if cost < best:
+					best = cost
+					pick = c
+		placed.append(pick.rect)
+		_put(host, b, pick.rect, pick.anchor)
+
+## The prop rects buttons must keep clear of: every placed prop's projected bounds, shrunk a little (the boxes are
+## loose), without ground-sized pieces (a floor or hall wider than half the screen).
+func obstacle_rects(screen_size: Vector2) -> Array:
+	var out := []
+	for n in _all:
+		if not is_instance_valid(n): continue
+		var r := prop_rect(n)
+		if r.size.x > screen_size.x * 0.5: continue
+		out.append(r.grow_individual(-r.size.x * 0.08, -r.size.y * 0.12, -r.size.x * 0.08, -r.size.y * 0.04))
+	return out
+
+## The candidate rects for a button of size sz at a prop's screen rect pr, in the rule's order: front (centred,
+## just below the prop), the two sides on the floor (the side with more room first), above. {rect, anchor}
+func candidates(pr: Rect2, sz: Vector2, obstacles: Array) -> Array:
+	var foot := Vector2(pr.get_center().x, pr.end.y)
+	var floor_y := pr.end.y - sz.y # beside: the button's bottom on the prop's foot line
+	var left := {"rect": Rect2(Vector2(pr.position.x - BUTTON_GAP - sz.x, floor_y), sz), "anchor": Vector2(pr.position.x, pr.end.y - sz.y / 2.0)}
+	var right := {"rect": Rect2(Vector2(pr.end.x + BUTTON_GAP, floor_y), sz), "anchor": Vector2(pr.end.x, pr.end.y - sz.y / 2.0)}
+	var sides := [left, right] if _room(left.rect, obstacles) >= _room(right.rect, obstacles) else [right, left]
+	return [{"rect": Rect2(Vector2(foot.x - sz.x / 2.0, pr.end.y + FLOOR_DROP), sz), "anchor": foot}] + sides + \
+		[{"rect": Rect2(Vector2(foot.x - sz.x / 2.0, pr.position.y - BUTTON_LIFT - sz.y), sz), "anchor": Vector2(foot.x, pr.position.y)}]
+
+## How free a rect's surroundings are: the distance to the nearest obstacle (more = freer).
+static func _room(r: Rect2, obstacles: Array) -> float:
+	var best := 1e9
+	for o in obstacles:
+		if o.intersects(r): return 0.0
+		best = minf(best, o.get_center().distance_to(r.get_center()))
+	return best
+
+## How much a rect covers: the overlap area with the obstacles, plus 50× that with placed buttons.
+static func overlap(r: Rect2, obstacles: Array, placed: Array) -> float:
+	var a := 0.0
+	for o in obstacles: a += r.intersection(o).get_area()
+	for p in placed: a += 50.0 * r.intersection(p.grow(BUTTON_GAP / 2.0)).get_area()
+	return a
+
+## A rect overlaps no obstacle and no placed button (with the button gap).
+static func is_free(r: Rect2, obstacles: Array, placed: Array) -> bool:
+	for o in obstacles:
+		if o.intersects(r): return false
+	for p in placed:
+		if p.grow(BUTTON_GAP / 2.0).intersects(r): return false
+	return true
 
 func _put(host: Control, b: Control, r: Rect2, a: Vector2) -> void:
 	b.position = r.position
@@ -191,7 +220,7 @@ func _put(host: Control, b: Control, r: Rect2, a: Vector2) -> void:
 		host.add_child(line)
 		host.move_child(line, b.get_index())
 		b.set_meta("leader", line)
-	var from := Vector2(r.get_center().x, r.position.y if a.y <= r.position.y else r.end.y)
+	var from := Vector2(clampf(a.x, r.position.x, r.end.x), clampf(a.y, r.position.y, r.end.y)) # the rect's nearest point
 	line.visible = from.distance_to(a) > 10.0
 	line.points = PackedVector2Array([from, a])
 

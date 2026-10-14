@@ -1,3 +1,13 @@
+> **Layout v2 (2026-10-14, Eren):** the Mission Board now stands against the BACK wall, centred (slot 0, tile
+> (6.5, 8.95), row front: the Missions button goes on the floor in front of it). The Guild Door stands at the FRONT
+> edge facing the camera (slot 5, tile (6.5, 0.3): its step lip sits on the floor's front edge; no front wall, the
+> player walks out toward the camera) - make the door clickable + a "<- Camp" button bottom-left. The centre is the
+> empty rug (`centre.prop` = null, no station). Coop Table (slot 1) and Tower Rack (slot 4) are unchanged; slots 2
+> and 3 stay free. Guild Door.fbx changed: no daylight panel behind the opening any more (you look through it into
+> the hall). Guild Hall.fbx is unchanged: its back wall never had a door opening. Older layout:
+> ~/blender/out/guild/layout_v1_doorback.json. Anything below that talks about the board in the centre or the door
+> in the back wall describes v1.
+
 # Guild kit (Blender, 2026-10-14)
 
 The Guild (Missions & Guild — Design, section "The Guild") as a small 3D diorama, shown like the Camp

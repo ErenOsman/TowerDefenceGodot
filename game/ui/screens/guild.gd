@@ -2,8 +2,9 @@ extends Control
 ## The Guild (Missions & Guild — Design § The Guild; mockups screens-b/guild.html, guild-welcome.html): a second
 ## place like the Camp, opened from the Camp's Signpost once Chapter 2 is cleared (SceneFlow.Guild). A 3D guild hall
 ## built from res://art/guild/layout.json exactly like the Camp (TdStationWorld: the Blender agent's Guild kit — floor,
-## hall walls, the Mission Board in the centre, Coop Table, Tower Rack, Guild Door; Idle loops; camp.gd's camera and
-## light, plus a warm hearth light), "Guild · Missions and co-op", and a station button over (or under) each prop:
+## hall walls, the Mission Board, Coop Table, Tower Rack, Guild Door; Idle loops; camp.gd's camera and
+## light, plus a warm hearth light; v2 layout: Mission Board on the back wall, Guild Door at the front edge, an empty
+## rug in the centre), "Guild · Missions and co-op", and a station button over (or under) each prop:
 ## Missions (primary, under the Mission Board: the mission board, then a mission's detail), Multiplayer (the co-op
 ## lobby, moved here from the Camp) and Towers (the hand editor, the same hands and layouts as the Camp's), each on
 ## the floor in front of its prop; Camp has no station button: "← Camp" bottom-left (like the Camp's "← Main menu")
@@ -16,11 +17,12 @@ const LAYOUT := "res://art/guild/layout.json"
 const FALLBACK_LAYOUT := {
 	"board": {"tiles": [14, 10]},
 	"ring": {"centre": [6.5, 4.5], "radius": [5.4, 4.65], "slots": 5, "first_angle_deg": 90},
-	"centre": {"prop": "Mission Board", "tile": [6.5, 4.5], "scale": 2.6, "yaw": 0, "station": "Missions", "row": "front"},
+	"centre": {"prop": null, "tile": [6.5, 4.5], "station": null},
 	"slots": [
-		{"slot": 0, "tile": [6.5, 9.15], "face_yaw": 0.0, "row": "back", "station": "Camp", "prop": "Guild Door", "scale": 2.8},
+		{"slot": 0, "tile": [6.5, 8.95], "face_yaw": 0.0, "row": "front", "station": "Missions", "prop": "Mission Board", "scale": 2.6},
 		{"slot": 1, "tile": [1.36, 5.94], "face_yaw": 0.0, "row": "back", "station": "Multiplayer", "prop": "Coop Table", "scale": 3.0},
 		{"slot": 4, "tile": [11.64, 5.94], "face_yaw": 0.0, "row": "back", "station": "Towers", "prop": "Tower Rack", "scale": 2.6},
+		{"slot": 5, "tile": [6.5, 0.3], "face_yaw": 0.0, "row": "front", "station": "Camp", "prop": "Guild Door", "scale": 2.8},
 	],
 	"decor": [{"prop": "Guild Floor", "tile": [6.5, 4.5], "scale": 1.0, "yaw": 0}, {"prop": "Guild Hall", "tile": [6.5, 4.5], "scale": 1.0, "yaw": 0}],
 }

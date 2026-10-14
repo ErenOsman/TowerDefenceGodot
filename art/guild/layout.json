@@ -5,7 +5,7 @@
    10
   ],
   "ground": "Guild Floor (art/guild/Guild Floor.fbx, a decor entry below)",
-  "note": "tile x 0..13 left->right, depth 0..9 front->back (Godot: position = Vector3(x, 0, -depth)). Same schema as the Camp's layout.json. The Mission Board is the centre piece AND the Missions station (centre.station); the other stations stand on a ring (ellipse) round it, every prop faces the camera (face_yaw 0). row: back = button above the prop, front = button below it. Floor and Hall are decor at the board centre, scale 1."
+  "note": "tile x 0..13 left->right, depth 0..9 front->back (Godot: position = Vector3(x, 0, -depth)). Same schema as the Camp's layout.json. The Mission Board stands against the back wall (slot 0), the Guild Door at the front edge (slot 5); the centre is the empty rug. Every prop faces the camera (face_yaw 0). row: back = button above the prop, front = button below it. Floor and Hall are decor at the board centre, scale 1."
  },
  "ring": {
   "centre": [
@@ -16,35 +16,30 @@
    5.4,
    4.65
   ],
-  "slots": 5,
-  "first_angle_deg": 90,
-  "note": "slot k at angle 90 + k*360/5 degrees (90 = straight behind the Mission Board, in the back wall line), counter-clockwise seen from above"
+  "note": "reference only: slots 1-4 sit on this ellipse; slot 0 (board) and slot 5 (door) are on the back wall and the front edge"
  },
  "centre": {
-  "prop": "Mission Board",
+  "prop": null,
   "tile": [
    6.5,
    4.5
   ],
-  "scale": 2.6,
-  "yaw": 0,
-  "station": "Missions",
-  "row": "front",
-  "note": "a station: the Missions button goes BELOW the board (row front) because the Guild Door stands right behind it on screen"
+  "station": null,
+  "note": "the rug (part of Guild Floor), left empty; free for a decor piece later"
  },
  "slots": [
   {
    "slot": 0,
    "tile": [
     6.5,
-    9.15
+    8.95
    ],
    "face_yaw": 0.0,
-   "row": "back",
-   "station": "Camp",
-   "prop": "Guild Door",
-   "scale": 2.8,
-   "note": "the Guild Door stands in the back wall line (its back face 0.36 tiles behind the slot, on the wall at depth 9.5)"
+   "row": "front",
+   "station": "Missions",
+   "prop": "Mission Board",
+   "scale": 2.6,
+   "note": "against the back wall, centred, in the wall line; row front = the Missions button on the floor in front of the board"
   },
   {
    "slot": 1,
@@ -93,6 +88,19 @@
    "station": "Towers",
    "prop": "Tower Rack",
    "scale": 2.6
+  },
+  {
+   "slot": 5,
+   "tile": [
+    6.5,
+    0.3
+   ],
+   "face_yaw": 0.0,
+   "row": "front",
+   "station": "Camp",
+   "prop": "Guild Door",
+   "scale": 2.8,
+   "note": "at the FRONT edge, facing the camera (no front wall: only the door stands there); the player walks out toward the camera. Make the door itself clickable + a '<- Camp' button bottom-left"
   }
  ],
  "decor": [
@@ -112,11 +120,12 @@
     4.5
    ],
    "scale": 1.0,
-   "yaw": 0
+   "yaw": 0,
+   "note": "back wall + side walls, no front wall; the back wall has no door opening"
   }
  ],
  "camera": {
   "note": "as camp.gd: c = ring centre (x, 0, -(depth + 0.6)); position c + Vector3(0, 14.5, 17.0); look_at(c); fov 34; background wood.900"
  },
- "spacing": "Blender guild kit 2026-10-14 (scripts/guild.py make_layout)"
+ "spacing": "Blender guild kit 2026-10-14 v2 (board on the back wall, door at the front edge; v1 kept as ~/blender/out/guild/layout_v1_doorback.json)"
 }

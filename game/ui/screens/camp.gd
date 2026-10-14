@@ -84,7 +84,6 @@ func _ready() -> void:
 
 func _build_world() -> void:
 	world = TdStationWorld.new()
-	world.floor_buttons = false # buttons above the back-row props: floor buttons would cover the fire and the Workshop
 	add_child(world)
 	world.build(load_layout(), func(p): return GameApp.camp_scene(p), true)
 	props = world.props
