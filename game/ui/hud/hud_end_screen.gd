@@ -188,7 +188,10 @@ func show_outcome(outcome: int) -> void:
 	elif _won and "drops" in c and not c.drops.is_empty(): _extra.add_child(_token_row(c.drops))
 	if not _won:
 		var tip = _codex_tip("losing")
-		if tip != null: _extra.add_child(_tip_card(tip))
+		if tip != null:
+			# the mission's plays line sat 6 px over the card (QA 2026-10-14): the same gap as above it
+			if _extra.get_child_count() > 0: _extra.add_child(TdMenu.spacer(14))
+			_extra.add_child(_tip_card(tip))
 	_extra.visible = _extra.get_child_count() > 0
 	# buttons: defeat = Level select · Retry (primary); victory = Retry · Level select · Next level (primary)
 	var has_next: bool = _won and c.next_level_asset != null

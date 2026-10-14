@@ -207,6 +207,7 @@ func refresh() -> void:
 	elif enemy: _sub.text = "Enemy"
 	elif session.is_commanded(e): _sub.text = "Yours"
 	else: _sub.text = "Neutral"
+	_fit_sub()
 	var desc := ""
 	if hand != null: desc = hand.type.description if hand.type != null else ""
 	elif tdef != null and tdef.type != null and tdef.type.description != "": desc = tdef.type.description
@@ -248,6 +249,15 @@ func refresh() -> void:
 		session.last_reason = keep
 	_owner_key = _key_of(e, hand)
 	size = Vector2(WIDTH, 0)
+
+## The sub line is 20 px; a longer one ("Tower · 100 energy", "Şule's tower") steps down to 18 (the floor) instead
+## of an ellipsis (QA 2026-10-14: "Tower · 100 ene…"). The room: the card's inner width minus the portrait and Info.
+const SUB_ROOM := 166.0
+
+func _fit_sub() -> void:
+	var font := _sub.get_theme_font("font")
+	var w := font.get_string_size(_sub.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
+	_sub.add_theme_font_size_override("font_size", 20 if w <= SUB_ROOM else 18)
 
 func _key_of(e: Entity, hand: TowerDef) -> String:
 	return ("e%d" % e.id) if e != null else ("t" + hand.id if hand != null else "")

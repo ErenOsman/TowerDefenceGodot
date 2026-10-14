@@ -18,6 +18,8 @@ enum Side {
 const GAP := 8.0
 ## Space kept from the bounds' sides.
 const PADDING := 8.0
+## How much a covered avoid rect weighs against the box spilling past the screen before it slides back in.
+const AVOID_WEIGHT := 4.0
 
 static var _avoid: Dictionary = {} # owner -> Array[Rect2]
 
@@ -52,7 +54,9 @@ static func solve(bounds: Rect2, size: Vector2, anchor: Rect2, edge: Rect2, side
 		var spill := area(box) - overlap(box, inner)
 		box = slide(box, bounds)
 		var score := spill + overlap(box, anchor)
-		for r in keep_clear: score += overlap(box, r)
+		# covering a keep-clear rect (the tutorial's dialogue box) costs more than sliding along the screen edge:
+		# it outweighed the spill of the side that fits, so End turn's tooltip sat on the box (QA 2026-10-14)
+		for r in keep_clear: score += overlap(box, r) * AVOID_WEIGHT
 		if score < best_score - 0.5:
 			best_score = score
 			best = box.position

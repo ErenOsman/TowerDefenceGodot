@@ -177,8 +177,23 @@ func box_shown() -> bool:
 	if guided != null: return guided.talking
 	return not _pointing
 
+## Tooltips keep off the dialogue box while it shows (QA 2026-10-14: End turn's tooltip opened over the box's notes on
+## the tutorial's piece step): its rect, plate and Skip included, is a TdTooltipPlacement avoid rect.
+var _avoid_rect := Rect2()
+
+func _update_tooltip_avoid() -> void:
+	var on := dialogue != null and dialogue.is_shown() and dialogue.modulate.a > 0.05 and is_visible_in_tree()
+	var r := HudSequence.box_area(dialogue.get_global_rect(), DOCK_MARGIN) if on else Rect2()
+	if r == _avoid_rect: return
+	_avoid_rect = r
+	TdTooltipPlacement.set_avoid(self, [r] if on else [])
+
+func _exit_tree() -> void:
+	TdTooltipPlacement.set_avoid(self, [])
+
 func _process(delta: float) -> void:
 	if controller == null: return
+	_update_tooltip_avoid()
 	var dt := TdTheme.unscaled(delta)
 	_clock += dt
 	var run: SequenceRun = controller.sequence
@@ -230,7 +245,10 @@ func _process(delta: float) -> void:
 			HudArt.set_medallion(_medal, portrait)
 			var step := ""
 			if run.count > 1: step = ("Tutorial · " if controller.is_tutorial else "") + "%d/%d" % [run.index + 1, run.count]
-			dialogue.set_notes(step, how)
+			# the guided box's order: how it goes on bottom-left, "Tutorial · n/N" bottom-right (they were swapped
+			# on plain intros; QA 2026-10-14)
+			dialogue.set_step_warning(false)
+			dialogue.set_notes(how, step)
 	_mode_t += dt
 	var fade := clampf(_mode_t / 0.25, 0.0, 1.0)
 	if _pointing:

@@ -192,6 +192,7 @@ func _on_hover(on: bool, i: int) -> void:
 
 ## Keys answer like the mouse: a held ability key shows its button pressed; a key on one that can't be cast shakes it.
 func _process(_delta: float) -> void:
+	if visible and controller != null: _sync_tips()
 	if not visible or not casting or controller == null: return
 	var keys = get_tree().root.get_node_or_null("KeyBinds")
 	if keys == null: return
@@ -201,6 +202,20 @@ func _process(_delta: float) -> void:
 		var id := HudText.ability_key(i)
 		b.set_key_held(not hand_keys and keys.held(id) and b.interactable)
 		if not hand_keys and keys.pressed(id) and not b.interactable: b.simulate_click()
+
+## The guided tutorial's dialogue box sits right above the bar: an ability tooltip there covered its words (QA
+## 2026-10-14). While the box shows, the bar's tooltips wait (the box says what the ringed button does); they come
+## back once the box is clicked away or the tutorial ends.
+func _sync_tips() -> void:
+	var c := controller
+	var hud = c.hud
+	var box_up: bool = c.guided != null and not c.guided.finished and hud != null and hud.get("sequence") != null \
+		and hud.sequence.dialogue != null and hud.sequence.dialogue.is_shown()
+	for b in _buttons:
+		var trig := TdTooltipTrigger.find_on(b)
+		if trig != null and trig.enabled == box_up:
+			trig.enabled = not box_up
+			if box_up and trig.is_showing(): trig.call("_close")
 
 ## The button for ability i (tools and tests), or null.
 func button(i: int) -> TdButton:

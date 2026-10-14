@@ -242,10 +242,12 @@ func _process(delta: float) -> void:
 	_phase_tag.visible = phase_text != ""
 	# co-op: cobalt only for YOUR turn; another player's turn is a wood chip
 	var others: bool = controller.is_coop and f.phase == Phase.Player and not controller.current_player in ["", controller.local_player]
-	var phase_key: int = f.phase + (100 if others else 0)
+	var won := f.outcome == Outcome.Won
+	var phase_key: int = f.phase + (100 if others else 0) + (1000 if won else 0)
 	if _phase_shown != phase_key:
 		_phase_shown = phase_key
-		var sprite := "tag_phase_player" if f.phase == Phase.Player else "tag_phase_enemy"
+		# "Victory" in the cobalt chip, not the enemy turn's red (QA 2026-10-14); "Defeat" stays red
+		var sprite := "tag_phase_player" if f.phase == Phase.Player or won else "tag_phase_enemy"
 		if others: sprite = "pill_wood"
 		_phase_tag.add_theme_stylebox_override("panel", TdTheme.stylebox(sprite, Color.WHITE, [18, 4, 18, 4]))
 		_phase_tag.modulate.a = 0.0

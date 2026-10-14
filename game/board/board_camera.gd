@@ -313,7 +313,15 @@ func step(dt: float) -> void:
 
 	# zoom and rotation
 	if _wheel != 0.0 and not ui and in_window:
+		var before := distance_target
 		distance_target = clampf(distance_target * (1.0 - _wheel * zoom_step), min_distance, max_distance)
+		# zooming out after a free pan brings the board back: the focus moves toward the strict limit in step with
+		# the zoom, reaching it at the zoom-out limit (QA 2026-10-14: the fit showed half the board off screen after
+		# a pan to the edge). Drags and keys still reach the board's edge at any zoom (user decision 2026-10-13).
+		if _free_pan and distance_target > before + 0.0001:
+			var k_out := clampf((distance_target - before) / maxf(0.0001, max_distance - before), 0.0, 1.0)
+			focus_target = focus_target.lerp(clamp_strict(focus_target), k_out)
+			if distance_target >= max_distance - 0.0001: _free_pan = false
 	_wheel = 0.0
 	if keys != null:
 		if keys.pressed("RotateLeft"): rotate_step(-1)

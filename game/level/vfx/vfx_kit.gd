@@ -64,7 +64,12 @@ static func spawn(n: String, at: Vector3, parent: Node, lifetime: float = 2.0) -
 	start(fx) # only now, placed in the tree: world-space particles are born where the effect is
 	var life := maxf(lifetime, float(fx.get_meta("duration", 1.0)))
 	var timer := parent.get_tree().create_timer(life, false, false, false) # scaled time: freezes on pause
-	timer.timeout.connect(func(): if is_instance_valid(fx): fx.queue_free())
+	# the timer outlives the level when it is left mid-effect: capture the id, not the node (a freed capture made
+	# Godot print "Lambda capture at index 0 was freed" on every level exit within an effect's life; QA 2026-10-14)
+	var fx_id := fx.get_instance_id()
+	timer.timeout.connect(func():
+		var node := instance_from_id(fx_id) as Node
+		if node != null: node.queue_free())
 	return fx
 
 ## A loop effect (status, trail) for the caller to parent; null when the kit has none by that name. It does not
@@ -81,7 +86,10 @@ static func start(fx: Node3D) -> void:
 		var delay := float(p.get_meta("delay", 0.0))
 		if delay > 0.0:
 			var t := fx.get_tree().create_timer(delay, false, false, false)
-			t.timeout.connect(func(): if is_instance_valid(p): p.restart())
+			var p_id := p.get_instance_id()
+			t.timeout.connect(func():
+				var layer := instance_from_id(p_id) as CPUParticles3D
+				if layer != null: layer.restart())
 		else:
 			p.restart()
 

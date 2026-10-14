@@ -41,6 +41,8 @@ var _cost: Panel
 var _cost_label: Label
 var _key: Label
 var _hp: TdHealthBar
+## The placed tower's "HP / max" on hover, on the plinth above the name plate (the bar's own label sat on the plate).
+var _hp_label: Label
 var _pips: HBoxContainer
 var _arrow: TextureRect
 var _trigger: TdTooltipTrigger
@@ -125,6 +127,14 @@ func _ready() -> void:
 	_hp.position = Vector2((SLOT.x - 100) / 2.0, SLOT.y - 12)
 	_hp.outlined_label = true
 	add_child(_hp)
+	_hp_label = HudArt.label("", "micro", TdTheme.color("cream.100"), 20)
+	_hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_hp_label.position = Vector2(0, PLATE_Y - 23)
+	_hp_label.size = Vector2(SLOT.x, 22)
+	TdTheme.outline(_hp_label, 4)
+	_hp_label.visible = false
+	add_child(_hp_label)
 	_pips = HudArt.hbox(4)
 	_pips.position = Vector2(4, 4)
 	add_child(_pips)
@@ -164,6 +174,7 @@ func show_state(p_tower_id: String, p_index: int, tower_name: String, cost: int,
 	_key.text = key
 	if _placed:
 		_hp.set_health(placed_frame.hp, placed_frame.max_hp)
+		_hp_label.text = "%d / %d" % [placed_frame.hp, placed_frame.max_hp]
 	for c in _pips.get_children():
 		_pips.remove_child(c)
 		c.queue_free()
@@ -209,7 +220,7 @@ func _restyle() -> void:
 	_medal.visible = _placed
 	_cost.visible = not _placed
 	_hp.visible = _placed
-	_hp.set_label_visible(_placed and hovered)
+	_hp_label.visible = _placed and hovered
 	_glow.visible = _picked
 	_arrow.visible = _selected and show_arrow
 	_render.modulate = Color(0.6, 0.6, 0.6, 0.4) if _poor else Color.WHITE

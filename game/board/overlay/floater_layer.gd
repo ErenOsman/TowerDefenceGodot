@@ -30,8 +30,31 @@ func float_text(world: Vector3, text: String, color: Color, life: float, font_si
 	for other in _live:
 		if other.age < other.life * 0.5 and other.world.distance_squared_to(world) < SAME_SPOT * SAME_SPOT:
 			f.lift = maxf(f.lift, other.lift + STACK_STEP)
+	# neighbours too: two towers side by side both saying "Ready!" overlapped into "ReReady!" (QA 2026-10-14);
+	# a floater whose box meets a young one's on screen goes up a step (its x stays over its own unit)
+	if cam != null and cam.is_inside_tree() and not cam.is_position_behind(world):
+		for k in 6:
+			var hit := false
+			for other in _live:
+				if other.age < other.life * 0.5 and _box(other).grow(-2.0).intersects(_box(f)):
+					f.lift += STACK_STEP
+					hit = true
+					break
+			if not hit: break
 	_live.append(f)
 	_place(f)
+
+## A floater's box on screen at its full size (no pop), where it is now in its rise.
+func _box(f: Dictionary) -> Rect2:
+	var w: Vector3 = f.world
+	if cam.is_position_behind(w): return Rect2()
+	var screen := cam.unproject_position(w)
+	var under := cam.unproject_position(Vector3(w.x, 0.0, w.z))
+	var zoom := WorldUi.readable(WorldUi.zoom(cam, Vector3(w.x, 0.0, w.z)))
+	var sz: Vector2 = (f.label as Label).size * zoom
+	var t := clampf(f.age / f.life, 0.0, 1.0)
+	var bottom := Vector2(under.x, screen.y - (10.0 + f.lift + RISE * t) * zoom)
+	return Rect2(bottom - Vector2(sz.x * 0.5, sz.y), sz)
 
 ## The texts floating now (tests and tools).
 func live_texts() -> Array:

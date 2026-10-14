@@ -213,8 +213,9 @@ var hint: String:
 	get:
 		if setup_error != null: return setup_error
 		if director != null and director.busy: return "Playing…  (%s skips one action)" % _key_first("Skip")
-		# the guided tutorial's refusal (its hint) shows over the placing / aiming help
-		if _message != null and guided != null and not guided.finished: return _message
+		# a refusal (the guided tutorial's hint, a refused tile while placing) shows over the placing / aiming help;
+		# the help came back in red before, without the reason (QA 2026-10-14)
+		if _message != null and ((guided != null and not guided.finished) or _placing != null or _aiming != null): return _message
 		if _placing != null:
 			var p: TowerDef = session.tower(_placing)
 			if p != null and session.energy < p.cost:
@@ -685,6 +686,7 @@ func toggle_placing(tower_id: String) -> void:
 	if not was and can_act:
 		_placing = tower_id
 		_selected = -1
+		_message = null # an older refusal must not read as this placing's
 		_guided_event("placing")
 	version += 1
 
@@ -733,6 +735,7 @@ func toggle_aim(ability: AbilityDef) -> void:
 		version += 1
 		return
 	_aiming = ability
+	_message = null
 	_aims = Targeting.valid_aims(session.state, caster.id, ability)
 	_route = RouteBuilder.new(session.state, caster, ability) if ability.targeting.shape == Shape.Steps else null
 	if _aims.is_empty():
@@ -1259,7 +1262,10 @@ func _click_tile(p: Vector2i) -> void:
 				if _sequence != null: _sequence.notify(SequenceEvent.TowerPlaced)
 				_guided_event("placed")
 		else:
-			_say(session.last_reason)
+			# the reason, then what to do (shown over the placing help, in red)
+			var why := session.last_reason
+			if why in ["Not walkable", "Not a buildable tile", "On a path", "Occupied"]: why += ". Click a lit tile; right-click cancels."
+			_say(why)
 			version += 1
 		return
 	if _aiming != null:
