@@ -29,6 +29,23 @@ the Unity repo.
 | Text | The lines are **placeholders**: Eren rewrites them. The agents do not polish wording | Eren 2026-10-13 |
 | Where lines live | For now `data/tutorial.json` in the Godot repo (the Sequences.json line format plus `allow` / `advance`). Once Unity has the same gating, the lines move to `Data/Sequences/Tutorial Steps` and the JSON keeps only the gating | agents |
 
+## The level
+
+(Godot overlay until the Unity Levels.json changes; the Unity agent must make the same change.) The catalog's
+tutorial level `Levels/Tutorial/Tutorial` ("First Defence") is shortened (Eren 2026-10-14: the slime took too long):
+
+- **Map** 7 × 5 (was 12 × 5), all Ground. **Road** row 2, 6 tiles from the spawn at (0,2) to (5,2) (was 11);
+  the **castle** (`Units/Bases/Base`) at (6,2).
+- **Build tiles** beside the road at the castle end: columns 4–6 of rows 0, 1, 3, 4 (12 tiles). The tutorial lights
+  (5,1) and (5,3); the road line points at (2,2); the walk goes 2 tiles toward the slime ((5,1) → (3,1)).
+- **Waves** unchanged: "One Slime" (a Slime at round 1), then "A Slime and a Runner" after it. **Energy** unchanged:
+  100 to start, 0 per round, the fixed hand is the Archer (cost 100), hand cap 1.
+- Played as the steps ask, **the slime is in Shoot range after ≤ 2 End turns** at step 9, and the level is won in
+  about 8 rounds (8 End turns in `tests/test_tutorial.gd`).
+- Camera (Godot, `hud.gd`): while the guidance runs, the board is framed above the bottom dialogue box (bottom inset
+  = the box + its name plate), so the small board never sits under the box; free play / Skip returns to the normal
+  framing.
+
 ## The steps (placeholder wording)
 
 | # | The Princess says | Allowed (ringed) | Goes on when |

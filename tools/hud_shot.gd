@@ -256,13 +256,13 @@ func _tutorial() -> void:
 	await _wait(1.2)
 	await _tut_shot("t3_piece")
 	level.toggle_placing(level.session.hand[0].id)
-	_hover_tile(Vector2i(10, 3))
+	_hover_tile(Vector2i(5, 3))
 	await _wait(1.2)
 	await _tut_shot("t4_tiles")
-	level.click_tile(Vector2i(9, 1)) # not lit: refused
+	level.click_tile(Vector2i(4, 1)) # not lit: refused
 	await _frames(4)
 	await _tut_shot("t4r_refused")
-	level.click_tile(Vector2i(10, 1))
+	level.click_tile(Vector2i(5, 1))
 	_hover_tile(Vector2i(-5, -5))
 	level.hover_override = null
 	_park_mouse()
@@ -306,7 +306,7 @@ func _tutorial() -> void:
 	if slime != null: _hover_tile(slime.pos)
 	await _wait(1.2)
 	await _tut_shot("t11_shoot_target")
-	level.click_tile(Vector2i(8, 0)) # not the slime: refused, the note says what was wrong and the box shakes
+	level.click_tile(Vector2i(3, 0)) # not the slime: refused, the note says what was wrong and the box shakes
 	await _frames(3)
 	await _tut_shot("t11r_refused")
 	print("refusals ", g.refusals, " says '", g.last_hint, "'")

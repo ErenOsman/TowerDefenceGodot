@@ -5,7 +5,7 @@
    "speaker": "Princess",
    "text": "Slimes come down this road…",
    "pointAt": "Tile",
-   "tileX": 4,
+   "tileX": 2,
    "tileY": 2,
    "uiElement": "",
    "continueOn": "Click",
@@ -49,7 +49,7 @@
    "speaker": "Princess",
    "text": "Now click a lit tile.",
    "pointAt": "Tile",
-   "tileX": 10,
+   "tileX": 5,
    "tileY": 3,
    "uiElement": "",
    "continueOn": "Event",
@@ -57,8 +57,8 @@
    "waitFor": "TowerPlaced",
    "pausesPlay": false,
    "allow": [
-    "tile:10,3",
-    "tile:10,1"
+    "tile:5,3",
+    "tile:5,1"
    ],
    "advance": "event:placed"
   },

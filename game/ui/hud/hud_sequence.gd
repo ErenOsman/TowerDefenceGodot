@@ -101,7 +101,7 @@ func _ready() -> void:
 	_piece_ring.mouse_filter = MOUSE_FILTER_IGNORE
 	_piece_ring.draw.connect(_draw_piece_ring)
 	dialogue = TdDialogueBox.new()
-	dialogue.size = Vector2(1100, 160) # shorter than the kit's 220 (Eren 2026-10-14: "tutorial paneli daha kısa olsun")
+	dialogue.size = Vector2(1100, 220)
 	# no bust beside the box: the Princess stands on the board (the board's speaker prop); only a small medallion
 	# on the name plate, as in the Unity build
 	_medal = HudArt.medallion(52, "medallion_ring", 5)
@@ -159,6 +159,12 @@ static func dialogue_rect(screen: Vector2, box: Vector2, target, was_top := fals
 	var bottom_plain := HudSequence.box_area(bottom, DOCK_MARGIN)
 	var bottom_cover := bottom_plain.intersection(t).get_area() if bottom_plain.intersects(t) else 0.0
 	return top if top_hit < bottom_cover else bottom
+
+## What the bottom-docked box covers from the screen's bottom edge (its name plate / Skip and DOCK_MARGIN included):
+## the HUD keeps the board above it while the guided tutorial runs.
+func guided_bottom_inset() -> float:
+	var h: float = dialogue.size.y if dialogue != null else 220.0
+	return BOX_BOTTOM + h + TdDialogueBox.OVERHANG + DOCK_MARGIN
 
 ## What a box at `r` covers: the box, its name plate and Skip over the top edge, and `margin` all round.
 static func box_area(r: Rect2, margin: float) -> Rect2:

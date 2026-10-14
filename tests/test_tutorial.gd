@@ -10,7 +10,7 @@ var c: LevelController
 var g: GuidedTutorial
 
 func setup() -> void:
-	if _lib == null: _lib = ContentLibrary.load("res://data/content")
+	if _lib == null: _lib = ContentLibrary.load_game() # the overlay's short tutorial map (data/content-godot/Levels.json)
 	c = LevelController.new()
 	var level: LevelAsset = _lib.catalog.tutorial if _lib.catalog != null else null
 	if level == null:
@@ -57,7 +57,7 @@ func _to_placing() -> void:
 	c.toggle_placing(_archer_id())
 	_idle()
 
-func _to_walk(place := Vector2i(10, 1)) -> void:
+func _to_walk(place := Vector2i(5, 1)) -> void:
 	_to_placing()
 	c.click_tile(place)
 	_idle()
@@ -81,7 +81,7 @@ func test_the_lines_load_in_order_with_their_rules() -> void:
 func test_the_whole_tutorial_step_by_step() -> void:
 	# road, then castle: talk only — every action is refused
 	assert_eq(g.display_line().point_at, SequencePointAt.Tile)
-	assert_eq(Vector2i(g.display_line().tile_x, g.display_line().tile_y), Vector2i(4, 2))
+	assert_eq(Vector2i(g.display_line().tile_x, g.display_line().tile_y), Vector2i(2, 2))
 	assert_eq(g.action_note(), "", "a talk line has no action note (the box says Click or press Space)")
 	var r := g.refusals
 	c.toggle_placing(_archer_id())
@@ -111,19 +111,19 @@ func test_the_whole_tutorial_step_by_step() -> void:
 	# only the two lit tiles; the one ring on the far one
 	assert_eq(g.index, 3)
 	assert_eq(g.display_line().point_at, SequencePointAt.Tile)
-	assert_eq(Vector2i(g.display_line().tile_x, g.display_line().tile_y), Vector2i(10, 3))
+	assert_eq(Vector2i(g.display_line().tile_x, g.display_line().tile_y), Vector2i(5, 3))
 	assert_true(g.hides_card, "the card stays closed during the guided steps")
 	assert_eq(g.action_note(), "Place the Archer on a lit tile")
-	assert_true(c.input_allowed("tile", Vector2i(10, 1)) and c.input_allowed("tile", Vector2i(10, 3)))
-	assert_false(c.input_allowed("tile", Vector2i(9, 1)), "other build tiles do not light")
+	assert_true(c.input_allowed("tile", Vector2i(5, 1)) and c.input_allowed("tile", Vector2i(5, 3)))
+	assert_false(c.input_allowed("tile", Vector2i(4, 1)), "other build tiles do not light")
 	r = g.refusals
-	c.click_tile(Vector2i(9, 1))
+	c.click_tile(Vector2i(4, 1))
 	_refused(r, 3, "another build tile", "Not now: place the Archer on a lit tile first.")
 	assert_eq(c.placing, _archer_id(), "still placing after a refused tile")
-	c.click_tile(Vector2i(10, 1))
+	c.click_tile(Vector2i(5, 1))
 	_idle()
 	var archer := g.archer()
-	assert_true(archer != null and archer.pos == Vector2i(10, 1), "placed on a lit tile")
+	assert_true(archer != null and archer.pos == Vector2i(5, 1), "placed on a lit tile")
 
 	# only End turn
 	assert_eq(g.index, 4)
@@ -146,7 +146,7 @@ func test_the_whole_tutorial_step_by_step() -> void:
 	_refused(r, 5, "selecting the slime", "Not now: click your Archer first.")
 	assert_eq(c.selected, -1)
 	r = g.refusals
-	c.click_tile(Vector2i(3, 0))
+	c.click_tile(Vector2i(1, 0))
 	_refused(r, 5, "clicking empty ground")
 	c.click_tile(archer.pos)
 	assert_eq(c.selected, archer.id)
@@ -160,23 +160,23 @@ func test_the_whole_tutorial_step_by_step() -> void:
 	_refused(r, 6, "Shoot while Tower Walk is asked for", "Not now: click Tower Walk first.")
 	c.toggle_aim(_ability("Tower Walk"))
 	assert_eq(c.aiming, _ability("Tower Walk"))
-	assert_false(c.input_allowed("aim", Vector2i(8, 1)), "no walking on the click-the-button line")
+	assert_false(c.input_allowed("aim", Vector2i(3, 1)), "no walking on the click-the-button line")
 	_idle()
 
 	# "Now click the lit tile." — exactly the tile two steps toward the slime
 	assert_eq(g.index, 7)
-	assert_eq(g.walk_tile(), Vector2i(8, 1))
+	assert_eq(g.walk_tile(), Vector2i(3, 1))
 	assert_eq(g.display_line().point_at, SequencePointAt.Tile)
-	assert_eq(Vector2i(g.display_line().tile_x, g.display_line().tile_y), Vector2i(8, 1))
-	assert_true(c.input_allowed("aim", Vector2i(8, 1)))
-	assert_false(c.input_allowed("aim", Vector2i(9, 1)), "only the one walk tile")
+	assert_eq(Vector2i(g.display_line().tile_x, g.display_line().tile_y), Vector2i(3, 1))
+	assert_true(c.input_allowed("aim", Vector2i(3, 1)))
+	assert_false(c.input_allowed("aim", Vector2i(4, 1)), "only the one walk tile")
 	r = g.refusals
-	c.click_tile(Vector2i(9, 1))
+	c.click_tile(Vector2i(4, 1))
 	_refused(r, 7, "another walk tile", "Not now: click the lit tile first.")
 	assert_eq(c.aiming, _ability("Tower Walk"), "still aiming after a refused tile")
-	c.click_tile(Vector2i(8, 1))
+	c.click_tile(Vector2i(3, 1))
 	_idle()
-	assert_eq(archer.pos, Vector2i(8, 1), "the archer walked")
+	assert_eq(archer.pos, Vector2i(3, 1), "the archer walked")
 
 	# End turn until the slime is in range; the line moves on by itself
 	assert_eq(g.index, 8)
@@ -209,7 +209,7 @@ func test_the_whole_tutorial_step_by_step() -> void:
 	assert_eq(g.index, 10)
 	assert_eq(g.display_line().point_at, SequencePointAt.FirstEnemy)
 	r = g.refusals
-	c.click_tile(Vector2i(8, 0))
+	c.click_tile(Vector2i(3, 0))
 	_refused(r, 10, "shooting at an empty tile", "Not now: click the slime first.")
 	c.click_tile(slime.pos)
 	_idle()
@@ -264,14 +264,79 @@ func test_the_whole_tutorial_step_by_step() -> void:
 	assert_true(g.finished, "the tutorial ends with the win")
 	assert_null(c.sequence)
 
+## The short tutorial map (Guided Tutorial — Design § The level; Eren 2026-10-14 "the slime took too long"): playing
+## only what each step allows, in order, the slime is in Shoot range at step 9 within 2 End turns and the level is
+## won in about 8 rounds (the sim is deterministic).
+func test_the_short_map_puts_the_slime_in_range_within_two_end_turns() -> void:
+	var grid: BattleGrid = c.session.state.grid
+	assert_eq(Vector2i(grid.width, grid.height), Vector2i(7, 5), "the overlay's 7×5 map")
+	var ends := 0
+	c.continue_sequence()
+	c.continue_sequence()
+	c.toggle_placing(_archer_id())
+	_idle()
+	assert_true(c.input_allowed("tile", Vector2i(5, 1)), "the lit tile")
+	c.click_tile(Vector2i(5, 1))
+	_idle()
+	assert_eq(g.index, 4)
+	c.end_round()
+	ends += 1
+	_idle()
+	c.click_tile(g.archer().pos)
+	_idle()
+	c.toggle_aim(_ability("Tower Walk"))
+	_idle()
+	assert_eq(g.aim_tiles(), [Vector2i(3, 1)], "2 tiles toward the slime")
+	c.click_tile(Vector2i(3, 1))
+	_idle()
+	assert_eq(g.index, 8)
+	var waited := 0
+	while g.index == 8 and waited < 5:
+		c.end_round()
+		ends += 1
+		waited += 1
+		_idle()
+	assert_eq(g.index, 9, "step 9 went on")
+	assert_true(waited <= 2, "the slime is in Shoot range after at most 2 End turns (took %d)" % waited)
+	assert_true(g.enemy_in_range())
+	c.select(g.archer().id)
+	c.toggle_aim(_ability("Shoot"))
+	_idle()
+	c.click_tile(g.first_enemy().pos)
+	_idle()
+	_idle(1.6)
+	assert_eq(g.index, 12)
+	c.end_round()
+	ends += 1
+	_idle()
+	var guard := 0
+	while not c.session.is_over and guard < 40:
+		guard += 1
+		var archer := g.archer()
+		assert_true(archer != null, "the archer stands")
+		if archer == null: return
+		c.select(archer.id)
+		var shoot := _ability("Shoot")
+		if c.input_allowed("quick_cast", shoot) and c.session.can_cast(archer, shoot) and g.can_hit(shoot, false):
+			c.quick_cast(shoot)
+		else:
+			assert_true(c.input_allowed("end_turn"), "End turn is allowed when nothing can be shot")
+			c.end_round()
+			ends += 1
+		_idle()
+	assert_eq(c.session.outcome, Outcome.Won, "the tutorial level is won")
+	assert_true(ends <= 9, "about 8 rounds in all (took %d End turns)" % ends)
+	_idle()
+	assert_true(g.finished)
+
 func test_the_walk_tile_follows_the_archers_row() -> void:
-	_to_walk(Vector2i(10, 3))
+	_to_walk(Vector2i(5, 3))
 	assert_eq(g.index, 6)
 	c.toggle_aim(_ability("Tower Walk"))
 	_idle()
 	assert_eq(g.index, 7)
-	assert_eq(g.walk_tile(), Vector2i(8, 3))
-	assert_eq(g.aim_tiles(), [Vector2i(8, 3)])
+	assert_eq(g.walk_tile(), Vector2i(3, 3))
+	assert_eq(g.aim_tiles(), [Vector2i(3, 3)])
 
 func test_a_cancelled_step_points_back_and_allows_its_first_click() -> void:
 	_to_placing()
@@ -281,7 +346,7 @@ func test_a_cancelled_step_points_back_and_allows_its_first_click() -> void:
 	assert_eq(g.display_line().ui_element, "@piece", "back to the piece")
 	assert_true(c.input_allowed("piece", _archer_id()))
 	c.toggle_placing(_archer_id())
-	c.click_tile(Vector2i(10, 1))
+	c.click_tile(Vector2i(5, 1))
 	_idle()
 	c.end_round()
 	_idle()
@@ -303,9 +368,9 @@ func test_skip_ends_the_guidance_for_free_play() -> void:
 	assert_null(c.sequence, "no line after Skip")
 	assert_true(c.can_act)
 	c.toggle_placing(_archer_id())
-	c.click_tile(Vector2i(9, 0))
+	c.click_tile(Vector2i(4, 0))
 	_idle()
-	assert_true(g.archer() != null and g.archer().pos == Vector2i(9, 0), "any tile after Skip")
+	assert_true(g.archer() != null and g.archer().pos == Vector2i(4, 0), "any tile after Skip")
 	var round := c.session.round
 	c.end_round()
 	_idle()
@@ -317,6 +382,6 @@ func test_skip_in_the_middle_keeps_the_game_as_it_is() -> void:
 	c.skip_sequence()
 	assert_true(g.finished)
 	assert_eq(c.placing, _archer_id(), "a mode in progress stays")
-	c.click_tile(Vector2i(11, 4))
+	c.click_tile(Vector2i(6, 4))
 	_idle()
 	assert_true(g.archer() != null)
