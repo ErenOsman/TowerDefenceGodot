@@ -155,10 +155,10 @@ Unity ids match the ones above or old Godot saves lose their forms/tokens/missio
   `centre` (Mission Board) is the Missions station (button below), plus the README's warm hearth light. Props load
   through `GameApp.prop_scene(folder, name)` (`camp_scene` = folder "camp"; both fall back to `art/tiles/`). The
   blurred `TdGuildBackdrop` remains only behind the full-screen mission detail.
-- Station buttons in the Guild (UI/UX ruling 2026-10-14) sit on the floor just in front of their prop, never above
-  it (`TdStationWorld.floor_buttons`); the Camp keeps buttons above its back-row props (floor buttons covered the
-  campfire and the Workshop table: render 2026-10-14); the Guild's Camp station is the bottom-left "← Camp" button plus the Guild Door as a hotspot (`TdStationWorld.hotspot`). First visit: the welcome card (`profile.guildSeen`). A co-op match goes back to `GameApp.lobby_scene()`
-  (the Guild once open, else the Camp) and reopens the lobby there.
+- Station buttons (Camp and Guild, UI/UX ruling 2026-10-14: props never move for buttons) take the first free spot
+  of: in front of the prop, beside it (the freer side first), above it — free = no prop's projected bounds (floors /
+  halls excluded) and no other button (`TdStationWorld.place_buttons`). The Guild's Camp station is the bottom-left
+  "← Camp" button plus the Guild Door as a hotspot (`TdStationWorld.hotspot`).
 - Camp: the Signpost station "Missions" in layout slot 4 (prop `Signpost`, the map-kit piece: `GameApp.camp_scene`
   falls back to `res://art/tiles/<name>.fbx`); locked (lock icon, "Opens after Chapter 2", the Disabled look, like
   the locked Workshop) until `GameApp.guild_unlocked()`, then opens the Guild with a gold "New" until the first visit.
@@ -220,3 +220,17 @@ Unity ids match the ones above or old Godot saves lose their forms/tokens/missio
   asset icon. Form descriptions in the overlay are standalone (no comparisons). Every scroll bar is ≥ 12 px
   (`TdTheme._widen_scrollbars`); the collection grid drag-scrolls on empty space while tiles keep their own drag
   (`TdDragScroll` skips controls with meta `drag_source`); `tools/hand_drag_check.gd` proves reorder / remove / add / scroll.
+
+## Godot daemons (server tooling, 2026-10-14)
+Two resident Godot processes keep this project loaded, so `check.sh`, `test.sh` and `~/godot/run.sh --daemon … -s tools/<x>_shot.gd`
+skip the start-up, the import and the lock. Full doc: `/home/ubuntu/godot/README-daemon.md`.
+- Services (systemd user units): `td-godot-headless` (check and test, in-process: `tools/daemon.gd` + `tests/suite_runner.gd`,
+  the same runner `tests/run.gd` uses) and `td-godot-render` (tool-script shots in a child Godot on its Xvfb display).
+  Client: `/home/ubuntu/godot/jobs.sh [--render] ping|check|test|shot|reload|restart`.
+- Restart: `systemctl --user restart td-godot-headless td-godot-render` (add `--no-block` to return at once).
+- Logs: `/home/ubuntu/godot/daemon/q-{headless,render}/daemon.log`, plus `godot.log` and `import.log` next to it.
+- Limits: a restart after 200 jobs or 1.5 GB RSS; `MemoryMax` 2.5 GB per service; a client waits at most 900 s (`JOBS_TIMEOUT`).
+- Fall back to direct runs with `TD_NO_DAEMON=1 ./test.sh` / `./check.sh` (or plain `run.sh` without `--daemon`) when
+  a result looks stale. A new `class_name` restarts the daemon by itself (that job runs in a child process); a dead
+  daemon falls back on its own.
+- Don't wrap daemon calls in `flock …/.td.lock` (the daemon serialises its own jobs). The lock stays for direct runs and exports.
