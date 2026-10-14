@@ -509,11 +509,30 @@ func _unit_page(entity: EntityAsset, description: String) -> void:
 		var pips := 0 if ab.cooldown_until_reset else maxi(1, ab.cooldown)
 		_abilities.add_child(_ability_row(icon, ab.display_name, ability_kind(ab),
 			TooltipText.describe(MenuLogic.fill_stat_words(ab.description, values)), TooltipText.cooldown_words(ab.cooldown, ab.cooldown_until_reset), pips,
-			AbilityText.tags(ab, me, vocab), false))
+			result_tags(ab, me, vocab), false))
 	for pv in passives:
 		var asset = GameApp.convert.asset_of(pv.def, "PassiveAsset")
 		var icon: Texture2D = GameApp.icon_texture(asset.icon) if asset != null and asset.icon != "" else null
 		_abilities.add_child(_ability_row(icon, pv.name, "Passive", TooltipText.describe(MenuLogic.fill_stat_words(pv.def.description, values)), "Always on", 0, [], true))
+
+## The result tags shown under an ability: AbilityText.tags plus how long a status it applies lasts ("2 Duration",
+## from the Apply Status step's duration, else the status's own) when AbilityText leaves it out (it only names a
+## duration that scales).
+static func result_tags(ab: AbilityDef, me: IEntity, vocab: Vocabulary) -> Array:
+	var out := AbilityText.tags(ab, me, vocab)
+	for t in out:
+		if str(t[1]) == "Duration": return out
+	for st in AbilityText.all_steps(ab.steps):
+		if not (st is ApplyStatusStep) or st.status == null: continue
+		var d := -1
+		if st.duration != null and not st.duration.is_empty and st.duration.expression.strip_edges().is_valid_int():
+			d = int(st.duration.expression.strip_edges())
+		elif st.status.duration >= 0:
+			d = st.status.duration
+		if d > 0:
+			out.append([str(d), "Duration"])
+			return out
+	return out
 
 ## An ability's type words ("Attack · Projectile"); an ability without tags is named from what it does: a status
 ## that controls (taunt, stun, root…) → "Control", healing → "Support", a move → "Movement".
@@ -603,7 +622,7 @@ func _ability_row(icon: Texture2D, name_text: String, tags: String, description:
 	h.add_child(right)
 	var name_row := TdMenu.hbox(12)
 	right.add_child(name_row)
-	name_row.add_child(TdMenu.label(name_text, "h3", TdTheme.color("status.ink") if passive else TdTheme.color("gold.ink"), 30))
+	name_row.add_child(TdMenu.label(name_text, "h3", TdTheme.color("gold.ink"), 30)) # one name colour for abilities and passives (the chip carries the role)
 	if tags != "":
 		var tl := TdMenu.label(tags, "small", TdTheme.color("ink.2"), 20)
 		tl.size_flags_vertical = SIZE_SHRINK_CENTER

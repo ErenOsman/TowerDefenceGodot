@@ -242,7 +242,7 @@ func _layout_box() -> void:
 		_divider.size = Vector2(w - 36, 2)
 		y += 8.0
 		_hint_left.position = Vector2(18, y)
-		_hint_left.size = Vector2(w * 0.6, 28)
+		_hint_left.size = Vector2(w - 36.0 if _hint_right.text == "" else w * 0.6, 28) # the whole row when alone
 		_hint_right.size = Vector2.ZERO
 		var hw := _hint_right.get_content_width()
 		_hint_right.position = Vector2(w - 18 - hw, y + 1)

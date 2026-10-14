@@ -52,7 +52,7 @@ func _ready() -> void:
 	retry_button.clicked.connect(func(): if controller != null: controller.retry())
 	leave_button = HudPopup.wide_button("Level select", TdButton.Style.SECONDARY, "icon_back", 240)
 	leave_button.clicked.connect(func(): if controller != null: controller.level_select())
-	next_button = HudPopup.wide_button("Next level", TdButton.Style.PRIMARY, "icon_next", 280)
+	next_button = HudPopup.wide_button("Next level", TdButton.Style.PRIMARY, "icon_continue", 280) # icon_next is a down chevron
 	next_button.icon_after = true
 	next_button.clicked.connect(func(): if controller != null: controller.next_level())
 	row.add_child(retry_button)

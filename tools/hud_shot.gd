@@ -1,7 +1,8 @@
 extends SceneTree
 ## Headless-render proof of the battle HUD over the level (like level_shot.gd): the intro dialogue, the idle turn with
 ## the hand, placing, a selected tower (action bar, inspector, an ability tooltip), aiming, an enemy selected (its
-## "Next" line), End turn hovered, the pause menu, the Info window and the end screen. Saves PNGs.
+## "Next" line), End turn hovered, the pause menu, the Info window and the end screen. Saves PNGs. With the extra
+## argument `victory` it plays a real win instead and saves only the victory window (…_11_victory.png).
 ##   ~/godot/run.sh projects/td -s tools/hud_shot.gd -- <level id> <out dir> [prefix]
 ##   ~/godot/run.sh projects/td --resolution 1280x720 -s tools/hud_shot.gd -- chapter1-1 /tmp/shots small
 ## The save is pointed at user://hud_shot.json (the real save is untouched).
@@ -44,6 +45,9 @@ func _run() -> void:
 		quit(1)
 		return
 	_park_mouse()
+	if OS.get_cmdline_user_args().has("victory"):
+		await _victory()
+		return
 	await _frames(30)
 	await _shot("0_intro")
 	if level.is_tutorial:
@@ -215,13 +219,7 @@ func _run() -> void:
 		await _settle()
 	await _wait(1.0)
 	await _shot("10_end_screen")
-	# the victory window as it looks with a reward (shown over the same board; the outcome is the screen's input)
-	hud.end_screen.visible = false
-	var app = root.get_node_or_null("GameApp")
-	if app != null and app.catalog != null: level.reward = app.catalog.find_tower("guardian")
-	hud.end_screen.show_outcome(Outcome.Won)
-	await _wait(0.6)
-	await _shot("11_victory")
+	# the victory window: a real win in its own run (tools/hud_shot.gd … victory)
 	print("outcome ", level.session.outcome, " round ", level.session.round, " panel open ", level.ui_panel_open)
 	quit(0)
 
@@ -309,6 +307,42 @@ func _report_tail(what: String, c: Control) -> void:
 	var tail: Control = box.get("_tail")
 	var t := tail.get_global_rect().get_center().x if tail != null and tail.visible else -1.0
 	print("%s: anchor centre %.1f  tail centre %.1f  box %.1f..%.1f" % [what, c.get_global_rect().get_center().x, t, box.get_global_rect().position.x, box.get_global_rect().end.x])
+
+## A real win (Instant on): two archers placed, then each round every enemy on the board is struck down by the
+## environment before End round, until the session reports Won; the end window opens by itself. The first clear's
+## reward is shown when the catalog gives one (the save is a test save).
+func _victory() -> void:
+	level.skip_sequence()
+	await _settle()
+	var hand: Array = level.session.hand
+	var tiles := _build_tiles_near_path(2)
+	for i in 2:
+		level.toggle_placing(hand[i].id)
+		level.click_tile(tiles[i])
+		await _settle()
+	level.instant_override = true
+	for r in 60:
+		if level.session.is_over: break
+		for e in level.session.enemies:
+			if not e.alive: continue
+			var fx := DamageEffect.new()
+			fx.amount = Formula.new("999")
+			fx.target_id = e.id
+			fx.source = 0
+			level.session.resolver.run(fx)
+		level.session.after_command()
+		level.version += 1
+		await _settle()
+		if level.session.is_over: break
+		level.end_round()
+		await _settle()
+	for i in 600:
+		if hud.end_screen.visible: break
+		await process_frame
+	await _wait(0.8)
+	print("victory: outcome ", level.session.outcome, " round ", level.session.round, " reward ", level.reward)
+	await _shot("11_victory")
+	quit(0)
 
 func _apply_statuses(unit: Entity, specs: Array, source := 0) -> void:
 	var app = root.get_node_or_null("GameApp")

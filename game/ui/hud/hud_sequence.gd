@@ -38,6 +38,8 @@ var _refusal_until := -1.0
 const BOARD_RING := Vector2(120, 64)
 ## The piece ring stands this far outside the hand piece.
 const PIECE_RING_OUT := 8.0
+## The guided tutorial's bubble width (UI/UX: max ~360, text wraps).
+const GUIDED_BUBBLE_WIDTH := 360.0
 
 func _init() -> void:
 	name = "Sequence"
@@ -160,6 +162,8 @@ func _process(delta: float) -> void:
 		var text := TooltipText.from_rich(line.text)
 		var guided := _guided()
 		if guided != null: text = _color_tower_names(text)
+		# the guided tutorial's bubble is narrow (its lines wrap) so it fits between the board's previews
+		bubble.box_width = GUIDED_BUBBLE_WIDTH if guided != null else 540.0
 		if _pointing:
 			dialogue.hide_line()
 			var same := guided != null and text == _shown_text and bubble.is_shown()
