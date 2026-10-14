@@ -7969,6 +7969,16 @@
       "border": null,
       "note": "White, tint in Unity. Shown at 20-36 px."
     },
+    "icon_enemy": {
+      "file": "png/icons/icon_enemy.png",
+      "group": "icons",
+      "sizePx": {
+        "w": 64,
+        "h": 64
+      },
+      "border": null,
+      "note": "White, tint in Unity. Shown at 20-36 px."
+    },
     "icon_next": {
       "file": "png/icons/icon_next.png",
       "group": "icons",

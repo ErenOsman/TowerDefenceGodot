@@ -206,9 +206,9 @@ static func has_played(progress: LevelProgress, level_id: String) -> bool:
 	return r != null and r.attempts > 0
 
 ## The enemies section of the level detail before the level has been played (user decision 2026-10-14, UI Design
-## Rules "Level select"): no chips, just this line; the enemies fact tile shows only the count. After one attempt the
-## chips show ("Enemies in this level").
-const EnemiesUnplayedText := "Enemies: you'll see them when you play it."
+## Rules "Level select"): the "Enemies in this level" heading stays, with this one muted body line under it instead
+## of the chips; the enemies fact tile shows only the count. After one attempt the chips show.
+const EnemiesUnplayedText := "You'll see them when you play it."
 
 ## A list row's right-hand state: "won" (a win recorded), "new" (unlocked, never played), "locked", or "" (played,
 ## not won yet).

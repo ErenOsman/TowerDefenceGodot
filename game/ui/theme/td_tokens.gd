@@ -449,6 +449,7 @@ const SPRITES := {
 	"icon_del-melee": ["res://art/ui/KitB/icons/icon_del-melee.png", 64, 64, [0, 0, 0, 0], [0.0, 0.0, 0.0, 0.0]],
 	"icon_del-spark": ["res://art/ui/KitB/icons/icon_del-spark.png", 64, 64, [0, 0, 0, 0], [0.0, 0.0, 0.0, 0.0]],
 	"icon_edit": ["res://art/ui/KitB/icons/icon_edit.png", 64, 64, [0, 0, 0, 0], [0.0, 0.0, 0.0, 0.0]],
+	"icon_enemy": ["res://art/ui/KitB/icons/icon_enemy.png", 64, 64, [0, 0, 0, 0], [0.0, 0.0, 0.0, 0.0]],
 	"icon_energy": ["res://art/ui/KitB/icons/icon_energy.png", 64, 64, [0, 0, 0, 0], [0.0, 0.0, 0.0, 0.0]],
 	"icon_eye": ["res://art/ui/KitB/icons/icon_eye.png", 64, 64, [0, 0, 0, 0], [0.0, 0.0, 0.0, 0.0]],
 	"icon_fast-forward": ["res://art/ui/KitB/icons/icon_fast-forward.png", 64, 64, [0, 0, 0, 0], [0.0, 0.0, 0.0, 0.0]],

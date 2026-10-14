@@ -1,0 +1,205 @@
+# Workshop — Design
+
+Written 2026-10-14 by the Godot agent from Eren's decisions of 2026-10-13 (given to the UI/UX agent) and the approved
+mockups; Eren asked for the doc first and left the open points to the agents ("I trust you"), so the rest is decided
+here and marked **(agents)**. This file is the source of truth for the Workshop; the Camp doc's open question
+"what the Workshop modifies and what it costs" is answered by it.
+
+The **Workshop** is the Camp station where the player **modifies towers**: a tower turns into one of its **forms**
+(Archer → Fire Archer), unlocked with **tokens** found in levels. A form is a different tower: other stats, abilities,
+passives, look and name. The tower keeps its ID, its name tag and its place in the hand; it fights as its current form.
+
+## Decisions
+
+| Topic | Decision | Source |
+| --- | --- | --- |
+| Where | Camp station **Workshop** (unlocked with the Camp; was "coming later"). Picker first, then the Modify view slides in from the right; the Modify view may be its own scene | Eren 2026-10-13 |
+| Picker | The collection like Hand select (search, Role / Delivery / Cost filters, Sort), no hand row; a detail card with **Modify** (or double-click) | Eren 2026-10-13 |
+| Modify view | **Left** the tower as it is now, **centre** the forms tree, **right** the selected node: what changes, what it costs, one action | Eren 2026-10-13 |
+| The tree | The tower's default form is the root in the middle; 2–3 nodes branch off it, each a different form of that tower. Forms may have children (Fire Archer → Inferno Archer): depth is allowed | Eren 2026-10-13 |
+| Unlock | A node is unlocked by spending **tokens** (Fire Archer: 1 Fire Arrow). A child needs its parent unlocked | Eren 2026-10-13 |
+| Switching | The tower stays in the form picked until changed; any unlocked form can be picked again. Switching is **free** and only in the Workshop (not during a level) | Eren (stays / switch back) · agents (free, Camp only) |
+| Per tower | Unlocks belong to the **individual tower** ("Unlocks for this Archer"): two Archers are two towers, each with its own forms. Tokens spent on one tower do nothing for another | agents (fits "every tower is an individual") |
+| Tokens | The game's **meta currency**: kinds such as Fire Arrow, Poison Gland, Yew Bow, Ember Core, Steel Plate, Arcane Shard, each with an icon and a line saying where it drops. No coins, no second currency | agents |
+| Where tokens come from | Levels: a **first-win drop** (once) and a **win drop** (every win, so replays are worth something); boss levels carry the rare tokens. Set per level in the catalog, like the first-clear reward tower | agents |
+| What a form changes | Anything the tower's entity has: stats, abilities (added, changed, removed), passives, model and portrait, name, and optionally the **energy cost** (default: the base tower's) | Eren (stats/abilities/looks) · agents (cost field, default unchanged) |
+| Elsewhere | A formed tower shows its form name and a small **form badge** on its hand card, tray piece, board medallion and Codex entry | UI/UX agent, mockup workshop-badge |
+| Codex | Every form is listed on its base tower's Codex page with its real portrait (no ???: the game is about collecting, and the Workshop tree shows every portrait too); a form no tower of yours has unlocked is desaturated with the line "Unlock it in the Workshop" and its token cost | agents · UI/UX agent |
+| Confirm | Unlocking asks once ("Unlock Fire Archer for this Archer? Spends 1 Fire Arrow (you have 2 → 1)"); switching does not | mockup workshop-confirm |
+| Content | Forms and tokens are content JSON like everything else (`Content/Forms.json`, `Content/Tokens.json`); drops live in `Catalog.json`; no numbers in code | agents |
+
+## Player flow
+
+```text
+Camp ──Workshop──▶ Picker (collection) ──Modify / double-click──▶ Modify view (tree) ──Back / Esc──▶ Picker ──Close──▶ Camp
+                                                                       │ Unlock (confirm) · Use this form
+                                                                       ▼
+                                                        the tower's form changes; hand, tray and board follow
+```
+
+A level never changes a form: the hand brings each tower in as the form it has when the level starts. Selling and
+dying in a level change nothing in the Workshop (towers come back after every level, as now).
+
+## Screen layout
+
+Reference mockup (approved as the UI direction): http://92.5.94.11/art/ui/screens-b/workshop.html, frames
+`workshop-picker` … `workshop-badge`, sheet `shots/workshop-sheet.png`.
+
+```text
+┌ Workshop · Pick a tower to modify ─────────────────────────────────────────── × ┐
+│ Search / Role / Delivery / Cost │ 37 towers            Sort ▾ │ Fire Archer      │
+│                                 │ [Archer][Archer][Fire Archer*]… │ #1 · tower 3  │
+│                                 │ (collection grid, badges)   │ 100 energy        │
+│                                 │                             │ Form of Archer ·  │
+│                                 │                             │ 1 of 4 unlocked   │
+│                                 │                             │ stats · abilities │
+│                                 │                             │ [    Modify    ]  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+          ▼ slides right (~350 ms)
+┌ ← Back Esc   Archer  #1 · tower 3                  tokens: 🔥2 🧪0 🏹1 🔥0 🛡1 💎3 ┐
+│ This tower now      │ Forms · click one to see it          │ Fire Archer          │
+│ portrait, name,     │        (Inferno Archer)              │ Form of Archer       │
+│ "Form: Default"     │            │                         │ description          │
+│ Max HP · Power ·    │ (Fire Archer)─(Archer)─(Poison Arch.)│ Compared with Archer │
+│ Range · Speed       │            │                         │ 19 Max HP · 12→11 ▼  │
+│ abilities as now    │        (Longbow)                     │ + Burn on hit        │
+│                     │ ● Current ● Unlocked ● Can unlock    │ Fire Shot [Changed]  │
+│                     │ ● Needs tokens                       │ Tower Walk [Same]    │
+│                     │                                      │ › Leads to: Inferno  │
+│                     │                                      │ Unlock cost 🔥1 (2)  │
+│                     │                                      │ [Unlock · 1 Fire Arrow] │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Node states:** Current (cobalt ring, the path from the root to it is cobalt), Unlocked (green ✓ check on the
+  node, no ring), Can unlock (gold ring + glow: the parent is unlocked and the tokens are there), Needs tokens (grey
+  portrait, red "0/1" chip), Locked behind a parent (grey, "needs Fire Archer"). Rings are only for Current and
+  Can unlock. Every node shows its real portrait, locked or not.
+- **Right card, one action:** `Unlock · 1 Fire Arrow` (enabled only in Can unlock; under it "Unlocks for this Archer
+  (tower 3)"), or `Use this form` (unlocked, not current; under it "Free: switch back any time"), or nothing for the
+  current form ("This is the tower's current form"). Missing tokens: the button is disabled and a red line says what
+  is missing and where it drops ("Needs 1 more Ember Core. Found in: The Glutton (boss)").
+- **Compared with:** the selected node's stats against the **current** form (12 → 11 ▼ Power), then its abilities
+  tagged Changed / Same / New / Gone, then the passives the same way, then "Leads to: …" for its children.
+- **Token header:** every token kind with the count owned; hovering one shows its name, description and where it drops.
+- **After Unlock:** the confirm popup, then the node fills, the ring flashes, a "Fire Archer unlocked" toast on the
+  card and the action becomes `Use this form`. Unlocking does not switch the form by itself.
+- **Keys:** Esc / Back returns to the picker (then closes it); Enter = the card's action; arrows move between nodes.
+
+## Rules
+
+- A **form** belongs to one tower type and has at most one **parent** form; a form without a parent hangs off the
+  root (the type's default form). The default form is never unlocked or paid for: every tower has it.
+- **Unlock** needs: the parent unlocked on this tower (none for root children), and every token of the cost owned.
+  The tokens are spent at once; nothing refunds them. Unlocked forms are saved on the tower and never lost.
+- **Current form** is one of the tower's unlocked forms or the default. Switching costs nothing and is immediate.
+- A formed tower keeps its **ID** (saves, hand, progress, Codex "owned" all key on it), its **custom name** (the
+  badge and the form name show next to it), its **hand slot** and its **tower number**.
+- **In a level** the tower is built from its form: the form's entity (stats, abilities, passives, model) and the
+  form's **energy cost** when it has one, else the base tower's. Selling refunds from that cost (the existing rule).
+  Any tooltip, Codex or wiki text about the tower speaks of the form by its own name.
+- **Tokens** are counted per kind in the save; a level's drops are granted on the end screen with the first-clear
+  reward tower ("Rewards: Fire Arrow ×2, Ember Core ×1"), first-win drops once (per level, with the first win),
+  win drops on every win. Quitting or losing drops nothing. Dev shortcuts can grant tokens.
+- **Co-op:** a player's hand entries carry the form, and the form's content comes with the content hash, so both
+  clients build the same entity. The relay never reads forms.
+- **Validation (Validate All):** a form's tower, entity, parent and tokens must exist; a form's parent must belong
+  to the same tower type; no cycles; depth ≤ 3 (root + 2 levels) for now; every token kind must drop somewhere
+  (a level lists it) or Validate All warns; a cost of 0 tokens is an error (the default form is the free one).
+
+## Data
+
+Content stays JSON under `Content/` (the single source of truth, read by Unity, the Godot build and the wiki). New
+files and fields; everything keyed by stable ids like the rest.
+
+### Content/Forms.json — `FormAsset`
+
+| Field | Meaning |
+| --- | --- |
+| `id` | stable id, saved on towers (`archer-fire`) |
+| `displayName`, `description`, `icon` | the form's own name and portrait ("Fire Archer"; the portrait may be the base portrait until the Blender agent renders one) |
+| `badge` | the small badge sprite shown on cards, tray pieces and the board medallion (`Assets/Art/Icons/Forms/fire.png`) |
+| `tower` | the base tower type (`Towers/Archer Tower`) |
+| `parent` | the parent form, or empty for a root child |
+| `entity` | the `EntityAsset` the tower fights as in this form (`Units/Towers/Fire Archer`): a full entity like any other tower's, so forms need no new mechanics |
+| `cost` | energy cost in this form; `-1` = the base tower's |
+| `unlock` | the tokens to spend: `[{ "token": "Tokens/Fire Arrow", "amount": 1 }]` |
+| `order` | where the node sits around the root (0, 1, 2… clockwise from the top); children sit beyond their parent |
+
+### Content/Tokens.json — `TokenAsset`
+
+| Field | Meaning |
+| --- | --- |
+| `id`, `displayName`, `description`, `icon` | "Fire Arrow — An arrowhead that still smoulders." |
+| `rarity` | `Common` / `Rare`: a hint for the header's order and the drop tables, no rule reads it |
+
+Where a token drops is not stored on the token: the Workshop derives "Found in: Rock Garden, The Drummer" from the
+catalog's drop lists (so it stays true when levels change).
+
+### Catalog.json — level entries
+
+Next to `firstClearReward`: `firstWinTokens` and `winTokens`, each `[{ "token": …, "amount": n }]`. `GameReference`
+exports them with the level and lists every form under its tower with its cost and where its tokens come from.
+
+### Saves (`GameData`)
+
+- `OwnedTower.form` — the current form id, empty = default. `OwnedTower.forms` — unlocked form ids (never the default).
+- `GameData.tokens` — `TokenWallet`: `[{ "id": "fire-arrow", "count": 2 }]` plus `earned` totals per kind (for
+  stats; nothing reads it yet). Engine-free rules in `Game.Meta.Workshop`: `CanUnlock(tower, form, wallet) → reason`,
+  `Unlock`, `SetForm`, `Drops(result, record, entry)`; tested like `LevelCatalog`.
+- `CodexProgress`: forms are discovered through the existing "owned" rule (owned = some tower has it unlocked).
+
+### Engine-free model
+
+```text
+FormDef  { id, name, description, towerType, parent, entity: EntityDef, cost (-1 = base), unlock: {tokenId: n}, badge, order }
+TowerType gains  forms: FormDef[]   (its tree, in content order)
+TowerCollection.Resolve(ownedTower) → (TowerType, FormDef or null): what the level builds (ConvertAsset / AssetConverter)
+Workshop.CanUnlock(tower, form, wallet): "Needs Fire Archer first" | "Needs 1 more Ember Core" | ok
+```
+
+## Starter content (placeholders: names, numbers and art are the mockup's; Eren rewrites)
+
+| Tower | Form | Parent | Unlock | What changes |
+| --- | --- | --- | --- | --- |
+| Archer | Fire Archer | – | 1 Fire Arrow | Shoot → Fire Shot: 11 damage (−1), applies Burn 2 turns |
+| Archer | Inferno Archer | Fire Archer | 1 Ember Core + 1 Fire Arrow | Fire Shot → Fire Volley: Radius 1, Burn around the target, 2 turn CD |
+| Archer | Poison Archer | – | 1 Poison Gland | Shoot → Venom Shot: 10 damage (−2), applies Acid 3 turns |
+| Archer | Longbow | – | 2 Yew Bow | +2 Power, +1 Range, −1 Speed (Long Shot) |
+| Guardian | Bastion | – | 1 Steel Plate | +15 Max HP, Taunt Range +1, −1 Speed (Shield Bash) |
+| Guardian | Spiked Guardian | – | 1 Steel Plate + 1 Ember Core | +3 Power, Counter-attack hits for 8 |
+| Mage | Pyromancer · Frost Mage · Storm Mage | – | Arcane Shard (+ Ember Core) | placeholders, see the mockup |
+
+| Token | Rarity | Drops (placeholder) |
+| --- | --- | --- |
+| Fire Arrow | Common | first win of every Chapter 2 level ×1; win drop of Rock Garden |
+| Poison Gland | Common | win drop of Rock Garden and The Drummer |
+| Yew Bow | Common | win drop of every Chapter 1 level (replays) |
+| Steel Plate | Common | first win of Three at the Gate ×2; its win drop |
+| Arcane Shard | Common | first win of every Chapter 2 level ×1; win drop of The Drummer |
+| Ember Core | Rare | The Glutton (boss): first win ×1 and win drop ×1 |
+
+Chapter 1 drops nothing on first wins (the reward towers are the prize there); Chapter 1 replays give Yew Bows so the
+first form is reachable before Chapter 2, the Workshop being open from the Camp's first visit.
+
+## Build plan
+
+1. **Content and rules (Unity):** `FormAsset`, `TokenAsset`, the catalog's drop lists, Validate All rules,
+   `Tools > Content > Create Starter Forms` (the table above), `GameReference` export; `OwnedTower.form/forms`,
+   `TokenWallet`, `Game.Meta.Workshop` with tests; the level builds a tower from its form; the end screen grants drops.
+2. **Screens (Unity):** the Workshop station opens the picker; the Modify view (`UI_Workshop`), the tree, the card,
+   confirm, badges on hand cards, tray pieces and board medallions; the Codex lists forms.
+3. **Godot build:** the same, from the synced content (the Godot agent builds it right after this doc; see
+   `GODOT-NOTES.md` in that repo for anything that differs).
+4. **Art:** the 6 token icons and a badge per form come from the UI kit as sprites (`Assets/Art/Icons/Forms/<form id>.png`
+   and `Assets/Art/Icons/Tokens/<token id>.png`, white and tintable, 64 and 128 px; the UI/UX agent has them made).
+   The starter badge set, one per form: Fire Archer (flame), Inferno Archer (big flame), Poison Archer (drop),
+   Longbow (bow), Bastion (shield), Spiked Guardian (spiked shield), Pyromancer (fireball), Frost Mage (snowflake),
+   Storm Mage (spark). Form portraits and models from the Blender agent when the forms are final; until then the
+   base portrait with the form's tint and badge.
+
+## Open questions
+
+- Whether the same token kinds last, or every chapter brings its own (the data allows both).
+- Whether a form should ever be **removable** (refund) — no, for now.
+- Form portraits: base portrait + tint and badge until real renders exist.

@@ -11,7 +11,7 @@ const SECTIONS := [CodexSection.Towers, CodexSection.Enemies, CodexSection.Statu
 const TAB_NAMES := ["Towers", "Enemies", "Statuses", "Tips"]
 ## The text column: at most ~60 characters of 22–24 px Nunito a line.
 const TEXT_W := 700.0
-const TAB_ICONS := ["icon_castle", "icon_wave", "icon_eye", "icon_info"]
+const TAB_ICONS := ["icon_castle", "icon_enemy", "icon_eye", "icon_info"]
 const TAB_WIDTHS := [210.0, 262.0, 262.0, 180.0] # faces; TdButton adds its bleed room
 const WIDTH := 1700.0
 const HEIGHT := 900.0

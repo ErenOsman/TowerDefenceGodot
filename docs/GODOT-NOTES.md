@@ -15,7 +15,7 @@ Unity repo by `tools/sync_from_unity.sh` (the Unity repo is the single source of
 
 ## Decisions taken while testing the Godot build
 See `docs/Decisions.md` (2026-10-13 rows) — they are logged in the Unity repo and synced here.
-- Level select hides "Enemies in this level" until the level has one attempt recorded (UI Design Rules "Level select", 2026-10-14). No extra save field: `MenuLogic.has_played` reads the LevelRecord's `attempts`, which every result (win, loss, quit through Pause) increments.
+- Level select hides the enemy chips until the level has one attempt recorded; the heading stays over one muted line "You'll see them when you play it." (UI Design Rules "Level select", 2026-10-14). The enemies fact tile waits for a generic enemy glyph from the kit (asked the UI/UX agent). No extra save field: `MenuLogic.has_played` reads the LevelRecord's `attempts`, which every result (win, loss, quit through Pause) increments.
 
 ## Co-op rules (sim) — Godot-only for now
 - `CoopSession` (`sim/level/coop_session.gd`) wraps a `CoopLevelSession` (a LevelSession subclass that only changes the

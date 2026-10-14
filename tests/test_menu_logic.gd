@@ -280,7 +280,7 @@ func test_level_select_enemies_hidden_until_played() -> void:
 	p.record(lost)
 	assert_true(MenuLogic.has_played(p, "a2"), "a loss counts too")
 	assert_false(MenuLogic.has_played(p, "a3"))
-	assert_eq(MenuLogic.EnemiesUnplayedText, "Enemies: you'll see them when you play it.")
+	assert_eq(MenuLogic.EnemiesUnplayedText, "You'll see them when you play it.")
 
 func test_level_select_row_state_and_number() -> void:
 	var cat := _catalog()

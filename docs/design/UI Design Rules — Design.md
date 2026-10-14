@@ -299,7 +299,7 @@ The bottom row reads left to right: what I have (tray), what I do (action bar), 
 
 Reference mockup: [level-select](http://92.5.94.11/art/ui/screens-b/level-select.html). Left: chapter groups with level rows (number, state "✓ Won" / "● New" / lock with its reason). Right: breadcrumb, title, description, fact tiles (waves, enemies, towers in hand, energy and income), the board preview (35° "contain" render with a blurred backing, the same as in co-op and chapter cards), the first-win reward line, Play. Bottom: the hand row with the level's cap divider ("Two Roads takes the first 4") and Change hand (opens Hand select before a level).
 
-- **Enemies in this level** are shown only once the player has played the level at least once (user, 2026-10-14). Before that, the section reads "Enemies: you'll see them when you play it." with no chips, and the enemies fact tile shows only the count.
+- **Enemies in this level** are shown only once the player has played the level at least once (user, 2026-10-14). Before that, the section keeps its heading "Enemies in this level" with one muted body line under it, "You'll see them when you play it.", and no chips; the enemies fact tile shows the count with a generic enemy icon (not a portrait).
 
 ### Hand select (user, 2026-10-13)
 

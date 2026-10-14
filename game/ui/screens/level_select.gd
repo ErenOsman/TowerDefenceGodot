@@ -7,8 +7,8 @@ extends TdPopup
 ##   Every unlocked level plus the first locked one shows (LevelCatalog.visible); in the Camp only one chapter.
 ## - Centre: "Chapter 1 · level 3 ✓ Won", the title, the description, four fact tiles (waves, enemies, towers in hand,
 ##   energy + "+N a round"), "Enemies in this level" as portrait chips "Slime ×3" (only once the level has been played
-##   at least once; before that the line "Enemies: you'll see them when you play it." and no portrait on the fact
-##   tile, MenuLogic.has_played) whose tooltip has HP, Shield,
+##   at least once; before that the same heading over one muted line "You'll see them when you play it." and no
+##   portrait on the fact tile, MenuLogic.has_played) whose tooltip has HP, Shield,
 ##   Speed, Power and the abilities with their cooldown; on the right the level's board as a rendered diorama
 ##   (TdLevelPreview → CoopBoardPic: 35°, contain, blurred margin; cached per level, the minimap while it renders), the first-win reward card (teal) and Play
 ##   (bottom-right, flat cobalt). A locked level shows the same panel greyed with its requirement and Play disabled.
@@ -46,6 +46,7 @@ var _title: Label
 var _desc: Label
 var _facts: GridContainer
 var _enemies_head: Label
+var _enemies_note: Label
 var _enemies: HFlowContainer
 var _map_col: VBoxContainer
 var _preview: TdLevelPreview
@@ -160,6 +161,10 @@ func _build_detail() -> void:
 	_info.add_child(TdMenu.spacer(18))
 	_enemies_head = TdMenu.label("Enemies in this level", "plate", TdTheme.color("cream.300"), 20)
 	_info.add_child(_enemies_head)
+	# shown instead of the chips until the level has been played once (MenuLogic.EnemiesUnplayedText)
+	_enemies_note = TdMenu.label(MenuLogic.EnemiesUnplayedText, "body", TdTheme.color("cream.300"))
+	_enemies_note.visible = false
+	_info.add_child(_enemies_note)
 	_info.add_child(TdMenu.spacer(10))
 	_enemies = HFlowContainer.new()
 	_enemies.add_theme_constant_override("h_separation", 12)
@@ -487,6 +492,7 @@ func _draw_level(level: LevelAsset, unlocked: bool) -> void:
 		_title.text = selected if selected != "" else "No level"
 		_desc.text = "No level to play." if selected == "" else "This level is missing from the catalog."
 		_enemies_head.visible = false
+		_enemies_note.visible = false
 		_reward.visible = false
 		_preview.show_level(null)
 		return
@@ -513,7 +519,7 @@ func _draw_level(level: LevelAsset, unlocked: bool) -> void:
 	var played := MenuLogic.has_played(SaveData.progress, selected)
 	var tiles := [
 		_fact("icon_wave", str(f.waves), MenuLogic.plural(f.waves, "wave")),
-		_fact("", str(f.enemies), MenuLogic.plural(f.enemies, "enemy", "enemies"), _first_enemy_icon(level) if played else null),
+		_fact("icon_enemy", str(f.enemies), MenuLogic.plural(f.enemies, "enemy", "enemies"), _first_enemy_icon(level) if played else null),
 		_fact("icon_cards", str(f.hand), MenuLogic.plural(f.hand, "tower") + " in hand"),
 		_fact("icon_energy", str(f.energy), "energy", null, "+%d a round" % f.per_round),
 	]
@@ -521,9 +527,10 @@ func _draw_level(level: LevelAsset, unlocked: bool) -> void:
 		t.modulate.a = dim
 		_facts.add_child(t)
 	var counts := MenuLogic.enemy_counts(level) if played else []
-	_enemies_head.text = "Enemies in this level" if played else MenuLogic.EnemiesUnplayedText
 	_enemies_head.visible = not played or not counts.is_empty()
 	_enemies_head.modulate.a = dim
+	_enemies_note.visible = not played
+	_enemies_note.modulate.a = dim
 	var compact := counts.size() > 4
 	_enemies.add_theme_constant_override("v_separation", 8 if compact else 10)
 	_enemies.add_theme_constant_override("h_separation", 10 if compact else 12)
