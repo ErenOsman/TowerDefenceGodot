@@ -101,7 +101,7 @@ func _ready() -> void:
 	_piece_ring.mouse_filter = MOUSE_FILTER_IGNORE
 	_piece_ring.draw.connect(_draw_piece_ring)
 	dialogue = TdDialogueBox.new()
-	dialogue.size = Vector2(1100, 220)
+	dialogue.size = Vector2(1100, 160) # shorter than the kit's 220 (Eren 2026-10-14: "tutorial paneli daha kısa olsun")
 	# no bust beside the box: the Princess stands on the board (the board's speaker prop); only a small medallion
 	# on the name plate, as in the Unity build
 	_medal = HudArt.medallion(52, "medallion_ring", 5)
