@@ -141,15 +141,15 @@ func _remove_button() -> Control:
 func set_tired(text: String) -> void:
 	tired = text != ""
 	if not tired or tower_id == "": return
-	if _fig != null: _fig.modulate = Color(1, 1, 1, 0.5)
-	if _plate != null: _plate.set_extra_state("Locked")
-	TdTiredBadge.attach(self, SIZE.x, 0.3, Vector2(0.5, 0.5))
-	_under(text, TdTheme.color("cream.100"))
+	# the whole slot at 50 % (plate included), the badge at full strength under the coin, a muted caption
+	for c in get_children(): if c is CanvasItem: c.modulate.a = 0.5
+	TdTiredBadge.attach(self, SIZE.x, 0.24, Vector2(0.17, 0.44))
+	_under(text, Color(TdTheme.color("cream.300"), 0.85))
 	tooltip_text = text.replace("\n", " ")
 
 ## A tower the mission takes (hand editor opened for a mission): "▲ goes" under the plate.
 func set_goes() -> void:
-	if tower_id != "" and not tired: _under("▲ goes", TdTheme.color("cream.200"))
+	if tower_id != "" and not tired: _under("▲ goes", TdTheme.color("cream.100"))
 
 func _under(text: String, col: Color) -> void:
 	var l := TdMenu.label(text, "plate", col, 18)

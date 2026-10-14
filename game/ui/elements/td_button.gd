@@ -224,6 +224,20 @@ func set_tag(t: String) -> void:
 	_tag.text = t
 	_layout()
 
+## Styles drawn with the UI rules' one Disabled look when not interactable (UI Design Rules § States: `ink.700` at
+## 60 %, label `text.disabled`, no hover; the reason goes on a line near it and on hover), never a dimmed sprite.
+const FLAT_DISABLED := [Style.PRIMARY, Style.SECONDARY, Style.DANGER, Style.MENU_PRIMARY, Style.MENU_WOOD, Style.TAB]
+const DISABLED_LABEL := Color("#7A8296")
+const INK_700 := Color("#262B3A")
+
+## The Disabled fill (also used by look-alike disabled actions, e.g. TdTowerCard.disabled_button).
+static func disabled_box(radius := 14) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(INK_700, 0.6) # no outline (UI Design Rules § States: Disabled)
+	sb.set_corner_radius_all(radius)
+	sb.anti_aliasing = true
+	return sb
+
 ## Enables or disables it; a disabled one still answers the pointer (reason on hover, shake on click).
 func set_interactable(v: bool, reason = null) -> void:
 	if v: denied_reason = ""
@@ -551,7 +565,10 @@ func _redraw() -> void:
 		# leave it out so the face simply sits 4 px lower under its rim
 		var menu_pressed := (style == Style.MENU_PRIMARY or style == Style.MENU_WOOD) and sprite.ends_with("_pressed")
 		_bg.add_theme_stylebox_override("panel", TdTheme.stylebox_cut_top(sprite, 8) if menu_pressed else TdTheme.stylebox(sprite))
+	var flat_disabled := not interactable and style in FLAT_DISABLED
+	if flat_disabled: _bg.add_theme_stylebox_override("panel", disabled_box())
 	var col: Color = st.get("label", Color.WHITE) if interactable else st.get("label_disabled", TdTheme.color("cream.300"))
+	if flat_disabled: col = DISABLED_LABEL
 	if style == Style.END_TURN and not interactable: col = TdTheme.color("cream.300")
 	_label.add_theme_color_override("font_color", col)
 	if style == Style.ICON:

@@ -15,6 +15,8 @@ const HAND_EDITOR := "res://game/ui/screens/hand_editor.tscn"
 const BANNER_SECONDS := 8.0
 ## The chat panel's height (about nine lines plus the field).
 const CHAT_H := 350.0
+## The smallest chat (a mission room's taller level card leaves less room).
+const CHAT_MIN := 170.0
 
 var net: Node = null
 ## Lines of the chat: [{name, text, color, system}].
@@ -30,6 +32,7 @@ var _banner_left := 0.0
 var _slots: VBoxContainer
 var _card: Dictionary
 var _change_level: Control
+var _mission_box: VBoxContainer
 var _chat_box: VBoxContainer
 var _chat_scroll: ScrollContainer
 var _chat_in: LineEdit
@@ -109,11 +112,14 @@ func _build() -> void:
 	body.add_child(right)
 	_card = CoopUi.level_card(560, 116)
 	right.add_child(_card.panel)
+	_mission_box = TdMenu.vbox(8)
+	_card.extra.add_child(_mission_box)
 	_change_level = CoopUi.paper_action("icon_edit", "Change level", func(): open_settings())
 	_card.extra.add_child(_change_level)
 	var chat := TdMenu.panel(TdPanel.Kind.WOOD, 16)
-	chat.custom_minimum_size = Vector2(0, CHAT_H) # fixed: the same for host and guest
-	chat.size_flags_vertical = SIZE_SHRINK_BEGIN
+	# the chat takes what the level card leaves (a mission room's card is taller: drops, plays), at least CHAT_MIN
+	chat.custom_minimum_size = Vector2(0, CHAT_MIN)
+	chat.size_flags_vertical = SIZE_EXPAND_FILL
 	right.add_child(chat)
 	var cv := TdMenu.vbox(8)
 	chat.add_child(cv)
@@ -121,7 +127,7 @@ func _build() -> void:
 	_chat_scroll = ScrollContainer.new()
 	_chat_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_chat_scroll.size_flags_vertical = SIZE_EXPAND_FILL
-	_chat_scroll.custom_minimum_size = Vector2(0, CHAT_H - 120.0)
+	_chat_scroll.custom_minimum_size = Vector2(0, CHAT_MIN - 120.0)
 	cv.add_child(_chat_scroll)
 	_chat_box = TdMenu.vbox(2)
 	_chat_box.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -284,10 +290,13 @@ func refresh() -> void:
 	_lock.modulate = TdTheme.color("cream.100") if locked else Color(TdTheme.color("cream.300"), 0.35)
 	_lock.tooltip_text = "Password room" if locked else "Open room: no password"
 	_lock.mouse_filter = MOUSE_FILTER_PASS
-	_sub.text = "%s · co-op · %d of %d player%s" % [CoopLevels.level_name(level), players.size(), count, "" if count == 1 else "s"]
+	var mission := CoopLevels.mission_for_level(level)
+	var what := CoopLevels.level_name(level) if mission == null else "%s · plays %s" % [mission.name, CoopLevels.level_name(level)]
+	_sub.text = "%s · co-op · %d of %d player%s" % [what, players.size(), count, "" if count == 1 else "s"]
 	_code.text = "Room: [b][color=#%s]%s[/color][/b]  ·  Password: [b]%s[/b]" % [TdTheme.color("cream.100").to_html(false),
 		_esc(str(room.get("name", ""))), "•".repeat(6) if locked else "none"]
 	CoopUi.fill_level_card(_card, level, count, true)
+	_fill_mission(mission)
 	_change_level.visible = net.is_host
 	_draw_slots(room, players, count, level)
 	var me = NetProtocol.find_player(room, net.player_id)
@@ -302,15 +311,21 @@ func refresh() -> void:
 	var host_name := NetProtocol.player_name(room, str(room.get("host", "")))
 	if net.is_host:
 		_start.visible = true
-		# not ready yet: a dimmed cobalt Start whose click (and hover) says why, never the grey disabled look
+		# not ready yet: the one Disabled look (UI review 2026-10-14), its click and hover say why; _wait says it too
 		_start_reason = "" if waiting.is_empty() else "Waiting for %s to be ready." % NetProtocol.join_names(waiting)
-		_start.modulate = Color(1, 1, 1, 1.0 if _start_reason == "" else 0.5)
-		_start.denied_reason = _start_reason
+		_start.set_interactable(_start_reason == "", _start_reason)
 		_start.tooltip_text = _start_reason
 		_wait.text = "Everyone is ready. Start when you like." if waiting.is_empty() else "Waiting for %s to be ready." % NetProtocol.join_names(waiting)
 	else:
 		_start.visible = false
 		_wait.text = "%s starts the match when everyone is ready." % host_name
+	# Ready needs a rested tower for a mission (Disabled look + the reason on the wait line)
+	var level_id := str(room.get("level", ""))
+	if not am_ready and not CoopLevels.can_ready(level_id):
+		_ready_btn.set_interactable(false, CoopLevels.last_reason + ".")
+		_wait.text = CoopLevels.last_reason + "."
+	else:
+		_ready_btn.set_interactable(true)
 	my_hand_cut()
 
 func _draw_slots(room: Dictionary, players: Array, count: int, level: String) -> void:
@@ -409,6 +424,21 @@ func _slot_row(i: int, p, room: Dictionary, cap: int, h: float) -> Control:
 		holder.add_child(x)
 	return panel
 
+## The side card for a mission room: the mission's name, its plays note and its drops (as the create popup's).
+func _fill_mission(mission: MissionDef) -> void:
+	for c in _mission_box.get_children(): c.queue_free()
+	_mission_box.visible = mission != null
+	if mission == null: return
+	_card.title.text = mission.name
+	var sd = get_node_or_null("/root/SaveData")
+	var mp: MissionProgress = sd.missions if sd != null else null
+	var note := CoopUi.note_row("", MissionUiLogic.create_plays_note(mission, mp))
+	CoopUi.set_note_icon(note, TdDrops.icon_texture("hourglass"))
+	_mission_box.add_child(note)
+	var box := CoopUi.flat_panel(Color("2b201a"), 10, Color(0, 0, 0, 0), Vector4(12, 6, 12, 6))
+	box.add_child(TdDrops.rows(mission, MissionUiLogic.first_win_claimed(mission, mp), 34.0, 86.0, 18))
+	_mission_box.add_child(box)
+
 ## Your strip in your row: the saved hand's first `cap` towers (tired ones dimmed with the moon badge: the match
 ## skips them and takes the next rested tower), padded with empty circles.
 func my_strip(cap: int) -> HBoxContainer:
@@ -433,7 +463,7 @@ func my_strip(cap: int) -> HBoxContainer:
 		holder.add_child(m)
 		if MissionBoard.is_tired(str(ids[i]), sd.missions):
 			m.modulate = Color(1, 1, 1, 0.5)
-			TdTiredBadge.attach(holder, 44.0, 0.42, Vector2(0.82, 0.8))
+			TdTiredBadge.attach(holder, 44.0, 0.46, Vector2(0.18, 0.18))
 			TdTooltipTrigger.attach(holder, "", MissionUiLogic.tired_line(null, false))
 		h.add_child(holder)
 	return h
@@ -457,7 +487,6 @@ func toggle_ready() -> void:
 	# a mission needs a rested tower to bring (Missions & Guild — Design § Tower energy)
 	if not ready and not CoopLevels.can_ready(str(net.room.get("level", ""))):
 		_ready_btn._deny()
-		add_system_line(CoopLevels.last_reason + ".")
 		_wait.text = CoopLevels.last_reason + "."
 		return
 	net.set_ready(not ready)

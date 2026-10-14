@@ -15,6 +15,11 @@ static var _busy := false
 const SUPERSAMPLE := 2.0
 
 var level_id := ""
+## Desaturated (a locked mission's picture).
+var grey := false:
+	set(v):
+		grey = v
+		if _pic != null: _pic.material = grey_material() if v else null
 var pitch := 35.0
 var yaw := -8.0
 var _pic: TextureRect
@@ -113,6 +118,17 @@ static func _backdrop(tex: Texture2D) -> Texture2D:
 			out = ImageTexture.create_from_image(crop)
 	_backdrops[tex] = out
 	return out
+
+static var _grey_mat: ShaderMaterial = null
+
+## Desaturates and darkens a picture (locked missions).
+static func grey_material() -> ShaderMaterial:
+	if _grey_mat == null:
+		var sh := Shader.new()
+		sh.code = "shader_type canvas_item;\nvoid fragment() {\n\tvec4 c = COLOR;\n\tfloat l = dot(c.rgb, vec3(0.299, 0.587, 0.114));\n\tCOLOR = vec4(vec3(l) * 0.8, c.a);\n}\n"
+		_grey_mat = ShaderMaterial.new()
+		_grey_mat.shader = sh
+	return _grey_mat
 
 static var _blur: ShaderMaterial = null
 

@@ -202,6 +202,10 @@ func _layout() -> void:
 		action_bar.size = action_bar.get_combined_minimum_size()
 		action_bar.position = Vector2(r.position.x, r.end.y - action_bar.size.y)
 	var bottom: float = layout["bottom_inset"] if action_bar.visible else HudLayout.TRAY_H
+	# while the guided tutorial speaks, the board is framed above its dialogue box (a small board such as the
+	# tutorial's 7×5 would otherwise fill the screen and sit under the box)
+	if controller.guided != null and not controller.guided.finished and sequence != null:
+		bottom = maxf(bottom, sequence.guided_bottom_inset())
 	# top bar + bottom row only: the board is centred on the whole width (the card may cover its edge)
 	_send_insets(HudLayout.TOP_BAR, bottom, 0.0)
 

@@ -33,10 +33,13 @@ static func coin(token_id: String, amount: int, first := false, dim := false, si
 	var h := TdMenu.hbox(4)
 	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	p.add_child(h)
-	var pic := TdMenu.picture(token_texture(token_id), Vector2(size - 10, size - 10))
+	# the coin at least 24 px on screen (the sprite has a margin: 28 px), the count in Plinth 18 (UI review 2026-10-14)
+	var d := clampf(size - 8.0, 28.0, 36.0)
+	var pic := TdMenu.picture(token_texture(token_id), Vector2(d, d))
 	pic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(pic)
-	var l := TdMenu.label(count_text if count_text != "" else "×%d" % amount, "micro", TdTheme.color("cream.100"), int(size * 0.5))
+	var l := TdMenu.label(count_text if count_text != "" else "×%d" % amount, "micro", TdTheme.color("cream.100"), 22 if size >= 42.0 else 18)
+	l.add_theme_font_override("font", TdTheme.font("plinth"))
 	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(l)
 	if dim: p.modulate = Color(1, 1, 1, 0.5)

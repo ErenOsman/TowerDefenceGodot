@@ -19,6 +19,7 @@ var stations := {}   # id → GuildStation
 var welcome_card: Control
 var popups: Control
 var board: TdPopup = null
+var _lobby_pending := false
 var _frame: Control
 
 func _ready() -> void:
@@ -42,11 +43,15 @@ func _ready() -> void:
 	if GameApp.catalog != null and GameApp.catalog.grant_starting_towers(SaveData.towers): SaveData.save()
 	refresh()
 	welcome_card.visible = not SaveData.profile.guild_seen
+	# back from a co-op match, or the Camp's "Multiplayer → Guild": the lobby opens (after the welcome card)
+	if has_node("/root/Net") and get_node("/root/Net").reopen_lobby:
+		get_node("/root/Net").reopen_lobby = false
+		_lobby_pending = true
 	if welcome_card.visible:
 		await get_tree().process_frame
 		TdPanelTransition.open(welcome_card.get_meta("card"))
-	elif has_node("/root/Net") and get_node("/root/Net").reopen_lobby: # back from a co-op match
-		get_node("/root/Net").reopen_lobby = false
+	elif _lobby_pending:
+		_lobby_pending = false
 		open_multiplayer.call_deferred()
 
 func _build_title() -> void:
@@ -148,6 +153,9 @@ func close_welcome() -> void:
 	if not SaveData.profile.guild_seen:
 		SaveData.profile.guild_seen = true
 		SaveData.save()
+	if _lobby_pending:
+		_lobby_pending = false
+		open_multiplayer()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not (event is InputEventKey) or not event.pressed or event.echo: return

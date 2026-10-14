@@ -43,6 +43,8 @@ func _run() -> void:
 			await _frames(2)
 			continue
 		var s = level.session
+		# the guided tutorial gates every action to its steps: skip it so the golden policy plays the level
+		if level.get("guided") != null and not level.guided.finished: level.skip_sequence()
 		var rounds := 0
 		while not s.is_over and rounds < max_rounds:
 			rounds += 1

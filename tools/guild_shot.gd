@@ -12,6 +12,8 @@ extends SceneTree
 ## lobby_list, lobby_auto_left, room_tired, end_mission, end_mission_last.
 
 var out_dir := "user://guild"
+## Second argument "720" (with --resolution 1280x720): only the board and the details (normal, all tired, co-op).
+var small := false
 var _n := 0
 var save
 var app
@@ -21,6 +23,7 @@ var relay: FakeRelay
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	if args.size() > 0: out_dir = args[0]
+	small = args.has("720")
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
 	_run.call_deferred()
 
@@ -52,21 +55,24 @@ func _run() -> void:
 	save.profile.camp_seen = true
 	save.save()
 	var camp_scene: PackedScene = load("res://game/ui/screens/camp.tscn")
-	var camp = camp_scene.instantiate()
-	root.add_child(camp)
-	await _frames(40)
-	await _shot("camp_signpost_locked")
-	camp.queue_free()
-	await _frames(4)
+	var camp
+	if not small:
+		camp = camp_scene.instantiate()
+		root.add_child(camp)
+		await _frames(40)
+		await _shot("camp_signpost_locked")
+		camp.queue_free()
+		await _frames(4)
 	_win_main(2, 99)
 	save.save()
 	print("guild unlocked: ", app.guild_unlocked())
-	camp = camp_scene.instantiate()
-	root.add_child(camp)
-	await _frames(40)
-	await _shot("camp_signpost")
-	camp.queue_free()
-	await _frames(4)
+	if not small:
+		camp = camp_scene.instantiate()
+		root.add_child(camp)
+		await _frames(40)
+		await _shot("camp_signpost")
+		camp.queue_free()
+		await _frames(4)
 	# Night Watch: won once and played today (Done today, first win claimed)
 	var nw: MissionDef = app.mission("night-watch")
 	var r := LevelResult.new()
@@ -94,10 +100,10 @@ func _run() -> void:
 	root.add_child(guild)
 	await _until(func(): return guild.backdrop.is_ready(), 60.0)
 	await _frames(6)
-	await _shot("guild_welcome")
+	if not small: await _shot("guild_welcome")
 	guild.close_welcome()
 	await _frames(10)
-	await _shot("guild")
+	if not small: await _shot("guild")
 	# the mission board
 	var board = guild.open_missions()
 	await _boards()
@@ -110,7 +116,7 @@ func _run() -> void:
 	save.missions.tire(hand[1], MissionBoard.day_of())
 	d.refresh()
 	await _frames(10)
-	await _shot("detail_tired")
+	if not small: await _shot("detail_tired")
 	for id in hand: save.missions.tire(id, MissionBoard.day_of())
 	d.refresh()
 	await _frames(10)
@@ -118,10 +124,14 @@ func _run() -> void:
 	save.missions.tired.clear()
 	d.select_mission("night-watch")
 	await _boards()
-	await _shot("detail_done")
+	if not small: await _shot("detail_done")
 	d.select_mission("hold-the-gate")
 	await _boards()
 	await _shot("detail_coop")
+	if small:
+		print("GUILD SHOT DONE")
+		quit()
+		return
 	# the hand editor for a mission: a 6th tower, the Guardian and an Archer tired
 	save.towers.add_to_hand(by_type["wisp"][0].id)
 	save.missions.tire(hand[1], MissionBoard.day_of())
@@ -131,6 +141,13 @@ func _run() -> void:
 	var he = d.open_hand_editor()
 	await _frames(40)
 	await _shot("hand_editor_mission")
+	# its detail card scrolled down to Tower Walk (the hourglass "Tired" line and the action under it)
+	he._select(hand[1])
+	await _frames(6)
+	var sc: ScrollContainer = he._detail.get_child(0)
+	sc.scroll_vertical = int(sc.get_v_scroll_bar().max_value)
+	await _frames(6)
+	await _shot("hand_editor_scrolled")
 	he.close()
 	d.close()
 	await _frames(20)

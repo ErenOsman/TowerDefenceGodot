@@ -36,7 +36,7 @@ See `docs/Decisions.md` (2026-10-13 rows) — they are logged in the Unity repo 
 - Camera turn (2026-10-14): Q / E keep the zoom distance and the pan; only the limits follow the new angle (zoom-out
   limit = the fit for it, a zoom beyond it is pulled in; the focus clamped to the pan limits). The fit is measured
   with the board centred, whatever the pan (it was measured from the focus).
-- Level select hides the enemy chips until the level has one attempt recorded; the heading stays over one muted line "You'll see them when you play it." (UI Design Rules "Level select", 2026-10-14). The enemies fact tile waits for a generic enemy glyph from the kit (asked the UI/UX agent). No extra save field: `MenuLogic.has_played` reads the LevelRecord's `attempts`, which every result (win, loss, quit through Pause) increments.
+- Level select hides the enemy chips until the level has one attempt recorded; the heading stays over one muted line "You'll see them when you play it." (UI Design Rules "Level select", 2026-10-14). The enemies fact tile always shows the kit's `icon_enemy` (never the first enemy's portrait; UI review 2026-10-14). No extra save field: `MenuLogic.has_played` reads the LevelRecord's `attempts`, which every result (win, loss, quit through Pause) increments.
 
 ## Co-op rules (sim) — Godot-only for now
 - `CoopSession` (`sim/level/coop_session.gd`) wraps a `CoopLevelSession` (a LevelSession subclass that only changes the
@@ -96,6 +96,7 @@ names and numbers) live in an **overlay**, `data/content-godot/`:
 | `Tokens.json` (`TokenAsset`) | `fire-arrow, poison-gland, yew-bow, steel-plate, arcane-shard, ember-core` (`id, displayName, description, icon, rarity`); icons `Assets/Art/UI/KitB/tokens/<token id>.png` |
 | `Missions.json` (`MissionAsset`) | the 5 starter missions: `patrol` (Two Roads, Any 1–4), `night-watch` (Rock Garden, Any 1–4), `hold-the-gate` (Three at the Gate, Coop 2–6), `drum-line` (The Drummer, Any 1–4, 2 plays a day), `glutton-returns` (The Glutton, Coop 2–6); all separate energy pools (sharedPool false, as data/coop.json had for these levels), coopHandCap 3. Fields: `id, displayName, description, icon ("" until the kit has mission art), level, mode (Solo/Coop/Any), players {min, max}, playsPerDay, requires [level or mission keys], requireAll, sharedPool, coopHandCap, firstWinTokens, winTokens` |
 | `Extras.json` | field patches for assets the synced content already has: `{ "<asset key>": { "<field>": value } }`. Now: the catalog's `guildUnlock` (= `Levels/Chapter 2/4 The Glutton`) and `missions` (the board order), and the rules' `towerEnergyPerDay` = 1. Replaces the old `CatalogDrops.json`: **chapter levels drop no tokens any more**, missions are the only token source |
+| `Levels.json` (`LevelAsset`) | the **short tutorial level** under the synced key `Levels/Tutorial/Tutorial` (same key = replaces Unity's entry in `load_game`): 7 × 5, road (0,2)–(5,2), castle (6,2), build tiles columns 4–6 of rows 0/1/3/4, same waves/energy/hand (Guided Tutorial — Design § The level; Eren 2026-10-14). `data/tutorial.json`'s tiles match it. Golden (`tools/golden.gd`, `ContentLibrary.load` without the overlay) still plays Unity's 12 × 5 entry. **Delete this file once Unity's Levels.json has the same map** |
 | `Units.json`, `Abilities.json`, `Passives.json`, `Reactions.json` | the form entities (`Units/Towers/Forms/*`: copies of the base tower with the doc's stat changes, base model/icon/miniature) and their abilities (Fire Shot, Fire Volley, Venom Shot, Long Shot, Shield Bash, Fireball, Frost Bolt, Chain Spark), the Spiked Counter-attack passive and its 8-damage reaction. Same shape as the Unity files |
 
 How it is read:
@@ -154,16 +155,27 @@ Unity ids match the ones above or old Godot saves lose their forms/tokens/missio
   sprite). First visit: the welcome card (`profile.guildSeen`). A co-op match goes back to `GameApp.lobby_scene()`
   (the Guild once open, else the Camp) and reopens the lobby there.
 - Camp: the Signpost station "Missions" in layout slot 4 (prop `Signpost`, the map-kit piece: `GameApp.camp_scene`
-  falls back to `res://art/tiles/<name>.fbx`); locked "Missions open after Chapter 2" until `GameApp.guild_unlocked()`,
-  then opens the Guild with a gold "New" until the first visit. The Camp's Multiplayer station stays usable until the
-  Guild opens, then shows "Moved to the Guild" (disabled).
+  falls back to `res://art/tiles/<name>.fbx`); locked (lock icon, "Opens after Chapter 2", the Disabled look, like
+  the locked Workshop) until `GameApp.guild_unlocked()`, then opens the Guild with a gold "New" until the first visit.
+  The Camp's Multiplayer opens the lobby until the Guild opens, then becomes the shortcut "Multiplayer → Guild" (the
+  Guild with its lobby open, after the welcome card) and disappears once `profile.guildSeen` (UI review 2026-10-14).
 - Mission board = `MissionBoardScreen` (`mission_board.gd`, a TdPopup over the Guild; `MissionBoard` is the rules
   class). Detail = `MissionDetail` (`mission_detail.gd`) **extends level_select.gd** (facts, enemies rule, preview,
   hand strip reused; the reward card becomes "Drops"; HandSlot gained `mark(tired_text, goes)`). Find a room → the
   Guild opens `CoopLobby` with `preselect_mission` → Create room with that mission picked.
 - Texts and states: `MissionUiLogic` (tested in `tests/test_mission_ui.gd`); coins / drop rows / mode chip / extra
   icons: `TdDrops` (icons flag, hourglass, users rasterised from the UI/UX mockup SVGs into `art/ui/icons-extra/`).
-  The moon "z" badge is drawn (`TdTiredBadge`): the kit has no moon sprite.
+  The tired badge is the kit's `badges/badge_tired.png` (`TdTiredBadge`, ≥ 20 px, top-left of the tower picture
+  under the cost coin, opposite the form badge); a tired slot is at 50 % as a whole, its caption muted.
+- UI review 2026-10-14: one Disabled look for kit buttons (Primary / Secondary / Danger / Menu / Tab:
+  `TdButton.disabled_box()`, ink at 60 %, label `#7A8296`, reason on hover and on a line nearby; also
+  `TdTowerCard.disabled_button` and the room's Start, which was a dimmed cobalt). The detail's note is one left-aligned
+  line (a type step smaller when needed); Change hand turns cobalt primary while Play is off for the hand's sake (all
+  tired / empty hand). Create room disables player counts outside the mission's range ("Hold the Gate needs 2–6
+  players"). The room's header says "Patrol · plays Two Roads" and its card has the plays note and the drops. Locked
+  missions' pictures are desaturated (`CoopBoardPic.grey`). The end screen says "Retry takes 1 rested tower (Mage)"
+  under Retry when the cap is not filled, and "All your towers are tired: change your hand in the Guild or come back
+  tomorrow." when Retry is hidden for that reason.
 - "▲ goes" shows in the mission detail only while a tower of the hand is tired (as the mockups: the normal detail has
   no marks); the hand editor opened for a mission (`mission` set) always marks the towers that go. Tired towers are
   dimmed in the hand editor wherever it opens (strip and collection).

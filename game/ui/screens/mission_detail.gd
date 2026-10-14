@@ -26,6 +26,8 @@ var _back_title: Label
 var _drops_box: VBoxContainer
 var _pips: HBoxContainer
 var _note_row: HBoxContainer
+var _change_wood: Control
+var _change_primary: TdButton
 var _state := ""
 var _lock_reason := ""
 
@@ -56,6 +58,15 @@ func _build() -> void:
 	_build_detail()
 	_build_hand()
 	_reshape_right_column()
+	# Change hand as the cobalt primary while Play is off for the hand's sake (one primary per screen)
+	var side := _slots_used.get_parent()
+	_change_wood = side.get_child(0)
+	_change_primary = TdMenu.button(TdButton.Style.PRIMARY, "Change hand", Vector2(300, 60), TdTheme.texture("icon_cards"))
+	_change_primary.font_size = 26
+	_change_primary.clicked.connect(open_hand_editor)
+	_change_primary.visible = false
+	side.add_child(_change_primary)
+	side.move_child(_change_primary, 0)
 	_popups = Control.new()
 	_popups.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	_popups.mouse_filter = MOUSE_FILTER_IGNORE
@@ -89,7 +100,7 @@ func _reshape_right_column() -> void:
 	_map_col.add_child(_pips)
 	_map_col.move_child(_pips, _reward.get_index() + 1)
 	_note_row = TdMenu.hbox(8)
-	_note_row.alignment = BoxContainer.ALIGNMENT_END
+	_note_row.alignment = BoxContainer.ALIGNMENT_BEGIN
 	_note_row.mouse_filter = MOUSE_FILTER_IGNORE
 	_map_col.add_child(_note_row)
 	_map_col.move_child(_note_row, _play.get_parent().get_index())
@@ -175,6 +186,7 @@ func _mission_row(m: MissionDef) -> TdButton:
 	var face := b.face_node()
 	var thumb := CoopUi.thumb_rect(m.level_id, Vector2(78, 52))
 	thumb.position = Vector2(8, 7)
+	if st == MissionUiLogic.Locked: (thumb.get_child(0) as CoopBoardPic).grey = true
 	thumb.mouse_filter = MOUSE_FILTER_IGNORE
 	face.add_child(thumb)
 	var col := TdMenu.vbox(-4)
@@ -227,7 +239,7 @@ func _draw_mission(m: MissionDef, level: LevelAsset) -> void:
 	var hand_n: int = m.coop_hand_cap if coop else int(f.hand)
 	var tiles := [
 		_fact("icon_wave", str(f.waves), MenuLogic.plural(f.waves, "wave")),
-		_fact("icon_enemy", str(f.enemies), MenuLogic.plural(f.enemies, "enemy", "enemies"), _first_enemy_icon(level) if played else null),
+		_fact("icon_enemy", str(f.enemies), MenuLogic.plural(f.enemies, "enemy", "enemies")), # always the kit's enemy glyph (UI review 2026-10-14)
 		_fact("icon_cards", str(hand_n), MenuLogic.plural(hand_n, "tower") + (" each" if coop else " in hand")),
 		_fact("icon_energy", str(f.energy), "energy", null, "+%d a round" % f.per_round),
 	]
@@ -247,6 +259,7 @@ func _draw_mission(m: MissionDef, level: LevelAsset) -> void:
 	_drops_box.add_child(TdDrops.rows(m, MissionUiLogic.first_win_claimed(m, SaveData.missions), 38.0, 96.0, 20))
 	_preview.show_level(level)
 	_preview.modulate = Color(1, 1, 1, 1) if dim >= 1.0 else Color(0.75, 0.75, 0.75, 0.6)
+	_preview.set_grey(_state == MissionUiLogic.Locked)
 
 func _mission_played(m: MissionDef) -> bool:
 	var r := SaveData.missions.find(m.id)
@@ -284,12 +297,12 @@ func _draw_action(m: MissionDef, level: LevelAsset) -> void:
 		_note_row.add_child(w)
 	elif icon_name != "":
 		_note_row.add_child(TdDrops.icon(icon_name, 20, col))
-	var nl := TdMenu.wrap_label(note.text, "plate", col, 19)
-	nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	# as wide as its text (the icon stays next to it), wrapping past the column's width
-	var w := nl.get_theme_font("font").get_string_size(note.text, HORIZONTAL_ALIGNMENT_LEFT, -1, 19).x + 4.0
-	nl.custom_minimum_size = Vector2(minf(w, MAP_SIZE.x - 40.0), 0)
-	nl.size_flags_horizontal = SIZE_SHRINK_END
+	# one line, left-aligned in the column, the icon next to it; a type step smaller when it would not fit
+	var nl := TdMenu.label(note.text, "plate", col, 19)
+	var font := nl.get_theme_font("font")
+	var fs := 19
+	while fs > 16 and font.get_string_size(note.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > MAP_SIZE.x - 34.0: fs -= 1
+	nl.add_theme_font_size_override("font_size", fs)
 	nl.size_flags_vertical = SIZE_SHRINK_CENTER
 	_note_row.add_child(nl)
 	_play.text = MissionUiLogic.primary_label(m)
@@ -298,6 +311,9 @@ func _draw_action(m: MissionDef, level: LevelAsset) -> void:
 	_play.left_pad = 86 if m.is_solo else 40
 	var ok := MissionUiLogic.primary_enabled(_state, bring)
 	_play.set_interactable(ok, note.text)
+	var hand_fix: bool = not ok and note.kind == "warn" # all tired / empty hand: Change hand is the way on
+	_change_primary.visible = hand_fix
+	_change_wood.visible = not hand_fix
 
 # ------------------------------------------------------------------ hand
 
@@ -333,7 +349,7 @@ func _draw_hand(level: LevelAsset, pop: bool) -> void:
 	var box := _tray.get_parent() as PanelContainer
 	if box != null:
 		var sb: StyleBoxFlat = box.get_theme_stylebox("panel").duplicate()
-		sb.content_margin_bottom = 50 if any_mark else 8
+		sb.content_margin_bottom = 58 if any_mark else 8 # two caption lines + ~8 px above the edge
 		box.add_theme_stylebox_override("panel", sb)
 	var lvname := level.get_display_name() if level != null else ""
 	_note.text = MissionUiLogic.hand_note(m, lvname, hand.size(), cap, MissionUiLogic.any_tired(hand.slice(0, maxi(cut, cap)), SaveData.missions))

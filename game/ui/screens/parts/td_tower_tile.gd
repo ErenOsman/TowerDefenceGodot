@@ -84,7 +84,7 @@ func _build(e: Dictionary, key: int) -> void:
 func set_tired(text: String) -> void:
 	if text == "" or _medal == null: return
 	for c in _medal.get_children(): c.modulate.a = 0.5
-	TdTiredBadge.attach(self, tile.x, 0.26, Vector2(0.72, 0.5))
+	TdTiredBadge.attach(self, tile.x, 0.22, Vector2(0.24, 0.48)) # top-left, under the coin
 	if _name != null: _name.modulate.a = 0.6
 	tooltip_text += "\n" + text
 

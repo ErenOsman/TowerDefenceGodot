@@ -7,8 +7,8 @@ extends TdPopup
 ##   Every unlocked level plus the first locked one shows (LevelCatalog.visible); in the Camp only one chapter.
 ## - Centre: "Chapter 1 · level 3 ✓ Won", the title, the description, four fact tiles (waves, enemies, towers in hand,
 ##   energy + "+N a round"), "Enemies in this level" as portrait chips "Slime ×3" (only once the level has been played
-##   at least once; before that the same heading over one muted line "You'll see them when you play it." and no
-##   portrait on the fact tile, MenuLogic.has_played) whose tooltip has HP, Shield,
+##   at least once; before that the same heading over one muted line "You'll see them when you play it.",
+##   MenuLogic.has_played; the enemies fact tile always shows the kit's icon_enemy) whose tooltip has HP, Shield,
 ##   Speed, Power and the abilities with their cooldown; on the right the level's board as a rendered diorama
 ##   (TdLevelPreview → CoopBoardPic: 35°, contain, blurred margin; cached per level, the minimap while it renders), the first-win reward card (teal) and Play
 ##   (bottom-right, flat cobalt). A locked level shows the same panel greyed with its requirement and Play disabled.
@@ -519,7 +519,7 @@ func _draw_level(level: LevelAsset, unlocked: bool) -> void:
 	var played := MenuLogic.has_played(SaveData.progress, selected)
 	var tiles := [
 		_fact("icon_wave", str(f.waves), MenuLogic.plural(f.waves, "wave")),
-		_fact("icon_enemy", str(f.enemies), MenuLogic.plural(f.enemies, "enemy", "enemies"), _first_enemy_icon(level) if played else null),
+		_fact("icon_enemy", str(f.enemies), MenuLogic.plural(f.enemies, "enemy", "enemies")), # always the kit's enemy glyph (UI review 2026-10-14)
 		_fact("icon_cards", str(f.hand), MenuLogic.plural(f.hand, "tower") + " in hand"),
 		_fact("icon_energy", str(f.energy), "energy", null, "+%d a round" % f.per_round),
 	]
@@ -820,14 +820,14 @@ class HandSlot extends Control:
 		var line := ""
 		var col := TdTheme.color("cream.200")
 		if tired_text != "":
-			if _mini != null: _mini.modulate = Color(1, 1, 1, 0.5)
-			if _coin != null: _coin.modulate = Color(0.75, 0.75, 0.75, 0.6)
-			if _plate != null: _plate.set_extra_state("Locked")
-			TdTiredBadge.attach(self, 124.0, 0.3, Vector2(0.5, 0.52))
+			# the whole slot at 50 % (plate included), the badge at full strength under the coin, a muted caption
+			for c in get_children(): if c is CanvasItem: c.modulate.a = 0.5
+			TdTiredBadge.attach(self, 124.0, 0.25, Vector2(0.17, 0.5))
 			line = tired_text
-			col = TdTheme.color("cream.100")
+			col = Color(TdTheme.color("cream.300"), 0.85)
 		elif goes:
 			line = "▲ goes"
+			col = TdTheme.color("cream.100")
 		if line == "": return
 		var l := TdMenu.label(line, "plate", col, 18)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

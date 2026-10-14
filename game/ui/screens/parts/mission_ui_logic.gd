@@ -34,6 +34,8 @@ const Stations := [
 	{"id": "Camp", "label": "Camp", "sub": "Back to the Camp", "icon": "back"},
 ]
 const MovedToGuild := "Moved to the Guild"
+## The Camp's Multiplayer station once the Guild is open (until the first Guild visit: then it is gone).
+const MultiplayerToGuild := "Multiplayer → Guild"
 const SpendInWorkshop := "Spend them in the Workshop."
 const TiredDetail := "Tired: went on a mission today. Rests in %s."
 
@@ -208,12 +210,13 @@ static func to_play_count(missions: Array, progress: LevelProgress, mp: MissionP
 static func missions_station_sub(to_play: int) -> String:
 	return "Today’s missions · " + ("all done" if to_play <= 0 else "%d to play" % to_play)
 
-## The Camp's Signpost while the Guild is closed: "Missions open after Chapter 2" (the guildUnlock level's chapter).
+## The Camp's locked Signpost line under "Missions": "Opens after Chapter 2" (the guildUnlock level's chapter; the
+## same words as the locked Workshop).
 static func signpost_locked_text(catalog: GameCatalogAsset) -> String:
 	if catalog != null and catalog.guild_unlock != null:
 		for e in catalog.entries():
-			if e[0].level == catalog.guild_unlock: return "Missions open after " + MenuLogic.chapter_name(catalog, e[1])
-	return "Missions open after Chapter 2"
+			if e[0].level == catalog.guild_unlock: return "Opens after " + MenuLogic.chapter_name(catalog, e[1])
+	return "Opens after Chapter 2"
 
 ## The Signpost station's tag: "New" until the Guild was visited once, else "".
 static func signpost_tag(guild_seen: bool) -> String:
@@ -251,6 +254,20 @@ static func picker_line(m: MissionDef, mp: MissionProgress, now = null) -> Strin
 static func create_plays_note(m: MissionDef, mp: MissionProgress, now = null) -> String:
 	if MissionBoard.plays_left(m, mp, now) <= 0: return MissionBoard.done_text(now)
 	return "[b]%s[/b]: the match start uses one for everyone." % MissionBoard.plays_text(m, mp, now)
+
+## Why a player count is off in Create room: "Hold the Gate needs 2–6 players" ("" without a mission).
+static func players_reason(m: MissionDef) -> String:
+	if m == null: return ""
+	return "%s needs %d–%d players" % [m.name, m.min_players, m.max_players]
+
+## The end screen's line under Retry when only some of the towers it would take are rested:
+## "Retry takes 1 rested tower (Mage)" ("" when it takes the full cap or none).
+static func retry_takes_line(names: Array, cap: int) -> String:
+	if names.is_empty() or names.size() >= cap: return ""
+	return "Retry takes %d rested %s (%s)" % [names.size(), MenuLogic.plural(names.size(), "tower"), ", ".join(PackedStringArray(names))]
+
+## Why Retry is hidden when no rested tower would go: the doc's line, pointing at the Guild.
+const RetryAllTired := "All your towers are tired: change your hand in the Guild or come back tomorrow."
 
 ## A lobby room row's second line: the mission ("Night Watch"), "Night Watch · done today" when used up.
 static func room_row_line(mission_name: String, done: bool) -> String:

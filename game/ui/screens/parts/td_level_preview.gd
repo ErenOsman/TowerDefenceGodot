@@ -34,6 +34,10 @@ func show_level(lv: LevelAsset) -> void:
 	_pic.visible = lv != null
 	if lv != null: _pic.show_level(lv.get_id())
 
+## Desaturates the picture (a locked mission).
+func set_grey(v: bool) -> void:
+	if _pic != null: _pic.grey = v
+
 ## Whether the board of the shown level is up (not the minimap).
 func is_board_shown() -> bool:
 	return _pic != null and _pic.is_board_shown()

@@ -25,6 +25,7 @@ var _tiles: HBoxContainer
 var _extra: VBoxContainer
 var _won := false
 var _rim: Panel
+var _retry_line: Label
 
 func _ready() -> void:
 	closable = false
@@ -62,6 +63,10 @@ func _ready() -> void:
 	row.add_child(retry_button)
 	row.add_child(leave_button)
 	row.add_child(next_button)
+	_retry_line = HudArt.label("", "body", TdTheme.color("cream.200"), 20)
+	_retry_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_retry_line.visible = false
+	body.add_child(_retry_line)
 	# the ribbon title, over the window's top edge
 	ribbon = PanelContainer.new()
 	ribbon.mouse_filter = MOUSE_FILTER_IGNORE
@@ -173,10 +178,10 @@ func show_outcome(outcome: int) -> void:
 			row.add_child(HudArt.label(line, "body", TdTheme.color("cream.100"), 22))
 			if _extra.get_child_count() > 0: _extra.add_child(TdMenu.spacer(14))
 			_extra.add_child(row)
-			# a play is left but Retry is hidden (every tower it would take is tired): say why
+			# a play is left but Retry is hidden (every tower it would take is tired): say why, pointing at the Guild
 			var why: String = c.retry_note if "retry_note" in c else ""
 			if not done and why != "" and not c.can_retry:
-				var wl := HudArt.label(why + ".", "body", TdTheme.color("cream.300"), 20)
+				var wl := HudArt.label(MissionUiLogic.RetryAllTired if why == MissionBoard.AllTired else why + ".", "body", TdTheme.color("cream.300"), 20)
 				wl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 				_extra.add_child(wl)
 	# Workshop tokens: "Rewards:" and a chip per token kind (icon, ×n, name)
@@ -207,7 +212,23 @@ func show_outcome(outcome: int) -> void:
 		row.move_child(leave_button, 0)
 		row.move_child(retry_button, 1)
 	row.move_child(next_button, 2)
+	# under Retry: when only some of the towers it would take are rested, which ones ("Retry takes 1 rested tower (Mage)")
+	_retry_line.text = _retry_takes(c, m) if retry_button.visible and m != null else ""
+	_retry_line.visible = _retry_line.text != ""
 	open()
+
+## "Retry takes 1 rested tower (Mage)" for a solo mission whose cap is not filled by rested towers ("" otherwise).
+func _retry_takes(c: LevelController, m: MissionDef) -> String:
+	var sd := get_tree().root.get_node_or_null("SaveData") if is_inside_tree() else null
+	var app := get_tree().root.get_node_or_null("GameApp") if is_inside_tree() else null
+	if sd == null or c.level == null: return ""
+	var cap: int = c.level.hand_cap
+	var names := []
+	for id in MissionBoard.taken(sd.towers.hand, sd.missions, cap):
+		var owned: OwnedTower = sd.towers.find(id)
+		var type: TowerAsset = app.catalog.find_tower(owned.type) if app != null and app.catalog != null and owned != null else null
+		names.append(MenuLogic.tower_name(owned, type) if owned != null else str(id))
+	return MissionUiLogic.retry_takes_line(names, cap)
 
 ## "Chapter 1 · First Steps": the level's chapter (from the catalog) and its name.
 static func place_line(c: LevelController) -> String:

@@ -142,6 +142,19 @@ static func note_row(icon: String, bbcode: String) -> PanelContainer:
 	h.add_child(TdMenu.rich(bbcode, "body", TdTheme.color("ink"), 20))
 	return p
 
+## Puts a texture as a note row's icon (the hourglass for plays: icons outside the kit), in ink.
+static func set_note_icon(row: PanelContainer, tex: Texture2D) -> void:
+	var h: HBoxContainer = row.get_child(0)
+	var first := h.get_child(0)
+	if first is TextureRect:
+		first.texture = tex
+		return
+	var i := TdMenu.picture(tex, Vector2(24, 24))
+	i.modulate = TdTheme.color("ink")
+	i.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	h.add_child(i)
+	h.move_child(i, 0)
+
 ## The paper level card: map, name, (description), waves · towers each, energy rule, turns note.
 ## Returns {panel, map, title, desc, facts, energy, turns, extra (VBox for buttons)}.
 static func level_card(width: float, map_h: float, with_desc := false) -> Dictionary:

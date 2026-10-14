@@ -119,6 +119,7 @@ func _card(m: MissionDef) -> Control:
 	var thumb := CoopUi.thumb_rect(m.level_id, THUMB)
 	thumb.size_flags_vertical = SIZE_SHRINK_BEGIN
 	if greyed: thumb.modulate = Color(0.7, 0.7, 0.7, 0.75)
+	if st.state == MissionUiLogic.Locked: (thumb.get_child(0) as CoopBoardPic).grey = true # a locked mission: no colour
 	h.add_child(thumb)
 	var body := TdMenu.vbox(6)
 	body.size_flags_horizontal = SIZE_EXPAND_FILL

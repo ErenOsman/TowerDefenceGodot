@@ -100,7 +100,8 @@ func _build() -> void:
 	_card = CoopUi.level_card(460, 210)
 	right.add_child(_card.panel)
 	_card.turns.visible = false
-	_plays_note = CoopUi.note_row("icon_clock", "")
+	_plays_note = CoopUi.note_row("", "")
+	CoopUi.set_note_icon(_plays_note, TdDrops.icon_texture("hourglass")) # plays: the hourglass (the clock is for rounds)
 	_card.extra.add_child(_plays_note)
 	_drops = TdMenu.vbox(0)
 	_card.extra.add_child(_drops)
@@ -140,9 +141,14 @@ func _on_open() -> void:
 func _on_state(_s: int) -> void:
 	if is_open: _refresh()
 
-## Keeps the player count within the picked mission's range (and the picker showing it).
+## Keeps the player count within the picked mission's range: counts outside it are disabled with the reason
+## ("Hold the Gate needs 2–6 players") and the picker shows the clamped count.
 func _clamp_count() -> void:
 	var m := CoopLevels.mission_for_level(level_id)
+	for i in _picker.size():
+		var n := i + NetProtocol.MIN_COUNT
+		var ok := m == null or (n >= m.min_players and n <= m.max_players)
+		_picker[i].set_interactable(ok, MissionUiLogic.players_reason(m))
 	if m == null: return
 	count = m.clamp_players(count)
 	for i in _picker.size(): _picker[i].set_selected(i + NetProtocol.MIN_COUNT == count)

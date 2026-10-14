@@ -151,11 +151,7 @@ static func result_tags(ab: AbilityDef, me: IEntity, vocab: Vocabulary) -> Array
 ## clickable; reason (optional) as its tooltip. Fills the width.
 static func disabled_button(text: String, icon: Texture2D, reason := "") -> Control:
 	var p := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color("#E2D4B8")
-	sb.border_color = Color("#BBA684")
-	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(14)
+	var sb := TdButton.disabled_box() # the one Disabled look (UI Design Rules § States)
 	sb.content_margin_left = 14; sb.content_margin_right = 14
 	p.add_theme_stylebox_override("panel", sb)
 	p.custom_minimum_size = Vector2(0, 54)
@@ -166,7 +162,7 @@ static func disabled_button(text: String, icon: Texture2D, reason := "") -> Cont
 	var h := TdMenu.hbox(8)
 	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	c.add_child(h)
-	var col := Color("#8C7A66")
+	var col := TdButton.DISABLED_LABEL
 	if icon != null:
 		var ic := TdMenu.picture(icon, Vector2(22, 22))
 		ic.modulate = col

@@ -207,21 +207,30 @@ func _build_ui() -> void:
 		if st.get("gate", "") == "workshop" and not MenuLogic.workshop_unlocked(GameApp.catalog, SaveData.progress):
 			locked_line = MenuLogic.workshop_locked_text(GameApp.catalog) # "Opens after Chapter 2"
 		elif st.get("gate", "") == "guild" and not GameApp.guild_unlocked():
-			locked_line = MissionUiLogic.signpost_locked_text(GameApp.catalog) # "Missions open after Chapter 2"
-		elif st.get("gate", "") == "moved" and GameApp.guild_unlocked():
-			locked_line = MissionUiLogic.MovedToGuild # the lobby lives in the Guild now
+			locked_line = MissionUiLogic.signpost_locked_text(GameApp.catalog) # "Opens after Chapter 2"
+		var action: String = st.action
+		if st.get("gate", "") == "moved" and GameApp.guild_unlocked():
+			# the lobby lives in the Guild now: a shortcut there until the first Guild visit, then gone
+			b.text = MissionUiLogic.MultiplayerToGuild
+			b.custom_minimum_size.x = 350.0
+			b.size = b.custom_minimum_size
+			action = "open_guild_lobby"
+			if SaveData.profile.guild_seen: b.visible = false
 		if locked_line != "":
+			# locked (UI review 2026-10-14): a lock icon, "Opens after Chapter 2", the Disabled look
 			b.custom_minimum_size = Vector2(maxf(236.0, 90.0 + TdTheme.font("nunito_bold").get_string_size(locked_line, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x), 72)
 			b.size = b.custom_minimum_size
+			b.icon = TdTheme.texture("icon_lock")
 			b.sub = locked_line
 			b.set_interactable(false, locked_line)
-		elif st.action != "":
-			b.clicked.connect(Callable(self, st.action))
+		elif action != "":
+			b.clicked.connect(Callable(self, action))
 			if st.get("gate", "") == "guild" and MissionUiLogic.signpost_tag(SaveData.profile.guild_seen) != "":
 				b.custom_minimum_size.x += 64.0 # room for the tag
 				b.size = b.custom_minimum_size
 				_new_tag(b, MissionUiLogic.signpost_tag(false))
 		if not props.has(st.id): b.visible = false # no slot for it in the layout yet
+		if not b.visible and b.has_meta("leader"): b.get_meta("leader").visible = false
 	var menu := TdMenuButton.new()
 	menu.style = TdButton.Style.MENU_WOOD
 	menu.custom_minimum_size = Vector2(290, 64)
@@ -481,6 +490,13 @@ func open_workshop() -> TdPopup:
 ## Missions (the Signpost): the Guild.
 func open_guild() -> void:
 	end_tour()
+	SaveData.save()
+	SceneFlow.go(SceneFlow.Guild)
+
+## The Camp's Multiplayer shortcut once the Guild is open: the Guild, with its lobby opened.
+func open_guild_lobby() -> void:
+	end_tour()
+	if has_node("/root/Net"): get_node("/root/Net").reopen_lobby = true
 	SaveData.save()
 	SceneFlow.go(SceneFlow.Guild)
 

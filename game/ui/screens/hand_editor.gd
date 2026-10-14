@@ -223,7 +223,7 @@ func _refresh_tray(pop := false) -> void:
 		_tray.add_child(s)
 		_slots.append(s)
 	# room under the slots for the tired / goes lines
-	_tray_panel.add_theme_stylebox_override("panel", TdTheme.stylebox("hand_tray", Color.WHITE, [14, 28, 14, 46 if lines else 4]))
+	_tray_panel.add_theme_stylebox_override("panel", TdTheme.stylebox("hand_tray", Color.WHITE, [14, 28, 14, 54 if lines else 4]))
 	if pop: TdMenu.pop_in(made, 0.03)
 
 ## The divider at the level's cap, its note above it.
