@@ -4,6 +4,9 @@ Started 2026-10-05. Not built yet; the [build plan](#build-plan) lists the phase
 
 The first time the game starts, the player names themselves and plays a short tutorial level that teaches placing, selecting, shooting and ending a round. It can be skipped, and it appears only once.
 
+**2026-10-14:** the tutorial itself is redesigned as a guided, hand-holding tutorial spoken through the visual-novel
+dialogue box: see **Guided Tutorial — Design**. This doc keeps the first-run flow and the sequence system.
+
 The tutorial's guidance and the conversations at the start of levels use one system: **sequences** of lines shown in **speech bubbles** (`UI_TextBubble`).
 
 ## Decisions
