@@ -295,6 +295,12 @@ The bottom row reads left to right: what I have (tray), what I do (action bar), 
 - **When the tray and the bar don't fit side by side** (at 1920: 130 × pieces + 110 × abilities > 1372, e.g. 8 pieces with 4+ abilities, 7 with 5+, 6 with 6+): the action bar and its hint line move up to a row above the tray's right part, centred on the screen. The tray never shrinks. The camera framing counts that raised row, so the board's front row is never hidden under it.
 - **Right bar ability list:** up to 6 rows fit above Sell; from 7 abilities on, the list scrolls.
 
+### Level select (2026-10-13/14)
+
+Reference mockup: [level-select](http://92.5.94.11/art/ui/screens-b/level-select.html). Left: chapter groups with level rows (number, state "✓ Won" / "● New" / lock with its reason). Right: breadcrumb, title, description, fact tiles (waves, enemies, towers in hand, energy and income), the board preview (35° "contain" render with a blurred backing, the same as in co-op and chapter cards), the first-win reward line, Play. Bottom: the hand row with the level's cap divider ("Two Roads takes the first 4") and Change hand (opens Hand select before a level).
+
+- **Enemies in this level** are shown only once the player has played the level at least once (user, 2026-10-14). Before that, the section reads "Enemies: you'll see them when you play it." with no chips, and the enemies fact tile shows only the count.
+
 ### Hand select (user, 2026-10-13)
 
 Replaces the old hand editor. Large window (76% × 80%) titled "Your hand", × only; changes save as you go. Interactive reference: [hand-select](http://92.5.94.11/art/ui/screens-b/hand-select.html) (before a level: `?from=level`).

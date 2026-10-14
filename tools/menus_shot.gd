@@ -4,7 +4,8 @@ extends SceneTree
 ##   ~/godot/run.sh projects/td --resolution 1280x720 -s tools/menus_shot.gd -- user://menus720
 ## Uses its own save (user://menus_shot.json, deleted first). Steps: welcome, main_menu, credits, settings_audio,
 ## settings_display, settings_gameplay, settings_controls (+ a capture and a conflict), codex_towers (a page),
-## codex_statuses, level_select, hand_editor, camp (after GameApp.complete_chapter1()), camp_tour, chapter_select,
+## codex_statuses, level_select (an unplayed level: no enemy chips), level_select_played (a won one: chips),
+## level_select_locked, hand_editor, camp (after GameApp.complete_chapter1()), camp_tour, chapter_select,
 ## camp_level_select, loading. PNGs: <out dir>/menu_<n>_<step>.png.
 
 var out_dir := "user://menus"
@@ -142,7 +143,17 @@ func _run() -> void:
 		await _until(func(): return flow.current == flow.LevelSelect and not flow.is_loading, 20.0)
 		await _frames(30)
 		var ls = current_scene
-		if _want("level_select"): await _shot("level_select")
+		if _want("level_select"): await _shot("level_select")  # the cursor is on an unplayed level: no enemy chips yet
+		if _want("level_select_played"):
+			var played := ""
+			for v in ls.visible_rows:
+				if played == "" and MenuLogic.has_played(save.progress, v.entry.level_id): played = v.entry.level_id
+			if played != "":
+				var before: String = ls.selected
+				ls.select(played)
+				await _frames(8)
+				await _shot("level_select_played")
+				ls.select(before)
 		if _want("level_select_locked"):
 			var locked := ""
 			for v in ls.visible_rows:

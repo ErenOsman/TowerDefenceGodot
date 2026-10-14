@@ -6,7 +6,9 @@ extends TdPopup
 ##   requirement line "Win Rock Garden first" for the one locked level shown, at 60 %); the selected row is cobalt.
 ##   Every unlocked level plus the first locked one shows (LevelCatalog.visible); in the Camp only one chapter.
 ## - Centre: "Chapter 1 · level 3 ✓ Won", the title, the description, four fact tiles (waves, enemies, towers in hand,
-##   energy + "+N a round"), "Enemies in this level" as portrait chips "Slime ×3" whose tooltip has HP, Shield,
+##   energy + "+N a round"), "Enemies in this level" as portrait chips "Slime ×3" (only once the level has been played
+##   at least once; before that the line "Enemies: you'll see them when you play it." and no portrait on the fact
+##   tile, MenuLogic.has_played) whose tooltip has HP, Shield,
 ##   Speed, Power and the abilities with their cooldown; on the right the level's board as a rendered diorama
 ##   (TdLevelPreview → CoopBoardPic: 35°, contain, blurred margin; cached per level, the minimap while it renders), the first-win reward card (teal) and Play
 ##   (bottom-right, flat cobalt). A locked level shows the same panel greyed with its requirement and Play disabled.
@@ -507,17 +509,20 @@ func _draw_level(level: LevelAsset, unlocked: bool) -> void:
 	_desc.text = TooltipText.from_rich(level.description)
 	_desc.modulate.a = dim
 	var f := MenuLogic.level_facts(level)
+	# the enemies are a surprise until the first attempt: no portrait on the tile, no chips (MenuLogic.has_played)
+	var played := MenuLogic.has_played(SaveData.progress, selected)
 	var tiles := [
 		_fact("icon_wave", str(f.waves), MenuLogic.plural(f.waves, "wave")),
-		_fact("", str(f.enemies), MenuLogic.plural(f.enemies, "enemy", "enemies"), _first_enemy_icon(level)),
+		_fact("", str(f.enemies), MenuLogic.plural(f.enemies, "enemy", "enemies"), _first_enemy_icon(level) if played else null),
 		_fact("icon_cards", str(f.hand), MenuLogic.plural(f.hand, "tower") + " in hand"),
 		_fact("icon_energy", str(f.energy), "energy", null, "+%d a round" % f.per_round),
 	]
 	for t in tiles:
 		t.modulate.a = dim
 		_facts.add_child(t)
-	var counts := MenuLogic.enemy_counts(level)
-	_enemies_head.visible = not counts.is_empty()
+	var counts := MenuLogic.enemy_counts(level) if played else []
+	_enemies_head.text = "Enemies in this level" if played else MenuLogic.EnemiesUnplayedText
+	_enemies_head.visible = not played or not counts.is_empty()
 	_enemies_head.modulate.a = dim
 	var compact := counts.size() > 4
 	_enemies.add_theme_constant_override("v_separation", 8 if compact else 10)

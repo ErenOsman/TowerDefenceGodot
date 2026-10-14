@@ -182,7 +182,7 @@ static func chapter_tag(catalog: LevelCatalog, progress: LevelProgress, chapter:
 	for e in catalog.entries:
 		if e.chapter != chapter: continue
 		total += 1
-		if progress != null and progress.find(e.level_id) != null: played = true
+		if has_played(progress, e.level_id): played = true
 	if not played: return "new"
 	return "1 level" if total == 1 else "%d levels" % total
 
@@ -198,12 +198,24 @@ static func level_number(catalog: LevelCatalog, level_id: String) -> int:
 		if e.level_id == level_id: return n
 	return 0
 
+## Whether the level has been played at least once: any attempt counts (a loss, a quit through Pause), not only a
+## win. The record exists from the first attempt (LevelProgress.record), so no separate flag is saved.
+static func has_played(progress: LevelProgress, level_id: String) -> bool:
+	if progress == null: return false
+	var r := progress.find(level_id)
+	return r != null and r.attempts > 0
+
+## The enemies section of the level detail before the level has been played (user decision 2026-10-14, UI Design
+## Rules "Level select"): no chips, just this line; the enemies fact tile shows only the count. After one attempt the
+## chips show ("Enemies in this level").
+const EnemiesUnplayedText := "Enemies: you'll see them when you play it."
+
 ## A list row's right-hand state: "won" (a win recorded), "new" (unlocked, never played), "locked", or "" (played,
 ## not won yet).
 static func row_state(progress: LevelProgress, level_id: String, unlocked: bool) -> String:
 	if not unlocked: return "locked"
 	if progress != null and progress.is_won(level_id): return "won"
-	if progress == null or progress.find(level_id) == null: return "new"
+	if not has_played(progress, level_id): return "new"
 	return ""
 
 ## What opens a locked level, short (the row's second line and the detail's kicker): "Win Rock Garden first",

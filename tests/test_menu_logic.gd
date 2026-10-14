@@ -266,6 +266,22 @@ func test_level_select_chapter_tag_new_until_played() -> void:
 	p.record(lost)
 	assert_eq(MenuLogic.chapter_tag(cat, p, 1), "2 levels", "a lost attempt counts as played")
 
+func test_level_select_enemies_hidden_until_played() -> void:
+	var p := LevelProgress.new()
+	assert_false(MenuLogic.has_played(null, "a1"), "no progress: not played")
+	assert_false(MenuLogic.has_played(p, "a1"), "never attempted: the chips stay hidden")
+	var quit := LevelResult.new()
+	quit.level_id = "a1"
+	quit.quit = true
+	p.record(quit)
+	assert_true(MenuLogic.has_played(p, "a1"), "a quit attempt counts as played (any attempt, not only a win)")
+	var lost := LevelResult.new()
+	lost.level_id = "a2"
+	p.record(lost)
+	assert_true(MenuLogic.has_played(p, "a2"), "a loss counts too")
+	assert_false(MenuLogic.has_played(p, "a3"))
+	assert_eq(MenuLogic.EnemiesUnplayedText, "Enemies: you'll see them when you play it.")
+
 func test_level_select_row_state_and_number() -> void:
 	var cat := _catalog()
 	var p := LevelProgress.new()
