@@ -801,11 +801,11 @@ class HandSlot extends Control:
 		add_child(key)
 		_plate = TdButton.new()
 		_plate.style = TdButton.Style.NAME_PLATE
-		_plate.custom_minimum_size = Vector2(108, 30)
-		_plate.size = Vector2(108, 30)
+		_plate.custom_minimum_size = Vector2(120, 30)
+		_plate.size = Vector2(120, 30)
 		_plate.text = "Empty" if empty else MenuLogic.tower_name(owned, type)
 		_plate.mouse_filter = MOUSE_FILTER_IGNORE
-		_plate.position = Vector2(8, SLOT.y - 32)
+		_plate.position = Vector2(2, SLOT.y - 32)
 		if empty or bench: _plate.set_extra_state("Locked")
 		add_child(_plate)
 		if bench: modulate.a = 0.8 # benched slots a little dimmer (as in hand select)

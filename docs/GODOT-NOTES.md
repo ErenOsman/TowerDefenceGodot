@@ -182,3 +182,11 @@ Unity ids match the ones above or old Godot saves lose their forms/tokens/missio
   (`TOWER_PAGES` / `ENEMY_PAGES`): Overview · Abilities (passives included) · Forms · Immunities (Immunities disabled,
   Forms disabled on enemies: dimmed, "Coming later"). The Forms page lists "Archer · Base form" and only the forms some tower of yours has unlocked;
   picking a row shows that form on every page (the base row goes back). Read-only: no Workshop link.
+- Review round 2026-10-14: the Camp station opens after Chapter 2 (`MenuLogic.workshop_unlocked`: the catalog's 2nd
+  main chapter's last level won; `GameApp.complete_chapter2()` for dev); a form not unlocked shows its first token's
+  coin in the tree (no grey shader); both Modify cards: stats, ⓘ trait lines (`WorkshopLogic.trait_lines`), "Abilities",
+  passives last as square chips; pinned footer, hidden scrollbar with a bottom fade; Unlock button "Unlock · [coin] 1 Fire
+  Arrow" (two tokens: coins and counts); disabled actions in a light paper fill; ability icons by id fall back to the
+  asset icon. Form descriptions in the overlay are standalone (no comparisons). Every scroll bar is ≥ 12 px
+  (`TdTheme._widen_scrollbars`); the collection grid drag-scrolls on empty space while tiles keep their own drag
+  (`TdDragScroll` skips controls with meta `drag_source`); `tools/hand_drag_check.gd` proves reorder / remove / add / scroll.

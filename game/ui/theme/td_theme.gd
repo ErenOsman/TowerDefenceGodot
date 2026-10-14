@@ -362,7 +362,25 @@ static func pick_sprite(style: Dictionary, hovered: bool, pressed: bool, selecte
 static func theme() -> Theme:
 	if _theme == null:
 		_theme = load(THEME_PATH)
+		_widen_scrollbars(_theme)
 	return _theme
+
+## Every scroll bar at least SCROLLBAR_W wide (thick enough to grab; user, 2026-10-14): the track and grabber
+## styles get content margins so their minimum size reaches it.
+const SCROLLBAR_W := 12.0
+
+static func _widen_scrollbars(th: Theme) -> void:
+	for t in ["VScrollBar", "PaperVScrollBar", "HScrollBar"]:
+		for st in ["scroll", "scroll_focus", "grabber", "grabber_highlight", "grabber_pressed"]:
+			if not th.has_stylebox(st, t): continue
+			var sb: StyleBox = th.get_stylebox(st, t).duplicate()
+			if t == "HScrollBar":
+				sb.content_margin_top = maxf(sb.content_margin_top, SCROLLBAR_W / 2.0)
+				sb.content_margin_bottom = maxf(sb.content_margin_bottom, SCROLLBAR_W / 2.0)
+			else:
+				sb.content_margin_left = maxf(sb.content_margin_left, SCROLLBAR_W / 2.0)
+				sb.content_margin_right = maxf(sb.content_margin_right, SCROLLBAR_W / 2.0)
+			th.set_stylebox(st, t, sb)
 
 ## Spacing grid: step(1) = 4 … step(12) = 48 (space.N = N*4).
 static func space(n: int) -> int:

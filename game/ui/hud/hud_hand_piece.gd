@@ -17,6 +17,8 @@ signal hover_changed(piece: HudHandPiece, hovered: bool)
 const SLOT := Vector2(124, 160)
 ## Every name plate's top (one baseline across the tray).
 const PLATE_Y := 118.0
+## The name plate's width: the slot's, so a form name ("Fire Archer") fits at 18 px.
+const PLATE_W := 122.0
 ## How far the miniature lifts on hover and while picked (the same height).
 const HOVER_LIFT := 12.0
 ## Mini cooldown pips on placed pieces. Off: the 2026-10-09 build review removed them (the Unity build shows none).
@@ -84,8 +86,8 @@ func _ready() -> void:
 	add_child(_medal)
 	_plate = TdButton.new()
 	_plate.style = TdButton.Style.NAME_PLATE
-	_plate.custom_minimum_size = Vector2(108, 28)
-	_plate.size = Vector2(108, 28)
+	_plate.custom_minimum_size = Vector2(PLATE_W, 28)
+	_plate.size = Vector2(PLATE_W, 28)
 	add_child(_plate)
 	_plate.mouse_filter = MOUSE_FILTER_IGNORE
 	# the "✓ on board" tag over a placed piece (wood, not cobalt: cobalt is the selected piece's)
@@ -220,7 +222,7 @@ func _restyle() -> void:
 	_plate.set_interactable(not _poor)
 	_plate.force_state(hovered and not _poor, false)
 	# one baseline for every plate (placed or not); the HP bar under a placed one
-	_plate.position = Vector2((SLOT.x - 108) / 2.0, PLATE_Y)
+	_plate.position = Vector2((SLOT.x - PLATE_W) / 2.0, PLATE_Y)
 	_hp.position.y = PLATE_Y + 28 + 4
 	_tag.visible = false # the medallion already says it is on the board (user, 2026-10-13)
 	_key.visible = not _placed
@@ -259,4 +261,4 @@ func _process(delta: float) -> void:
 	_medal.position = Vector2((SLOT.x - 64) / 2.0 + shake, PLATE_Y - 86 - _lift)
 	_medal.scale = Vector2.ONE * _scale
 	_glow.position.y = -4 - _lift
-	if _poor: _plate.position.x = (SLOT.x - 108) / 2.0 + shake
+	if _poor: _plate.position.x = (SLOT.x - PLATE_W) / 2.0 + shake

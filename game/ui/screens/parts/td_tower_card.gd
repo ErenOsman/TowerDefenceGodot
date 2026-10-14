@@ -32,16 +32,28 @@ static func stat_tile(stat: String, label: String, value: String, width := 158.0
 	h.add_child(l)
 	return p
 
-## A 2-column grid of stat tiles from [[stat, label, value], …].
-static func stat_grid(tiles: Array, width := 158.0) -> GridContainer:
+## A 2-column grid of stat tiles from [[stat, label, value], …], inside a margin the size of the paper_stat
+## sprite's outset (its rim hangs outside the tile; without the margin a clipping parent cuts the left/right edge).
+static func stat_grid(tiles: Array, width := 158.0) -> Control:
 	var g := GridContainer.new()
 	g.columns = 2
 	g.add_theme_constant_override("h_separation", 6)
 	g.add_theme_constant_override("v_separation", 6)
 	for t in tiles: g.add_child(stat_tile(t[0], t[1], t[2], width))
-	return g
+	return bleed_margin(g)
 
-## An ability or passive row: the dashed rule above, icon (passives: a 42 px medallion), name, the subtitle,
+## Wraps a control in a MarginContainer as wide as the paper_stat sprite's outset (+1 px), so its rim is not clipped.
+static func bleed_margin(c: Control) -> MarginContainer:
+	var o: Array = TdTheme.sprite_outset("paper_stat")
+	var m := MarginContainer.new()
+	var sides := ["left", "top", "right", "bottom"]
+	for i in 4: m.add_theme_constant_override("margin_" + sides[i], int(ceil(float(o[i]) if o.size() > i else 0.0)) + 1)
+	m.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	m.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	m.add_child(c)
+	return m
+
+## An ability or passive row: the dashed rule above, icon (passives: the double-rim square chip), name, the subtitle,
 ## optional rich text, result pills.
 static func ability_row(icon: Texture2D, name_text: String, sub: String, pills: Array, text: String, passive: bool) -> Control:
 	var box := TdMenu.vbox(0)
@@ -55,10 +67,8 @@ static func ability_row(icon: Texture2D, name_text: String, sub: String, pills: 
 	var h := TdMenu.hbox(10)
 	m.add_child(h)
 	var isz := 44.0
-	if passive:
-		var med := TdMenu.medallion(icon, isz - 2.0)
-		med.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-		h.add_child(med)
+	if false:
+		pass
 	else:
 		var ic := TdMenu.picture(icon, Vector2(isz, isz))
 		ic.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
@@ -92,13 +102,31 @@ static func def_rows(def: EntityDef, vocab: Vocabulary) -> Array:
 
 ## One ability's row (icon from its asset, subtitle, result pills).
 static func ability_row_of(ab: AbilityDef, me: IEntity, vocab: Vocabulary) -> Control:
-	var app := _app()
-	var asset = app.convert.asset_of(ab, "AbilityAsset") if app != null else null
-	var icon: Texture2D = TdTheme.ability_icon(MenuLogic.icon_name(asset.icon)) if asset != null and asset.icon != "" else null
+	var icon := ability_icon(ab)
 	var pills := []
 	if me != null and vocab != null:
 		for r in result_tags(ab, me, vocab): pills.append([str(r[0]), MenuLogic.result_name(str(r[1]))])
-	return ability_row(icon, ab.display_name, HandLogic.ability_subtitle(ab.tags, ab.cooldown, ab.cooldown_until_reset), pills, "", false)
+	var sub := HandLogic.ability_subtitle(ab.tags, ab.cooldown, ab.cooldown_until_reset)
+	if ab.tags.is_empty() and HandLogic.ability_kind(ab) != "": sub = HandLogic.ability_kind(ab) + " · " + sub # Taunt: "Control · 2 turn CD"
+	return ability_row(icon, ab.display_name, sub, pills, "", false)
+
+## An ability's chip icon: the kit's by ability id (abilities/<id>.png, e.g. fire-shot: forms get their own icons
+## when the kit delivers them), else its asset's icon (the base ability's for a form).
+static func ability_icon(ab: AbilityDef) -> Texture2D:
+	if ab == null: return null
+	var t := TdTheme.kit("abilities/" + ab.name)
+	if t != null: return t
+	var app := _app()
+	var asset = app.convert.asset_of(ab, "AbilityAsset") if app != null else null
+	return TdTheme.ability_icon(MenuLogic.icon_name(asset.icon)) if asset != null and asset.icon != "" else null
+
+## A passive's icon: the kit's double-rim square chip (passives/<icon>), else its icon.
+static func passive_icon(p: PassiveDef) -> Texture2D:
+	var app := _app()
+	var asset = app.convert.asset_of(p, "PassiveAsset") if app != null and p != null else null
+	if asset == null or asset.icon == "": return null
+	var t := TdTheme.kit("passives/" + MenuLogic.icon_name(asset.icon))
+	return t if t != null else app.icon_texture(asset.icon)
 
 ## The result tags shown under an ability: AbilityText.tags plus how long a status it applies lasts ("2 Duration",
 ## from the Apply Status step's duration, else the status's own) when AbilityText leaves it out (it only names a
@@ -119,6 +147,37 @@ static func result_tags(ab: AbilityDef, me: IEntity, vocab: Vocabulary) -> Array
 			return out
 	return out
 
+## A disabled action on the cream card (mockup .k-btn.is-disabled on paper): a light muted fill, ink text, never
+## clickable; reason (optional) as its tooltip. Fills the width.
+static func disabled_button(text: String, icon: Texture2D, reason := "") -> Control:
+	var p := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color("#E2D4B8")
+	sb.border_color = Color("#BBA684")
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(14)
+	sb.content_margin_left = 14; sb.content_margin_right = 14
+	p.add_theme_stylebox_override("panel", sb)
+	p.custom_minimum_size = Vector2(0, 54)
+	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var c := CenterContainer.new()
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.add_child(c)
+	var h := TdMenu.hbox(8)
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	c.add_child(h)
+	var col := Color("#8C7A66")
+	if icon != null:
+		var ic := TdMenu.picture(icon, Vector2(22, 22))
+		ic.modulate = col
+		ic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		h.add_child(ic)
+	var l := TdMenu.label(text, "header", col, 24)
+	l.add_theme_font_override("font", TdTheme.font("plinth"))
+	h.add_child(l)
+	if reason != "": TdTooltipTrigger.attach(p, "", reason)
+	return p
+
 ## A gold ring round a button (the mockup's .ws-gold: the Unlock buttons).
 static func gold_ring(b: Control) -> void:
 	var p := Panel.new()
@@ -137,10 +196,7 @@ static func gold_ring(b: Control) -> void:
 
 ## One passive's row (always on).
 static func passive_row_of(p: PassiveDef, name_text := "") -> Control:
-	var app := _app()
-	var asset = app.convert.asset_of(p, "PassiveAsset") if app != null else null
-	var icon: Texture2D = app.icon_texture(asset.icon) if app != null and asset != null and asset.icon != "" else null
-	return ability_row(icon, name_text if name_text != "" else p.display_name, "Passive · always on", [],
+	return ability_row(passive_icon(p), name_text if name_text != "" else p.display_name, "Passive · always on", [],
 		TooltipText.describe(p.description), true)
 
 ## A portrait medallion (TdMenu.medallion) with the form's badge at its lower-right and, for a form, a ring in the

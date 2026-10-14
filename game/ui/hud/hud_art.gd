@@ -47,12 +47,16 @@ static func _ability_ref(converter: AssetConverter, a: AbilityDef) -> String:
 
 ## The ability's full-face picture for an ability button (kit abilities_face/<Name>, else its icon).
 static func ability_face(converter: AssetConverter, a: AbilityDef) -> Texture2D:
+	var own := TdTheme.kit("abilities_face/" + a.name) if a != null else null # a form's own ability art, by id
+	if own != null: return own
 	var ref := _ability_ref(converter, a)
 	var t := TdTheme.ability_face(HudText.icon_name(ref)) if ref != "" else null
 	return t if t != null else icon(ref)
 
 ## The ability's chip icon for rows (kit abilities/<Name>, else its icon).
 static func ability_chip(converter: AssetConverter, a: AbilityDef) -> Texture2D:
+	var own := TdTheme.kit("abilities/" + a.name) if a != null else null # a form's own ability art, by id
+	if own != null: return own
 	var ref := _ability_ref(converter, a)
 	var t := TdTheme.kit("abilities/" + HudText.icon_name(ref)) if ref != "" else null
 	return t if t != null else icon(ref)

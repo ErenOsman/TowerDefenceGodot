@@ -2,7 +2,8 @@ extends Control
 ## The Camp (UI_Camp.cs; Camp & Chapters — Design): the home between levels once Chapter 1 is won. A 3D camp
 ## laid out from res://art/camp/layout.json (map-kit ground with its frame, the station props on a ring round the
 ## Campfire, all facing the camera; Tent and Supplies) with a station button over each prop: Chapters (the chapter picker, then a chapter's
-## levels), Towers (the hand editor over every owned tower), Codex, Workshop (towers into their forms: workshop.gd), and
+## levels), Towers (the hand editor over every owned tower), Codex, Workshop (towers into their forms: workshop.gd; locked
+## until Chapter 2 is cleared, MenuLogic.workshop_unlocked), and
 ## Main menu; Multiplayer (the co-op lobby). The first visit (PlayerProfile.camp_seen) shows a welcome card, then a tour: the
 ## Princess's speech bubble (TdTextBubble) points at each station in turn, the station highlighted; a click goes on,
 ## Skip ends it. Map music comes from SceneFlow (AudioMgr.play_scene_music).
@@ -17,7 +18,7 @@ const STATIONS := [
 	{"id": "Towers", "label": "Towers", "icon": "icon_cards", "action": "open_towers", "locked": false},
 	{"id": "Chapters", "label": "Chapters", "icon": "icon_castle", "action": "open_chapters", "locked": false, "primary": true},
 	{"id": "Codex", "label": "Codex", "icon": "icon_codex", "action": "open_codex", "locked": false},
-	{"id": "Workshop", "label": "Workshop", "icon": "icon_edit", "action": "open_workshop", "locked": false},
+	{"id": "Workshop", "label": "Workshop", "icon": "icon_edit", "action": "open_workshop", "locked": false, "gate": "workshop"},
 	{"id": "Multiplayer", "label": "Multiplayer", "icon": "icon_onboard", "action": "open_multiplayer", "locked": false},
 ]
 ## Used when layout.json cannot be read (same values as layout.json, the ring layout of 2026-10-13).
@@ -198,9 +199,14 @@ func _build_ui() -> void:
 		b.font_size = 26
 		add_child(b)
 		buttons[st.id] = b
-		if st.locked:
-			b.sub = "Coming later"
-			b.set_interactable(false, "Coming later")
+		var locked_line := "Coming later" if st.locked else ""
+		if st.get("gate", "") == "workshop" and not MenuLogic.workshop_unlocked(GameApp.catalog, SaveData.progress):
+			locked_line = MenuLogic.workshop_locked_text(GameApp.catalog) # "Opens after Chapter 2"
+		if locked_line != "":
+			b.custom_minimum_size = Vector2(maxf(236.0, 90.0 + TdTheme.font("nunito_bold").get_string_size(locked_line, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x), 72)
+			b.size = b.custom_minimum_size
+			b.sub = locked_line
+			b.set_interactable(false, locked_line)
 		elif st.action != "":
 			b.clicked.connect(Callable(self, st.action))
 		if not props.has(st.id): b.visible = false # no slot for it in the layout yet

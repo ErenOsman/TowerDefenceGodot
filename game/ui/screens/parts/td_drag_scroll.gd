@@ -34,7 +34,8 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.position.x < -50000.0: return # our own cancelling release: let it through to the pressed control
 		if event.pressed:
-			_down = scroll.get_global_rect().has_point(event.position) and not _over_bar(event.position) and _on_top()
+			_down = scroll.get_global_rect().has_point(event.position) and not _over_bar(event.position) and _on_top() \
+				and not _over_drag_source()
 			_dragging = false
 			_start = event.position
 			_start_scroll = scroll.scroll_vertical
@@ -53,6 +54,15 @@ func _input(event: InputEvent) -> void:
 			var scale := scroll.get_global_transform_with_canvas().get_scale().y
 			scroll.scroll_vertical = _start_scroll - int((event.position.y - _start.y) / maxf(scale, 0.001))
 			scroll.get_viewport().set_input_as_handled()
+
+## The press is on something that starts its own drag-and-drop (a hand-editor tile or hand slot: meta "drag_source"):
+## that drag wins, the list does not scroll.
+func _over_drag_source() -> bool:
+	var n: Node = scroll.get_viewport().gui_get_hovered_control()
+	while n != null and n != scroll:
+		if n is Control and n.get_meta("drag_source", false): return true
+		n = n.get_parent()
+	return false
 
 ## Not under another popup (only the top popup's lists scroll).
 func _on_top() -> bool:

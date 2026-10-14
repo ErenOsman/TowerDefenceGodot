@@ -295,6 +295,18 @@ static func ability_subtitle(tags: Array, cooldown: int, until_reset: bool) -> S
 	parts.append("CD until reset" if until_reset else "%d turn CD" % maxi(1, cooldown))
 	return " · ".join(parts)
 
+## An ability's type words ("Attack · Projectile"); an ability without tags is named from what it does: a status
+## that controls (taunt, stun, root…) → "Control", healing → "Support", a move → "Movement". (Shared with the Codex.)
+static func ability_kind(ab: AbilityDef) -> String:
+	if not ab.tags.is_empty(): return " · ".join(PackedStringArray(ab.tags))
+	for st in AbilityText.all_steps(ab.steps):
+		if st is ApplyStatusStep and st.status != null:
+			for t in st.status.tags:
+				if t in [Tags.Taunted, Tags.Stunned, Tags.Rooted] or Tags.PreventActing.has(t): return "Control"
+		if st is HealStep: return "Support"
+		if st is JumpStep or st is TeleportStep or st is WalkStep: return "Movement"
+	return ""
+
 ## "#1 · tower 3".
 static func number_text(e: Dictionary) -> String:
 	return "#%d · tower %d" % [e.number, e.index]

@@ -16,7 +16,10 @@ const MEDAL := 60.0
 var tower_id := ""
 var selected := false
 ## Can be dragged onto a hand slot (the hand editor; off in the Workshop picker).
-var draggable := true
+var draggable := true:
+	set(v):
+		draggable = v
+		set_meta("drag_source", v) # TdDragScroll leaves a press here to the tile's own drag
 var tile := SIZE
 var _hovered := false
 var _medal: Control
@@ -33,6 +36,7 @@ static func make(e: Dictionary, picture: Texture2D, key: int, tile_size := SIZE)
 	return t
 
 func _init() -> void:
+	set_meta("drag_source", true)
 	custom_minimum_size = SIZE
 	mouse_filter = MOUSE_FILTER_STOP
 	mouse_entered.connect(func(): _hovered = true; _restyle())

@@ -26,6 +26,7 @@ const GRID_COLUMNS := 6
 var _selected := ""
 var _entries: Array = []
 var _renaming := -1
+var _rename_edit: LineEdit = null
 var _drag_hand_id := ""
 var _msg_serial := 0
 
@@ -234,7 +235,7 @@ func _refresh_layouts() -> void:
 func _layout_tab(i: int, l: Dictionary, active: bool) -> Control:
 	var tab := LayoutTab.new()
 	tab.active = active
-	tab.custom_minimum_size = Vector2(0, 58)
+	tab.custom_minimum_size = Vector2(0, 46)
 	tab.size_flags_horizontal = SIZE_EXPAND_FILL
 	tab.tooltip_text = "Active: levels use this hand" if active else "Click to use this layout"
 	tab.clicked.connect(func(): switch_layout(i))
@@ -248,6 +249,7 @@ func _layout_tab(i: int, l: Dictionary, active: bool) -> Control:
 	tab.add_child(m)
 	var v := TdMenu.vbox(0)
 	v.mouse_filter = MOUSE_FILTER_IGNORE
+	v.alignment = BoxContainer.ALIGNMENT_CENTER # the tab holds only the layout's name and its rename pencil
 	m.add_child(v)
 	var top := TdMenu.hbox(6)
 	top.mouse_filter = MOUSE_FILTER_IGNORE
@@ -268,7 +270,13 @@ func _layout_tab(i: int, l: Dictionary, active: bool) -> Control:
 		e.add_theme_stylebox_override("normal", eb)
 		e.add_theme_stylebox_override("focus", eb)
 		e.text_submitted.connect(func(t: String): _commit_rename(i, t))
+		# leaving the field (focus lost, or a click anywhere else: see _input) commits too; Esc cancels
 		e.focus_exited.connect(func(): if _renaming == i: _commit_rename(i, e.text))
+		e.gui_input.connect(func(ev: InputEvent):
+			if ev is InputEventKey and ev.pressed and ev.keycode == KEY_ESCAPE:
+				e.accept_event()
+				cancel_rename())
+		_rename_edit = e
 		e.size_flags_vertical = SIZE_SHRINK_CENTER
 		v.visible = false # the name field fills the tab while renaming
 		m.add_child(e)
@@ -299,24 +307,6 @@ func _layout_tab(i: int, l: Dictionary, active: bool) -> Control:
 		pen.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 		pen.pressed.connect(func(): _renaming = i; _refresh_layouts())
 		top.add_child(pen)
-	var bottom := TdMenu.hbox(3)
-	bottom.mouse_filter = MOUSE_FILTER_IGNORE
-	v.add_child(bottom)
-	var hand: Array = l.hand
-	if hand.is_empty():
-		bottom.add_child(TdMenu.label("Empty", "plate", TdTheme.color("cream.300"), 18))
-	else:
-		for k in mini(4, hand.size()):
-			var o := SaveData.towers.find(hand[k])
-			var type: TowerAsset = GameApp.catalog.find_tower(o.type) if o != null else null
-			var med := TdMenu.medallion(_portrait(type), 22)
-			TdFormBadge.attach(med, MenuLogic.badge_path(o, GameApp.catalog), 22) # a colour dot at this size
-			med.size_flags_vertical = SIZE_SHRINK_CENTER
-			bottom.add_child(med)
-	var fill := TdMenu.spacer()
-	fill.size_flags_horizontal = SIZE_EXPAND_FILL
-	bottom.add_child(fill)
-	bottom.add_child(TdMenu.label(HandLogic.layout_count(hand), "micro", TdTheme.color("cream.200"), 18))
 	return tab
 
 func _refresh_filters() -> void:
@@ -475,7 +465,9 @@ func switch_layout(i: int) -> void:
 	_hand_changed(true)
 
 func _commit_rename(i: int, text: String) -> void:
+	if _renaming != i: return
 	_renaming = -1
+	_rename_edit = null
 	if HandLogic.rename_layout(SaveData.data, i, text): SaveData.save()
 	_refresh_layouts.call_deferred()
 
@@ -508,10 +500,23 @@ func _shake_tray() -> void:
 ## Esc / right click: first cancels a rename, then closes.
 func back() -> void:
 	if _renaming >= 0:
-		_renaming = -1
-		_refresh_layouts()
+		cancel_rename()
 		return
 	close()
+
+## Esc while renaming: the old name stays.
+func cancel_rename() -> void:
+	if _renaming < 0: return
+	_renaming = -1
+	_rename_edit = null
+	_refresh_layouts.call_deferred()
+
+## A click outside the name field while renaming commits it (a click on a non-focusable control would not take
+## the focus away, so focus_exited alone is not enough).
+func _input(event: InputEvent) -> void:
+	if _renaming < 0 or not is_open or not (event is InputEventMouseButton) or not event.pressed: return
+	if _rename_edit != null and is_instance_valid(_rename_edit) and not _rename_edit.get_global_rect().has_point(event.position):
+		_commit_rename(_renaming, _rename_edit.text)
 
 func _miniature(type: TowerAsset) -> Texture2D:
 	if type == null or type.entity == null: return null

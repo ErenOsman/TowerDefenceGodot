@@ -494,7 +494,64 @@ static func status_description(description: String, stacks: int, turns_left: int
 
 ## The Codex progress line: "5 / 9 discovered" ("7 tips" for Tips).
 static func codex_progress_text(section: int, known: int, total: int) -> String:
-	return "%d tips" % total if section == CodexSection.Tips else "%d / %d discovered" % [known, total]
+	match section:
+		CodexSection.Tips: return "%d tips" % total
+		CodexSection.Towers: return "%d %s" % [known, plural(known, "tower")] # only met towers are listed
+		CodexSection.Statuses: return "%d / %d seen" % [known, total]
+	return "%d / %d met" % [known, total]
+
+## The main chapter whose last level opens the Workshop (user decision 2026-10-14: "Opens after Chapter 2").
+const WORKSHOP_CHAPTER := 2
+
+## The last level of the n-th main chapter (1-based, catalog order), or null.
+static func main_chapter_last_level(asset: GameCatalogAsset, n: int) -> LevelAsset:
+	if asset == null: return null
+	var k := 0
+	for c in asset.chapters:
+		if c == null or c.kind != ChapterKind.Main: continue
+		k += 1
+		if k != n: continue
+		for i in range(c.levels.size() - 1, -1, -1):
+			if c.levels[i] != null and c.levels[i].level != null: return c.levels[i].level
+		return null
+	return null
+
+## Whether the Workshop is open: the last level of main chapter WORKSHOP_CHAPTER is won (one rule, shared by the
+## Camp station and anything else that needs it).
+static func workshop_unlocked(asset: GameCatalogAsset, progress: LevelProgress) -> bool:
+	var last := main_chapter_last_level(asset, WORKSHOP_CHAPTER)
+	return last != null and progress != null and progress.is_won(last.get_id())
+
+## The locked Workshop station's line: "Opens after Chapter 2" (the chapter's name from the catalog).
+static func workshop_locked_text(asset: GameCatalogAsset) -> String:
+	var k := 0
+	if asset != null:
+		for i in asset.chapters.size():
+			var c = asset.chapters[i]
+			if c == null or c.kind != ChapterKind.Main: continue
+			k += 1
+			if k == WORKSHOP_CHAPTER: return "Opens after " + chapter_name(asset, i)
+	return "Opens after Chapter %d" % WORKSHOP_CHAPTER
+
+## How many towers of a type the collection holds.
+static func owned_count(towers: TowerCollection, type_id: String) -> int:
+	var n := 0
+	if towers != null:
+		for o in towers.towers:
+			if o.type == type_id: n += 1
+	return n
+
+## Where a tower type is first earned (the Codex Overview): "the tutorial" (a starting tower or the tutorial's
+## reward), else the name of the level whose first win gives it, else "".
+static func first_earned(catalog: GameCatalogAsset, type_id: String) -> String:
+	if catalog == null: return ""
+	if catalog.tutorial_reward != null and catalog.tutorial_reward.get_id() == type_id: return "the tutorial"
+	for t in catalog.starting_towers:
+		if t != null and t.get_id() == type_id: return "the tutorial"
+	for e in catalog.entries():
+		var d = e[0]
+		if d.first_clear_reward != null and d.first_clear_reward.get_id() == type_id and d.level != null: return d.level.get_display_name()
+	return ""
 
 ## A model's portrait name: the view's file name ("Assets/Art/Models/Big Slime/Big Slime Blender.prefab" → "Big Slime").
 static func portrait_name(view_path: String) -> String:

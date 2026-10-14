@@ -13,7 +13,7 @@ signal dropped(data: Dictionary, slot: int)
 ## This piece started being dragged.
 signal drag_began(tower_id: String)
 
-const SIZE := Vector2(104, 126)
+const SIZE := Vector2(112, 126)
 const PLATE_Y := 96.0
 const FIG := 88.0
 
@@ -68,11 +68,11 @@ func _build(owned: OwnedTower, type: TowerAsset, mini: Texture2D) -> void:
 	TdFormBadge.attach(_fig, MenuLogic.form_badge(MenuLogic.form_in(owned, type)), FIG, 0.32, Vector2(0.86, 0.78))
 	_plate = TdButton.new()
 	_plate.style = TdButton.Style.NAME_PLATE
-	_plate.custom_minimum_size = Vector2(100, 28)
-	_plate.size = Vector2(100, 28)
+	_plate.custom_minimum_size = Vector2(SIZE.x, 28)
+	_plate.size = Vector2(SIZE.x, 28)
 	_plate.text = MenuLogic.tower_name(owned, type)
 	_plate.mouse_filter = MOUSE_FILTER_IGNORE
-	_plate.position = Vector2((SIZE.x - 100) / 2.0, PLATE_Y)
+	_plate.position = Vector2(0, PLATE_Y)
 	add_child(_plate)
 	if type != null:
 		var coin := TdHandSlot.coin(type.cost, 30.0)

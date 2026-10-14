@@ -212,6 +212,7 @@ func _build_grid() -> Control:
 	grid_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	grid_scroll.size_flags_vertical = SIZE_EXPAND_FILL
 	v.add_child(grid_scroll)
+	TdDragScroll.attach(grid_scroll) # drag empty space to scroll; a press on a draggable tile still drags the tile
 	grid = GridContainer.new()
 	grid.columns = columns
 	grid.add_theme_constant_override("h_separation", gap)

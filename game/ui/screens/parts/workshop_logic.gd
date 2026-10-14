@@ -142,10 +142,10 @@ static func description_of(type: TowerType, id: String) -> String:
 	var d := def_of(type, id)
 	return d.description if d != null else ""
 
-## The card's line under the name: "Default form", "Form of Archer", "Form of Fire Archer" (a child: its parent).
+## The card's line under the name: "Base form", "Form of Archer", "Form of Fire Archer" (a child: its parent).
 static func subtitle(type: TowerType, id: String) -> String:
 	var f := form_of(type, id)
-	if f == null: return "Default form"
+	if f == null: return "Base form"
 	return "Form of " + (f.parent.name if f.parent != null else name_of(type, ROOT))
 
 ## The picker card's form line: "Default form · 1 of 4 forms unlocked", "Form of Archer · …", "Default form · no
@@ -159,6 +159,23 @@ static func form_line(owned: OwnedTower, type: TowerType) -> String:
 	for f in type.forms:
 		if Workshop.is_unlocked(owned, f.id): u += 1
 	return "%s · %d of %d forms unlocked" % [head, u, n]
+
+## The card's ⓘ trait lines: what the form does on its own terms (no comparison): every status its abilities
+## apply to their target, "Burn on hit", or "Burn around the target" when the ability hits an area; a status from
+## a non-attack ability: "Applies Taunted" (content order, each once).
+static func trait_lines(def: EntityDef, vocab: Vocabulary) -> Array:
+	var out := []
+	if def == null: return out
+	var me := DefStats.new(def)
+	for ab in def.abilities:
+		if ab == null: continue
+		var area := vocab != null and AbilityText.area(ab, me, vocab) != null
+		for st in AbilityText.all_steps(ab.steps):
+			if st is ApplyStatusStep and st.status != null and st.on != StepTarget.Self:
+				var line := "%s %s" % [st.status.display_name, "around the target" if area else "on hit"]
+				if not ab.tags.has(Tags.Attack): line = "Applies " + st.status.display_name # Taunt: "Applies Taunted"
+				if not out.has(line): out.append(line)
+	return out
 
 ## "This tower now" panel's line: "Form: Default" / "Form: Fire Archer".
 static func now_line(owned: OwnedTower, type: TowerType) -> String:
@@ -204,17 +221,27 @@ static func spend_text(form: FormDef) -> String:
 		for id in form.unlock: parts.append("%d %s" % [int(form.unlock[id]), form.token_name(id)])
 	return " + ".join(parts)
 
+## The Unlock button's parts (UI/UX 2026-10-14; never wraps): one token → [[token id, "1 Fire Arrow"]] ("Unlock ·
+## [coin] 1 Fire Arrow"); two or more → coins and counts only [[id, "1"], [id, "1"]] (names stay in the cost row).
+static func unlock_parts(form: FormDef) -> Array:
+	var out := []
+	if form == null: return out
+	for id in form.unlock:
+		var n := int(form.unlock[id])
+		out.append([id, "%d %s" % [n, form.token_name(id)] if form.unlock.size() == 1 else str(n)])
+	return out
+
 ## The card's one action for a node: {kind, text, note, reason}.
 ##  kind "unlock": text "Unlock · 1 Fire Arrow", note "Unlocks for this Archer (tower 3)."
 ##  kind "use": text "Use this form", note "Free: switch back any time."
-##  kind "current": no button, note "This is the tower's current form."
+##  kind "current": a disabled "✓ Current form" button, note "This is the tower's current form."
 ##  kind "blocked": a disabled "Unlock", reason = Workshop.last_reason + "." and, for missing tokens,
 ##  " Found in: …." (found: {token id: text}, from found_in_text).
 static func action(owned: OwnedTower, type: TowerType, id: String, wallet: TokenWallet, index: int, found := {}) -> Dictionary:
 	var st := node_state(owned, type, id, wallet)
 	var base := name_of(type, ROOT)
 	match st:
-		"current": return {"kind": "current", "text": "", "note": "This is the tower's current form.", "reason": ""}
+		"current": return {"kind": "current", "text": "Current form", "note": "This is the tower's current form.", "reason": ""}
 		"unlocked": return {"kind": "use", "text": "Use this form", "note": "Free: switch back any time.", "reason": ""}
 		"can": return {"kind": "unlock", "text": "Unlock · " + spend_text(form_of(type, id)),
 			"note": "Unlocks for this %s (tower %d)." % [base, index], "reason": ""}
@@ -284,13 +311,13 @@ static func codex_form_ids(towers: TowerCollection, type: TowerType) -> Array:
 		if anyone_unlocked(towers, type.id, f.id): out.append(f.id)
 	return out
 
-## A Forms row's name: "Fire Archer", the default "Archer · Base form".
+## A Forms row's name: the form's ("Fire Archer"), the base row the type's ("Archer").
 static func codex_row_name(type: TowerType, id: String) -> String:
-	return name_of(type, id) + (" · Base form" if id == ROOT else "")
+	return name_of(type, id)
 
-## A Forms row's second line: "The tower as it comes" / "Form of Archer" / "Form of Fire Archer".
+## A Forms row's second line: "Base form" / "Form of Archer" / "Form of Fire Archer".
 static func codex_row_sub(type: TowerType, id: String) -> String:
-	return "The tower as it comes" if id == ROOT else subtitle(type, id)
+	return subtitle(type, id)
 
 ## Whether any owned tower of a type has a form unlocked (the Codex shows the forms nobody has desaturated).
 static func anyone_unlocked(towers: TowerCollection, type_id: String, form_id: String) -> bool:

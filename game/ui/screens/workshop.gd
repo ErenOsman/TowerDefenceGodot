@@ -30,6 +30,8 @@ const GOLD_RING := Color("#FFD46B")
 const SHORT := Color("#FF7A6B")
 const OK := Color("#7EE08A")
 const TITLE_INK := Color("#2B5594")
+## The paper cards' lower colour (the bottom fade of their scrolling body).
+const PAPER_FADE := Color("#EADDC2")
 
 ## "pick" or "modify".
 var view := "pick"
@@ -37,7 +39,7 @@ var view := "pick"
 var tower_id := ""
 ## The selected node of the tree (a form id; "" = the default form).
 var node_id := ""
-## A node just unlocked (its toast shows until another node is picked or 2.6 s pass).
+## A node just unlocked (its toast shows until another node is picked or 4 s pass).
 var flash_id := ""
 var confirm_open := false
 
@@ -253,21 +255,52 @@ func _refresh_pdetail() -> void:
 		TdTheme.texture("icon_energy").resource_path, TdTheme.rich("gold.ink"), e.cost], "small", TdTheme.color("ink.2"), 18))
 	body.add_child(_bold_digits(WorkshopLogic.form_line(owned, type), 18))
 	if e.description != "": body.add_child(TdMenu.rich(TooltipText.describe(e.description), "body", TdTheme.color("ink"), 18))
-	var def: EntityDef = e.def
-	if def != null and _vocab != null: body.add_child(TdTowerCard.stat_grid(HandLogic.stat_tiles(DefStats.new(def), _vocab, 4)))
-	var rows := TdMenu.vbox(0)
-	body.add_child(rows)
-	for r in TdTowerCard.def_rows(def, _vocab): rows.add_child(r)
-	var b := TdMenu.button(TdButton.Style.PRIMARY, "Modify", Vector2(340, 58), TdTheme.texture("icon_edit"))
+	_def_section(body, e.def)
+	var b := TdMenu.button(TdButton.Style.PRIMARY, "Modify", Vector2(0, 58), TdTheme.texture("icon_edit"))
+	b.size_flags_horizontal = SIZE_EXPAND_FILL
 	b.clicked.connect(func(): open_modify(tower_id))
 	_pdetail.add_child(b)
 
 ## A ScrollContainer filling a column, holding a vbox (returned) with room for the scrollbar.
-func _scroll_body(parent: Control, sep := 10, gutter_px := 12) -> VBoxContainer:
+func _scroll_body(parent: Control, sep := 10, gutter_px := 12, fade := false) -> VBoxContainer:
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = SIZE_EXPAND_FILL
-	parent.add_child(scroll)
+	if fade:
+		# the Modify cards: no scrollbar line; a fade at the bottom says there is more (wheel / drag scrolls)
+		TdDragScroll.attach(scroll, true)
+		scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER # after attach (it sets AUTO)
+		var holder := Control.new()
+		holder.size_flags_vertical = SIZE_EXPAND_FILL
+		holder.size_flags_horizontal = SIZE_EXPAND_FILL
+		holder.mouse_filter = MOUSE_FILTER_PASS
+		parent.add_child(holder)
+		scroll.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+		holder.add_child(scroll)
+		var f := TextureRect.new()
+		var g := Gradient.new()
+		g.set_color(0, Color(PAPER_FADE, 0.0))
+		g.set_color(1, PAPER_FADE)
+		var gt := GradientTexture2D.new()
+		gt.gradient = g
+		gt.fill_from = Vector2(0, 0)
+		gt.fill_to = Vector2(0, 1)
+		gt.width = 4
+		gt.height = 32
+		f.texture = gt
+		f.stretch_mode = TextureRect.STRETCH_SCALE
+		f.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		f.mouse_filter = MOUSE_FILTER_IGNORE
+		f.set_anchors_and_offsets_preset(PRESET_BOTTOM_WIDE)
+		f.offset_top = -28
+		holder.add_child(f)
+		var upd := func() -> void:
+			var bar := scroll.get_v_scroll_bar()
+			f.visible = bar.max_value - bar.page > 1.0 and scroll.scroll_vertical < bar.max_value - bar.page - 1.0
+		scroll.get_v_scroll_bar().changed.connect(upd)
+		scroll.get_v_scroll_bar().value_changed.connect(func(_v): upd.call())
+	else:
+		parent.add_child(scroll)
 	var gutter := MarginContainer.new()
 	gutter.add_theme_constant_override("margin_right", gutter_px)
 	gutter.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -384,7 +417,7 @@ func _refresh_now() -> void:
 	var owned := _owned()
 	var cur := WorkshopLogic.current_id(owned, _type)
 	var e := _entry(tower_id)
-	var body := _scroll_body(_now, 8, 4)
+	var body := _scroll_body(_now, 8, 0, true)
 	body.add_child(_caption("This tower now"))
 	var head := TdMenu.hbox(14)
 	body.add_child(head)
@@ -404,11 +437,24 @@ func _refresh_now() -> void:
 	var fl := TdMenu.rich("%s [color=%s][b]%s[/b][/color]" % [line.get_slice(":", 0) + ":", TdTheme.rich("ink"), line.get_slice(": ", 1)], "body", TdTheme.color("ink.2"), 18)
 	fl.add_theme_font_override("normal_font", TdTheme.font("nunito_bold"))
 	v.add_child(fl)
-	var def := WorkshopLogic.def_of(_type, cur)
-	if def != null and _vocab != null: body.add_child(TdTowerCard.stat_grid(HandLogic.stat_tiles(DefStats.new(def), _vocab, 4), 140))
-	var rows := TdMenu.vbox(0)
-	body.add_child(rows)
-	for r in TdTowerCard.def_rows(def, _vocab): rows.add_child(r)
+	_def_section(body, WorkshopLogic.def_of(_type, cur))
+
+## The same structure on both Modify cards (and the picker card): the stat tiles, the ⓘ trait lines ("Burn on hit"),
+## an "Abilities" caption, the abilities, then the passives (square chips).
+func _def_section(body: VBoxContainer, def: EntityDef) -> void:
+	if def == null: return
+	if _vocab != null: body.add_child(TdTowerCard.stat_grid(HandLogic.stat_tiles(DefStats.new(def), _vocab, 4), 120))
+	for line in WorkshopLogic.trait_lines(def, _vocab):
+		var tl := TdMenu.rich("[img=18x18 color=%s]%s[/img]  %s" % [TdTheme.rich("ink.2"), TdTheme.texture("icon_info").resource_path, line],
+			"body", TdTheme.color("ink"), 18)
+		tl.add_theme_font_override("normal_font", TdTheme.font("nunito_bold"))
+		body.add_child(tl)
+	var rows := TdTowerCard.def_rows(def, _vocab)
+	if rows.is_empty(): return
+	body.add_child(_caption("Abilities"))
+	var box := TdMenu.vbox(0)
+	body.add_child(box)
+	for r in rows: box.add_child(r)
 
 func _caption(text: String) -> Label:
 	return _cap(text, Color(0, 0, 0, 0))
@@ -433,7 +479,7 @@ func _refresh_card() -> void:
 	var id := node_id
 	var st := WorkshopLogic.node_state(owned, _type, id, SaveData.tokens)
 	var cur := WorkshopLogic.current_id(owned, _type)
-	var body := _scroll_body(_card, 6, 6)
+	var body := _scroll_body(_card, 6, 0, true)
 	if flash_id == id and id != "": body.add_child(_toast(WorkshopLogic.toast(_type, id)))
 	var head := TdMenu.hbox(14)
 	body.add_child(head)
@@ -452,13 +498,9 @@ func _refresh_card() -> void:
 	v.add_child(sub)
 	body.add_child(TdMenu.rich(TooltipText.describe(WorkshopLogic.description_of(_type, id)), "body", TdTheme.color("ink"), 18))
 	# the selected form as it is (no comparison with the current form: user decision 2026-10-14)
-	var sdef := WorkshopLogic.def_of(_type, id)
-	if sdef != null and _vocab != null: body.add_child(TdTowerCard.stat_grid(HandLogic.stat_tiles(DefStats.new(sdef), _vocab, 4), 160))
-	if sdef != null:
-		var rows := TdMenu.vbox(0)
-		body.add_child(rows)
-		for r in TdTowerCard.def_rows(sdef, _vocab): rows.add_child(r)
-	# the bottom: cost row and the one action
+	_def_section(body, WorkshopLogic.def_of(_type, id))
+	# the pinned footer: Leads to, the cost row and the one action (only the body above scrolls)
+	_card.add_child(TdMenu.spacer(8))
 	var foot := TdMenu.vbox(6)
 	_card.add_child(foot)
 	# "› Leads to: Inferno Archer" (kept out of the scroll so it always shows)
@@ -473,17 +515,16 @@ func _refresh_card() -> void:
 	var act := WorkshopLogic.action(owned, _type, id, SaveData.tokens, int(_entry(tower_id).get("index", 0)), _found)
 	match act.kind:
 		"current":
-			var l := TdMenu.wrap_label(act.note, "body", TdTheme.color("ink.2"), 18)
-			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			foot.add_child(l)
+			foot.add_child(TdTowerCard.disabled_button(act.text, TdTheme.texture("icon_check")))
+			foot.add_child(_note(act.note))
 		"use":
-			var b := TdMenu.button(TdButton.Style.PRIMARY, act.text, Vector2(CARD_W - 32, 58), TdTheme.texture("icon_check"))
+			var b := TdMenu.button(TdButton.Style.PRIMARY, act.text, Vector2(0, 58), TdTheme.texture("icon_check"))
+			b.size_flags_horizontal = SIZE_EXPAND_FILL
 			b.clicked.connect(card_action)
 			foot.add_child(b)
 			foot.add_child(_note(act.note))
 		"unlock":
-			var b := TdMenu.button(TdButton.Style.PRIMARY, act.text, Vector2(CARD_W - 32, 58), _token_icon(f))
-			TdTowerCard.gold_ring(b)
+			var b := _unlock_button(f)
 			b.clicked.connect(card_action)
 			foot.add_child(b)
 			foot.add_child(_note(act.note))
@@ -496,9 +537,38 @@ func _refresh_card() -> void:
 			wl.add_theme_font_override("font", TdTheme.font("nunito_extrabold"))
 			why.add_child(wl)
 			foot.add_child(why)
-			var b := TdMenu.button(TdButton.Style.PRIMARY, act.text, Vector2(CARD_W - 32, 58), TdTheme.texture("icon_plus"))
-			b.set_interactable(false, act.reason)
-			foot.add_child(b)
+			foot.add_child(TdTowerCard.disabled_button(act.text, TdTheme.texture("icon_plus"), act.reason))
+
+## "Unlock · [coin] 1 Fire Arrow" (one token) or "Unlock · [coin] 1 [coin] 1" (several: coins and counts only; the
+## names are in the cost row). Never wraps; gold ring (mockup .ws-gold).
+func _unlock_button(f: FormDef) -> TdButton:
+	var b := TdMenu.button(TdButton.Style.PRIMARY, "", Vector2(0, 58))
+	b.size_flags_horizontal = SIZE_EXPAND_FILL
+	TdTowerCard.gold_ring(b)
+	var c := CenterContainer.new()
+	c.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	c.offset_bottom = -4 # the face sits above the button's bottom lip
+	c.mouse_filter = MOUSE_FILTER_IGNORE
+	b.face_node().add_child(c) # on the face (drawn over its sprite; the face moves with the press)
+	var h := TdMenu.hbox(6)
+	h.mouse_filter = MOUSE_FILTER_IGNORE
+	c.add_child(h)
+	h.add_child(_button_label("Unlock ·"))
+	for part in WorkshopLogic.unlock_parts(f):
+		var t := GameApp.catalog.find_token(part[0])
+		var ic := TdMenu.picture(GameApp.kit_texture(t.icon) if t != null else null, Vector2(30, 30))
+		ic.size_flags_vertical = SIZE_SHRINK_CENTER
+		h.add_child(ic)
+		h.add_child(_button_label(part[1]))
+	return b
+
+func _button_label(text: String) -> Label:
+	var l := TdMenu.label(text, "header", Color.WHITE, 26)
+	l.add_theme_font_override("font", TdTheme.font("plinth"))
+	l.add_theme_color_override("font_outline_color", Color(0.1, 0.2, 0.4, 0.6))
+	l.add_theme_constant_override("outline_size", 4)
+	l.size_flags_vertical = SIZE_SHRINK_CENTER
+	return l
 
 func _note(text: String) -> Label:
 	var l := TdMenu.wrap_label(text, "body", TdTheme.color("ink.2"), 18)
@@ -635,7 +705,7 @@ func confirm_unlock() -> bool:
 	_tree.flash(node_id)
 	_toast_serial += 1
 	var serial := _toast_serial
-	get_tree().create_timer(2.6, true, false, true).timeout.connect(func():
+	get_tree().create_timer(4.0, true, false, true).timeout.connect(func():
 		if serial == _toast_serial and is_instance_valid(self) and flash_id != "":
 			flash_id = ""
 			if view == "modify": _refresh_card())
@@ -801,7 +871,7 @@ class FormTree extends Control:
 			else:
 				draw_dashed_line(a, b, Color(0.933, 0.886, 0.776, 0.35), 6.0, 9.0, true)
 
-## One node: the medallion (real portrait, grey when not unlocked; ring cobalt for Current, gold + glow for Can
+## One node: the medallion (real portrait once unlocked, else its first token's coin; ring cobalt for Current, gold + glow for Can
 ## unlock, else the form's tint), the badge, "Current" above, a green ✓ when unlocked, the name plate (cobalt when
 ## selected) and, when it is not unlocked, its token chips ("0/1" red when short, "1 ✓" when there).
 class FormNode extends Control:
@@ -812,6 +882,8 @@ class FormNode extends Control:
 	var screen
 	var anchor := Vector2(W / 2.0, TOP + NODE_MEDAL / 2.0)
 	var state := ""
+	## Shows its token coin (not unlocked yet) instead of the portrait.
+	var coin := false
 	var _medal: Control
 	var _ring: TdTowerCard.RingLine
 	var _flash_ring: TdTowerCard.RingLine
@@ -834,11 +906,21 @@ class FormNode extends Control:
 	func build() -> void:
 		var type: TowerType = screen._type
 		state = WorkshopLogic.node_state(screen._owned(), type, id, SaveData.tokens)
-		_medal = TdMenu.medallion(screen._portrait(id), NODE_MEDAL)
+		# a form not unlocked yet shows the coin of its cost's first token in place of the portrait (user decision
+		# 2026-10-14); the portrait appears once it is unlocked
+		var f0 := WorkshopLogic.form_of(type, id)
+		coin = f0 != null and state in ["can", "need", "locked"] and not f0.unlock.is_empty()
+		if coin:
+			_medal = Control.new()
+			_medal.mouse_filter = MOUSE_FILTER_IGNORE
+			_medal.custom_minimum_size = Vector2(NODE_MEDAL, NODE_MEDAL)
+			_medal.size = _medal.custom_minimum_size
+			var t: TokenAsset = GameApp.catalog.find_token(f0.unlock.keys()[0])
+			var pic := TdMenu.picture(GameApp.kit_texture(t.icon) if t != null else null, Vector2(NODE_MEDAL, NODE_MEDAL))
+			_medal.add_child(pic)
+		else:
+			_medal = TdMenu.medallion(screen._portrait(id), NODE_MEDAL)
 		_medal.position = Vector2((W - NODE_MEDAL) / 2.0, TOP)
-		if state in ["need", "locked"]:
-			for c in _medal.get_children():
-				if c is TextureRect and c.material != null: c.material = TdMenu.grey_circle_material()
 		add_child(_medal)
 		_ring = TdTowerCard.RingLine.new()
 		_ring.size = Vector2(NODE_MEDAL, NODE_MEDAL)
@@ -929,7 +1011,9 @@ class FormNode extends Control:
 				glow = Color(GOLD_RING, 0.5)
 			_:
 				var b: String = screen._badge(id)
-				if b != "": c = TdFormBadge.colour_of(b)
+				if coin: c = Color(0, 0, 0, 0) # a coin: no ring unless it can be unlocked
+				elif b != "": c = TdFormBadge.colour_of(b)
+				else: c = TdTheme.color("ink") # the base form, not current: a neutral ink ring (cobalt means Current)
 		_ring.colour = c
 		_ring.glow = glow
 		_ring.visible = c.a > 0.0

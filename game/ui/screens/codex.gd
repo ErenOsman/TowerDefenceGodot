@@ -1,7 +1,7 @@
 extends TdPopup
 ## The Codex (UI_Codex.cs; Codex — Design; the Unity build's layout): tabs Towers / Enemies / Statuses / Tips,
 ## "5 / 9 discovered" with a gold bar, a list on the left (one row per entry: medallion, name, "• New" while new,
-## "???" while undiscovered) and the selected entry's page on paper at the right: towers and enemies get a model
+## a lock and "Not met yet" while undiscovered) and the selected entry's page on paper at the right: towers and enemies get a model
 ## preview turning (drag to turn), stat tiles, description and ability / passive rows (icon, cooldown pips, CD words,
 ## tags, description, result chips); statuses their icon, description and rules (lasts, again); tips their text with
 ## the player's keys (KeyBinds.fill_keys). Opening an entry marks it seen (SaveData.codex) and saves. Reusable from
@@ -12,11 +12,11 @@ extends TdPopup
 
 const SECTIONS := [CodexSection.Towers, CodexSection.Enemies, CodexSection.Statuses, CodexSection.Tips]
 const TAB_NAMES := ["Towers", "Enemies", "Statuses", "Tips"]
-## The text column: at most ~60 characters of 22–24 px Nunito a line.
-const TEXT_W := 700.0
 const TAB_ICONS := ["icon_castle", "icon_enemy", "icon_eye", "icon_info"]
 const TAB_WIDTHS := [210.0, 262.0, 262.0, 180.0] # faces; TdButton adds its bleed room
 const WIDTH := 1700.0
+## The header's progress block and its bar: one width whatever the count text says.
+const PROGRESS_W := 246.0
 const HEIGHT := 900.0
 const STAT_ICONS := {"MaxHp": "icon_heart", "Power": "icon_power", "Potency": "icon_del-spark", "Duration": "icon_clock",
 	"Speed": "icon_speed", "Range": "icon_range", "Radius": "icon_range"}
@@ -41,6 +41,8 @@ var _preview: TdModelPreview
 var _picture: TextureRect
 var _hint: Label
 var _stats: GridContainer
+var _facts: VBoxContainer
+var _stage_badge: TextureRect
 var _title: Label
 var _subtitle: RichTextLabel
 var _description: RichTextLabel
@@ -92,13 +94,15 @@ func _build() -> void:
 		tab_buttons[k].custom_minimum_size.x = TAB_WIDTHS[k]
 		tab_buttons[k].size.x = TAB_WIDTHS[k]
 	var prog := TdMenu.vbox(6)
-	prog.custom_minimum_size = Vector2(240, 0)
+	prog.custom_minimum_size = Vector2(PROGRESS_W, 0) # a fixed block: the bar has the same width on every tab
 	prog.alignment = BoxContainer.ALIGNMENT_CENTER
 	head.add_child(prog)
 	_progress = TdMenu.label("", "header", TdTheme.color("cream.100"), 28)
+	_progress.clip_text = true # never widens the block
 	prog.add_child(_progress)
 	_bar = Panel.new()
-	_bar.custom_minimum_size = Vector2(246, 10)
+	_bar.custom_minimum_size = Vector2(PROGRESS_W, 10)
+	_bar.size_flags_horizontal = SIZE_SHRINK_BEGIN
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = TdTheme.color("wood.900")
 	bg.set_corner_radius_all(5)
@@ -185,7 +189,7 @@ func _build() -> void:
 	lv.add_child(lcen)
 	_locked_pic = TdMenu.picture(null, Vector2(128, 128))
 	lcen.add_child(_locked_pic)
-	_locked_title = TdMenu.label("???", "display", TdTheme.color("ink.2"), 44)
+	_locked_title = TdMenu.label("Not met yet", "display", TdTheme.color("ink.2"), 40)
 	_locked_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lv.add_child(_locked_title)
 	_locked_kind = TdMenu.label("", "body", TdTheme.color("ink.2"), 22)
@@ -232,12 +236,21 @@ func _build() -> void:
 	_hint.set_anchors_and_offsets_preset(PRESET_BOTTOM_WIDE)
 	_hint.offset_top = -40; _hint.offset_bottom = -10
 	stage.add_child(_hint)
+	# a formed tower's badge: a 48 px overlay at the preview frame's top-right (not on the model)
+	_stage_badge = TextureRect.new()
+	_stage_badge.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_stage_badge.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_stage_badge.set_anchors_and_offsets_preset(PRESET_TOP_RIGHT)
+	_stage_badge.offset_left = -64; _stage_badge.offset_right = -16; _stage_badge.offset_top = 16; _stage_badge.offset_bottom = 64
+	_stage_badge.mouse_filter = MOUSE_FILTER_IGNORE
+	stage.add_child(_stage_badge)
+	# the Overview's wide 2 × 2 stat tiles and facts sit in the text column, beside the model (mockup codex2)
 	_stats = GridContainer.new()
 	_stats.columns = 2
-	_stats.add_theme_constant_override("h_separation", int(TILE_GAP))
-	_stats.add_theme_constant_override("v_separation", int(TILE_GAP))
-	_stats.size_flags_horizontal = SIZE_SHRINK_BEGIN
-	_left.add_child(_stats)
+	_stats.add_theme_constant_override("h_separation", 10)
+	_stats.add_theme_constant_override("v_separation", 10)
+	_stats.size_flags_horizontal = SIZE_EXPAND_FILL
+	_facts = TdMenu.vbox(10)
 	_page_scroll = ScrollContainer.new()
 	_page_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_page_scroll.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -249,12 +262,13 @@ func _build() -> void:
 	for side in ["left", "top", "bottom"]: pad.add_theme_constant_override("margin_" + side, 6)
 	pad.add_theme_constant_override("margin_right", 22)
 	_page_scroll.add_child(pad)
-	var right := TdMenu.vbox(10)
-	right.size_flags_horizontal = SIZE_SHRINK_BEGIN
-	right.custom_minimum_size = Vector2(TEXT_W, 0)
+	var right := TdMenu.vbox(14)
+	right.size_flags_horizontal = SIZE_EXPAND_FILL # rows and ability lists use the page's full width (mockup codex2)
 	pad.add_child(right)
 	_description = TdMenu.rich("", "body", TdTheme.color("ink"), 24)
 	right.add_child(_description)
+	right.add_child(TdTowerCard.bleed_margin(_stats))
+	right.add_child(_facts)
 	_body = TdMenu.rich("", "body", TdTheme.color("ink"), 24)
 	right.add_child(_body)
 
@@ -301,7 +315,11 @@ static func catch_up() -> void:
 	var catalog: GameCatalogAsset = GameApp.catalog
 	if catalog == null: return
 	var found := false
-	for owned in data.towers.towers: found = data.codex.discover(CodexSection.Towers, owned.type) or found
+	for owned in data.towers.towers:
+		if data.codex.discover(CodexSection.Towers, owned.type):
+			found = true
+			# the towers you start with are not news: only towers earned later get the "New" dot
+			if MenuLogic.first_earned(catalog, owned.type) == "the tutorial": data.codex.mark_viewed(CodexSection.Towers, owned.type)
 	var levels := [catalog.tutorial]
 	for e in catalog.entries(): levels.append(e[0].level)
 	for l in levels:
@@ -388,17 +406,19 @@ func _draw_row(b: TdButton, e: Dictionary) -> void:
 	var icon: Control
 	var kit_medal := _kit_medallion(e, "medallion_256")
 	if not known:
-		icon = TdMenu.picture(_locked_texture(e), Vector2(40, 40))
+		icon = TdMenu.picture(TdTheme.texture("icon_lock"), Vector2(26, 26)) # a lock, "Not met yet" (no "???")
+		icon.modulate = TdTheme.color("cream.300")
+		icon.position = Vector2(7, 7)
 	elif e.section == CodexSection.Towers and kit_medal != null:
 		icon = TdMenu.picture(kit_medal, Vector2(40, 40)) # the kit's medallion, mipmapped down
 	elif e.section == CodexSection.Towers or e.section == CodexSection.Enemies:
 		icon = TdMenu.medallion(tex, 40, e.section == CodexSection.Enemies)
 	else:
 		icon = TdMenu.picture(tex if tex != null else TdTheme.texture("icon_info"), Vector2(36, 36))
-	icon.position = Vector2(12, 10)
+	icon.position += Vector2(12, 10)
 	icon.set_meta("row_part", true)
 	b.face_node().add_child(icon)
-	var l := TdMenu.label(e.name if known else "???", "header", TdTheme.color("cream.100"), 26)
+	var l := TdMenu.label(e.name if known else "Not met yet", "header", TdTheme.color("cream.100") if known else TdTheme.color("cream.300"), 26 if known else 22)
 	var dot := known and SaveData.codex.is_new(e.section, e.id)
 	l.position = Vector2(66, 0)
 	l.size = Vector2(140 if dot else 194, 60)
@@ -424,11 +444,6 @@ static func _kit_medallion(e: Dictionary, folder: String) -> Texture2D:
 	var n := MenuLogic.icon_name(e.icon)
 	return TdTheme.kit("units/%s/%s" % [folder, n]) if n != "" else null
 
-## An undiscovered entry's picture: its unit's locked silhouette medallion (128 px), else the lock badge.
-static func _locked_texture(e: Dictionary) -> Texture2D:
-	var t := _kit_medallion(e, "locked_128")
-	return t if t != null else TdTheme.texture("lock_badge")
-
 func _entry_picture(e: Dictionary) -> Texture2D:
 	var a = e.asset
 	if a is TowerAsset: return TdMenu.unit_picture(a.entity.view if a.entity != null else "", e.icon)
@@ -453,6 +468,10 @@ func select(e: Dictionary) -> void:
 
 func _show_page(e: Dictionary) -> void:
 	for c in _stats.get_children(): c.queue_free()
+	for c in _facts.get_children(): c.queue_free()
+	_stage_badge.texture = null
+	_stats.visible = true
+	_facts.visible = true
 	for c in _abilities.get_children(): c.queue_free()
 	for c in _forms.get_children(): c.queue_free()
 	_description.text = ""
@@ -490,7 +509,7 @@ func _show_page(e: Dictionary) -> void:
 		_cols.visible = false
 		_page_top.visible = false
 		_locked_overlay.visible = true
-		_locked_pic.texture = _locked_texture(e)
+		_locked_pic.texture = TdTheme.texture("lock_badge")
 		var n := _locked_pic.texture.get_size() * (0.5 if _locked_pic.texture == TdTheme.texture("lock_badge") else 1.0)
 		_locked_pic.custom_minimum_size = n
 		_locked_kind.text = MenuLogic.section_name(e.section)
@@ -547,14 +566,15 @@ func _unit_page(entity: EntityAsset, description: String) -> void:
 	var me := DefStats.new(d)
 	var vocab: Vocabulary = GameApp.rules.vocabulary if GameApp.rules != null else CombatVocabulary.create()
 	var values := {}
-	for tile in stat_tiles(me, vocab):
-		_stats.add_child(_stat_tile(tile[0], tile[1], tile[2]))
+	var tiles := stat_tiles(me, vocab)
+	_stats.columns = 3 if tiles.size() > 4 else 2 # wraps in the text column; the page never grows
+	for tile in tiles:
+		_stats.add_child(TdTowerCard.stat_tile(tile[0], tile[1], tile[2], 200))
 		if tile[0] != "MaxHp": values[tile[0]] = tile[2]
 	var passives := PassiveView.of(d)
 	_abilities_head.visible = d.abilities.size() + passives.size() > 0
 	for ab in d.abilities:
-		var asset = GameApp.convert.asset_of(ab, "AbilityAsset")
-		var icon: Texture2D = TdTheme.ability_icon(MenuLogic.icon_name(asset.icon)) if asset != null and asset.icon != "" else null
+		var icon := TdTowerCard.ability_icon(ab)
 		var pips := 0 if ab.cooldown_until_reset else maxi(1, ab.cooldown)
 		_abilities.add_child(_ability_row(icon, ab.display_name, ability_kind(ab),
 			TooltipText.describe(MenuLogic.fill_stat_words(ab.description, values)), TooltipText.cooldown_words(ab.cooldown, ab.cooldown_until_reset), pips,
@@ -588,9 +608,41 @@ func _tower_page(t: TowerAsset) -> void:
 		_title.text = t.get_display_name()
 		_subtitle.text = "Tower · [b][color=%s]%d[/color][/b] energy" % [TdTheme.rich("gold.ink"), t.cost]
 	_unit_page(ent, fa.description if fa != null and fa.description != "" else t.description)
+	var bp := MenuLogic.form_badge(fa)
+	_stage_badge.texture = load(bp) if bp != "" else null
+	_tower_facts(t, fa, ent)
 	_build_strip(TOWER_PAGES, type)
 	if page == "forms": _forms_rows(t, type, ids)
 	_apply_page()
+
+## The Overview's facts (mockup codex2): energy, role chips, "In your collection: 6", "First earned: the tutorial".
+func _tower_facts(t: TowerAsset, fa: FormAsset, ent: EntityAsset) -> void:
+	var cost := fa.cost if fa != null and fa.cost >= 0 else t.cost
+	_facts.add_child(_fact("icon_energy", "[color=%s][b]%d[/b][/color] energy" % [TdTheme.rich("ink"), cost], TdTheme.color("gold.ink")))
+	var def: EntityDef = GameApp.convert.entity(ent) if ent != null else null
+	var roles: Array = HandLogic.traits(def).roles
+	if not roles.is_empty():
+		var chips := HFlowContainer.new()
+		chips.add_theme_constant_override("h_separation", 8)
+		for r in roles:
+			var dot: Color = HandLogic.ROLE_COLORS.get(r, TdTheme.color("ink.2"))
+			chips.add_child(TdMenu.pill("[color=%s]●[/color] [b]%s[/b]" % [dot.to_html(false), r], Color(0.18, 0.13, 0.09, 0.06), TdTheme.color("ink"), 18,
+				Color(0.37, 0.29, 0.21, 0.3)))
+		_facts.add_child(chips)
+	_facts.add_child(_fact("icon_cards", "In your collection: [color=%s][b]%d[/b][/color]" % [TdTheme.rich("ink"), MenuLogic.owned_count(SaveData.towers, t.get_id())]))
+	var first := MenuLogic.first_earned(GameApp.catalog, t.get_id())
+	if first != "": _facts.add_child(_fact("icon_castle", "First earned: [color=%s][b]%s[/b][/color]" % [TdTheme.rich("ink"), first]))
+
+func _fact(icon: String, bbcode: String, tint := Color(0, 0, 0, 0)) -> Control:
+	var h := TdMenu.hbox(8)
+	var ic := TdMenu.picture(TdTheme.texture(icon), Vector2(20, 20))
+	ic.modulate = tint if tint.a > 0 else TdTheme.color("ink.2")
+	ic.size_flags_vertical = SIZE_SHRINK_CENTER
+	h.add_child(ic)
+	var l := TdMenu.rich(bbcode, "body", TdTheme.color("ink.2"), 20)
+	l.add_theme_font_override("normal_font", TdTheme.font("nunito_bold"))
+	h.add_child(l)
+	return h
 
 ## The page tab strip (an underlined tab per page; disabled ones dimmed with "Coming later").
 func _build_strip(pages: Array, type: TowerType) -> void:
@@ -621,6 +673,8 @@ func show_form(id: String) -> void:
 func _apply_page() -> void:
 	_left.visible = page == "overview"
 	_description.visible = page == "overview"
+	_stats.visible = page == "overview"
+	_facts.visible = page == "overview"
 	_abilities.visible = page == "abilities"
 	_abilities_head.visible = false
 	_forms.visible = page == "forms"
@@ -652,8 +706,6 @@ func _forms_rows(t: TowerAsset, type: TowerType, ids: Array) -> void:
 		var sl := TdMenu.label(WorkshopLogic.codex_row_sub(type, id), "body", TdTheme.color("ink.2"), 18)
 		sl.add_theme_font_override("font", TdTheme.font("nunito_bold"))
 		v.add_child(sl)
-		var desc: String = fa.description if fa != null else ""
-		if desc != "": v.add_child(TdMenu.rich(TooltipText.describe(desc), "body", TdTheme.color("ink"), 18))
 		_forms.add_child(row)
 	if ids.size() == 1:
 		var e := TdMenu.label("Unlock more forms in the Workshop.", "body", TdTheme.color("ink.2"), 20)
@@ -720,14 +772,7 @@ static func result_tags(ab: AbilityDef, me: IEntity, vocab: Vocabulary) -> Array
 ## An ability's type words ("Attack · Projectile"); an ability without tags is named from what it does: a status
 ## that controls (taunt, stun, root…) → "Control", healing → "Support", a move → "Movement".
 static func ability_kind(ab: AbilityDef) -> String:
-	if not ab.tags.is_empty(): return " · ".join(PackedStringArray(ab.tags))
-	for st in AbilityText.all_steps(ab.steps):
-		if st is ApplyStatusStep and st.status != null:
-			for t in st.status.tags:
-				if t in [Tags.Taunted, Tags.Stunned, Tags.Rooted] or Tags.PreventActing.has(t): return "Control"
-		if st is HealStep: return "Support"
-		if st is JumpStep or st is TeleportStep or st is WalkStep: return "Movement"
-	return ""
+	return HandLogic.ability_kind(ab)
 
 ## The stat tiles (EntityText.StatTiles): Max HP first, then Power, Potency, Duration, Speed, Range, Radius the unit
 ## has. Array of [stat, label, value text].
@@ -743,35 +788,6 @@ static func stat_tiles(me: IEntity, vocab: Vocabulary) -> Array:
 static func _num(v) -> String:
 	var f := float(v)
 	return str(int(f)) if is_equal_approx(f, roundf(f)) else str(snappedf(f, 0.01))
-
-## One stat tile: a fixed size (two columns of TILE_W with TILE_GAP between them span the model box exactly), its
-## content placed by hand (the label clips its text), so a long label never widens a column.
-const TILE_W := (276.0 - TILE_GAP) / 2.0
-const TILE_H := 68.0
-const TILE_GAP := 12.0
-
-func _stat_tile(stat: String, label: String, value: String) -> Control:
-	var root := Control.new()
-	root.custom_minimum_size = Vector2(TILE_W, TILE_H)
-	root.mouse_filter = MOUSE_FILTER_IGNORE # not clipped: the sprite's rim hangs 2 px outside the tile (its outset)
-	var bg := Panel.new()
-	bg.add_theme_stylebox_override("panel", TdTheme.stylebox("paper_stat"))
-	bg.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	bg.mouse_filter = MOUSE_FILTER_IGNORE
-	root.add_child(bg)
-	var icon := TdMenu.picture(TdTheme.texture(STAT_ICONS.get(stat, "icon_power")), Vector2(20, 20))
-	icon.modulate = TdTheme.color("ink.2")
-	icon.position = Vector2(10, 12)
-	root.add_child(icon)
-	var v := TdMenu.label(value, "header", TdTheme.color("ink"), 28)
-	v.position = Vector2(36, 2)
-	root.add_child(v)
-	var l := TdMenu.label(label, "small", TdTheme.color("ink.2"), 20)
-	l.position = Vector2(10, 38)
-	l.size = Vector2(TILE_W - 16, 26)
-	l.clip_text = true
-	root.add_child(l)
-	return root
 
 func _ability_row(icon: Texture2D, name_text: String, tags: String, description: String, cd: String, pips: int,
 		results: Array, passive: bool) -> Control:
@@ -795,7 +811,7 @@ func _ability_row(icon: Texture2D, name_text: String, tags: String, description:
 		var pr := TdMenu.hbox(4)
 		pr.alignment = BoxContainer.ALIGNMENT_CENTER
 		for i in mini(pips, 6):
-			pr.add_child(TdMenu.picture(TdTheme.texture("pip_ability_ready"), Vector2(18, 18)))
+			pr.add_child(_pip()) # brown / gold pips (blue means active)
 		left.add_child(pr)
 	var cdl := TdMenu.label(cd, "small", TdTheme.color("ink"), 20)
 	cdl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -811,6 +827,12 @@ func _ability_row(icon: Texture2D, name_text: String, tags: String, description:
 		tl.size_flags_vertical = SIZE_SHRINK_CENTER
 		name_row.add_child(tl)
 	right.add_child(TdMenu.rich(description, "body", TdTheme.color("ink"), 22))
+	# the pill line sits at the row's bottom, on the baseline of the "1 turn CD" label under the icon
+	right.size_flags_vertical = SIZE_FILL
+	var push := Control.new()
+	push.size_flags_vertical = SIZE_EXPAND_FILL
+	push.mouse_filter = MOUSE_FILTER_IGNORE
+	right.add_child(push)
 	if not results.is_empty():
 		var chips := HFlowContainer.new()
 		chips.add_theme_constant_override("h_separation", 12)
@@ -827,6 +849,19 @@ func _ability_row(icon: Texture2D, name_text: String, tags: String, description:
 	sep.add_theme_stylebox_override("separator", ls)
 	box.add_child(sep)
 	return box
+
+## A cooldown pip on paper: a gold dot with a brown rim.
+func _pip() -> Control:
+	var p := Panel.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = TdTheme.color("gold")
+	sb.border_color = Color("#6B4E2E")
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(8)
+	p.add_theme_stylebox_override("panel", sb)
+	p.custom_minimum_size = Vector2(16, 16)
+	p.mouse_filter = MOUSE_FILTER_IGNORE
+	return p
 
 func _chip(value: String, label: String) -> Control:
 	var n := MenuLogic.result_name(label)

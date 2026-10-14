@@ -1,7 +1,7 @@
 extends SceneTree
 ## Dev script: screenshots the Workshop (Workshop — Design; mockups workshop-*.html) under Xvfb.
 ##   flock /home/ubuntu/godot/.td.lock ~/godot/run.sh projects/td -s tools/workshop_shot.gd [-- <out dir>]
-##   … --resolution 1280x720 -s tools/workshop_shot.gd -- user://workshop720
+##   … --resolution 1280x720 -s tools/workshop_shot.gd -- user://workshop720 workshop   (workshop: only the Workshop frames)
 ## Uses its own save (user://workshop_shot.json, deleted first): the mockup's collection (6 Archers, 5 Guardians, 4
 ## Mages…; "Archer #1 · tower 3" is the one modified) and its tokens (Fire Arrow 2, Poison Gland 0, Yew Bow 1, Ember
 ## Core 0, Steel Plate 1, Arcane Shard 3, seeded with SaveTools add_tokens).
@@ -38,6 +38,36 @@ func _run() -> void:
 	for pair in [["fire-arrow", 2], ["yew-bow", 1], ["steel-plate", 1], ["arcane-shard", 3]]:
 		print(SaveTools.run("add_tokens", save.data, app.catalog, pair))
 	save.save()
+	# the Camp: the Workshop station locked ("Opens after Chapter 2"), then open once Chapter 2 is won (results
+	# recorded without rewards, so the collection and tokens stay the mockup's)
+	if not OS.get_cmdline_user_args().has("workshop"):
+		save.profile.camp_seen = true
+		save.save()
+		var camp_scene: PackedScene = load("res://game/ui/screens/camp.tscn")
+		var camp = camp_scene.instantiate()
+		root.add_child(camp)
+		await _frames(40)
+		await _shot("camp_locked")
+		camp.queue_free()
+		await _frames(4)
+		for n in [1, 2]:
+			var k := 0
+			for ch in app.catalog.chapters:
+				if ch == null or ch.kind != ChapterKind.Main: continue
+				k += 1
+				if k != n: continue
+				for e in ch.levels:
+					var r := LevelResult.new()
+					r.level_id = e.level.get_id()
+					r.won = true
+					save.progress.record(r)
+		save.save()
+		camp = camp_scene.instantiate()
+		root.add_child(camp)
+		await _frames(40)
+		await _shot("camp_unlocked")
+		camp.queue_free()
+		await _frames(4)
 	var archer: OwnedTower = by_type["archer"][2]
 	var guardian: OwnedTower = by_type["guardian"][1]
 	var mage: OwnedTower = by_type["mage"][1]
@@ -59,7 +89,7 @@ func _run() -> void:
 	await _frames(20)
 	await _shot("confirm")
 	ws.confirm_unlock()
-	await _frames(12)
+	await _frames(4)
 	await _shot("unlocked")
 	print("after unlock: fire-arrow ", save.tokens.count("fire-arrow"), " forms ", archer.forms, " form '", archer.form, "'")
 	ws.card_action() # Use this form
@@ -119,6 +149,10 @@ func _run() -> void:
 	ws.open()
 	await _frames(40)
 	await _shot("picker")
+	if OS.get_cmdline_user_args().has("workshop"):
+		print("WORKSHOP SHOT DONE")
+		quit()
+		return
 	ws.close()
 	await _frames(20)
 	# the hand editor shows the badges and form names
