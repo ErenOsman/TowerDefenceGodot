@@ -36,6 +36,9 @@ See `docs/Decisions.md` (2026-10-13 rows) — they are logged in the Unity repo 
 - Camera turn (2026-10-14): Q / E keep the zoom distance and the pan; only the limits follow the new angle (zoom-out
   limit = the fit for it, a zoom beyond it is pulled in; the focus clamped to the pan limits). The fit is measured
   with the board centred, whatever the pan (it was measured from the focus).
+- Camera zoom-out (QA 2026-10-14): zooming out with the wheel recentres the board, so a view dragged to the board's
+  edge cannot end half off screen at the zoom-out limit (Unity only clamps the focus; a Godot-only difference, the pan
+  rule of 2026-10-13 is unchanged).
 - Level select hides the enemy chips until the level has one attempt recorded; the heading stays over one muted line "You'll see them when you play it." (UI Design Rules "Level select", 2026-10-14). The enemies fact tile always shows the kit's `icon_enemy` (never the first enemy's portrait; UI review 2026-10-14). No extra save field: `MenuLogic.has_played` reads the LevelRecord's `attempts`, which every result (win, loss, quit through Pause) increments.
 
 ## Co-op rules (sim) — Godot-only for now
