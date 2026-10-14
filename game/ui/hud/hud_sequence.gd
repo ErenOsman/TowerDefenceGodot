@@ -160,7 +160,6 @@ func _process(delta: float) -> void:
 		var text := TooltipText.from_rich(line.text)
 		var guided := _guided()
 		if guided != null: text = _color_tower_names(text)
-		bubble.set_skip_key("Esc" if guided != null else "")
 		if _pointing:
 			dialogue.hide_line()
 			var same := guided != null and text == _shown_text and bubble.is_shown()
