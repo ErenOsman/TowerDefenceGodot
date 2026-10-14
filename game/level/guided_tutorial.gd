@@ -12,10 +12,11 @@ extends RefCounted
 ## "all". What a step needs first is allowed too: the piece while a placement line's tile waits and the tower is not
 ## being placed; the archer while an ability line's tower is not selected.
 ##
-## The HUD shows `run` (a SequenceRun whose index this class sets; it never ticks it) through controller.sequence and
-## asks display_line() where to point (one ring per line, on what the Princess's bubble points at); a refused action
-## calls host.refuse(text) with what was wrong ("Not now: click the slime first.") and bumps `refusals` (the HUD shakes
-## the ringed target and shows the text in the bubble). An optional per-line "hint" replaces that text.
+## The HUD shows `run` (a SequenceRun whose index this class sets; it never ticks it) through controller.sequence in
+## the dialogue box (HudSequence) and asks display_line() where to ring (one ring per line) and action_note() for the
+## box's note ("Click the Archer piece"); a refused action calls host.refuse(text) with what was wrong ("Not now: click
+## the slime first.") and bumps `refusals` (the HUD shakes the ringed target and shows the text in the note's place).
+## An optional per-line "hint" replaces that text.
 ## Never changes the game itself except clearing the selection when a line asks the player to select.
 
 const PATH := "res://data/tutorial.json"
@@ -282,25 +283,39 @@ func allows(kind: String, payload = null) -> bool:
 			return _end_turn_ok()
 	return false
 
-## What was wrong, in the Princess's words: "Not now: click the slime first." (what the line needs next), or
-## "Finish this step first." on a talk line.
-func refusal_text() -> String:
-	if finished or talking: return "Finish this step first."
-	var need := ""
+## What the step needs next, lower case ("click the Archer piece", "place the Archer on a lit tile", "click End
+## turn", "Shift-click Shoot", "click your Archer", "click the slime"); "" on a talk line or in free play.
+func need_text() -> String:
+	if finished or talking or _has("all"): return ""
 	var l := display_line()
 	match l.point_at:
 		SequencePointAt.UI:
-			if l.ui_element == "@piece": need = "click the %s piece" % _tower_name()
-			elif l.ui_element == "EndTurnButton": need = "click End turn"
-			elif l.ui_element.begins_with("@ability:"):
+			if l.ui_element == "@piece": return "click the %s piece" % _tower_name()
+			if l.ui_element == "EndTurnButton": return "click End turn"
+			if l.ui_element.begins_with("@ability:"):
 				var a := line_ability()
 				var verb := _quick_click if _has("quick_cast") else "click"
-				need = "%s %s" % [verb, a.display_name if a != null else "the ability"]
-		SequencePointAt.Tile: need = "click the lit tile"
-		SequencePointAt.FirstTower: need = "click your %s" % _tower_name()
+				return "%s %s" % [verb, a.display_name if a != null else "the ability"]
+		SequencePointAt.Tile:
+			if not place_tiles().is_empty(): return "place the %s on a lit tile" % _tower_name()
+			return "click the lit tile"
+		SequencePointAt.FirstTower: return "click your %s" % _tower_name()
 		SequencePointAt.FirstEnemy:
 			var e := first_enemy()
-			need = "click the %s" % (e.def.display_name.to_lower() if e != null else "enemy")
+			return "click the %s" % (e.def.display_name.to_lower() if e != null else "enemy")
+	return ""
+
+## The dialogue box's note on an action step: what the player may do now ("Place the Archer on a lit tile"),
+## "" on a talk line or in free play.
+func action_note() -> String:
+	var need := need_text()
+	return need.left(1).to_upper() + need.substr(1) if need != "" else ""
+
+## What was wrong, in the Princess's words: "Not now: click the slime first." (what the line needs next); on a talk
+## line "Finish this step first." (Guided Tutorial — Design; the HUD shows it in the box's note slot, in place of
+## "Click or press Space", never beside it).
+func refusal_text() -> String:
+	var need := need_text()
 	return "Finish this step first." if need == "" else "Not now: %s first." % need
 
 func _tower_name() -> String:

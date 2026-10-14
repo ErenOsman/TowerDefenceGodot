@@ -1,7 +1,7 @@
 extends "res://tools/hud_shot.gd"
 ## Headless-render proof of the guided tutorial (hud_shot.gd's tutorial mode on the tutorial level): saves
-## <prefix>_t2_piece … _t8c_refused PNGs (see hud_shot.gd `_tutorial`).
-##   ~/godot/run.sh projects/td -s tools/tutorial_shot.gd -- <out dir> [prefix] [short]   (short: stop after t6b)
+## <prefix>_t1_road … _t11r_refused PNGs in the dialogue box (see hud_shot.gd `_tutorial`).
+##   ~/godot/run.sh projects/td -s tools/tutorial_shot.gd -- <out dir> [prefix] [short]   (short: stop after t8)
 
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()

@@ -82,6 +82,7 @@ func test_the_whole_tutorial_step_by_step() -> void:
 	# road, then castle: talk only — every action is refused
 	assert_eq(g.display_line().point_at, SequencePointAt.Tile)
 	assert_eq(Vector2i(g.display_line().tile_x, g.display_line().tile_y), Vector2i(4, 2))
+	assert_eq(g.action_note(), "", "a talk line has no action note (the box says Click or press Space)")
 	var r := g.refusals
 	c.toggle_placing(_archer_id())
 	assert_null(c.placing, "no placing during a talk line")
@@ -99,6 +100,7 @@ func test_the_whole_tutorial_step_by_step() -> void:
 	assert_eq(g.index, 2)
 	assert_false(g.talking)
 	assert_eq(g.display_line().ui_element, "@piece")
+	assert_eq(g.action_note(), "Click the Archer piece", "the box's note names the allowed action")
 	r = g.refusals
 	c.end_round()
 	_refused(r, 2, "End turn while the piece is asked for", "Not now: click the Archer piece first.")
@@ -106,16 +108,17 @@ func test_the_whole_tutorial_step_by_step() -> void:
 	assert_eq(c.placing, _archer_id())
 	_idle()
 
-	# only the two lit tiles; the bubble (and the one ring) on the far one
+	# only the two lit tiles; the one ring on the far one
 	assert_eq(g.index, 3)
 	assert_eq(g.display_line().point_at, SequencePointAt.Tile)
 	assert_eq(Vector2i(g.display_line().tile_x, g.display_line().tile_y), Vector2i(10, 3))
 	assert_true(g.hides_card, "the card stays closed during the guided steps")
+	assert_eq(g.action_note(), "Place the Archer on a lit tile")
 	assert_true(c.input_allowed("tile", Vector2i(10, 1)) and c.input_allowed("tile", Vector2i(10, 3)))
 	assert_false(c.input_allowed("tile", Vector2i(9, 1)), "other build tiles do not light")
 	r = g.refusals
 	c.click_tile(Vector2i(9, 1))
-	_refused(r, 3, "another build tile", "Not now: click the lit tile first.")
+	_refused(r, 3, "another build tile", "Not now: place the Archer on a lit tile first.")
 	assert_eq(c.placing, _archer_id(), "still placing after a refused tile")
 	c.click_tile(Vector2i(10, 1))
 	_idle()

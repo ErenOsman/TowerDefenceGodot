@@ -58,48 +58,32 @@ See `docs/Decisions.md` (2026-10-13 rows) — they are logged in the Unity repo 
   every tower has Tower Walk, so there is no "Movement" role chip and no "Can move" toggle (UI Design Rules, cd1b6a5).
 
 ## Tutorial lines — Godot-only for now (guided tutorial)
-The tutorial level plays a guided ("babysitting") tutorial instead of `Sequences/Tutorial Steps` when
-`data/tutorial.json` exists (`game/level/guided_tutorial.gd`, owned by the LevelController; other levels' intros and
-entrances still use SequenceRun). At every step only one action is possible: it is ringed and the Princess's bubble
-points at it (one ring per line, the tail ends on its edge); anything else is refused (the bubble says what was wrong; the ringed target and the bubble shake).
-Space / a click goes on on talk lines; Skip ends the guidance (free play). **Move these texts into the Unity content**
-(`Data/Sequences/Tutorial Steps`) once Unity gets the same gating; then `data/tutorial.json` keeps only `allow`/`advance`.
+**Source of truth: `docs/design/Guided Tutorial — Design.md`** (decisions, the step table, the refusals, the data
+grammar of `data/tutorial.json`). This section only says how the Godot build does it.
 
-| # | Princess says | Allowed (ringed) | Goes on when |
-| --- | --- | --- | --- |
-| 1 | Slimes come down this road… | nothing (points at road tile (4,2)) | click / Space |
-| 2 | …to your castle. Keep it safe. | nothing (points at the castle) | click / Space |
-| 3 | Click your Archer to place it. | the Archer's tray piece | placing starts |
-| 4 | Now click a lit tile. | build tiles (10,3) and (10,1) only (only they light; the ring is on (10,3)) | the tower is placed |
-| 5 | End the turn to let the slime come. | End turn | the round ended |
-| 6 | Towers can move. Click your Archer. | selecting the Archer | it is selected |
-| 7 | Click Tower Walk. | the Tower Walk button | aiming starts |
-| 8 | Now click the lit tile. | the tile 2 steps toward the slime on the archer's row | the walk is cast |
-| 9 | Click End turn until the slime is in range. | End turn | by itself: the first enemy is in Shoot range at a turn start |
-| 10 | Click Shoot. | the Shoot button | aiming starts |
-| 11 | Now click the slime. | the slime | the shot is cast |
-| 12 | Nice shot. | nothing | 1.5 s |
-| 13 | Shoot needs a turn to recover. Click End turn. | End turn | the round ended |
-| 14 | A Runner is fast. {click:QuickCast} Shoot to fire at the nearest target. | quick cast Shoot (or a normal Shoot at an enemy); End turn while nothing is in range | a cast |
-| 15 | That's it: place, move, shoot, end turn. Finish the wave. | everything | the level is won (end screen) |
-
-Refusals (with the shake, in the bubble's note; the hint line under the bar is hidden while the tutorial speaks):
-"Not now: click the slime first." (what the line needs next: the Archer piece / the lit tile / your Archer / Tower Walk /
-Shoot / End turn / the slime, "Shift-click Shoot" on line 14) and "Finish this step first." on talk lines.
-End turn shows at 60 % on lines that do not allow it.
-
-`data/tutorial.json` = the Sequences.json line fields (`speaker`, `text`, `pointAt`, `tileX/Y`, `uiElement`,
-`continueOn`, `seconds`, `waitFor`, `pausesPlay`) plus:
-- `advance`: `click` | `seconds:<s>` | `event:<placing|placed|selected|aiming|cast|round_ended|in_range|won>` (it decides
-  `continueOn`; talk lines pause play).
-- `allow` tokens: `piece:<tower type id>`, `tile:x,y`, `select:archer` (the player's first tower), `ability:<ability id>`,
-  `aim_tile:x,y`, `aim_tile:toward_enemy:<n>` (n tiles along the archer's row toward the first enemy; the nearest valid
-  walk aim if that one is not), `aim_unit:first_enemy`, `aim_unit:enemy`, `end_turn`, `end_turn:until_castable` (End
-  turn only while the line's ability can hit no enemy or is not ready), `quick_cast`, `all`. `[]` = talk only.
-  What a step needs first is implied: the piece again while a tile line is not placing; the archer while an ability
-  line's tower is not selected. Right-click / Esc cancelling always works. Selling is refused until `all`.
-- `hint` (optional): replaces the generated refusal text.
-- A line that goes on at `event:aiming` refuses aim clicks (one step = one action: the button, then the target).
+- The tutorial level plays the guided tutorial instead of `Sequences/Tutorial Steps` when `data/tutorial.json` exists
+  (`game/level/guided_tutorial.gd`, owned by the LevelController; other levels' intros and entrances still use
+  SequenceRun). **Move these texts into the Unity content** once Unity gets the same gating.
+- Presentation (2026-10-14, rebuilt from the bubble version): every step speaks through the **dialogue box**
+  (`TdDialogueBox` in `HudSequence`, 1100×220, centred, bottom edge 212 px over the screen's, like the Unity build's
+  `UI_DialogueBox`): name plate, letter-by-letter text, Skip (skip glyph, click only — Esc keeps pause) top-right.
+  Notes: bottom-left "Click or press Space" on talk steps, the allowed action on action steps
+  (`GuidedTutorial.action_note()`: "Click the Archer piece", "Place the Archer on a lit tile", "Click Tower Walk",
+  "Shift-click Shoot"…), "Click to hide" on the free-play line; bottom-right "Tutorial · n/N" (+ the bobbing next
+  mark when it waits for a click). The Princess stands on the board as the 3D prop (no bust), a medallion on the plate.
+- A refusal (`GuidedTutorial.refusal_text()`: "Not now: click the slime first.", "Finish this step first." on talk
+  lines) replaces the bottom-left note for 2 s in the warning colour (`warn`); the box and the ringed target shake.
+  The hint line under the bar stays hidden while the tutorial speaks.
+- The ring stays on what the step needs next (board ring round a tile / unit, gold ring round a HUD button, the
+  piece's own ring in the tray); talk steps that show something dim the rest 30 % with a lit hole, action steps don't.
+- Docking: `HudSequence.dialogue_rect(screen, box, target, was_top)` (pure, `tests/test_dialogue_dock.gd`): bottom by
+  default; when the target's screen rect (ring; a unit up to its plate; on a placement step every lit tile) meets the
+  bottom box + its plate/Skip overhang + 8 px, the box docks at the top (top edge 136) for that step; back down only
+  once the target clears by 24 px more; if both cover it, the lesser cover. Today steps 4, 6 and 8 dock at the top.
+- One owner: `controller.sequence` is the guided run while it runs, else the level's own SequenceRun; both go through
+  the same box (the guided branch places it, the other path re-centres it). The bubble (`TdTextBubble`) is only used
+  by non-guided sequence lines that point at something.
+- Render proof: `tools/tutorial_shot.gd` (steps 1–11 with refusals; prints where the box is docked).
 
 ## Workshop & Missions content — Godot-only overlay
 `data/content/*.json` is synced from the Unity repo and never edited here, so the Workshop's starter content
@@ -163,6 +147,35 @@ Unity ids match the ones above or old Godot saves lose their forms/tokens/missio
 - Dev: SaveTools actions `chapter2` (Clear Chapter 2: opens the Guild) and `rest_missions` (Reset today's plays / rest
   all towers), shown in the F1 panel and the TD Tools Save tab.
 
+## Missions & Guild screens
+- `SceneFlow.Guild` → `game/ui/screens/guild.tscn`: a warm-tinted blurred board (`TdGuildBackdrop`: Rock Garden's
+  CoopBoardPic render, blurred by a mip shader; placeholder until there is Guild art) and a ring of 4 drawn round
+  stations (Missions primary, Multiplayer, Towers, Camp) round a "Notice board" emblem (the Arcane Shard token
+  sprite). First visit: the welcome card (`profile.guildSeen`). A co-op match goes back to `GameApp.lobby_scene()`
+  (the Guild once open, else the Camp) and reopens the lobby there.
+- Camp: the Signpost station "Missions" in layout slot 4 (prop `Signpost`, the map-kit piece: `GameApp.camp_scene`
+  falls back to `res://art/tiles/<name>.fbx`); locked "Missions open after Chapter 2" until `GameApp.guild_unlocked()`,
+  then opens the Guild with a gold "New" until the first visit. The Camp's Multiplayer station stays usable until the
+  Guild opens, then shows "Moved to the Guild" (disabled).
+- Mission board = `MissionBoardScreen` (`mission_board.gd`, a TdPopup over the Guild; `MissionBoard` is the rules
+  class). Detail = `MissionDetail` (`mission_detail.gd`) **extends level_select.gd** (facts, enemies rule, preview,
+  hand strip reused; the reward card becomes "Drops"; HandSlot gained `mark(tired_text, goes)`). Find a room → the
+  Guild opens `CoopLobby` with `preselect_mission` → Create room with that mission picked.
+- Texts and states: `MissionUiLogic` (tested in `tests/test_mission_ui.gd`); coins / drop rows / mode chip / extra
+  icons: `TdDrops` (icons flag, hourglass, users rasterised from the UI/UX mockup SVGs into `art/ui/icons-extra/`).
+  The moon "z" badge is drawn (`TdTiredBadge`): the kit has no moon sprite.
+- "▲ goes" shows in the mission detail only while a tower of the hand is tired (as the mockups: the normal detail has
+  no marks); the hand editor opened for a mission (`mission` set) always marks the towers that go. Tired towers are
+  dimmed in the hand editor wherever it opens (strip and collection).
+- Lobby: room rows say the mission's name ("Night Watch · done today"), state "Done today", Join refused with "Done
+  today: you played … Resets in 5 h."; the auto-leave runs in the lobby (deferred `leave_room` + "Done today" popup);
+  the room shows your saved hand's first cap towers with the tired ones badged and `CoopLevels.tired_note`; Ready is
+  refused by `CoopLevels.can_ready` (also with an empty saved hand).
+- Workshop "Found in" names missions (`WorkshopLogic.found_in_text(token, GameApp.missions())` →
+  `MissionBoard.found_in_text`); the old "Chapter 2 levels" / "(boss)" grouping is gone.
+- Renders: `tools/guild_shot.gd` (gives The Glutton Returns a "Win Hold the Gate first" requirement in memory only,
+  to show a locked card).
+
 ## Workshop screens (game/ui/screens/workshop.gd)
 - Opened from the Camp's Workshop station (`camp.gd` STATIONS: `open_workshop`, a TdPopup like Codex / Towers; the tour
   line is unchanged). Picker = `TdCollection` (the hand editor's filters + grid, shared; no hand row, no quick cost chips
@@ -173,7 +186,7 @@ Unity ids match the ones above or old Godot saves lose their forms/tokens/missio
 - Tree: root children by `FormDef.order` on the mockup's slots (left, right, below; more than 3 evenly round the root),
   grandchildren 200 px beyond their parent (up from a side node). The right card shows the selected form as it is
   (stat tiles, abilities, passives): no comparison with the current form (user decision 2026-10-14).
-- "Found in" groups a whole chapter as "Chapter 2 levels" and marks boss levels "(boss)".
+- "Found in" names the missions that drop the token (see Missions & Guild screens).
 - Elsewhere: `MenuLogic.tower_name` returns the form's name for a formed tower without a custom name (hand cards,
   slots, level-select strip, the picker); `HandLogic.entries` builds a formed tower from its form (entity, cost,
   traits, description, badge); Default sort keeps the collection order within a type. HUD tray pieces, the placed

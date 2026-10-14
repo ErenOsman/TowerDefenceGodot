@@ -70,11 +70,6 @@ func _build() -> void:
 	sequence.find_ui = find_ui
 	sequence.find_piece = func(): return tray.first_in_hand()
 	sequence.find_ability = func(kind): return action_bar.button_for(kind) if action_bar.visible else null
-	sequence.find_hud_rects = func():
-		var rects := []
-		for part in [tray, action_bar, top_bar.end_turn if top_bar != null else null, inspector]:
-			if part != null and part.is_visible_in_tree(): rects.append(part.get_global_rect())
-		return rects
 	root.add_child(sequence)
 	pause = HudPause.new()
 	pause.name = "Pause"
@@ -234,7 +229,7 @@ func _hint() -> void:
 	var text := hint_text(controller.hint, aim != null and not aim.targeting.is_movement, threat)
 	var refusal: bool = controller.hint_is_refusal
 	if controller.ui_panel_open: text = ""
-	# one voice: while the guided tutorial speaks, its bubble says what to do and what was wrong
+	# one voice: while the guided tutorial speaks, its dialogue box says what to do and what was wrong
 	if controller.guided != null and not controller.guided.finished: text = ""
 	hint_pill.visible = text != ""
 	if text == "": return

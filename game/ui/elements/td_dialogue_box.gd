@@ -8,7 +8,9 @@ extends Control
 ## that slides in (60 px, motion.normal, ease out) when a new speaker first talks. A click on the box shows the whole
 ## line, a second one continues (clicked); Skip raises skip_clicked. Unscaled time. No game references.
 ##   show_line(speaker, text, wait_for_click, portrait := null), reveal_all(), hide_line(), set_notes(step, hint),
-##   set_skip_key(text), is_shown(), is_fully_shown(); signals clicked, skip_clicked
+##   set_skip_key(text), set_step_warning(on), covered_rect(), is_shown(), is_fully_shown(); signals clicked, skip_clicked
+## (The notes are two slots: bottom-left `step`, bottom-right `hint`; a caller may put any short text in either —
+## the guided tutorial puts "Click or press Space" / the allowed action left and "Tutorial · 3/15" right.)
 ## (hide_line, not hide: Control.hide() cannot be overridden.)
 
 signal clicked
@@ -92,6 +94,7 @@ func _build() -> void:
 	_skip.size = Vector2(150, 44)
 	_skip.font_size = 22
 	_skip.text = "Skip"
+	_skip.icon = TdTheme.texture("icon_skip") # the Unity box's Skip: the skip glyph before the word
 	_content.add_child(_skip)
 	_skip.set_key_hint("Esc")
 	_skip.fit_to_content(120)
@@ -140,7 +143,7 @@ func _layout() -> void:
 	_name.size = _plate.size - Vector2(0, 2)
 	_skip.position = Vector2(s.x - _skip.size.x - 28, -24)
 	_step.position = Vector2(56, s.y - 24 - 28)
-	_step.size = Vector2(400, 28)
+	_step.size = Vector2(maxf(120.0, s.x - 56 - 40 - 300), 28)
 	_hint.size = Vector2(0, 0)
 	var hw := _hint.get_content_width()
 	_hint.position = Vector2(s.x - 40 - hw - (40.0 if _next.visible else 0.0), s.y - 24 - 28)
@@ -192,6 +195,18 @@ func set_notes(step: String, hint: String) -> void:
 	_hint.text = hint
 	_hint.visible = hint != ""
 	_layout()
+
+## The bottom-left note in the warning colour (a refusal shown in its place) or back in cream.300.
+func set_step_warning(on: bool) -> void:
+	_build()
+	_step.add_theme_color_override("font_color", TdTheme.color("warn") if on else TdTheme.color("cream.300"))
+
+## The rect the box covers on screen with what stands over its top edge (name plate, Skip), in its parent's space.
+func covered_rect() -> Rect2:
+	return Rect2(position + Vector2(0, -OVERHANG), size + Vector2(0, OVERHANG))
+
+## How far the name plate and Skip reach above the box's top edge.
+const OVERHANG := 30.0
 
 ## The key shown on Skip ("Esc"; "" hides the badge). Read it from KeyBinds.
 func set_skip_key(t: String) -> void:

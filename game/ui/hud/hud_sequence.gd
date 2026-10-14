@@ -6,14 +6,18 @@ extends Control
 ## found by node name, e.g. "EndTurnButton", and gets a soft pulsing ring; the board draws its own ring for world
 ## targets). Click → continue_sequence (a box line that waits for the game hides until the next line), Skip →
 ## skip_sequence. Full-rect and pointer-transparent; only the box / bubble take clicks.
+## The guided tutorial (controller.guided) speaks ONLY through the dialogue box, every step (Guided Tutorial — Design):
+## talk steps wait for a click / Space ("Click or press Space" bottom-left), action steps keep the instruction up while
+## the ring marks the target and the bottom-left note names the allowed action; a refusal replaces that note for 2 s in
+## the warning colour; "Tutorial · n/N" bottom-right. The box docks at the top for a step whose ringed target would lie
+## under it (dialogue_rect). One owner: controller.sequence is either the guided run or the level's own sequence, never
+## both, and both go through this one box.
 
 ## Finds a HUD element by name (set by the HUD): name -> Control or null.
 var find_ui: Callable
 ## The first hand piece still in the hand (Control) or null; the action bar's button for "move" / "attack" or null.
 var find_piece: Callable
 var find_ability: Callable
-## The HUD's own parts the bubble keeps clear of (hand tray, action bar, End turn): -> Array of canvas rects.
-var find_hud_rects: Callable
 var controller: LevelController
 
 var dialogue: TdDialogueBox
@@ -26,7 +30,7 @@ var _pointing := false
 var _mode_t := 1.0
 var _clock := 0.0
 ## The guided tutorial: the piece's own ring (under its badges), the shake and the "Not now" note on a refused action,
-## the text kept when only the target changes.
+## the text kept when only the target changes, the box docked at the top.
 var _piece_ring: Control
 var _refusals := 0
 var _shake_t := 1.0
@@ -34,12 +38,24 @@ var _shown_text := ""
 var _note := ""
 var _note_right := ""
 var _refusal_until := -1.0
+var _dock_top := false
+var _guided_index := -1
+## The guided step whose box the player clicked away (the free-play line), -1 = none.
+var _hidden_step := -1
 ## The board ring's size (canvas px at zoom 1); the bubble's tail ends on its edge.
 const BOARD_RING := Vector2(120, 64)
 ## The piece ring stands this far outside the hand piece.
 const PIECE_RING_OUT := 8.0
-## The guided tutorial's bubble width (UI/UX: max ~360, text wraps).
-const GUIDED_BUBBLE_WIDTH := 360.0
+## The dialogue box's bottom edge stands this far above the screen's (the hand tray and the bar stay clear under it).
+const BOX_BOTTOM := 212.0
+## Docked at the top: the box's top edge (its name plate and Skip reach 30 px higher, still under the top bar).
+const BOX_TOP := HudLayout.TOP_BAR + 40.0
+## The air kept between the box (with its plate and Skip) and a ringed target.
+const DOCK_MARGIN := 8.0
+## Once docked at the top, the target must clear the bottom area by this much more before the box goes back down.
+const DOCK_HYSTERESIS := 24.0
+## How long a refusal stays in the note's place (seconds, unscaled).
+const REFUSAL_SECONDS := 2.0
 
 func _init() -> void:
 	name = "Sequence"
@@ -121,12 +137,39 @@ static func _wood_plate(box: Control) -> void:
 	if n != null: n.add_theme_color_override("font_color", TdTheme.color("teal"))
 
 func _layout() -> void:
-	if dialogue == null: return
-	dialogue.position = Vector2((size.x - dialogue.size.x) / 2.0, size.y - 212.0 - dialogue.size.y)
+	if dialogue == null or _guided() != null: return # the guided tutorial places the box itself (dialogue_rect)
+	dialogue.position = HudSequence.dialogue_rect(size, dialogue.size, null).position
 
-## The story box is up (the hand and bar step back).
+## Where the dialogue box goes (canvas px): centred, its bottom edge BOX_BOTTOM above the screen's; docked at the top
+## (top edge BOX_TOP) when `target` (the ringed target's screen rect, or null) would lie under the bottom box, its
+## name plate / Skip or DOCK_MARGIN round them. `was_top`: it is docked at the top now — it stays there until the
+## target clears the bottom area by DOCK_HYSTERESIS more (no flicker while the camera glides). When both places
+## would cover the target, the one covering less of it.
+static func dialogue_rect(screen: Vector2, box: Vector2, target, was_top := false) -> Rect2:
+	var x := (screen.x - box.x) / 2.0
+	var bottom := Rect2(x, screen.y - BOX_BOTTOM - box.y, box.x, box.y)
+	var top := Rect2(x, BOX_TOP, box.x, box.y)
+	if not (target is Rect2): return bottom
+	var t: Rect2 = target
+	var keep := DOCK_MARGIN + (DOCK_HYSTERESIS if was_top else 0.0)
+	var bottom_hit := HudSequence.box_area(bottom, keep).intersection(t).get_area() if HudSequence.box_area(bottom, keep).intersects(t) else 0.0
+	if bottom_hit <= 0.0: return bottom
+	var top_hit := HudSequence.box_area(top, DOCK_MARGIN).intersection(t).get_area() if HudSequence.box_area(top, DOCK_MARGIN).intersects(t) else 0.0
+	if top_hit <= 0.0: return top
+	var bottom_plain := HudSequence.box_area(bottom, DOCK_MARGIN)
+	var bottom_cover := bottom_plain.intersection(t).get_area() if bottom_plain.intersects(t) else 0.0
+	return top if top_hit < bottom_cover else bottom
+
+## What a box at `r` covers: the box, its name plate and Skip over the top edge, and `margin` all round.
+static func box_area(r: Rect2, margin: float) -> Rect2:
+	return Rect2(r.position - Vector2(margin, TdDialogueBox.OVERHANG + margin), r.size + Vector2(margin * 2.0, TdDialogueBox.OVERHANG + margin * 2.0))
+
+## The story box is up (the hand and bar step back; not on a guided action step: the target may be in the tray).
 func box_shown() -> bool:
-	return dialogue != null and dialogue.is_shown() and not _pointing
+	if dialogue == null or not dialogue.is_shown(): return false
+	var guided := _guided()
+	if guided != null: return guided.talking
+	return not _pointing
 
 func _process(delta: float) -> void:
 	if controller == null: return
@@ -145,43 +188,37 @@ func _process(delta: float) -> void:
 		_place_piece_ring(null)
 		return
 	line = effective_line(line)
-	_guided_marks(line, dt)
+	var guided := _guided()
+	if guided != null:
+		_process_guided(guided, run, line, dt)
+		return
 	if run == _run and run.version == _hidden_version: return
 	if run != _run or run.version != _version:
 		_run = run
 		_version = run.version
 		_hidden_version = -1
+		_hidden_step = -1
 		var point := line.point_at != SequencePointAt.Center and line.point_at != SequencePointAt.Nothing
 		if point != _pointing: _mode_t = 0.0
 		_pointing = point
 		var portrait: Texture2D = HudArt.portrait_named("Princess") if line.speaker == SequenceSpeaker.Princess else null
 		var waits := line.continue_on == SequenceContinue.Click
-		var keys = get_tree().root.get_node_or_null("KeyBinds")
-		var skip_key: String = keys.first("Skip") if keys != null else "Space"
+		var skip_key := _skip_key()
 		var how := HudText.how_it_goes_on(line.continue_on, line.wait_for, skip_key)
 		var text := TooltipText.from_rich(line.text)
-		var guided := _guided()
-		if guided != null: text = _color_tower_names(text)
-		# the guided tutorial's bubble is narrow (its lines wrap) so it fits between the board's previews
-		bubble.box_width = GUIDED_BUBBLE_WIDTH if guided != null else 540.0
+		bubble.box_width = 540.0
 		if _pointing:
 			dialogue.hide_line()
-			var same := guided != null and text == _shown_text and bubble.is_shown()
 			bubble.show_line(_speaker(line), text, waits, portrait)
-			if same: bubble.reveal_all() # only the target moved (the guided tutorial's next click): no retyping
-			if guided != null:
-				_note = "Tutorial · %d/%d" % [run.index + 1, run.count] if line.continue_on != SequenceContinue.Seconds else ""
-				_note_right = "Click or " + HudSequence.key_chip(skip_key) if waits else ""
-				_refusal_until = -1.0
-				_set_note(_note, false)
-			else:
-				bubble.set_hint("" if waits else how.trim_prefix("Click to hide. "), "Click or " + HudSequence.key_chip(skip_key) if waits else "")
+			bubble.set_hint("" if waits else how.trim_prefix("Click to hide. "), "Click or " + HudSequence.key_chip(skip_key) if waits else "")
 			_shown_text = text
 			var world = controller.sequence_target_world(line)
 			if world != null and controller.camera != null and not controller.camera.in_view(world, 0.02): controller.camera.glide(world)
 		else:
 			bubble.hide_bubble()
 			_shown_text = ""
+			_layout()
+			dialogue.set_step_warning(false)
 			dialogue.show_line(_speaker(line), text, waits, null)
 			_medal.visible = portrait != null
 			HudArt.set_medallion(_medal, portrait)
@@ -192,21 +229,9 @@ func _process(delta: float) -> void:
 	var fade := clampf(_mode_t / 0.25, 0.0, 1.0)
 	if _pointing:
 		var spot = _target(line, false)
-		var guided_now := _guided() != null
-		bubble.tail_to_target = guided_now
-		if not guided_now: bubble.target_below = null
-		if guided_now:
-			# the tail ends ON the one ring (its top edge) and the box keeps clear of the ring, the units' heads and
-			# plates, the previews and the Kills / damage chips
-			var ring = _guided_ring_rect(line)
-			spot = Vector2(ring.get_center().x, ring.position.y) if ring != null else null
-			bubble.target_below = Vector2(ring.get_center().x, ring.end.y) if ring != null else null
-			var strong := _guided_strong()
-			if find_hud_rects.is_valid(): strong.append_array(find_hud_rects.call()) # never on the tray, bar or End turn
-			bubble.avoid = _guided_avoid(ring) + strong
-			bubble.tail_avoid = strong
-			bubble.preview_avoid = controller.preview_rects
-		elif spot != null and line.point_at != SequencePointAt.UI:
+		bubble.tail_to_target = false
+		bubble.target_below = null
+		if spot != null and line.point_at != SequencePointAt.UI:
 			var box_h: float = bubble.box_rect().size.y
 			var top: float = bubble.global_position.y + bubble.margin
 			if spot.y - bubble.gap - box_h < top:
@@ -216,7 +241,7 @@ func _process(delta: float) -> void:
 		var on_screen: bool = spot != null and Rect2(Vector2.ZERO, size).has_point(spot)
 		bubble.keep_inside = line.point_at == SequencePointAt.UI or on_screen
 		bubble.point_at(spot)
-		bubble.position.x = _shake_offset()
+		bubble.position.x = 0.0
 		bubble.modulate.a = fade
 		var ui_rect = _ui_rect(line)
 		var hole = ui_rect.get_center() if ui_rect != null else _target(line, true)
@@ -224,20 +249,67 @@ func _process(delta: float) -> void:
 		# a line that waits for the player to act leaves the board lit (user, 2026-10-10): only the ring marks the target
 		_set_dim(hole, hole_r, 0.0 if line.continue_on == SequenceContinue.Event else 0.3 * fade)
 		_board_ring(line, ui_rect == null)
-		var piece := _ui_control(line) as HudHandPiece if _guided() != null else null
-		_place_piece_ring(piece)
-		_ring.visible = ui_rect != null and piece == null
-		if ui_rect != null and piece == null:
-			var r := HudSequence.ring_rect(ui_rect, size)
-			_ring.position = r.position + Vector2(_shake_offset(), 0)
-			_ring.size = r.size
-			_ring.queue_redraw()
+		_place_piece_ring(null)
+		_place_hud_ring(ui_rect)
 	else:
 		_ring.visible = false
 		_dim.visible = false
 		_board_ring(null, false)
 		_place_piece_ring(null)
 		dialogue.modulate.a = fade
+
+## The guided tutorial's step in the dialogue box (never the bubble): the line (retyped only when its words change),
+## the notes ("Click or press Space" / the allowed action left, "Tutorial · n/N" right), the one ring on what the step
+## needs next, the dim on a talk step that points at something, and the box docked away from the ringed target.
+func _process_guided(guided: GuidedTutorial, run: SequenceRun, line: SequenceLine, dt: float) -> void:
+	if run != _run or run.version != _version:
+		var new_step := run != _run or run.index != _guided_index
+		_run = run
+		_version = run.version
+		_hidden_version = -1
+		_guided_index = run.index
+		if new_step:
+			_hidden_step = -1
+			_dock_top = false
+		bubble.hide_bubble()
+		_pointing = line.point_at != SequencePointAt.Center and line.point_at != SequencePointAt.Nothing
+		var waits := line.continue_on == SequenceContinue.Click
+		var text := _color_tower_names(TooltipText.from_rich(line.text))
+		if text != _shown_text or not dialogue.is_shown():
+			if not dialogue.is_shown(): _mode_t = 0.0
+			dialogue.show_line(_speaker(line), text, waits, null)
+			var portrait: Texture2D = HudArt.portrait_named("Princess") if line.speaker == SequenceSpeaker.Princess else null
+			_medal.visible = portrait != null
+			HudArt.set_medallion(_medal, portrait)
+		_shown_text = text
+		if waits: _note = HudText.how_it_goes_on(SequenceContinue.Click, line.wait_for, _skip_key())
+		elif not guided.hides_card: _note = "Click to hide" # the free-play line: the player may put it away
+		else: _note = guided.action_note()
+		_note_right = "Tutorial · %d/%d" % [run.index + 1, run.count]
+		_refusal_until = -1.0
+		_set_note(_note, false)
+		var world = controller.sequence_target_world(line)
+		if world != null and controller.camera != null and not controller.camera.in_view(world, 0.02): controller.camera.glide(world)
+	_guided_marks(guided, line, dt)
+	if _hidden_step == run.index:
+		if dialogue.is_shown(): dialogue.hide_line()
+		_shown_text = ""
+	_mode_t += dt
+	var fade := clampf(_mode_t / 0.25, 0.0, 1.0)
+	var ui_rect = _ui_rect(line)
+	var piece := _ui_control(line) as HudHandPiece
+	_place_piece_ring(piece)
+	_place_hud_ring(ui_rect if piece == null else null)
+	_board_ring(line, ui_rect == null and line.point_at != SequencePointAt.UI)
+	# a talk step that shows something dims the rest a little (a soft lit hole round it); an action step leaves the
+	# board lit (user, 2026-10-10): only the ring marks the target
+	var hole = ui_rect.get_center() if ui_rect != null else (_target(line, true) if _pointing else null)
+	var hole_r: float = (maxf(ui_rect.size.x, ui_rect.size.y) / 2.0 + 24.0) if ui_rect != null else 70.0
+	_set_dim(hole, hole_r, 0.3 * fade if guided.talking and hole != null and dialogue.is_shown() else 0.0)
+	var r := HudSequence.dialogue_rect(size, dialogue.size, _guided_target_rect(line), _dock_top)
+	_dock_top = r.position.y < size.y * 0.5
+	dialogue.position = r.position + Vector2(_shake_offset(), 0)
+	dialogue.modulate.a = fade
 
 ## Exactly one light ring per line: the board's ring (sequence marks) goes round the world target the bubble
 ## points at, and is off while the bubble points at a HUD element (that ring is the HUD's). The HUD processes after
@@ -315,27 +387,60 @@ func _guided() -> GuidedTutorial:
 	if controller == null or controller.guided == null or controller.guided.finished: return null
 	return controller.guided
 
-## The guided tutorial's refusal: the ringed target and the bubble shake, and the bubble's note says what was wrong
-## (red, a few seconds) — the hint line under the bar is hidden while the tutorial speaks (one voice).
-func _guided_marks(line: SequenceLine, dt: float) -> void:
-	var guided := _guided()
-	if guided != null and guided.refusals != _refusals:
+## The guided tutorial's refusal: the ringed target and the box shake, and the refusal takes the bottom-left note's
+## place (warning colour, REFUSAL_SECONDS) — the hint line under the bar is hidden while the tutorial speaks (one voice).
+func _guided_marks(guided: GuidedTutorial, line: SequenceLine, dt: float) -> void:
+	if guided.refusals != _refusals:
 		_refusals = guided.refusals
 		_shake_t = 0.0
 		var target := _ui_control(line)
 		if target is HudHandPiece: (target as HudHandPiece).deny("")
 		elif target is TdButton: (target as TdButton).shake()
-		_refusal_until = _clock + 2.5
+		_refusal_until = _clock + REFUSAL_SECONDS
 		_set_note(guided.last_hint, true)
 	elif _refusal_until >= 0.0 and _clock >= _refusal_until:
 		_refusal_until = -1.0
 		_set_note(_note, false)
 	_shake_t = minf(1.0, _shake_t + dt / 0.32)
 
+## The box's notes: `text` bottom-left (a refusal in the warning colour), the step counter bottom-right.
 func _set_note(text: String, refusal: bool) -> void:
-	var left = bubble.get("_hint_left")
-	if left is Label: left.add_theme_color_override("font_color", TdTheme.color("bad.ink") if refusal else TdTheme.color("ink.2"))
-	bubble.set_hint(text, _note_right)
+	dialogue.set_step_warning(refusal)
+	dialogue.set_notes(text, _note_right)
+
+## The Skip action's key (the continue key: Space by default).
+func _skip_key() -> String:
+	var keys = get_tree().root.get_node_or_null("KeyBinds") if is_inside_tree() else null
+	return keys.first("Skip") if keys != null else "Space"
+
+## The pulsing ring round a HUD element (null hides it), kept on screen, shaking with a refusal.
+func _place_hud_ring(ui_rect) -> void:
+	_ring.visible = ui_rect != null
+	if ui_rect == null: return
+	var r := HudSequence.ring_rect(ui_rect, size)
+	_ring.position = r.position + Vector2(_shake_offset(), 0)
+	_ring.size = r.size
+	_ring.queue_redraw()
+
+## What the guided box must keep clear of (canvas px), or null: the ring round the step's target, and for a unit the
+## unit itself up to its plate over the head.
+func _guided_target_rect(line: SequenceLine):
+	var r = _guided_ring_rect(line)
+	if r == null: return null
+	var guided := _guided()
+	if guided != null and line.point_at == SequencePointAt.Tile and controller.placing != null:
+		# a placement step lights more than the ringed tile: the box keeps clear of every lit one
+		for t in guided.place_tiles():
+			var other := line.with_text(line.text)
+			other.point_at = SequencePointAt.Tile
+			other.tile_x = t.x
+			other.tile_y = t.y
+			var o = _guided_ring_rect(other)
+			if o != null: r = (r as Rect2).merge(o)
+	if line.point_at in [SequencePointAt.FirstTower, SequencePointAt.FirstEnemy, SequencePointAt.Speaker, SequencePointAt.Subject]:
+		var head = controller.sequence_target_screen(line, false)
+		if head != null: r = (r as Rect2).expand(head - Vector2(0, 48.0 * _ring_zoom()))
+	return r
 
 ## The refusal shake (±7 px, like a denied hand piece), 0 when still.
 func _shake_offset() -> float:
@@ -405,39 +510,6 @@ func _guided_ring_rect(line: SequenceLine):
 	var rs := BOARD_RING * _ring_zoom()
 	return Rect2(ground - rs * 0.5, rs)
 
-## What the bubble keeps clear of: its ring, every unit's head and plate (feet to a plate's height above the head),
-## the previewed tiles, the overlay's plates and markers (HP bars, Kills / damage chips).
-func _guided_avoid(ring) -> Array:
-	var out: Array = []
-	if ring != null: out.append(ring.grow(6))
-	if controller != null: out.append_array(controller.preview_rects)
-	return out
-
-## What neither the box nor its tail may cover: every unit's head and plate (a plate's height above the head down to
-## just above the ring round its feet, where a tail may end) and the overlay's plates and markers (HP bars, Kills /
-## damage chips).
-func _guided_strong() -> Array:
-	var out: Array = []
-	var c := controller
-	if c == null or c.camera == null: return out
-	var zoom := _ring_zoom()
-	if c.shown != null:
-		for f in c.shown.entities.values():
-			if f.life != LifeState.Alive or f.position == null: continue
-			var w := GridSpace.to_world(f.pos)
-			if c.camera.is_position_behind(w): continue
-			var feet := c.camera.unproject_position(w)
-			var head := c.camera.unproject_position(w + Vector3.UP * 1.4)
-			var half_w := 70.0 * zoom
-			var low := feet.y - BOARD_RING.y * 0.5 * zoom - 4.0
-			out.append(Rect2(Vector2(feet.x - half_w, head.y - 56.0 * zoom), Vector2(half_w * 2.0, maxf(8.0, low - head.y + 56.0 * zoom))))
-	if c.overlay != null:
-		for layer in [c.overlay.plates, c.overlay.markers]:
-			if layer == null: continue
-			for ch in layer.get_children():
-				if ch is Control and ch.is_visible_in_tree() and ch.size.x > 0.0 and ch.size.y > 0.0: out.append(ch.get_global_rect())
-	return out
-
 ## Tower names in a line in accent.light ("Click your [Archer] to place it.").
 func _color_tower_names(text: String) -> String:
 	if controller == null or controller.session == null: return text
@@ -465,6 +537,12 @@ func _on_dialogue_clicked() -> void:
 	if controller == null: return
 	var run: SequenceRun = controller.sequence
 	var line: SequenceLine = run.current if run != null else null
+	var guided := _guided()
+	if guided != null:
+		# a talk step goes on; the free-play line's box can be put away; an action step's box ignores the click
+		if guided.talking: controller.continue_sequence()
+		elif not guided.hides_card: _hidden_step = run.index
+		return
 	if line != null and not _pointing and line.continue_on == SequenceContinue.Event:
 		_hidden_version = run.version
 		dialogue.hide_line()

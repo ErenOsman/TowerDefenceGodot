@@ -223,10 +223,20 @@ func _run() -> void:
 	print("outcome ", level.session.outcome, " round ", level.session.round, " panel open ", level.ui_panel_open)
 	quit(0)
 
-## The guided tutorial (GuidedTutorial, data/tutorial.json): the piece (t2), the lit tiles (t3), the archer (t5),
-## Tower Walk (t6a) and its tile (t6b), Shoot (t8a), the slime (t8b) and a refused click (t8c).
-## tools/tutorial_shot.gd runs this with the tutorial level; `tutorial_short` stops after t6b.
+## The guided tutorial (GuidedTutorial, data/tutorial.json) in the dialogue box: step 1 (t1_road) and a refused click
+## on it (t1r_refused: the refusal in the note's place), the castle (t2_castle), the piece (t3_piece), the lit tiles
+## (t4_tiles) and a refused tile (t4r_refused), End turn (t5), the archer (t6_select), Tower Walk (t7) and its tile
+## (t8), Shoot (t10), the slime (t11) and a refused click (t11r_refused). Each shot prints where the box is docked.
+## tools/tutorial_shot.gd runs this with the tutorial level; `tutorial_short` stops after t8.
 var tutorial_short := false
+
+func _tut_shot(n: String) -> void:
+	await _shot(n)
+	var seq: HudSequence = hud.sequence
+	var g: GuidedTutorial = level.guided
+	print("  %s: step %d/%d box %s at y %.0f, notes '%s' | '%s'" % [n, g.index + 1, g.steps.size(),
+		"shown" if seq.dialogue.is_shown() else "hidden", seq.dialogue.position.y,
+		(seq.dialogue.get("_step") as Label).text, (seq.dialogue.get("_hint") as RichTextLabel).text])
 
 func _tutorial() -> void:
 	var g: GuidedTutorial = level.guided
@@ -234,38 +244,45 @@ func _tutorial() -> void:
 		print("NO GUIDED TUTORIAL")
 		quit(1)
 		return
+	await _wait(1.6) # the whole first line typed out
+	await _tut_shot("t1_road")
+	level.toggle_placing(level.session.hand[0].id) # a talk line: refused, the note says so
+	await _frames(4)
+	await _tut_shot("t1r_refused")
 	level.continue_sequence()
-	await _frames(20)
-	await _shot("t1b_castle")
+	await _wait(1.2)
+	await _tut_shot("t2_castle")
 	level.continue_sequence()
-	await _frames(40)
-	await _shot("t2_piece")
+	await _wait(1.2)
+	await _tut_shot("t3_piece")
 	level.toggle_placing(level.session.hand[0].id)
 	_hover_tile(Vector2i(10, 3))
-	await _frames(40)
-	await _shot("t3_tiles")
+	await _wait(1.2)
+	await _tut_shot("t4_tiles")
+	level.click_tile(Vector2i(9, 1)) # not lit: refused
+	await _frames(4)
+	await _tut_shot("t4r_refused")
 	level.click_tile(Vector2i(10, 1))
 	_hover_tile(Vector2i(-5, -5))
 	level.hover_override = null
 	_park_mouse()
 	await _settle()
-	await _frames(10)
+	await _wait(1.2)
+	await _tut_shot("t5_end_turn")
 	level.end_round()
 	await _settle()
-	await _frames(50)
-	print("step ", g.index, " selected ", level.selected)
-	await _shot("t5_select")
+	await _wait(1.2)
+	await _tut_shot("t6_select")
 	var archer := g.archer()
 	level.click_tile(archer.pos)
 	await _settle()
-	await _frames(40)
-	await _shot("t6a_walk_button")
+	await _wait(1.2)
+	await _tut_shot("t7_walk_button")
 	level.toggle_aim(g.ability("Tower Walk"))
 	var walk = g.walk_tile()
 	_hover_tile(walk)
-	await _frames(40)
-	print("step ", g.index, " (7 = the walk tile)")
-	await _shot("t6b_walk_tile")
+	await _wait(1.2)
+	await _tut_shot("t8_walk_tile")
 	if tutorial_short:
 		quit(0)
 		return
@@ -282,17 +299,16 @@ func _tutorial() -> void:
 		await _frames(3)
 	level.instant_override = false
 	level.select(archer.id)
-	await _frames(50)
-	print("step ", g.index, " (9 = Click Shoot)")
-	await _shot("t8a_shoot_button")
+	await _wait(1.2)
+	await _tut_shot("t10_shoot_button")
 	level.toggle_aim(g.ability("Shoot"))
 	var slime := g.first_enemy()
 	if slime != null: _hover_tile(slime.pos)
-	await _frames(40)
-	await _shot("t8b_shoot_target")
-	level.click_tile(Vector2i(8, 0)) # not the slime: refused, the bubble says what was wrong and shakes
+	await _wait(1.2)
+	await _tut_shot("t11_shoot_target")
+	level.click_tile(Vector2i(8, 0)) # not the slime: refused, the note says what was wrong and the box shakes
 	await _frames(3)
-	await _shot("t8c_refused")
+	await _tut_shot("t11r_refused")
 	print("refusals ", g.refusals, " says '", g.last_hint, "'")
 	quit(0)
 
