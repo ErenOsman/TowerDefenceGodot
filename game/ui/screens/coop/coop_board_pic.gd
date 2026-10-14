@@ -161,6 +161,8 @@ static func render(host: Node, lv: LevelAsset, px: Vector2i, p_pitch: float, p_y
 	vp.own_world_3d = true
 	vp.transparent_bg = true
 	vp.msaa_3d = Viewport.MSAA_2X
+	# every frame only for the few frames before the capture below; then the viewport is freed and the picture is
+	# the cached texture (per level and size: a new level or size renders again, nothing else does)
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	host.add_child(vp)
 	var root := Node3D.new()

@@ -34,7 +34,13 @@ signal rtt_changed(ms: int)
 signal message_received(msg: Dictionary)
 
 ## Seconds before a connection attempt counts as failed; retry back-off (doubles up to the max).
+## The connect timeout is wall-clock time (Time.get_ticks_msec), not summed frame deltas, AND needs at least
+## CONNECT_MIN_POLLS polls: one long frame (a slow device, a backgrounded browser tab) must not time out the
+## socket before the browser has had a chance to deliver its open event.
 const CONNECT_TIMEOUT := 8.0
+const CONNECT_MIN_POLLS := 20
+## A single frame delta is clamped to this for the other timers here (retry back-off, round-trip pings).
+const MAX_DELTA := 0.25
 const RETRY_FIRST := 2.0
 const RETRY_MAX := 15.0
 
@@ -67,7 +73,8 @@ var _want := false        # the player wants to be online
 var _seq := 0
 var _retry_in := 0.0
 var _retry_wait := RETRY_FIRST
-var _connecting_for := 0.0
+var _connect_started_ms := 0
+var _connect_polls := 0
 ## Round trip to the relay in ms (a `list` → `rooms` exchange every RTT_EVERY seconds while online); -1 = unknown.
 var rtt_ms := -1
 const RTT_EVERY := 5.0
@@ -141,11 +148,12 @@ func _open_socket() -> void:
 		_schedule_retry()
 		return
 	_peer = ws
-	_connecting_for = 0.0
+	_start_connect_clock()
 	_set_state(State.CONNECTING if state != State.RECONNECTING else State.RECONNECTING)
 
 ## Reads the socket: sends hello once it opens, handles every frame waiting, notices a closed connection.
 func poll(delta := 0.0) -> void:
+	delta = clampf(delta, 0.0, MAX_DELTA)
 	if _peer == null:
 		if _want and not practice and (state == State.RECONNECTING or state == State.OFFLINE) and auto_reconnect and _retry_in > 0.0:
 			_retry_in -= delta
@@ -165,8 +173,8 @@ func poll(delta := 0.0) -> void:
 				_rtt_sent = Time.get_ticks_msec()
 				_send(NetProtocol.list())
 	elif ready_state == WebSocketPeer.STATE_CONNECTING:
-		_connecting_for += delta
-		if _connecting_for > CONNECT_TIMEOUT:
+		_connect_polls += 1
+		if _connect_timed_out():
 			connect_failure = "Can't reach the server."
 			_peer.close()
 			_peer = null
@@ -176,6 +184,15 @@ func poll(delta := 0.0) -> void:
 		if connect_failure == "" or state == State.ONLINE: connect_failure = "The connection to the server was lost."
 		_peer = null
 		_lost()
+
+## Starts the connect timeout (wall clock + poll count) for a socket that was just opened.
+func _start_connect_clock() -> void:
+	_connect_started_ms = Time.get_ticks_msec()
+	_connect_polls = 0
+
+func _connect_timed_out() -> bool:
+	return _connect_polls >= CONNECT_MIN_POLLS \
+		and Time.get_ticks_msec() - _connect_started_ms > int(CONNECT_TIMEOUT * 1000.0)
 
 func _frames() -> Array:
 	var out := []

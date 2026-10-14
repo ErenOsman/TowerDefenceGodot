@@ -35,6 +35,8 @@ func build(layout: Dictionary, prop_loader: Callable, map_ground := true) -> voi
 	vp = SubViewport.new()
 	vp.own_world_3d = true
 	vp.msaa_3d = Viewport.MSAA_2X
+	# keeps animating, but only while visible and not under a full-screen window (_process)
+	vp.render_target_update_mode = SubViewport.UPDATE_WHEN_VISIBLE
 	add_child(vp)
 	root3d = Node3D.new()
 	vp.add_child(root3d)
@@ -72,6 +74,11 @@ func build(layout: Dictionary, prop_loader: Callable, map_ground := true) -> voi
 	var cc := Vector3(fire.x, 0.0, -fire.y - 0.6)
 	cam.position = cc + Vector3(0, 14.5, 17.0)
 	cam.look_at(cc, Vector3.UP)
+
+## The props' Idle loops keep playing; the 3D view is not drawn while a full-screen window (Workshop, Hand,
+## Codex, Settings… over the 88 % scrim) covers it (TdDiorama.animate_unless_covered; browser smoke test 2026-10-14).
+func _process(_delta: float) -> void:
+	if vp != null: TdDiorama.animate_unless_covered(vp, self)
 
 ## A layout.json, or `fallback` when it cannot be read.
 static func load_layout(path: String, fallback: Dictionary) -> Dictionary:

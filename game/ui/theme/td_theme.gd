@@ -12,10 +12,13 @@ extends RefCounted
 ##   TdTheme.motion("quick") -> 0.18, TdTheme.eased("lift", t), TdTheme.tween(node) (unscaled time)
 ##   TdTheme.feedback("Button"), TdTheme.control_style("Primary")
 ## All UI motion uses unscaled time: TdTheme.tween(node) ignores Engine.time_scale, TdTheme.unscaled(delta) in _process.
+## Fonts: Nunito/Plinth lack symbols (✓ → ● ▲ ⓘ ⧗ ✕ ⚠ …) and the web build has no system fallback, so every font's
+## import settings (art/fonts/*.ttf.import `fallbacks`) chain DejaVuSans-Bold-TdSubset + NotoSansSymbols-TdSubset;
+## anything loading those .ttf files gets them (tests/test_ui_theme_glyphs.gd). New fonts: add the same fallbacks.
 
 const THEME_PATH := "res://game/ui/theme/td_theme.tres"
 const KIT_ROOT := "res://art/ui/KitB/"
-## The fonts have no "→": "base » now" in stat rows (see TooltipText.changed).
+## "base » now" in stat rows (see TooltipText.changed); the look, kept now that "→" draws from the fallback font.
 const ARROW := "»"
 ## Sprites are 2x the 1920x1080 reference.
 const SPRITE_SCALE := 0.5

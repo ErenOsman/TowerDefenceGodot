@@ -118,12 +118,19 @@ func load_pending(loading_screen: Node) -> void:
 	await _change(target, loading_screen)
 	target_ready = true
 
-## Frees the loading screen over the opened scene.
+## A loading screen is over the scene (from load_pending until close_loading_screen: opaque, then fading out).
+## The opened scene's first sequence line and first input wait for it (LevelController.behind_loading_screen).
+func is_loading_screen_up() -> bool:
+	return _loading_screen != null and is_instance_valid(_loading_screen) and not _loading_screen.is_queued_for_deletion()
+
+## Frees the loading screen over the opened scene (hidden at once: not drawn again, even for the frame it is freed in).
 func close_loading_screen(loading_screen: Node = null) -> void:
 	var n := loading_screen if loading_screen != null else _loading_screen
 	_loading_screen = null
 	target_ready = false
-	if n != null and is_instance_valid(n): n.queue_free()
+	if n != null and is_instance_valid(n):
+		if n is CanvasItem or n is CanvasLayer: n.visible = false
+		n.queue_free()
 	loading_screen_closed.emit()
 
 # ---------------------------------------------------------------- internals

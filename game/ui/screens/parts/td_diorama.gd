@@ -30,8 +30,12 @@ void fragment() {
 ## The last board drawn (unblurred, small), for screens that show the backdrop without building it.
 static var snapshot: Texture2D = null
 
-## The level whose board is shown (null: the catalog's first level).
-var level: LevelAsset = null
+## The level whose board is shown (null: the catalog's first level). Changing it after _ready rebuilds the board.
+var level: LevelAsset = null:
+	set(v):
+		if v == level: return
+		level = v
+		if _board_vp != null and is_inside_tree(): _rebuild_board()
 ## Blur radius in texels of the small render, and how much it is darkened toward wood.900.
 var blur := 1.6
 var dim := 0.55
@@ -81,6 +85,8 @@ func _ready() -> void:
 		_board_vp = SubViewport.new()
 		_board_vp.own_world_3d = true
 		_board_vp.msaa_3d = Viewport.MSAA_DISABLED
+		# drawn every frame only until the snapshot (SNAP_FRAME); then once (UPDATE_ONCE) and again only when the
+		# size or the level changes: a blurred, dimmed still costs nothing per frame (browser smoke test 2026-10-14)
 		_board_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 		_board_box.add_child(_board_vp)
 		_build_board_world()
@@ -216,8 +222,16 @@ func _build_minis() -> void:
 	_minis_root.add_child(_minis_cam)
 	_minis_cam.current = true
 
+func _rebuild_board() -> void:
+	for c in _board_vp.get_children(): c.free()
+	_build_board_world()
+	_frames = 0
+	_board_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+
 func _layout() -> void:
 	_place_board_camera()
+	# a new size: draw the still once more (before the snapshot it is still drawing every frame)
+	if _board_vp != null and _frames >= SNAP_FRAME: _board_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
 	if _minis_cam == null or size.y <= 0: return
 	# ortho: size = world units over the viewport's height; 1 reference px = size / height units
 	var units_per_px := _minis_cam.size / size.y
@@ -232,10 +246,44 @@ func _layout() -> void:
 		# where the feet go: on the camera ray through the screen point (orthographic: depth does not move it)
 		m.position = _minis_cam.project_ray_origin(pt) + _minis_cam.project_ray_normal(pt) * 20.0
 
+## The frame the board's still is taken (models and shadows settled) and its every-frame drawing stops.
+const SNAP_FRAME := 12
+
 func _process(_delta: float) -> void:
-	# keep a small copy of the board once it has drawn (for the loading screen)
-	if _board_vp == null or _frames > 12: return
+	# the animated miniatures: not drawn while a window covers the screen (kept for a few frames first)
+	if _minis_vp != null: animate_unless_covered(_minis_vp, self)
+	# keep a small copy of the board once it has drawn (for the loading screen), then stop redrawing it
+	if _board_vp == null or _frames >= SNAP_FRAME: return
 	_frames += 1
-	if _frames == 12:
+	if _frames == SNAP_FRAME:
 		var img := _board_vp.get_texture().get_image()
 		if img != null and not img.is_empty(): snapshot = ImageTexture.create_from_image(img)
+		_board_vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+
+# ------------------------------------------------------------------ covered by a window
+
+## Whether an open menu window (TdPopup) hides the screen behind it: its window fills ≥ 90 % of the view, or its
+## scrim is up at ≥ 85 % (the 88 % scrim token; the Camp/Guild tour's 60 % scrim does not count) and fully faded in.
+## A window that holds `inside` (the backdrop itself) does not count.
+static func screen_covered(tree: SceneTree, inside: Node = null) -> bool:
+	if tree == null or tree.root == null: return false
+	var view := tree.root.get_visible_rect()
+	var view_area := maxf(view.get_area(), 1.0)
+	for p in TdPopup.open_popups:
+		if not is_instance_valid(p) or not p.is_open or not p.is_visible_in_tree(): continue
+		if inside != null and p.is_ancestor_of(inside): continue
+		if p.use_scrim and p.scrim != null and p.scrim.visible and p.scrim.color.a >= 0.85 and p.scrim.modulate.a >= 0.99:
+			return true
+		if p.window != null and p.window.is_visible_in_tree() and p.window.get_global_rect().get_area() >= view_area * 0.9:
+			return true
+	return false
+
+## For an animated 3D backdrop: draws it while visible (UPDATE_WHEN_VISIBLE), not at all while a window covers the
+## screen (the last frame stays in its texture). The first frames always draw so there is a picture to keep.
+static func animate_unless_covered(vp: SubViewport, owner: Node) -> void:
+	if not is_instance_valid(vp) or not owner.is_inside_tree(): return
+	var drawn: int = vp.get_meta("td_drawn_frames", 0)
+	var mode := SubViewport.UPDATE_WHEN_VISIBLE
+	if drawn < 5: vp.set_meta("td_drawn_frames", drawn + 1)
+	elif screen_covered(owner.get_tree(), owner): mode = SubViewport.UPDATE_DISABLED
+	if vp.render_target_update_mode != mode: vp.render_target_update_mode = mode

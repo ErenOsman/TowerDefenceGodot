@@ -41,7 +41,25 @@ static func find_on(control: Control) -> TdTooltipTrigger:
 		if c is TdTooltipTrigger: return c
 	return null
 
+## Forgets every trigger's hover and hides the tooltip: for a window opening over them. Godot re-sends hover
+## enter/exit only on pointer motion, so without this a tooltip stays drawn over the window, or a pending one
+## (pointer resting on Pause, the window opened by key) opens over it after the delay. Leaving the window and
+## moving onto a control again starts its tooltip as usual.
+static func reset_all(tree: SceneTree) -> void:
+	if tree != null:
+		for t in tree.get_nodes_in_group(GROUP):
+			var trig := t as TdTooltipTrigger
+			if trig == null: continue
+			trig._hovering = false
+			trig._showing = false
+			trig._timer = 0.0
+	TdTooltip.hide_immediate()
+	TdTooltipStack.hide()
+
+const GROUP := "td_tooltip_triggers"
+
 func _enter_tree() -> void:
+	add_to_group(GROUP)
 	_target = get_parent() as Control
 	if _target == null: return
 	if not _target.mouse_entered.is_connected(_on_enter):

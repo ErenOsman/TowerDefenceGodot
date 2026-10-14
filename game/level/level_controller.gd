@@ -112,6 +112,10 @@ var _last_shown_phase: int = Phase.NotStarted
 var _last_ticks := 0
 var _loading_held := false
 var _frames_drawn := 0
+## The loading screen is still over the level (opaque, or fading out): no sequence line shows yet (`sequence` is
+## null), the sequence/guided clocks stand still and the player's keys and clicks are not read, so the first line
+## and the first input come after the card has fully gone (browser smoke test 2026-10-14).
+var behind_loading_screen := false
 
 ## Tile previews get a clear border over the kit's thin one (off: the plain kit decals).
 var reinforce_outlines := true
@@ -158,11 +162,13 @@ var shown: ViewFrame:
 ## your turn, with nothing of yours still on its way to the relay).
 var can_act: bool:
 	get: return session != null and not director.busy and session.phase == Phase.Player and not session.is_over \
-		and not (sequence != null and sequence.blocking) and (coop == null or coop.my_turn)
+		and not behind_loading_screen and not (sequence != null and sequence.blocking) and (coop == null or coop.my_turn)
 
-## The speech-bubble sequence playing (the level's intro, the tutorial's steps, an entrance), or null.
+## The speech-bubble sequence playing (the level's intro, the tutorial's steps, an entrance), or null (also while
+## the loading screen is still over the level).
 var sequence: SequenceRun:
 	get:
+		if behind_loading_screen: return null
 		if guided != null and not guided.finished: return guided.run
 		return _sequence if _sequence != null and not _sequence.finished else null
 
@@ -310,6 +316,7 @@ func _ready() -> void:
 	if flow != null:
 		flow.hold_loading_screen()
 		_loading_held = true
+	behind_loading_screen = _loading_screen_up()
 	EntityView.show_corpses = show_corpses
 	_last_ticks = Time.get_ticks_msec()
 	_setup()
@@ -558,6 +565,11 @@ func _process(delta: float) -> void:
 	var unscaled := clampf((now - _last_ticks) / 1000.0, 0.0, 0.1)
 	_last_ticks = now
 	_release_loading_screen_when_drawn()
+	var behind := _loading_screen_up()
+	if behind != behind_loading_screen:
+		behind_loading_screen = behind
+		version += 1
+		sequence_changed.emit() # the first line shows now
 	if session == null: return
 	if _message != null and now / 1000.0 >= _message_until:
 		_message = null
@@ -577,14 +589,15 @@ func _process(delta: float) -> void:
 		_was_busy = director.busy
 		version += 1
 	if coop != null: _tick_coop(unscaled)
-	else:
+	elif not behind_loading_screen:
 		_check_entrances()
 		_discover_for_codex()
-	_tick_sequence(unscaled)
-	_tick_guided(unscaled)
-	if director.busy and _pressed("Skip"): skip()
-	_handle_pause_keys()
-	_handle_input()
+	if not behind_loading_screen: # nothing speaks or listens before the loading card has gone
+		_tick_sequence(unscaled)
+		_tick_guided(unscaled)
+		if director.busy and _pressed("Skip"): skip()
+		_handle_pause_keys()
+		_handle_input()
 	_draw_highlights()
 	_update_board_feedback()
 
@@ -612,6 +625,11 @@ func _release_loading_screen_when_drawn() -> void:
 	_loading_held = false
 	var flow = _auto("SceneFlow")
 	if flow != null: flow.release_loading_screen()
+
+## The loading screen (SceneFlow) is still up over this scene.
+func _loading_screen_up() -> bool:
+	var flow = _auto("SceneFlow")
+	return flow != null and flow.has_method("is_loading_screen_up") and flow.is_loading_screen_up()
 
 func _exit_tree() -> void:
 	if _loading_held:
@@ -2001,7 +2019,7 @@ func _tick_sequence(unscaled: float) -> void:
 func _update_sequence_marks() -> void:
 	var line: SequenceLine = sequence.current if sequence != null else null
 	# the guided tutorial's line points where its step needs (the HUD shows the same; no flicker between the two)
-	if guided != null and not guided.finished: line = guided.display_line()
+	if guided != null and not guided.finished and not behind_loading_screen: line = guided.display_line()
 	if line == null or line.point_at == SequencePointAt.UI or line.point_at == SequencePointAt.Nothing or line.point_at == SequencePointAt.Center:
 		overlay.sequence.set_target(null, false)
 		return

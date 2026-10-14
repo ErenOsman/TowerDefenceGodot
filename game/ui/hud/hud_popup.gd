@@ -49,6 +49,9 @@ func open() -> void:
 	visible = true
 	_closing = false
 	_opened_frame = Engine.get_process_frames()
+	# the Pause button's (or a unit's) tooltip would stay drawn over the window until the pointer moves, and a
+	# pending one would still open over it (browser smoke test 2026-10-14)
+	TdTooltipTrigger.reset_all(get_tree() if is_inside_tree() else null)
 	_centre()
 	_scrim.fade_in()
 	TdPanelTransition.open(panel)
