@@ -9,13 +9,21 @@ extends SceneTree
 
 const OUT := "/home/ubuntu/godot/golden-gd"
 const REF := "/home/ubuntu/godot/golden"
+## The content golden plays: the frozen snapshot of the Unity content the C# oracle recorded with (plural keys,
+## the 12×5 tutorial, no Workshop/missions), NOT res://data/content, which has moved on. A sim-vs-C# regression
+## check on fixed content; see ~/godot/oracle/README.md and docs/GODOT-NOTES.md "Golden".
+const CONTENT := "/home/ubuntu/godot/oracle/content"
 
 func _initialize() -> void:
 	var only := ""
 	var args := OS.get_cmdline_user_args()
 	if args.size() > 0: only = args[0]
 	DirAccess.make_dir_recursive_absolute(OUT)
-	var lib = ContentLibrary.load("res://data/content")
+	if not DirAccess.dir_exists_absolute(CONTENT):
+		print("no oracle content snapshot at " + CONTENT)
+		quit(1)
+		return
+	var lib = ContentLibrary.load(CONTENT)
 	if lib.problems.size() > 0:
 		for p in lib.problems: print("PROBLEM " + str(p))
 	var convert = AssetConverter.new()

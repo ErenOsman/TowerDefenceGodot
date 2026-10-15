@@ -215,6 +215,15 @@ How it is read:
   (`TdTheme._widen_scrollbars`); the collection grid drag-scrolls on empty space while tiles keep their own drag
   (`TdDragScroll` skips controls with meta `drag_source`); `tools/hand_drag_check.gd` proves reorder / remove / add / scroll.
 
+## Golden (sim vs the C# oracle)
+- `tools/golden.gd` plays every level with the golden policy (seed 12345) on the GDScript sim and diffs the logs with
+  the C# oracle's (`~/godot/golden/*.log`, written by `~/godot/oracle/Golden.cs`). Expect "11/11 levels identical".
+- Both sides load the **frozen Unity content snapshot** `~/godot/oracle/content/` (Unity `Content/*.json` at a00f795,
+  2026-10-15), not `data/content`: the game's content has moved on (tutorial map, forms, tokens, missions, singular
+  keys), but the C# cannot change any more, so golden is a regression check of the simulation on fixed content.
+  The snapshot keeps Unity's plural keys; the loader assumes no key prefix. Never edit it; see `~/godot/oracle/README.md`.
+- Content changes are checked by `tests/test_content_all.gd`, `tools/soak.gd` and the content check instead.
+
 ## Godot daemons (server tooling, 2026-10-14)
 Two resident Godot processes keep this project loaded, so `check.sh`, `test.sh` and `~/godot/run.sh --daemon … -s tools/<x>_shot.gd`
 skip the start-up, the import and the lock. Full doc: `/home/ubuntu/godot/README-daemon.md`.

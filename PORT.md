@@ -88,7 +88,8 @@ The C# simulation compiles and its 183 tests pass on this server with .NET 8:
 `cd ~/godot/oracle && PATH=$HOME/dotnet:$PATH dotnet test -nologo -v q [--filter Name]`.
 To see what the C# really does for a case, add a throwaway `[Test]` to `~/godot/oracle/Probe.cs`, write the
 result to a file (`System.IO.File.WriteAllText("/home/ubuntu/godot/oracle/probe.txt", …)`) and run it with
-`--filter Probe`. `EventLog.Dump(state)` gives the full event log as text: the GDScript port's `dump()` must
+`--filter Probe`. Golden (`Golden.cs` / `tools/golden.gd`) plays the frozen content snapshot `~/godot/oracle/content/`
+(Unity's content on 2026-10-15), not `data/content`; see `~/godot/oracle/README.md`. `EventLog.Dump(state)` gives the full event log as text: the GDScript port's `dump()` must
 produce the same lines, so the two can be diffed.
 
 ## Style
