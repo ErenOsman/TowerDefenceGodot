@@ -1,6 +1,6 @@
 # Level Select — Design
 
-Written 2026-10-03 as a claude.ai doc; moved into the repo on 2026-10-05. This file is now the source of truth. All four build phases are built; [Since the doc was written](#since-the-doc-was-written) lists what changed afterwards.
+Written 2026-10-03 as a claude.ai doc; moved into the repo on 2026-10-05. This file is now the source of truth. Godot pass 2026-10-15: code names are the Godot build's. All four build phases are built (in the Godot build too: `game/ui/screens/level_select.gd`); [Since the doc was written](#since-the-doc-was-written) lists what changed afterwards.
 
 Level select is the screen between the main menu and a level: the player picks an unlocked level, sees what it holds, checks the hand that comes in, and plays. Winning a level unlocks the next ones and is saved as meta progress.
 
@@ -54,7 +54,7 @@ The hand cap of the selected level decides where "In this level" ends: here the 
 One catalog asset lists every level in play order, grouped into chapters, and says what opens each one.
 
 - **Level identity:** `LevelAsset` has the fields the other assets have — a stable `id` (saved in progress, never the asset name), `displayName`, `description` and `icon`. Validate All flags a missing or duplicate id.
-- **The catalog (`GameCatalogAsset`, one per project, loaded from Resources):** chapters in order, each with a name and its levels in order. Each entry has its level and its **requirement**: Previous (the default), Open, or a list of levels of which all or any must be won.
+- **The catalog (`GameCatalogAsset`, one per project: `data/content/Catalog.json`):** chapters in order, each with a name and its levels in order. Each entry has its level and its **requirement**: Previous (the default), Open, or a list of levels of which all or any must be won.
 - **Unlocked** = its requirement is met by the saved progress. **Won** = a win was ever recorded. A won level stays playable. Shown: every unlocked level, plus the first locked level in catalog order with its requirement; every other locked level is hidden until it is the next one. Chapters with nothing to show are hidden too.
 - **Default requirement:** a new entry needs the entry before it in the same chapter (the first entry of a chapter needs the last of the previous chapter), so a plain list behaves as a line without any setup. Branches are made by editing the requirement.
 - **Validation:** unknown ids, requirements that point at the level itself or form a cycle, and levels nobody can ever reach are errors in Validate All.
@@ -83,7 +83,7 @@ The save keeps one record per level played, written when a level ends; unlocks a
 Everything in the detail panel is read from the Level asset and the save, so a new level needs no extra authoring to look complete.
 
 - **Header:** display name, chapter, icon, description.
-- **Minimap:** a small picture of the map built at runtime from the Level asset (`LevelMinimap`): ground, wall and chasm tiles, the roads with each road's start marked, bases marked. Build tiles look like ground. One texture per level, no scene loaded.
+- **Minimap:** a small picture of the map built at runtime from the Level asset: ground, wall and chasm tiles, the roads with each road's start marked, bases marked. Build tiles look like ground. One texture per level, no scene loaded.
 - **Facts:** waves, total enemies, hand cap, start energy, energy per round.
 - **Enemies:** each enemy type the waves and LevelEvents can spawn, with its icon, display name and count; hovering one shows its tooltip (HP, speed, abilities) the way the level UI does.
 - **Locked level** (only the one locked level that is shown): the same panel, greyed, with the requirement ("Win Two Roads first") and Play disabled; the player can still read what is coming.
@@ -93,7 +93,7 @@ Everything in the detail panel is read from the Level asset and the save, so a n
 The hand strip at the bottom shows all 8 slots, and the selected level's hand cap splits them into towers that come in and towers that stay on the bench.
 
 - **The strip:** the saved hand (`GameData.towers.hand`) as cards in order; the first `handCap` cards are lit with "In this level", the rest dimmed as "Bench". Changing the selected level moves the split at once.
-- **Change hand:** a popup with the owned towers and the 8 slots: add, remove, reorder. It edits the same `TowerCollection` the Persistent Data Viewer edits and saves on close.
+- **Change hand:** a popup with the owned towers and the 8 slots: add, remove, reorder. It edits the same `TowerCollection` the save tools edit (the TD Tools dock's Save tab, the F1 dev panel) and saves on close.
 - **Empty or short hand:** Play still works with fewer towers; with no tower at all, Play warns ("No towers in your hand") instead of starting.
 - **Starting towers:** a new save starts with the catalog's starting towers, so the screen is never empty.
 - **Out of scope:** tower details beyond the card (upgrades, stats screens) belong to a later collection screen.
@@ -102,31 +102,31 @@ The hand strip at the bottom shows all 8 slots, and the selected level's hand ca
 
 Level select hands the GameScene one request, and the GameScene hands back one result; neither scene knows the other's internals.
 
-- **The request (`LevelLaunch`):** a small static holder set by level select before loading `SceneID.Game`: the chosen Level asset. Retry reuses it.
-- **The GameScene reads it:** `LevelController` takes the requested level and builds the hand from the saved collection (`GameCatalogAsset.BuildHand`, tower types looked up in the catalog). With no request — the GameScene played straight from the editor — it keeps the Inspector level and test hand, so development flow is unchanged.
+- **The request (`LevelLaunch`, `sim/data/level_launch.gd`):** a small static holder set by level select before loading `SceneFlow.Game`: the chosen Level asset. Retry reuses it.
+- **The GameScene reads it:** `LevelController` takes the requested level and builds the hand from the saved collection (`GameCatalogAsset.build_hand`, tower types looked up in the catalog). With no request — the level scene run straight from the editor (F6) or a tool — it plays `LevelController.test_level_id` with `test_hand`, so development flow is unchanged.
 - **The result:** when the session ends, the level writes a record into `GameData.progress` and saves. Quitting through the pause menu writes only the attempt.
-- **The end screen:** Retry (same request), Level select (`SceneID.LevelSelect`), and **Next level** when the win opened a level that follows in the catalog.
+- **The end screen:** Retry (same request), Level select (`SceneFlow.LevelSelect`), and **Next level** when the win opened a level that follows in the catalog.
 - **Main menu:** Play opens level select.
 
 ## Data and code
 
-The rules (unlocks, records) are engine-free and tested; the screen is a template-style panel in its own scene.
+The rules (unlocks, records) are engine-free and tested; the screen is its own scene.
 
 | Piece | Where |
 | --- | --- |
-| `LevelProgress`, `LevelRecord`, `LevelResult`, `LevelCatalog` (unlock check) | `Scripts/Game/Meta/` (`Game.Meta`), Edit Mode tests |
-| `GameData.progress`, last selected level | `Scripts/Core/GameData.cs` |
-| `id`, `displayName`, `description`, `icon`, `music` on `LevelAsset` | `Scripts/Game/Data/LevelAsset.cs` |
-| `GameCatalogAsset` (chapters, levels, requirements, first-clear rewards, tower types, starting towers) | `Scripts/Game/Data/`, the asset in `Resources/` |
+| `LevelProgress`, `LevelRecord`, `LevelResult`, `LevelCatalog` (unlock check) | `sim/meta/`; tests `tests/test_progress.gd`, `tests/test_meta.gd` |
+| `GameData.progress`, last selected level | `game/app/game_data.gd` (saved by `SaveData` in `user://gamedata.json`) |
+| `id`, `displayName`, `description`, `icon`, `music` on a level entry | `data/content/Levels.json` (`LevelAsset`, `sim/data/level_asset.gd`) |
+| `GameCatalogAsset` (chapters, levels, requirements, first-clear rewards, tower types, starting towers) | `sim/data/game_catalog_asset.gd`, the entry in `data/content/Catalog.json` |
 | Catalog checks (ids, cycles, unreachable levels) | `AssetValidator` + Validate All |
-| `LevelLaunch` request | `Scripts/Gameplay/` |
-| `LevelMinimap` | `Scripts/UI/LevelSelectScene/` |
-| `UI_LevelSelect` (chapter list, detail panel, hand strip), hand popup | `Scripts/UI/LevelSelectScene/`, prefabs in `Prefabs/UI/LevelSelect/` |
-| `LevelSelectScene` | `Scenes/`, build index 3; `SceneID.LevelSelect = 3`; `Tools > Deprecated > Set Up Level Select Scene` builds it |
-| Read the request, write the result, Next level | `LevelController`, `UI_EndScreen` |
+| `LevelLaunch` request | `sim/data/level_launch.gd` |
+| The level picture | `TdLevelPreview` (`game/ui/screens/parts/`): a 35° board render (`CoopBoardPic`), the flat minimap while it renders |
+| Level select (chapter list, detail panel, hand strip), hand editor | `game/ui/screens/level_select.gd` + `.tscn`, `hand_editor.gd` + `.tscn` |
+| The scene | `SceneFlow.LevelSelect` → `game/ui/screens/level_select.tscn` |
+| Read the request, write the result, Next level | `LevelController`, `HudEndScreen` (`game/ui/hud/hud_end_screen.gd`) |
 
 ## Since the doc was written
 
-- **First-clear rewards:** a catalog level's `firstClearReward` gives one new tower of that type on its first win (`GameCatalogAsset.GrantFirstClearReward`); the end screen says which tower joined ("A Guardian joined you!"). Chapter 1 rewards Guardian, Mage, Priest, then Archer.
-- **Livelier UI:** level rows, hand cards and buttons are `UI_Button`s, all prefab-based like the level HUD.
+- **First-clear rewards:** a catalog level's `firstClearReward` gives one new tower of that type on its first win (`GameCatalogAsset.grant_first_clear_reward`); the end screen says which tower joined ("A Guardian joined you!"). Chapter 1 rewards Guardian, Mage, Priest, then Archer.
+- **Livelier UI:** level rows, hand cards and buttons are kit buttons (`TdButton`), like the level HUD.
 - **Build tiles** show as plain ground on the minimap.
