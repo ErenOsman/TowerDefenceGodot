@@ -1,7 +1,7 @@
 # Missions & Guild — Design
 
-Written 2026-10-14 by the Godot agent from Eren's decisions of the same day; the points he left open are decided
-here and marked **(agents)**. This file is the source of truth for missions, the Guild and where tokens come from;
+Written 2026-10-14 by the Godot agent from Eren's decisions of the same day; Godot pass 2026-10-15. The points he left
+open are decided here and marked **(agents)**. This file is the source of truth for missions, the Guild and where tokens come from;
 Workshop — Design (tokens), Camp & Chapters — Design (the Camp's Signpost) and Multiplayer — Design (co-op rooms)
 point at it.
 
@@ -15,7 +15,7 @@ today cannot be joined, and a room that switches to it drops you.
 
 | Topic | Decision | Source |
 | --- | --- | --- |
-| Where | The Camp's **Signpost** gains **Missions** once Chapter 2's last level is won (`GameCatalogAsset.guildUnlock`); it opens the **Guild**, a place like the Camp, with Back to the Camp | Eren 2026-10-14 |
+| Where | The Camp's **Signpost** gains **Missions** once Chapter 2's last level is won (the catalog's `guildUnlock`); it opens the **Guild**, a place like the Camp, with Back to the Camp | Eren 2026-10-14 |
 | Name | **Guild** (scene `GuildScene`, `SceneID.Guild`) | Eren ("kamp yerine guild olabilir") |
 | What is there | **Missions** (the mission board), **Multiplayer** (the co-op lobby, moved here from the Camp), **Towers** (the hand editor, the same hands and 4 layouts as the Camp's), **Camp** (back). The Workshop stays in the Camp: tokens are earned in the Guild and spent in the Camp | Eren (missions, multiplayer, hand editing) · agents (Towers = the same hand editor; Workshop stays) |
 | Tokens | **Missions are the only source of tokens.** Chapter levels drop none (their prize is the first-clear tower). A mission lists what it drops: `winTokens` on every win and `firstWinTokens` once | Eren (missions = token source) · agents (chapters drop nothing) |
@@ -26,7 +26,7 @@ today cannot be joined, and a room that switches to it drops you.
 | Unlock | A mission has a requirement like a level: open when the Guild opens (default), or a list of levels / missions that must be won first (all / any). No daily rotation for now: the board shows every unlocked mission every day | agents |
 | Records | Missions keep their own records (attempts, wins, best) under the **mission id**, separate from the chapter level they reuse; co-op wins count as wins for every player in the match. Missions never change chapter progress | agents |
 | After a mission | The end screen shows the token drops ("Rewards: Fire Arrow ×1"); Retry is hidden when the plays are used up ("Done today"); the leave button says **Guild** | agents |
-| Content | `Content/Missions.json` (`MissionAsset`), the catalog's `guildUnlock` and ordered `missions` list; no numbers in code | agents |
+| Content | `data/content/Missions.json` (`MissionAsset`), the catalog's `guildUnlock` and ordered `missions` list; no numbers in code | agents |
 
 ## Player flow
 
@@ -81,7 +81,7 @@ A place like the Camp (stations on a ring; panels until there is art):
   shows "Done today" on those rooms and disables Join.
 - **Rewards.** On a win: `winTokens` to everyone in the match; `firstWinTokens` once per mission per player; the
   end screen shows them. A loss or a quit gives nothing (but the play is spent).
-- **Unlock.** `GameCatalogAsset.guildUnlock` (Chapter 2's last level) opens the Signpost entry and the Guild;
+- **Unlock.** The catalog's `guildUnlock` (Chapter 2's last level) opens the Signpost entry and the Guild;
   a mission's own `requires` works like a level's.
 - **Validation (Validate All):** every mission's level exists; a co-op mission's player range is within 1–6 and
   its level's `coopHandCap` ≥ 1; `playsPerDay` ≥ 1; every token kind drops from at least one mission (else warn);
@@ -89,17 +89,17 @@ A place like the Camp (stations on a ring; panels until there is art):
 
 ## Data
 
-### Content/Missions.json — `MissionAsset`
+### data/content/Missions.json — `MissionAsset` (keys `Mission/<Name>`)
 
 | Field | Meaning |
 | --- | --- |
 | `id`, `displayName`, `description`, `icon` | the mission ("Night Watch"); saved under the id |
-| `level` | the `LevelAsset` it plays (a chapter level reused, or a level made for the mission) |
+| `level` | the level it plays (a `Level/…` key) (a chapter level reused, or a level made for the mission) |
 | `mode` | `Solo` / `Coop` / `Any` |
 | `players` | `{ "min": 2, "max": 4 }` for Coop / Any (the room's count is clamped to it) |
 | `playsPerDay` | 1 by default |
 | `requires`, `requireAll` | level / mission ids that must be won first; empty = open with the Guild |
-| `sharedPool`, `coopHandCap` | the co-op rules (Multiplayer — Design); replaces `coop.json` |
+| `sharedPool`, `coopHandCap` | the co-op rules (Multiplayer — Design); replaces `coop.json` as the co-op list (the relay still reads `data/coop.json`, generated from the missions by `tools/coop_json.gd`) |
 | `firstWinTokens`, `winTokens` | `[{ "token": "Token/Fire Arrow", "amount": 1 }]` |
 
 Catalog: `guildUnlock` (a level) and `missions` (ordered mission list, the board's order). The Workshop's catalog
@@ -110,9 +110,11 @@ drop fields `firstWinTokens` / `winTokens` on chapter levels are dropped: tokens
 - `MissionProgress`: records per mission id (attempts, wins, won, best base HP, fewest rounds, last played),
   `plays`: `[{ "id", "day": "2026-10-14", "count": 1 }]` and `tired`: `[{ "tower": "<tower id>", "day": "2026-10-14" }]`.
   `PlayerProfile.guildSeen`.
-- Engine-free rules in `Game.Meta` (`MissionBoard`): `IsGuildUnlocked(progress)`, `IsUnlocked(mission, progress,
-  missions)`, `PlaysLeft(mission, now)`, `StartPlay(mission, hand, cap, now)` (spends the play and tires the towers
-  taken; returns them), `IsTired(tower, now)`, `RestedHand(hand, now)`, `ResetsIn(now)`, `Drops(result, record)`.
+- Engine-free rules in `sim/meta/mission_board.gd` (`MissionBoard`, static): `is_guild_unlocked(progress, catalog)`,
+  `is_unlocked(mission, progress, mission_progress)`, `plays_left(mission, mission_progress, now)`,
+  `start_play(mission, mission_progress, hand, cap, now)` (spends the play and tires the towers taken; returns them),
+  `is_tired(tower, mission_progress, now)`, `rested_hand(hand, mission_progress, now)`, `resets_in(now)`,
+  `drops(result, record, mission)`; `MissionDef` and `MissionProgress` beside it. Tests: `tests/test_missions.gd`.
 - Rule data: `towerEnergyPerDay` = 1 in the game rules (one field, so it can change without code).
 
 ## Starter content (placeholders, Eren rewrites)
@@ -125,15 +127,18 @@ drop fields `firstWinTokens` / `winTokens` on chapter levels are dropped: tokens
 | Drum Line | Chapter 2 · 3 The Drummer | Any 1–4 | 2 | Arcane Shard ×1, Poison Gland ×1 · Fire Arrow ×1 |
 | The Glutton Returns | Chapter 2 · 4 The Glutton | Co-op 2–6 | 1 | Ember Core ×1 · Ember Core ×1 |
 
-## Build plan
+## In the Godot build
 
-1. **Content and rules (Unity):** `MissionAsset`, the catalog's `guildUnlock` / `missions`, `MissionProgress`,
-   `MissionBoard` rules with tests, Validate All; the co-op list reads missions; the end screen grants mission drops.
-2. **Screens (Unity):** the Signpost entry, `UI_Guild` with its stations, the mission board and detail, the lobby's
-   mission picker with "Done today", the auto-leave message.
-3. **Godot build:** the same, from `data/content` (Missions.json; built. Since 2026-10-15 the Godot build is the game and steps 1–2 will not be done in the frozen Unity repo).
-4. **Art:** a Guild backdrop and station props (Blender agent) when the stations are final; a mission card look from
-   the UI/UX agent.
+Built (2026-10-14/15): the content and rules (`MissionAsset`, the catalog's `guildUnlock` / `missions`,
+`MissionProgress`, `MissionBoard` with tests, Validate All; the co-op list reads missions; the end screen grants
+mission drops) and the screens: the Signpost to the Guild, the Guild (`game/ui/screens/guild.gd`, a 3D hall from the
+Blender kit's `art/guild/`, built like the Camp by `TdStationWorld`), the mission board and detail
+(`mission_board.gd`, `mission_detail.gd`), the lobby's mission picker with "Done today", the auto-leave message. How
+it is wired: docs/GODOT-NOTES.md ("Missions & Guild rules", "Missions & Guild screens"). Still open: a mission card
+look (missions have no icon art yet; their `icon` is empty).
+
+History: the plan first had the content, rules and screens built in the Unity repo (`UI_Guild` and its stations)
+and then mirrored in the Godot build; only the Godot build was done before the Unity build stopped on 2026-10-15.
 
 ## Open questions
 
