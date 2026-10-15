@@ -256,7 +256,7 @@ Offline check of candidate content entries, used by the wiki's Content Editor (/
   tables[{title, columns, rows}], warnings[]}], candidates[], baseline{}, elapsed_ms}`; exit 0 ok / 1 errors / 2 usage.
   `--schema` prints `ContentSerializer.SCHEMA` + enum names + stats + tags between `CONTENT_SCHEMA_BEGIN/_END`
   (key order kept: `JSON.stringify(…, "", false)`).
-- `--context <dir>` (more content-format files, not loaded): duplicate checks against them (the wiki passes its approved set and open entries). Errors also: a key not starting with its type's folder (Status/…), an id used by another entry of the type, keys differing only by case/spaces; warnings: duplicate display name or number.
+- `--context <dir>` (more content-format files, not loaded): duplicate checks against them (the wiki's Content Editor passes its approved set and open entries; it then writes accepted entries into data/content itself and commits them as "Content Editor": `content: apply <key>` / `content: remove <key>`). Errors also: a key not starting with its type's folder (Status/…; read from the existing keys, the folder most of the type's keys use, ContentFiles.KEY_FOLDERS for a type with none), an id used by another entry of the type, keys differing only by case/spaces; warnings: duplicate display name or number.
 - Loader: `ContentLibrary.load(folder, extra)` / `load_game(extra)` merge the candidate folder over data/content
   (same key → the candidate wins). Nothing is written. An empty candidate folder checks the content alone (ok + a warning). Test: `tests/test_content_candidate.gd`.
 - Logic: `tools/content_check_runner.gd` (no class_name, so the daemon needs no restart). Errors = load problems,

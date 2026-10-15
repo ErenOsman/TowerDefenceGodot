@@ -6,7 +6,9 @@ extends RefCounted
 ## the content without them already has are counted in "baseline"), and probes each candidate by its type in small
 ## headless fights (statuses on dummies, abilities cast at dummies, units on a small road, levels played with the
 ## golden policy…).
-##   run(["<candidate dir>", "[level id]"]) → {"json": Dictionary, "code": 0 ok / 1 errors / 2 usage}
+##   run(["<candidate dir>", "[level id]", "--context", "<dir>"]) → {"json": Dictionary, "code": 0 ok / 1 errors / 2 usage}
+##   --context <dir>: more entries in the content format (the editor's approved set, other open
+##   entries) that are not loaded but count for the duplicate checks (ids, display names, keys).
 ##   run(["--schema"]) → the content format (ContentSerializer.SCHEMA, enum names, stats, file of each type)
 ## Engine-free apart from the logger (script errors met while probing are reported). No class_name on purpose:
 ## the resident daemon cannot learn new global classes without a restart.
@@ -61,8 +63,16 @@ func _run(args: Array) -> Dictionary:
 		return {"json": _schema(), "code": 0, "marker": "CONTENT_SCHEMA"}
 	if args.is_empty():
 		return {"json": {"ok": false, "errors": ["usage: content_check <candidate dir> [level id] | --schema"], "warnings": [], "probes": [], "elapsed_ms": 0}, "code": 2}
-	var dir := str(args[0])
-	var level_id := str(args[1]) if args.size() > 1 else ""
+	var rest := []
+	var context := ""
+	var i := 0
+	while i < args.size():
+		if str(args[i]) == "--context" and i + 1 < args.size():
+			context = str(args[i + 1]); i += 2; continue
+		rest.append(str(args[i])); i += 1
+	var dir: String = rest[0] if rest.size() > 0 else ""
+	var level_id: String = rest[1] if rest.size() > 1 else ""
+	_context_dir = context
 	OS.add_logger(errlog)
 	var out := {}
 	if not DirAccess.dir_exists_absolute(dir):
@@ -80,6 +90,83 @@ func _run(args: Array) -> Dictionary:
 	return {"json": out, "code": 0 if errors.is_empty() else 1}
 
 var _baseline := {}
+var _context_dir := ""
+
+## The key folder of each asset type (singular: "Status/Burn"; ContentFiles.KEY_FOLDERS, docs/CONTENT.md).
+const KEY_FOLDERS: Dictionary = ContentFiles.KEY_FOLDERS
+
+## The key folder of each type as the content actually uses it: the first path segment most of the type's existing
+## keys have (so the rule follows a key migration without a code change); KEY_FOLDERS for types with no keys yet.
+func _key_folders() -> Dictionary:
+	var counts := {}
+	for a in lib.all:
+		var k = lib.key_of(a)
+		if k == null or cand_keys.has(k) or not str(k).contains("/"): continue
+		var t := ContentSerializer.type_of(a)
+		var seg := str(k).substr(0, str(k).find("/"))
+		if not counts.has(t): counts[t] = {}
+		counts[t][seg] = counts[t].get(seg, 0) + 1
+	var out := KEY_FOLDERS.duplicate()
+	for t in counts:
+		var best := ""
+		for seg in counts[t]:
+			if best == "" or counts[t][seg] > counts[t][best]: best = seg
+		out[t] = best
+	return out
+
+static func _norm_key(k: String) -> String:
+	return k.to_lower().replace(" ", "").replace("_", "").replace("-", "")
+
+## Key folder, duplicate ids (error), display names and numbers (warning) and keys that differ only by case or
+## spaces (error), against the loaded content, the context entries and the other candidates.
+func _duplicates(by_file: Dictionary) -> void:
+	var pool := {}   # asset type → {key: entry}
+	var add := func(type_name: String, key: String, entry, where: String) -> void:
+		if not (entry is Dictionary): return
+		if not pool.has(type_name): pool[type_name] = {}
+		if not pool[type_name].has(key): pool[type_name][key] = [entry, where]
+	for a in lib.all:
+		var t := ContentSerializer.type_of(a)
+		if cand_keys.has(lib.key_of(a)): continue
+		add.call(t, lib.key_of(a), {"id": a.get("id") if "id" in a else null, "displayName": a.get("display_name") if "display_name" in a else null,
+			"number": a.get("number") if "number" in a else null}, "content")
+	if _context_dir != "" and DirAccess.dir_exists_absolute(_context_dir):
+		for f in DirAccess.get_files_at(_context_dir):
+			if not f.ends_with(".json"): continue
+			var root = JSON.parse_string(FileAccess.get_file_as_string(_context_dir.path_join(f)))
+			if not (root is Dictionary) or not (root.get("assets") is Dictionary): continue
+			for key in root["assets"]:
+				if not cand_keys.has(key): add.call(str(root.get("type", "")), key, root["assets"][key], str(root.get("source", "context")))
+	for f in by_file:
+		var t: String = by_file[f]["type"]
+		for key in by_file[f]["assets"]: add.call(t, key, by_file[f]["assets"][key], "candidate")
+	var folders := _key_folders()
+	for f in by_file:
+		var t: String = by_file[f]["type"]
+		var folder: String = folders.get(t, "")
+		if folder == "Settings" or folder.begins_with("Assets"): folder = ""   # singletons keep their own keys
+		for key in by_file[f]["assets"]:
+			var entry = by_file[f]["assets"][key]
+			if not (entry is Dictionary): continue
+			if folder != "" and not str(key).begins_with(folder + "/"):
+				var tail: String = str(key).substr(str(key).find("/") + 1) if str(key).contains("/") else str(key)
+				errors.append("%s: the key must start with '%s/' (the folder the game's %s keys use; docs/CONTENT.md): e.g. %s/%s" % [key, folder, t, folder, tail])
+			for other in pool.get(t, {}):
+				if other == key: continue
+				var o: Array = pool[t][other]
+				var oe: Dictionary = o[0]
+				var src := "" if o[1] == "content" or o[1] == "candidate" else " (%s)" % o[1]
+				var id = entry.get("id")
+				if id is String and id != "" and oe.get("id") is String and oe.get("id") == id:
+					errors.append("%s: id '%s' is already %s%s (ids must be unique: rules and saves use them)" % [key, id, other, src])
+				var dn = entry.get("displayName")
+				if dn is String and dn != "" and oe.get("displayName") == dn:
+					warnings.append("%s: display name '%s' is also %s%s" % [key, dn, other, src])
+				if _norm_key(other) == _norm_key(str(key)):
+					errors.append("%s: the key differs from %s%s only by case or spaces" % [key, other, src])
+				var num = entry.get("number")
+				if (num is float or num is int) and int(num) > 0 and (oe.get("number") is float or oe.get("number") is int) and int(oe.get("number")) == int(num):
+					warnings.append("%s: number %d is also %s%s" % [key, int(num), other, src])
 
 func _check(dir: String, level_id: String) -> void:
 	# the candidate files
@@ -151,6 +238,7 @@ func _check(dir: String, level_id: String) -> void:
 	_baseline = {"load_problems": known, "errors": base_e, "warnings": base_w,
 		"note": "findings the content already has without the candidates (not listed)"}
 
+	_duplicates(by_file)
 	conv = AssetConverter.new()
 	rules = conv.rules(lib.rules)
 	_index_refs()
