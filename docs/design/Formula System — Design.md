@@ -1,6 +1,6 @@
 # Formula System — Design
 
-Oct 1, 2026 · @Eren
+Oct 1, 2026 · @Eren · Godot pass 2026-10-15
 
 ## Summary
 
@@ -11,8 +11,8 @@ Formulas are small, side-effect-free expressions that compile into trees and res
 - **Buffs in a separate pipeline.** Flat, then additive %, then multiplicative %, then clamp: the same order for every value.
 - **Parameterized patterns.** Shape, distance metric, radius range, orientation and line of sight are separate fields.
 - **One resolver, three uses.** The same code produces the result, the tooltip preview and the breakdown.
-- **Deterministic.** Exact `decimal` arithmetic, rounding only at slot outputs and a seeded project RNG give the same result on every machine.
-- **Data, not code.** Formulas are text fields in ScriptableObject assets, validated in the editor and at build time.
+- **Deterministic.** Exact `decimal` arithmetic (in the Godot build: floats snapped by `Num`, see Numbers, rounding and randomness), rounding only at slot outputs and a seeded project RNG give the same result on every machine.
+- **Data, not code.** Formulas are text fields in content entries (`data/content/*.json`), validated before the game runs (Validate All, the tests, the content check).
 
 ## Goals and non-goals
 
@@ -21,7 +21,7 @@ The system succeeds when a designer can write a new formula safely without going
 **Goals**
 
 - Writing a new formula from existing building blocks needs no code change.
-- An invalid formula fails in the editor and at build time, never at runtime.
+- An invalid formula fails validation before the game runs, never at runtime.
 - Tooltip previews and actual results come from the same code.
 - Every number is explainable: players and developers can see a breakdown.
 - The same inputs and seed produce the same result on every machine.
@@ -71,7 +71,9 @@ Leaves read data (Stat, Var, Const) and inner nodes compute, so a new formula is
 | `Random` | `rand(0.9, 1.1)` | Draws only from the seeded RNG in the context |
 | `Ref` | `@BaseMelee` | A reference to a named formula in the FormulaLibrary |
 
-The core is plain C# with no `UnityEngine` reference. `Num` is a thin wrapper around `decimal`; see Numbers, rounding and randomness.
+The core is plain GDScript with no engine calls (`sim/formulas/`). In the design `Num` is a thin wrapper around `decimal`; see Numbers, rounding and randomness.
+
+Design sketch, written in C# before the build (built: `IFormulaNode`, the node classes, `EvalContext` and `Trace` in `sim/formulas/`, names per PORT.md: `Evaluate` → `evaluate`, `EvalContext.Self` → `self_`):
 
 ```csharp
 [Flags] public enum Needs { None = 0, Target = 1, Power = 2, Damage = 4, Self = 8 }
@@ -158,7 +160,7 @@ call    := FUNC '(' expr (',' expr)* ')'    // min, max, clamp, floor, round, if
 
 ## Phases, context and validation
 
-Every slot resolves in exactly one phase and may read only what that phase provides; this is checked in the editor and at build time, never at runtime.
+Every slot resolves in exactly one phase and may read only what that phase provides; this is checked before the game runs (validation), never at runtime.
 
 &#91;embedded content: resolution phases · 4 phases, per-target loop\]
 
@@ -235,7 +237,7 @@ At the same radius, Diamond selects 25 tiles, Circle 37 and Square 49; Line and 
 - **Two patterns per action:** a `targeting` pattern (where you can aim, centred on Source) and an `area` pattern (what is hit around the aimed tile).
 - **Circle rule:** `dx² + dy² ≤ (r + 0.5)²`, computed in integers as `4(dx² + dy²) ≤ (2r + 1)²`. Without the +0.5, small circles cannot be told apart from Diamond; at r = 2 both select the same 13 tiles.
 - **Custom shapes:** `Union` and `Difference` cover most needs, e.g. ring = Diamond(max) − Diamond(min − 1). Irregular shapes such as a knight's move use a `Custom` mask.
-- **In Unity:** `PatternDef` is a serializable class whose radii are `Formula` fields; its drawer shows a small grid preview.
+- **In the Godot build:** `PatternDef` (`sim/combat/pattern_def.gd`) is an object whose radii are formula text (`"minRadius": "0"`, `"maxRadius": "6"` in a content entry's `targeting` or `area`).
 
 ## Numbers, rounding and randomness
 
@@ -244,6 +246,8 @@ All formula math uses one numeric type: C#'s `decimal`, wrapped in a thin `Num` 
 Binary floating point cannot hold values such as 0.05 or 1.15 exactly, and rounding boundaries expose it: in double, 1.15 × 100 = 114.99999999999999, which floors to 114. Float results can also differ in the last digit across compilers and platforms (Mono/IL2CPP, x64/ARM), and a floor turns that into a 1 HP difference.
 
 `decimal` avoids both, and its speed does not matter at this scale. If it ever does, a 64-bit fixed-point type is the fallback, and `Num` keeps that swap to one file.
+
+Design sketch (the C# `Num`):
 
 ```csharp
 public readonly struct Num {
@@ -262,55 +266,44 @@ public readonly struct Num {
 }
 ```
 
-- **Fractional data:** Unity does not serialize `decimal`, so fractional values come from formula text or from integer fields (e.g. 2000 basis points = 20% for a modifier amount). No simulation data lives in `float` fields.
+**In the Godot build.** GDScript has no `decimal`, so a `Num` is a plain `float` and `sim/formulas/num.gd` holds static helpers with the decimal semantics: every arithmetic result goes through `Num.fix` (snapped to 9 decimals, so 0.1 + 0.2 == 0.3 and 1.15 × 100 floors to 115), division and modulo by zero give 0, modulo is floored, rounding is half away from zero. All formula arithmetic goes through `Num.add/sub/mul/div/mod` (PORT.md "Types"). The golden logs (`tools/golden.gd`) check that the GDScript simulation writes the same events as the C# `decimal` one.
+
+- **Fractional data:** fractional values come from formula text or from integer fields (e.g. 2000 basis points = 20% for a modifier amount). No simulation data lives in `float` fields of the content: in `data/content` every fractional rule value is formula text (`"0.05"`), parsed with the decimal rules above. (The design's reason was that Unity does not serialize `decimal`.)
 - **Rounding:** never inside a formula; once, at the slot output, per the slot's rule. Damage → int, `floor`; Range and radii → int, `floor`, at least 0; Power → not rounded.
-- **Randomness:** only through `rand()` and the seeded RNG in the context, a project-owned, integer-based generator (e.g. xorshift or PCG). `UnityEngine.Random` shares global state and is unavailable in the engine-free core; `System.Random` is not guaranteed to produce the same sequence across .NET versions. Crits draw from the same RNG in a fixed order.
+- **Randomness:** only through `rand()` and the seeded RNG in the context, a project-owned, integer-based generator: xorshift64* (`XorShiftRng`, `sim/formulas/xor_shift_rng.gd`; PORT.md has its test vectors). The engine's random functions share global state and are not used in the engine-free core, and an engine's generator is not guaranteed to produce the same sequence across versions. Crits draw from the same RNG in a fixed order.
 - **Previews:** tooltips run two passes, with `rand()` returning its lower and then its upper bound, so the tooltip reads "36–44 damage". This holds while the formula is monotonic in the random term, which damage variance almost always is.
 - **Breakdowns:** with `Trace` enabled, each node records its contribution; the same English text feeds tooltips and debugging and costs nothing when disabled.
 
-## Storage and tooling in Unity
+## Storage and tooling
 
-Formulas are data: they live as text fields in ScriptableObject assets. Code holds only the building blocks, and the editor holds the tools that make writing formulas safe.
+Formulas are data: they live as text fields in content entries (`data/content/*.json`). Code holds only the building blocks, and the tools make writing formulas safe.
 
 &#91;embedded content: formula system layers · editor, data, core\]
 
-Assets live in git as text; editor tools edit and validate them, and the game compiles each text into a tree once, on load.
+Content lives in git as text; tools edit and validate it, and the game compiles each text into a tree once, on load.
 
-- **Data, not code.** ScriptableObjects are Unity's established home for designer-authored data. Formulas in code would cost a recompile and domain reload per balance tweak and tie designers to programmers; generating C# from the text would pay the same cost to gain only performance, a non-goal.
-- **Text, not a `[SerializeReference]` graph.** Text gives one-line diffs, pastes into spreadsheets and can be read by a non-Unity server. The drawer still shows the parsed tree as a read-only preview.
+- **Data, not code.** Formulas in code would cost a code change per balance tweak and tie designers to programmers; generating code from the text would pay the same cost to gain only performance, a non-goal.
+- **Text, not a serialized node graph.** Text gives one-line diffs, pastes into spreadsheets and can be read by a server in any language.
 
-```csharp
-[CreateAssetMenu(menuName = "Game/Ability")]
-public sealed class AbilityDefinition : ScriptableObject {
-    public PatternDef targeting;
-    public PatternDef area;
+A formula slot in a content entry (from an ability's attack step) and the field schema that declares its phase:
 
-    [FormulaSlot(Phase.Attack)]
-    public Formula power = new Formula("100");
-
-    [FormulaSlot(Phase.OnHit, Round.Floor)]
-    public Formula damage = new Formula("Power");
-}
-
-[Serializable]
-public struct Formula {
-    [SerializeField] string expression;             // the single source of truth
-    public Formula(string expression) => this.expression = expression;
-    public IFormulaNode Compiled => FormulaCache.Get(expression);   // parsed once, cached by text
-}
+```json
+{ "$type": "AttackStepData", "power": "100", "onHit": { "items": [ { "$type": "DamageStepData", "amount": "ActionPower" } ] } }
 ```
 
-- **Shared formulas and names.** A FormulaLibrary asset holds named formulas (`@BaseMelee`); a GameRules asset holds game-wide ones such as mitigation and crit chance. Stat names come from one catalog, a `StatId` enum or a StatCatalog asset.
-- **Editor tools.** A `FormulaSlot` drawer parses as you type, checks the phase and previews the result and breakdown on `FormulaTestBench` units. A Playground window, a Validate All command and an `IPreprocessBuildWithReport` build gate complete the set.
-- **Runtime.** Each text compiles once, on first use or at startup, into an immutable tree cached by its text, so editing a formula in Play Mode takes effect on the next resolution.
-- **Assemblies.** The core (`Game.Formulas`) is an asmdef with No Engine References, shared by the Unity client, a server and tests. Asset types live in `Game.Formulas.Unity`, tools in `Game.Formulas.Editor`.
-- **Spreadsheets (optional).** If balancing moves to sheets, an importer writes rows into the assets, and each field keeps a single source of truth.
+`ContentSerializer.SCHEMA` (`sim/data/content_serializer.gd`) declares each slot as `formula:<Phase>` (or `condition:<Point>`); the value in the simulation is a `Formula` (`sim/formulas/formula.gd`): the expression text, the single source of truth, compiled once per vocabulary and cached by text.
+
+- **Shared formulas and names.** The rules entry (`Settings/GameRules` in `Rules.json`) holds the named formulas (`library`, `@BaseMelee`), game-wide ones such as `mitigation`, `hitChance` and `critChance`, and the stat names (`stats`).
+- **Tools.** Validate All (the TD Tools dock's Validate tab, and `tests/test_content_all.gd` in every `./test.sh`), the wiki Content Editor's Check (`tools/content_check.gd`, which also plays a candidate on test units) and the Balance Sheet (dock and `BalanceSheet`). The design's live slot drawer, Playground window and build gate were Unity editor tools and have no Godot counterpart.
+- **Runtime.** Each text compiles once, on first use or at startup, into an immutable tree cached by its text.
+- **Folders.** The core is `sim/formulas/` (engine-free), shared by the game, tests and tools; the content types are in `sim/data/`, the tools in `addons/td_tools/`, `game/dev/` and `tools/`.
+- **Spreadsheets (optional).** If balancing moves to sheets, an importer writes rows into the content entries, and each field keeps a single source of truth.
 
 ## Worked example
 
 In this example, Shield Breaker deals **211 damage**. Source: 20 Str, 12 Per, a +20% Power buff. Target: 400 max HP, 100 current HP, 25 armor.
 
-`ShieldBreaker.asset` fields, as the Inspector shows them:
+Shield Breaker's fields (the test builds it in code: `tests/test_combat.gd`, `test_shield_breaker_deals_211`):
 
 | Field | Value |
 | --- | --- |
@@ -335,18 +328,18 @@ OnHit and Mitigation run separately for each target in the Plus area; Power is 1
 
 ## Validation and testing
 
-Formula errors are caught before the game runs: as you type in the drawer, in bulk with Validate All, and finally at the build gate and in CI.
+Formula errors are caught before the game runs: in bulk with Validate All (the dock, and every `./test.sh` run), and in the wiki Content Editor's Check before content is merged.
 
-- **One validator.** The drawer, Validate All, the build gate and CI all call the same `Validator`, so they always agree.
+- **One validator.** Validate All, the tests and the content check all call the same `Validator` (`sim/formulas/validator.gd`), so they always agree.
 - **Checks.** Parse errors (with column), unknown stats, queries, variables or `@Ref`s, phase violations, type mismatches, `@Ref` cycles and constant division by zero.
-- **Unit tests.** The core is engine-free, so its tests run in Unity Test Framework's Edit Mode or, if preferred, in a separate .NET test project. Every node type is covered, especially that `if` evaluates only the chosen branch and `rand` draws only from the context RNG.
+- **Unit tests.** The core is engine-free, so its tests run headless (`./test.sh`, `tests/test_formula.gd`, `tests/test_num.gd`). Every node type is covered, especially that `if` evaluates only the chosen branch and `rand` draws only from the context RNG.
 - **Golden tests.** A few fixed scenarios per ability (stats + seed → expected result and breakdown). A deliberate balance change updates the table; an accidental one breaks a test. Running them on every target platform confirms the results match exactly.
-- **CI.** Validate All and the tests run on every commit and block the merge on failure.
+- **CI.** Validate All and the tests run on every commit and block the merge on failure. (Planned in the design; today they run with `./test.sh`, there is no CI server.)
 
 ## Open decisions
 
 Three decisions that shape the design are still open.
 
 - **Network model.** Server-authoritative or lockstep? `decimal` works for both. Under a server-authoritative model it mainly keeps client previews exact; lockstep also needs a deterministic RNG consumption order and input timing.
-- **Where balancing happens.** Only in the Inspector, or in spreadsheets? Spreadsheets need an importer and a single source of truth per field.
-- **Rounding per slot.** `floor` or `round` for Damage? It changes how the game feels and is set in one place, the slot's `[FormulaSlot]` attribute.
+- **Where balancing happens.** Only in the content (the JSON, the wiki Content Editor), or in spreadsheets? Spreadsheets need an importer and a single source of truth per field.
+- **Rounding per slot.** `floor` or `round` for Damage? It changes how the game feels and is set in one place, the slot's rounding rule (a `Round` value where the slot resolves, e.g. `DamageEffect`).
