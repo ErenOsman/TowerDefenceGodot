@@ -47,6 +47,8 @@ Format: date · decision · reason. The commit that made the change is in bracke
 
 | Date | Decision | Reason |
 | --- | --- | --- |
+| 2026-10-15 | The Princess is NOT drawn on the board. She speaks as a visual-novel bust standing on the dialogue box's left edge, above the text (tutorial and level intros alike); the on-board speaker prop is removed. Supersedes the 2026-10-13 note that made her a board prop | Eren ("visual novellerdeki gibi konuşmanın üstünde olacak", repeated) |
+| 2026-10-15 | The selection ring around a selected unit is a true circle on screen (a screen-space overlay), not a ground decal squashed by the perspective | Eren ("çember basık") |
 | 2026-10-15 | The Camp has a proper **Guild** station button (where Multiplayer stood); the Signpost hotspot is dropped. Multiplayer exists only in the Guild and opens with it after Chapter 2. Before Chapter 2 is cleared the Guild and Workshop buttons are not shown at all (not greyed). Pressing Guild slides the screen: the Camp out to the left, the Guild in from the right, and back the same way | Eren ("adam akıllı butonu yap, multiplayer'ın olduğu yerde olsun … butonlar gözükmesin bile"; the slide sketch) |
 | 2026-10-15 | A layout editor for the Camp and Guild dioramas: in the F1 dev panel, drag props with the mouse, rotate and scale with keys, save to art/<place>/layout.json | Eren ("keşke manuel yerlerini değiştirebilsem, 15 saniyelik iş") |
 | 2026-10-15 | Hand select tower tiles: the hover lift is visual only; the tile's hit area never moves | Eren (hover glitch) |
