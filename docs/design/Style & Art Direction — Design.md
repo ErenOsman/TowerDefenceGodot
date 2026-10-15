@@ -80,7 +80,7 @@ One tile is 1×1 unit. A normal unit stays inside a 0.8×0.8 footprint so neighb
 
 - One skinned mesh on one armature; Godot creates an `AnimationPlayer`. Each Blender action becomes a clip; the loader matches the last `|`-separated part of the name, so `Idle` and `<Name>|Idle` both work.
 - **Clips:** `Idle` and `Walk` (looped by the loader; Walk plays while the unit moves), `Attack`, `Cast`, `Hit`, `Die` (its **last frame is the corpse**, held by `show_dead`), `Spawn`. Missing clips are skipped and the presenter falls back to a tween. Hub props only need `Idle`.
-- **Impact:** the loader looks for a method-track key named `Impact` on the clip; without one it lands the impact at **50% of the clip**. Blender's FBX export cannot write method tracks, so today every clip uses the 50% fallback. The exact impact frame of every Attack and Cast (and the Red Slime's Die burst) is listed per model in `~/blender/out/manifest.json` (`clips.<Clip>.impact`, 30 fps); an import step that adds the `Impact` key from that file would make the hits land on the right frame.
+- **Impact:** the loader uses a method-track key named `Impact` on the clip when there is one; Blender's FBX export cannot write method tracks, so the impact times come from **`art/models/impacts.json`** (`{"<Model>": {"<Clip>": seconds}}`, made from `~/blender/out/manifest.json`, 30 fps; Attack, Cast, and Red Slime's Die burst). Without either, the impact lands at 50% of the clip. When a model's clips change, regenerate impacts.json with the model.
 - **Muzzle:** an empty named `Muzzle`, parented to the bone that carries the bow, barrel, staff head, beak or mouth, so it follows the animation. `EntityView` picks the deepest `Muzzle` node; projectiles start there (else two thirds of the way up).
 - **Hitbox (optional):** a mesh named `Hitbox` is hidden and used for the HP bar's outline.
 - **Hidden effect parts** (muzzle flashes, chips, web nets, fire rings, ash piles) are built at 1% size at rest and scaled up by their bone inside a clip, so bone **scale** keys must import (they do).
@@ -113,16 +113,27 @@ Personality: towers hop like moved game pieces and attack crisply; slimes squash
 
 ## 8. Roster (2026-10-15)
 
+In the repo (`art/models/`, used by content):
+
 | Family | Models |
 | --- | --- |
 | Towers | Archer (remade 2026-10-08), Guardian, Mage, Priest, Wisp, Alchemist, Drummer, Ballista, Cannon; ideas: Pikeman, Princess |
-| Slimes | Slime, Runner, Big Slime, Shield Slime, Slime Archer, Slime Shaman, Red Slime (explodes on death), Slime King, Slime Glutton (boss) |
-| Beasts, spiders, birds | Rabbit, Jackalope, Bat, Tusker; Giant Spider, Green Giant Spider, Yellow Spider; Crow, Eagle, Phoenix (mini-boss) |
-| Brutes | Brute, Ironhide, Rockjaw; idea: Strider |
-| Undead | Skeleton, Skeleton Spearman, Skeleton Archer, Skeleton Mage, Skeleton Fire Mage, Lich (mini-boss), Skeleton King (boss) |
-| Serpents | Snake, Cobra, Basilisk (boss), Medusa (mini-boss) |
-| Buildings, objects | Base, Fortress, Rock, Rock B, Rock C, Statue (petrified knight), Statue B (praying angel) |
+| Slimes | Slime, Runner, Big Slime, Shield Slime, Slime Archer, Slime Shaman, Slime King, Slime Glutton (boss) |
+| Beasts, brutes | Rabbit, Jackalope, Bat, Tusker; Brute, Ironhide, Rockjaw; idea: Strider |
+| Undead | Skeleton, Skeleton Spearman, Skeleton Mage, Skeleton Fire Mage, Lich (mini-boss), Skeleton King (boss) |
+| Buildings, objects | Base, Fortress, Rock, Rock B, Rock C |
 | Projectiles | Arrow, Ballista Bolt, Cannon Shell, Fire Orb, Acid Flask, Spit Glob, Wisp Spark |
+
+**Available, not in the repo** (ready in `~/blender/out/`; every FBX under `art/` goes into the web export, so they are added when content uses them):
+
+| Family | Models |
+| --- | --- |
+| Slimes | Red Slime (explodes on death; Die impact = the burst) |
+| Spiders | Giant Spider, Green Giant Spider, Yellow Spider |
+| Birds | Crow, Eagle, Phoenix (mini-boss) |
+| Undead | Skeleton Archer |
+| Serpents | Snake, Cobra, Basilisk (boss), Medusa (mini-boss) |
+| Objects | Statue (petrified knight), Statue B (praying angel) |
 
 Per-model triangles, bounds, clip lengths and impact frames: `~/blender/out/manifest.json`. Pictures (hero, game camera, animation sheets, portraits): the gallery at http://92.5.94.11/art/. Not built: the Stone Golem boss idea.
 
@@ -138,5 +149,6 @@ Per-model triangles, bounds, clip lengths and impact frames: `~/blender/out/mani
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Roster split into "in the repo" and "available, not in the repo"; impact times via art/models/impacts.json |
 | 2026-10-15 | Moved to the Godot repo as Markdown and rewritten for Godot: import, clip/Impact/Muzzle contract as the loader reads it, folders, hub layouts. Brought up to date: faceted slimes, no red eyes, no faces on buildings, the roster since 2026-10-07 (undead, serpents, spiders, birds, statues, Red Slime, Princess, Guild) |
 | 2026-10-07 | First version (Unity era): style chosen, palette, shape language, animation contract, map kit, 26 models |

@@ -1,0 +1,191 @@
+{
+ "Alchemist": {
+  "Attack": 0.5,
+  "Cast": 0.5333
+ },
+ "Archer": {
+  "Attack": 0.5,
+  "Cast": 0.3667
+ },
+ "Ballista": {
+  "Attack": 0.3333,
+  "Cast": 0.3333
+ },
+ "Base": {
+  "Attack": 0.4,
+  "Cast": 0.3667
+ },
+ "Basilisk": {
+  "Attack": 0.5667,
+  "Cast": 0.5333
+ },
+ "Bat": {
+  "Attack": 0.3,
+  "Cast": 0.2667
+ },
+ "Big Slime": {
+  "Attack": 0.5,
+  "Cast": 0.5
+ },
+ "Brute": {
+  "Attack": 0.5,
+  "Cast": 0.4667
+ },
+ "Cannon": {
+  "Attack": 0.3333,
+  "Cast": 0.3333
+ },
+ "Cobra": {
+  "Attack": 0.3667,
+  "Cast": 0.3333
+ },
+ "Crow": {
+  "Attack": 0.3,
+  "Cast": 0.3
+ },
+ "Drummer": {
+  "Attack": 0.3333,
+  "Cast": 0.4333
+ },
+ "Eagle": {
+  "Attack": 0.4667,
+  "Cast": 0.4
+ },
+ "Fortress": {
+  "Attack": 0.4,
+  "Cast": 0.3667
+ },
+ "Giant Spider": {
+  "Attack": 0.4,
+  "Cast": 0.4333
+ },
+ "Green Giant Spider": {
+  "Attack": 0.4,
+  "Cast": 0.4333
+ },
+ "Guardian": {
+  "Attack": 0.3667,
+  "Cast": 0.4333
+ },
+ "Ironhide": {
+  "Attack": 0.5667,
+  "Cast": 0.5667
+ },
+ "Jackalope": {
+  "Attack": 0.2667,
+  "Cast": 0.3667
+ },
+ "Lich": {
+  "Attack": 0.4667,
+  "Cast": 0.5667
+ },
+ "Mage": {
+  "Attack": 0.4667,
+  "Cast": 0.5
+ },
+ "Medusa": {
+  "Attack": 0.6,
+  "Cast": 0.5333
+ },
+ "Phoenix": {
+  "Attack": 0.4667,
+  "Cast": 0.6
+ },
+ "Pikeman": {
+  "Attack": 0.4333,
+  "Cast": 0.4
+ },
+ "Priest": {
+  "Attack": 0.4333,
+  "Cast": 0.4667
+ },
+ "Princess": {
+  "Attack": 0.4333,
+  "Cast": 0.3667
+ },
+ "Rabbit": {
+  "Attack": 0.2667,
+  "Cast": 0.3667
+ },
+ "Red Slime": {
+  "Attack": 0.3667,
+  "Cast": 0.4,
+  "Die": 0.4
+ },
+ "Rockjaw": {
+  "Attack": 0.5,
+  "Cast": 0.5667
+ },
+ "Runner": {
+  "Attack": 0.2667,
+  "Cast": 0.4
+ },
+ "Shield Slime": {
+  "Attack": 0.3667,
+  "Cast": 0.4
+ },
+ "Skeleton": {
+  "Attack": 0.4,
+  "Cast": 0.3333
+ },
+ "Skeleton Archer": {
+  "Attack": 0.5,
+  "Cast": 0.5
+ },
+ "Skeleton Fire Mage": {
+  "Attack": 0.4,
+  "Cast": 0.4333
+ },
+ "Skeleton King": {
+  "Attack": 0.6,
+  "Cast": 0.5333
+ },
+ "Skeleton Mage": {
+  "Attack": 0.3667,
+  "Cast": 0.4667
+ },
+ "Skeleton Spearman": {
+  "Attack": 0.4,
+  "Cast": 0.2667
+ },
+ "Slime": {
+  "Attack": 0.3667,
+  "Cast": 0.4667
+ },
+ "Slime Archer": {
+  "Attack": 0.4333,
+  "Cast": 0.4667
+ },
+ "Slime Glutton": {
+  "Attack": 0.8333,
+  "Cast": 0.7
+ },
+ "Slime King": {
+  "Attack": 0.7667,
+  "Cast": 0.6
+ },
+ "Slime Shaman": {
+  "Attack": 0.3667,
+  "Cast": 0.4667
+ },
+ "Snake": {
+  "Attack": 0.4,
+  "Cast": 0.3333
+ },
+ "Strider": {
+  "Attack": 0.4,
+  "Cast": 0.5667
+ },
+ "Tusker": {
+  "Attack": 0.3667,
+  "Cast": 0.6667
+ },
+ "Wisp": {
+  "Attack": 0.3667,
+  "Cast": 0.3333
+ },
+ "Yellow Spider": {
+  "Attack": 0.2667,
+  "Cast": 0.4333
+ }
+}

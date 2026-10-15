@@ -3,7 +3,9 @@ extends RefCounted
 ## Maps the presenters' calls onto a model's AnimationPlayer (EntityAnimatorBridge.cs). The FBX contract:
 ## clips `<Name>|Idle`, `|Walk`, `|Attack`, `|Cast`, `|Hit`, `|Die` (last frame = the corpse), `|Spawn`.
 ## A trigger plays the first clip whose name ends with "|<Trigger>" (else contains it). The impact: a method
-## track key calling "Impact"/"impact" on the clip when there is one, else fallback_impact of the clip.
+## track key calling "Impact"/"impact" on the clip when there is one, else the Blender kit's
+## res://art/models/impacts.json ({"<Model>": {"<Clip>": seconds}}, the model = the part of the clip name before
+## "|"; Blender's FBX export cannot write method tracks), else fallback_impact of the clip.
 ## One-shot clips return to Idle (or Walk while moving) when they end. Missing clips are skipped, so a model
 ## may have only some.
 
@@ -71,10 +73,38 @@ func impact_key_time(trigger: String) -> float:
 			if str(a.method_track_get_name(t, k)).to_lower() == "impact": return a.track_get_key_time(t, k)
 	return -1.0
 
-## When the impact lands, in seconds into the clip.
+## When the impact lands, in seconds into the clip: the clip's impact key, else the kit's impacts.json, else
+## fallback_impact of the clip.
 func impact_time(trigger: String) -> float:
 	var key := impact_key_time(trigger)
-	return key if key >= 0.0 else clip_length(trigger, 0.5) * fallback_impact
+	if key >= 0.0: return key
+	var table := impact_table_time(trigger)
+	if table >= 0.0: return minf(table, clip_length(trigger, 0.5))
+	return clip_length(trigger, 0.5) * fallback_impact
+
+const IMPACTS_PATH := "res://art/models/impacts.json"
+static var _impacts = null  # {"<Model>": {"<Clip>": seconds}} once loaded; {} when the file is missing
+
+## The impact time from art/models/impacts.json for this clip (model = the clip name's part before "|"), or -1.
+func impact_table_time(trigger: String) -> float:
+	var name: String = _clips.get(trigger.to_lower(), "")
+	if name == "" or not name.contains("|"): return -1.0
+	var model := name.get_slice("|", 0)
+	var clip := name.get_slice("|", name.get_slice_count("|") - 1)
+	var table: Dictionary = impacts_table()
+	if not table.has(model): return -1.0
+	var clips: Dictionary = table[model]
+	if not clips.has(clip): return -1.0
+	return float(clips[clip])
+
+static func impacts_table() -> Dictionary:
+	if _impacts == null:
+		_impacts = {}
+		if FileAccess.file_exists(IMPACTS_PATH):
+			var parsed = JSON.parse_string(FileAccess.get_file_as_string(IMPACTS_PATH))
+			if parsed is Dictionary: _impacts = parsed
+			else: push_warning("EntityRig: %s is not a JSON object" % IMPACTS_PATH)
+	return _impacts
 
 func set_moving(moving: bool) -> void:
 	if _moving == moving: return
