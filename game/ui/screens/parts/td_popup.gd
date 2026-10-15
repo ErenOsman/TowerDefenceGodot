@@ -30,6 +30,9 @@ var scrim: TdScrim
 var window: Control
 var is_open := false
 var _built := false
+## A left click on the scrim this soon after open() does not close it.
+const SCRIM_GRACE_MS := 400
+var _opened_at := -100000
 
 func _init() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -47,7 +50,9 @@ func _ensure_built() -> void:
 	scrim = TdScrim.new()
 	scrim.visible = use_scrim
 	scrim.clicked.connect(func(button: int):
-		if button == MOUSE_BUTTON_LEFT and close_on_scrim: back()
+		# the second click of the double click that opened it lands on the scrim: not a close (QA 2026-10-15: a double
+		# click on a mission's hand slot opened the hand editor and shut it at once)
+		if button == MOUSE_BUTTON_LEFT and close_on_scrim and Time.get_ticks_msec() - _opened_at > SCRIM_GRACE_MS: back()
 		elif button == MOUSE_BUTTON_RIGHT and right_click_closes: back())
 	add_child(scrim)
 	# right click = Back anywhere over the popup: read before the GUI (controls with MOUSE_FILTER_STOP — cards, panels,
@@ -71,6 +76,7 @@ func open() -> void:
 	if not is_inside_tree():
 		push_warning("[TdPopup] add it to the tree before open()")
 	is_open = true
+	_opened_at = Time.get_ticks_msec()
 	visible = true
 	mouse_filter = MOUSE_FILTER_STOP
 	open_popups.erase(self)

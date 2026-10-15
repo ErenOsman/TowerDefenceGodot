@@ -402,10 +402,10 @@ func _slot_row(i: int, p, room: Dictionary, cap: int, h: float) -> Control:
 	state.size_flags_vertical = SIZE_SHRINK_CENTER
 	row.add_child(state)
 	var tail := Control.new()
-	tail.custom_minimum_size = Vector2(190, 0)
+	tail.custom_minimum_size = Vector2(204, 0) # Change hand at 200: its label ran to 7 px of the rim at 186 (QA 2026-10-15)
 	row.add_child(tail)
 	if mine:
-		var ch := TdMenu.button(TdButton.Style.SECONDARY, "Change hand", Vector2(186, 48), TdTheme.texture("icon_cards"))
+		var ch := TdMenu.button(TdButton.Style.SECONDARY, "Change hand", Vector2(200, 48), TdTheme.texture("icon_cards"))
 		ch.font_size = 21
 		ch.position = Vector2(0, (h - 12 - 48) / 2.0)
 		ch.clicked.connect(open_hand_editor)

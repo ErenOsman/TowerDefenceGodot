@@ -433,13 +433,24 @@ func _draw_detail(online: bool) -> void:
 	var done := room_done(r)
 	var why := "This room is full." if full else ("The match has started." if started else "")
 	if done and why == "": why = MissionUiLogic.join_done_text(m.name)
+	# the note wraps inside the column: on one line "Done today: you played Night Watch today. Resets in 15 h." widened
+	# the whole lobby window by ~116 px (QA 2026-10-15)
 	if done:
-		_join_note.add_child(TdDrops.icon("check", 20, TdTheme.color("cream.200")))
-		var jl := TdMenu.label(MissionUiLogic.join_done_text(m.name), "plate", TdTheme.color("cream.200"), 19)
-		_join_note.add_child(jl)
+		var ic := TdDrops.icon("check", 20, TdTheme.color("cream.200"))
+		ic.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		_join_note.add_child(ic)
+		_join_note.add_child(_note_label(MissionUiLogic.join_done_text(m.name)))
 	elif why != "": # full / started: the reason on a line too, not only on hover (the one Disabled look rule; QA 2026-10-14)
-		_join_note.add_child(TdMenu.label(why, "plate", TdTheme.color("cream.200"), 19))
+		var wl := _note_label(why)
+		wl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT # over the Join button, as before
+		_join_note.add_child(wl)
 	_join.set_interactable(why == "", why)
+
+func _note_label(text: String) -> Label:
+	var l := TdMenu.wrap_label(text, "plate", TdTheme.color("cream.200"), 19)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	l.custom_minimum_size = Vector2(0, 0)
+	return l
 
 ## The mission's drops on the level card (a dark box: Each win / First win).
 static func _drops_card(m: MissionDef) -> Control:

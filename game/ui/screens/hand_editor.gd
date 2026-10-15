@@ -145,7 +145,7 @@ func _build_head() -> Control:
 
 func _build_tray() -> Control:
 	_tray_panel = PanelContainer.new()
-	_tray_panel.add_theme_stylebox_override("panel", TdTheme.stylebox("hand_tray", Color.WHITE, [14, 28, 14, 4]))
+	_tray_panel.add_theme_stylebox_override("panel", TdTheme.stylebox("hand_tray", Color.WHITE, [14, 34, 14, 4]))
 	_tray_panel.size_flags_vertical = SIZE_SHRINK_BEGIN
 	var drop := TrayDrop.new()
 	drop.editor = self
@@ -223,8 +223,9 @@ func _refresh_tray(pop := false) -> void:
 		s.dropped.connect(_on_drop)
 		_tray.add_child(s)
 		_slots.append(s)
-	# room under the slots for the tired / goes lines
-	_tray_panel.add_theme_stylebox_override("panel", TdTheme.stylebox("hand_tray", Color.WHITE, [14, 28, 14, 54 if lines else 4]))
+	# room under the slots for the tired / goes lines; 34 on top: the divider's note clear of the tray's rim (QA 2026-10-15:
+	# at 28 its letters touched the rim)
+	_tray_panel.add_theme_stylebox_override("panel", TdTheme.stylebox("hand_tray", Color.WHITE, [14, 34, 14, 54 if lines else 4]))
 	if pop: TdMenu.pop_in(made, 0.03)
 
 ## The divider at the level's cap, its note above it.
@@ -241,7 +242,7 @@ func _divider(note: String) -> Control:
 	var l := TdMenu.label(note, "plate", TdTheme.color("cream.200"), 18)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.size = Vector2(320, 24)
-	l.position = Vector2(13 - 160, -28)
+	l.position = Vector2(13 - 160, -30)
 	l.mouse_filter = MOUSE_FILTER_IGNORE
 	d.add_child(l)
 	return d
@@ -405,6 +406,7 @@ func _refresh_detail() -> void:
 	if at >= 0:
 		foot.add_child(TdMenu.label("In your hand · key %d" % (at + 1), "plate", TdTheme.color("good.ink"), 18))
 		var b := TdMenu.button(TdButton.Style.SECONDARY, "Remove from hand", _action_size(TdButton.Style.SECONDARY), TdTheme.texture("icon_close"))
+		b.font_size = 24 # at the default size the label ran to ~8 px of the rims in the fixed-width card (QA 2026-10-15)
 		var id: String = e.id
 		b.clicked.connect(func(): remove(id))
 		foot.add_child(b)

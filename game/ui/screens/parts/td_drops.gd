@@ -43,8 +43,17 @@ static func coin(token_id: String, amount: int, first := false, dim := false, si
 	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	h.add_child(l)
 	if dim: p.modulate = Color(1, 1, 1, 0.5)
-	TdTooltipTrigger.attach(p, TooltipText.title(token_name(token_id), TooltipText.value_color(), "Token"),
-		"First win only." if first else "")
+	# what the token is for and how many you have (QA 2026-10-15: an "Each win" coin said only "Ember Core · Token")
+	var app := TdMenu.app()
+	var t: TokenAsset = app.catalog.find_token(token_id) if app != null and app.catalog != null else null
+	var body := (t.description + "\n") if t != null and t.description != "" else ""
+	body += "First win only." if first else "Every win."
+	var have := ""
+	if app != null and app.has_node("/root/SaveData"):
+		var sd = app.get_node("/root/SaveData")
+		if sd.tokens != null: have = str(sd.tokens.count(token_id))
+	TdTooltipTrigger.attach(p, TooltipText.title(token_name(token_id), TooltipText.value_color(), "Token"), body,
+		"You have" if have != "" else "", have)
 	return p
 
 ## The coins of a {token: amount} list, in order.

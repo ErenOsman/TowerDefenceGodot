@@ -63,6 +63,7 @@ func _run() -> void:
 	if want("coop"): await tour_coop()
 	if want("play"): await tour_play()
 	if sections.has("verify"): await tour_verify()
+	if sections.has("abuse"): await tour_abuse()
 	qa.finish()
 	quit()
 
@@ -460,7 +461,7 @@ func tour_hand() -> void:
 		qa.step = "Esc"
 		await qa.key(KEY_ESCAPE)
 		await qa.wait(8, 0.5)
-		if he.is_open: qa.find("esc", "hand editor", "Esc does not close it")
+		if is_instance_valid(he) and he.is_open: qa.find("esc", "hand editor", "Esc does not close it")
 	save.missions.tired.clear()
 	save.towers.hand.erase(by_type["wisp"][0].id)
 	save.save()
@@ -919,7 +920,8 @@ func tour_coop() -> void:
 	if dp == null or not str(dp.get_script().resource_path).contains("coop_lobby") and not ("texts" in dp):
 		qa.find("data", "auto-leave", "no Done today popup (top: %s)" % [QA.describe(dp) if dp != null else "none"])
 	else:
-		await qa.crawl(func(): return dp if is_instance_valid(dp) and dp.is_open else null, "done_popup", {"max": 4})
+		cur.dp = dp # a lambda capturing a freed popup raises an engine error when called: read it from the dict
+		await qa.crawl(func(): return cur.dp if is_instance_valid(cur.dp) and cur.dp.is_open else null, "done_popup", {"max": 4})
 	# Esc closes the lobby
 	qa.step = "lobby Esc"
 	if is_instance_valid(lobby) and top_popup() == lobby:
@@ -1092,3 +1094,228 @@ func tour_verify() -> void:
 		ws.open_modify(by_type["archer"][2].id)
 		await qa.wait(14, 0.9)
 		await shot_audit("v_ws_modify", ws)
+
+# ------------------------------------------------------------------ abuse: wrong inputs (QA round 2)
+
+func depth() -> int:
+	return TdPopup.open_popups.size()
+
+## Open popups whose script is (or extends) the named class (by name: a class reference here would compile the
+## screen scripts before the autoloads exist).
+func count_popups(cls_name: String) -> int:
+	var n := 0
+	for p in TdPopup.open_popups:
+		var s: Script = p.get_script()
+		while s != null:
+			if s.get_global_name() == cls_name: n += 1; break
+			s = s.get_base_script()
+	return n
+
+func keys(list: Array) -> void:
+	for k in list:
+		await qa.key(k)
+		await qa.wait(3, 0.2)
+
+## Wrong inputs on every screen: right clicks, Space / Enter / Tab / arrows where they mean nothing, double clicks on
+## cards, Play, Modify, Unlock and Create. Each step notes what happened; anything that opened twice, played or spent
+## is a finding (engine warnings are caught by the logger).
+func tour_abuse() -> void:
+	qa.screen = "Wrong inputs"
+	var g = await goto_guild()
+	freeze_world(g, true)
+	qa.step = "bare guild keys"
+	await qa.click_at(Vector2(960, 760), MOUSE_BUTTON_RIGHT)
+	await keys([KEY_SPACE, KEY_ENTER, KEY_TAB, KEY_1, KEY_ESCAPE])
+	if depth() != 0 or flow.current != flow.Guild: qa.find("bug", "bare Guild", "keys / right click: %d popups, scene %s" % [depth(), flow.current])
+	await qa.shot("ab_guild_keys")
+	# the board: a double click on a card opens one detail
+	qa.step = "board card double click"
+	var b = await open_board(g)
+	freeze_world(g, true)
+	var card: Control = b.cards.get("patrol")
+	await qa.dbl_click_at(QA.grect(card).position + Vector2(40, 40))
+	await qa.wait(10, 0.6)
+	await boards()
+	note("double click card: details ", count_popups("MissionDetail"), " depth ", depth())
+	if count_popups("MissionDetail") != 1: qa.find("bug", "board card double click", "%d details opened" % count_popups("MissionDetail"))
+	var d = b.detail
+	qa.step = "detail keys"
+	if d != null:
+		await qa.click_at(qa.centre(d._rows[3]))
+		await qa.wait(4, 0.3)
+		var dd := depth()
+		await keys([KEY_SPACE, KEY_ENTER, KEY_TAB, KEY_UP, KEY_DOWN])
+		note("detail keys: depth ", dd, " → ", depth(), " loading ", flow.is_loading, " mission ", d.mission_id)
+		if flow.is_loading: qa.find("bug", "detail keys", "a key started the level")
+		await qa.shot("ab_detail_keys")
+		# a double click on a hand slot: one hand editor
+		await qa.dbl_click_at(qa.centre(d._pieces[0]))
+		await qa.wait(12, 0.8)
+		var n_he := 0
+		for p in TdPopup.open_popups:
+			if str(p.get_script().resource_path).contains("hand_editor"): n_he += 1
+		note("double click hand slot: hand editors ", n_he)
+		if n_he > 1: qa.find("bug", "detail hand slot double click", "%d hand editors opened" % n_he)
+		await qa.shot("ab_detail_slot_dbl")
+		while depth() > dd:
+			await qa.key(KEY_ESCAPE)
+			await qa.wait(6, 0.4)
+		# right click on Play: Back, never plays
+		await qa.click_at(qa.centre(d._play), MOUSE_BUTTON_RIGHT)
+		await qa.wait(8, 0.5)
+		if flow.is_loading: qa.find("bug", "right click on Play", "started the level")
+		if is_instance_valid(d) and d.is_open: qa.find("esc", "detail", "right click on Play did not go back")
+	qa.step = "board keys"
+	if g.board != null and g.board.is_open:
+		await keys([KEY_SPACE, KEY_ENTER, KEY_TAB])
+		if flow.is_loading: qa.find("bug", "board keys", "a key started a level")
+		await qa.shot("ab_board_keys")
+	# co-op: lobby keys, double click Create, Enter in the room name, Esc chain
+	qa.step = "lobby keys"
+	if g.board != null and g.board.is_open:
+		await qa.key(KEY_ESCAPE)
+		await qa.wait(8, 0.5)
+	_connect_fake()
+	var lobby: CoopLobby = await open_lobby(g)
+	if lobby != null:
+		var mert := _bot("Mert")
+		_say(mert, NetProtocol.create("Quick slimes", "chapter2-2", 4, "", ["cannon"]))
+		net.list_rooms()
+		await qa.wait(6, 0.4)
+		lobby.select_room(mert.room_id)
+		await qa.wait(4, 0.3)
+		await keys([KEY_SPACE, KEY_ENTER, KEY_TAB])
+		note("lobby keys: in room ", net.in_room, " depth ", depth())
+		await qa.shot("ab_lobby_keys")
+		if net.in_room:
+			net.leave_room()
+			await qa.wait(8, 0.5)
+		# double click on a room row: joins? (one room popup at most)
+		var row: Control = null
+		for r in lobby._list.get_children():
+			if r is Control and r.visible: row = r; break
+		if row != null:
+			await qa.dbl_click_at(qa.centre(row))
+			await qa.wait(10, 0.6)
+			await boards()
+			note("double click room row: in room ", net.in_room, " rooms popups ", count_popups("CoopRoom"), " depth ", depth())
+			if count_popups("CoopRoom") > 1: qa.find("bug", "lobby row double click", "%d room popups" % count_popups("CoopRoom"))
+			await qa.shot("ab_lobby_row_dbl")
+			if net.in_room:
+				net.leave_room()
+				await qa.wait(10, 0.6)
+		qa.step = "create double click"
+		var d0 := depth()
+		await qa.dbl_click_at(qa.centre(lobby._create))
+		await qa.wait(10, 0.7)
+		await boards()
+		note("double click Create room: create popups ", count_popups("CoopCreatePopup"), " depth ", d0, " → ", depth())
+		if count_popups("CoopCreatePopup") > 1: qa.find("bug", "Create room double click", "%d create popups" % count_popups("CoopCreatePopup"))
+		var cp = top_popup()
+		if cp is CoopCreatePopup:
+			await qa.click_at(qa.centre(cp._name))
+			await qa.key(KEY_END)
+			await qa.type_text(" 2")
+			await qa.key(KEY_ENTER)
+			await qa.wait(10, 0.6)
+			note("Enter in the room name: in room ", net.in_room, " top ", QA.describe(top_popup()) if top_popup() != null else "none")
+			await qa.shot("ab_create_enter")
+			if not net.in_room:
+				# the Create button double clicked: one room
+				await qa.dbl_click_at(qa.centre(cp._create))
+				await qa.wait(12, 0.8)
+				note("double click Create: in room ", net.in_room, " room popups ", count_popups("CoopRoom"), " rooms on relay ", relay.rooms.size() if "rooms" in relay else -1)
+			if count_popups("CoopRoom") > 1: qa.find("bug", "Create double click", "%d room popups" % count_popups("CoopRoom"))
+			await boards()
+			await qa.shot("ab_room")
+			if net.in_room:
+				var room: CoopRoom = lobby.room_popup
+				# Ready double click: back to not ready (two toggles), no error
+				await qa.dbl_click_at(qa.centre(room._ready_btn))
+				await qa.wait(6, 0.4)
+				var me = NetProtocol.find_player(net.room, net.player_id)
+				note("Ready double click: ready ", me.get("ready", false) if me != null else "?")
+				# Esc, right click in the room: stays
+				await qa.key(KEY_ESCAPE)
+				await qa.wait(4, 0.3)
+				await qa.click_at(Vector2(960, 540), MOUSE_BUTTON_RIGHT)
+				await qa.wait(6, 0.4)
+				note("room after Esc + right click: in room ", net.in_room, " depth ", depth())
+				await qa.shot("ab_room_esc")
+				net.leave_room()
+				await qa.wait(8, 0.5)
+		while depth() > 0:
+			await qa.key(KEY_ESCAPE)
+			await qa.wait(6, 0.4)
+	# Workshop
+	qa.step = "workshop keys"
+	var camp = await goto_camp()
+	freeze_world(camp, true)
+	var ws = await ws_open(camp)
+	if ws != null:
+		var t0: Control = ws.collection.tiles.get(by_type["archer"][1].id)
+		await qa.click_at(qa.centre(t0))
+		await qa.wait(4, 0.3)
+		await keys([KEY_SPACE, KEY_TAB, KEY_RIGHT, KEY_DOWN])
+		note("picker after Space/Tab/arrows: view ", ws.view, " tower ", ws.tower_id, " (clicked ", by_type["archer"][1].id, ")")
+		await qa.shot("ab_ws_pick_keys")
+		await qa.key(KEY_ENTER)
+		await qa.wait(14, 0.9)
+		if ws.view != "modify": qa.find("bug", "picker Enter", "did not open Modify")
+		await keys([KEY_ENTER, KEY_ENTER, KEY_SPACE, KEY_TAB])
+		note("modify after Enter×2 on the current form: view ", ws.view, " confirm ", ws.confirm_open)
+		if ws.view == "modify": # a right click in the picker closes the Workshop
+			await qa.click_at(qa.centre(ws._tree) + Vector2(0, -60), MOUSE_BUTTON_RIGHT)
+			await qa.wait(12, 0.8)
+			if ws.view != "pick": qa.find("esc", "Modify right click", "did not go back to the picker")
+		if not is_instance_valid(ws) or not ws.is_open: ws = await ws_open(camp)
+		var mb := find_text(ws._pdetail, "Modify")
+		if mb != null:
+			await qa.dbl_click_at(qa.centre(mb))
+			await qa.wait(14, 0.9)
+		note("double click Modify: view ", ws.view)
+		await qa.shot("ab_ws_modify_dbl")
+		if ws.view == "modify":
+			ws.select_node("archer-fire")
+			await qa.wait(6, 0.4)
+			var have0: int = save.tokens.count("fire-arrow")
+			var ub: Control = null
+			for c in QA.visible_controls(ws._card):
+				if c is TdButton and c.interactable and c.style == TdButton.Style.PRIMARY: ub = c
+			if ub != null:
+				await qa.dbl_click_at(qa.centre(ub))
+				await qa.wait(8, 0.5)
+				note("double click Unlock: confirm ", ws.confirm_open, " tokens ", have0, " → ", save.tokens.count("fire-arrow"))
+				await qa.shot("ab_ws_unlock_dbl")
+				if ws.confirm_open:
+					var yes := find_text(ws._confirm, "Unlock")
+					if yes != null:
+						await qa.dbl_click_at(qa.centre(yes))
+						await qa.wait(8, 0.5)
+				var have1: int = save.tokens.count("fire-arrow")
+				note("double click confirm Unlock: tokens ", have0, " → ", have1, " confirm ", ws.confirm_open)
+				if have1 < have0 - 1: qa.find("data", "Unlock double click", "spent %d tokens" % (have0 - have1))
+				await qa.shot("ab_ws_unlocked_dbl")
+		await keys([KEY_ESCAPE, KEY_ESCAPE, KEY_ESCAPE])
+		await qa.wait(8, 0.5)
+		note("Esc ×3: workshop open ", is_instance_valid(ws) and ws.is_open, " scene ", flow.current)
+	# the last: a double click on a card's Play (Drum Line: 2 plays) → one launch, one play spent
+	qa.step = "card Play double click"
+	g = await goto_guild()
+	freeze_world(g, true)
+	b = await open_board(g)
+	var dl: Control = b.cards.get("drum-line")
+	var play := find_text(dl, "Play")
+	var left0 := MissionBoard.plays_left(app.mission("drum-line"), save.missions)
+	var sc := QA.scroll_parent(dl)
+	if sc != null:
+		sc.ensure_control_visible(dl)
+		await qa.frames(3)
+	if play != null:
+		await qa.dbl_click_at(qa.centre(play))
+		await qa.until(func(): return flow.current == flow.Game and not flow.is_loading and current_scene != null, 90.0)
+		await qa.wait(20, 1.0)
+		var left1 := MissionBoard.plays_left(app.mission("drum-line"), save.missions)
+		note("double click Play: plays ", left0, " → ", left1, " scene ", flow.current)
+		if left1 != left0 - 1: qa.find("data", "card Play double click", "plays %d → %d" % [left0, left1])
+		await qa.shot("ab_play_dbl")

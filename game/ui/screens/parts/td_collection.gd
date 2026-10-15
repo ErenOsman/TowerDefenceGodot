@@ -69,6 +69,8 @@ func _build_filters() -> Control:
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = SIZE_EXPAND_FILL
+	# when it scrolls (the hand editor's longer list) the bar stood 4 px from the search field's rim (QA 2026-10-15)
+	scroll.add_theme_constant_override("scrollbar_v_separation", 8)
 	well.add_child(scroll)
 	var v := TdMenu.vbox(8) # 8 px between the filter groups (they touched at 4)
 	v.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -91,6 +93,12 @@ func _build_filters() -> Control:
 	TdTheme.apply_type(search, "body", TdTheme.color("ink"), 20)
 	search.add_theme_font_override("font", TdTheme.font("nunito_bold"))
 	search.clear_button_enabled = true
+	# its 4-character minimum (+ the clear icon) pushed the Workshop's filter well from 224 to 234 px (QA 2026-10-15)
+	search.add_theme_constant_override("minimum_character_width", 0)
+	# focus by a click only, and Enter gives the keys back: Tab used to park the caret here and every later Enter / arrow
+	# went into the field (QA 2026-10-15: Workshop picker Enter stopped opening Modify)
+	search.focus_mode = FOCUS_CLICK
+	search.text_submitted.connect(func(_t: String): search.release_focus())
 	search.text_changed.connect(func(t: String):
 		filter.q = t
 		refresh_grid())

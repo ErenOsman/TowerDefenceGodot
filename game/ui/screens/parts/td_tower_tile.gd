@@ -10,7 +10,8 @@ signal double_pressed(tower_id: String)
 
 const SIZE := Vector2(108, 116)
 ## The Workshop picker's wider tiles (no hand row there: the filters and the card are narrower).
-const WIDE := Vector2(114, 116)
+## 118: the 224 px filter well gave the grid 10 px back; "Fire Archer" (105 px) no longer touches the rims (QA 2026-10-15).
+const WIDE := Vector2(118, 116)
 const MEDAL := 60.0
 
 var tower_id := ""

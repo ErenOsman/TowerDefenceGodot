@@ -123,6 +123,7 @@ func _process(delta: float) -> void:
 
 func _open() -> void:
 	if _target == null: return
+	if _covered(): return
 	if not _stack.is_empty():
 		_showing = true
 		TdTooltipStack.show(self, _target, _stack, _side if _side >= 0 else TdTooltipPlacement.Side.AUTO, _edge)
@@ -138,6 +139,17 @@ func _open() -> void:
 			PositionMode.ANCHOR_FOLLOW: TdTooltip.show_at(_target, body, header, footer_label, footer_value, true)
 			PositionMode.ANCHOR_STATIC: TdTooltip.show_at(_target, body, header, footer_label, footer_value, false)
 	TdTooltip.own(self)
+
+## A popup opened over the target while the pointer rested on it (Godot keeps the old hover until the pointer moves):
+## no tooltip through the popup's scrim (QA 2026-10-15: the lobby's Join tooltip showed over the "Done today" popup).
+func _covered() -> bool:
+	return covered(_target)
+
+## Whether `target` sits under the top open popup (not inside it): its tooltips stay shut.
+static func covered(target: Control) -> bool:
+	if target == null or TdPopup.open_popups.is_empty(): return false
+	var top = TdPopup.open_popups.back()
+	return is_instance_valid(top) and top != target and not top.is_ancestor_of(target)
 
 func _close() -> void:
 	if not _showing: return

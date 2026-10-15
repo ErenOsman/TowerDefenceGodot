@@ -42,6 +42,7 @@ var node_id := ""
 ## A node just unlocked (its toast shows until another node is picked or 4 s pass).
 var flash_id := ""
 var confirm_open := false
+var _confirm_at := -100000
 
 var collection: TdCollection
 var _entries: Array = []
@@ -181,7 +182,8 @@ func _build_confirm() -> void:
 	_confirm.visible = false
 	add_child(_confirm)
 	var sc := TdScrim.new()
-	sc.clicked.connect(func(_b: int): cancel_confirm())
+	# not the second click of a double click on Unlock (it landed on the scrim and cancelled at once; QA 2026-10-15)
+	sc.clicked.connect(func(_b: int): if Time.get_ticks_msec() - _confirm_at > TdPopup.SCRIM_GRACE_MS: cancel_confirm())
 	_confirm.add_child(sc)
 	var c := CenterContainer.new()
 	c.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -557,17 +559,29 @@ func _unlock_button(f: FormDef) -> TdButton:
 	var h := TdMenu.hbox(6)
 	h.mouse_filter = MOUSE_FILTER_IGNORE
 	c.add_child(h)
-	h.add_child(_button_label("Unlock ·"))
-	for part in WorkshopLogic.unlock_parts(f):
+	var parts := WorkshopLogic.unlock_parts(f)
+	# never wraps: the label shrinks (26 → 20) until it fits the face with ~26 px each side (QA 2026-10-15: "Unlock ·
+	# 1 Fire Arrow" ran to 12 px of the rims, longer token names past them)
+	var texts := ["Unlock ·"]
+	for part in parts: texts.append(part[1])
+	var fs := 26
+	var room := CARD_W - 32.0 - 52.0
+	while fs > 20:
+		var w := (texts.size() - 1) * (30.0 + 12.0) # each token: its coin and the two gaps round it
+		for t in texts: w += TdTheme.font("plinth").get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		if w <= room: break
+		fs -= 1
+	h.add_child(_button_label("Unlock ·", fs))
+	for part in parts:
 		var t := GameApp.catalog.find_token(part[0])
 		var ic := TdMenu.picture(GameApp.kit_texture(t.icon) if t != null else null, Vector2(30, 30))
 		ic.size_flags_vertical = SIZE_SHRINK_CENTER
 		h.add_child(ic)
-		h.add_child(_button_label(part[1]))
+		h.add_child(_button_label(part[1], fs))
 	return b
 
-func _button_label(text: String) -> Label:
-	var l := TdMenu.label(text, "header", Color.WHITE, 26)
+func _button_label(text: String, fs := 26) -> Label:
+	var l := TdMenu.label(text, "header", Color.WHITE, fs)
 	l.add_theme_font_override("font", TdTheme.font("plinth"))
 	l.add_theme_color_override("font_outline_color", Color(0.1, 0.2, 0.4, 0.6))
 	l.add_theme_constant_override("outline_size", 4)
@@ -689,6 +703,7 @@ func open_confirm() -> void:
 	yes.clicked.connect(confirm_unlock)
 	row.add_child(yes)
 	confirm_open = true
+	_confirm_at = Time.get_ticks_msec()
 	_confirm.visible = true
 	_confirm.modulate.a = 0.0
 	TdTheme.tween(_confirm).tween_property(_confirm, "modulate:a", 1.0, 0.15)
@@ -836,7 +851,9 @@ class FormTree extends Control:
 	## The tree frame (TREE_SIZE) scaled into the area between the caption and the legend.
 	func _frame() -> Array:
 		var top := 34.0
-		var bottom := 46.0
+		# the legend (40) + room for a bottom node's token chips, which hang ~118 px under its anchor (QA 2026-10-15:
+		# Longbow's "1/2" chip sat on the legend at 46)
+		var bottom := 70.0
 		var avail := Vector2(size.x, size.y - top - bottom)
 		var k := minf(avail.x / WorkshopLogic.TREE_SIZE.x, avail.y / WorkshopLogic.TREE_SIZE.y)
 		k = minf(k, 1.15)

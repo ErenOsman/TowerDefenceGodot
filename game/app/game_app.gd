@@ -104,6 +104,8 @@ func can_play_mission(m: MissionDef, now = null) -> bool:
 ## false (MissionBoard.last_reason) when refused.
 func play_mission(mission_id: String) -> bool:
 	var m := mission(mission_id)
+	# a double click on Play: the first click is already loading the level (no second request, no SceneFlow warning)
+	if SceneFlow.is_loading and LevelLaunch.mission_id == mission_id: return true
 	if not can_play_mission(m): return false
 	var l := mission_level(m)
 	if l == null:

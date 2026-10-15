@@ -63,6 +63,9 @@ func _build() -> void:
 	_change_wood = side.get_child(0)
 	_change_primary = TdMenu.button(TdButton.Style.PRIMARY, "Change hand", Vector2(300, 60), TdTheme.texture("icon_cards"))
 	_change_primary.font_size = 26
+	# no bleed room: it would widen the column by ~28 px and the button and "N of 8 slots used" jumped left when it
+	# replaced the wood one (QA 2026-10-15; nothing clips there, the hover growth still shows)
+	_change_primary.bleed_mode = TdButton.Bleed.OFF
 	_change_primary.clicked.connect(open_hand_editor)
 	_change_primary.visible = false
 	side.add_child(_change_primary)

@@ -472,6 +472,7 @@ func _tap() -> void:
 
 func _show_reason() -> void:
 	if denied_reason == "" or not is_inside_tree(): return
+	if TdTooltipTrigger.covered(self): return # under a popup that opened while the pointer rested here (QA 2026-10-15)
 	# clear of what hangs outside the rect (ability ring and badge, end turn glow)
 	var r := face_global_rect()
 	var grow := 20.0 if style == Style.ABILITY else (8.0 if style == Style.END_TURN else 0.0)
