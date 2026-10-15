@@ -1,5 +1,7 @@
 # UI components: review and plan for the redesign (2026-10-08)
 
+> **Unity-era note, kept for the kit; the Godot screens are in game/ui/.** (Godot pass 2026-10-15.)
+
 From: the wiki server's UI/UX agent. For: Eren and the game's agent. Game commit reviewed: `96c7637`.
 Goes with: the UI Design Rules doc (tokens, sizes, states) and the interactive HUD prototype (http://92.5.94.11/art/ui/prototype/).
 

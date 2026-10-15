@@ -1,6 +1,6 @@
 # Handoff — 2026-10-03 (updated after phase 5)
 
-> **Historical snapshot, out of date.** Paths, plans and "next steps" here are from 2026-10-03. For where things stand now, start at `Docs/README.md`, then `Docs/Changelog.md`.
+> **Historical snapshot of the Unity project, out of date.** Paths, plans and "next steps" here are from 2026-10-03; the Unity build stopped on 2026-10-15 and the Godot build is the game. For where things stand now, start at the Godot repo's `README.md` and `docs/GODOT-NOTES.md`; the Unity changelog is `docs/archive/Changelog (Unity, to 2026-10-15).md`. Godot pass 2026-10-15: this header only.
 
 Where the work stands, for the next session. Read this, then `CLAUDE.md`'s files, then `git log --oneline | head -20`.
 

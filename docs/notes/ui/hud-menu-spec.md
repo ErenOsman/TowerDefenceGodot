@@ -1,5 +1,7 @@
 # Style B "Painted Diorama": Unity build spec for Welcome, Main menu and Battle HUD (2026-10-08)
 
+> **Unity-era note, kept for the kit; the Godot screens are in game/ui/.** (Godot pass 2026-10-15.)
+
 From: the UI/UX agent (wiki server). For: the game's agent and Eren. Game commit read: `96c7637`. Nothing here is in the game yet.
 Read first: AGENTS.md Rules 5, 7, 11-14, 17; the component plan `notes/2026-10-08-ui-components-plan.md` (UITheme, UITweener,
 UIFeedback, UIStateVisual, UI_Badge, TooltipPlacement…). This spec gives the values and the per-screen build; the plan gives the classes.

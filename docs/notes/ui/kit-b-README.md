@@ -1,5 +1,7 @@
 # Style B "Painted Diorama": Unity sprite kit
 
+> **Unity-era note, kept for the kit; the Godot screens are in game/ui/.** (Godot pass 2026-10-15.)
+
 Rendered from HTML/CSS with headless Chromium (`node render.js` in `~/uiux/kit-b`). Every value comes from `tokens.js`
 (the same tokens as the UITheme table in `notes/2026-10-08-hud-menu-spec.md`): change a token, re-render, and the PNGs,
 `slices.json`, `unity/KitBImport.cs`, this README and `sheet.png` are rebuilt.

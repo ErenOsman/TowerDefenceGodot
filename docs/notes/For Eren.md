@@ -1,5 +1,8 @@
 # For Eren
 
+> **Unity-era note (2026-10-05), Godot pass 2026-10-15.** The questions and proposals are still open and apply to the
+> Godot build's content (`data/content`) as well; the "Done" list describes checks made in the Unity project.
+
 Questions and proposals collected while you were away (from 2026-10-05). I only build the parts that don't need your decision: bug fixes, tests, docs and checks. Everything that changes the game waits here for your answer. Newest first within each section.
 
 ## Questions (your decision)

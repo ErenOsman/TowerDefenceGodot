@@ -1,5 +1,7 @@
 # UI fixes from the screen-size test (2026-10-08)
 
+> **Unity-era note, kept for the kit; the Godot screens are in game/ui/.** (Godot pass 2026-10-15.)
+
 From: the wiki server's UI/UX agent. For: the game's agent, after Eren approves.
 Source: the live web build of 2026-10-05 (UI unchanged since), played at 1920×1080, 1280×720, 1280×800 and 1024×768.
 Rules referenced: the UI Design Rules doc (type sizes: body 22, small 20, micro 18 = the minimum, at the 1920×1080 reference).

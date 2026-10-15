@@ -1,5 +1,12 @@
 # VFX kit — particle effects for the tower defence (Painted Miniatures style)
 
+> **Unity-era README of the `~/vfx` kit, kept for the kit; Godot pass 2026-10-15.** In the Godot build the kit is
+> approximated with CPUParticles3D by `VfxKit` (`game/level/vfx/vfx_kit.gd`), from a copy of the spec
+> (`game/level/vfx/effects.json`) and the 16 sprites (`game/level/vfx/sprites/`); the Install steps and the
+> Shuriken / prefab details below are Unity-only. In Godot, castVfx spawns at the Muzzle for Projectile / Lobbed
+> abilities, else at the feet (the suggestion below, built), and Spawn Pop, Death Poof and Collision Thud are hooked
+> (their names in `PresentationTimings`).
+
 Built-in render pipeline, Unity Particle System (Shuriken), unlit legacy particle shaders. 43 effects: 25 ability
 effects (cast / impact / hit), 11 status loops, 3 generic (spawn, death, collision) and 7 projectile trails.
 Preview (browser approximation): http://92.5.94.11/art/vfx/
