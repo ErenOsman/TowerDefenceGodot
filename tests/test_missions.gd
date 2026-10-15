@@ -51,7 +51,7 @@ func _mission(id := "x", plays := 1, mode := MissionMode.Solo) -> MissionDef:
 func test_missions_content_loads() -> void:
 	assert_eq(lib().problems.size(), 0, "\n".join(lib().problems))
 	assert_eq(lib().all_of("MissionAsset").size(), 5)
-	assert_eq(lib().file_of(lib().get_asset("Missions/Patrol")), "Missions.json")
+	assert_eq(lib().file_of(lib().get_asset("Mission/Patrol")), "Missions.json")
 	var c := lib().catalog
 	assert_seq(c.missions.map(func(a): return a.get_id()), ["patrol", "night-watch", "hold-the-gate", "drum-line", "glutton-returns"])
 	assert_eq(c.guild_unlock.get_id(), "chapter2-4", "Chapter 2's last level")
@@ -153,7 +153,7 @@ func test_mission_validation_rules() -> void:
 	c.name = "C"
 	c.chapters = lib().catalog.chapters
 	c.missions = [solo, solo, null]
-	c.guild_unlock = lib().get_asset("Levels/Other/Test Level")
+	c.guild_unlock = lib().get_asset("Level/Other/Test Level")
 	var ce := AssetValidator.validate_catalog(c)
 	assert_true(ce.any(func(e): return e.contains("listed twice")))
 	assert_true(ce.any(func(e): return e.contains("missions[2] is empty")))
@@ -172,11 +172,11 @@ func test_content_hash_includes_missions() -> void:
 	assert_false(DirAccess.dir_exists_absolute("res://data/content-godot"), "no overlay folder any more")
 
 func test_mission_asset_round_trips() -> void:
-	var a: MissionAsset = lib().get_asset("Missions/Hold the Gate")
+	var a: MissionAsset = lib().get_asset("Mission/Hold the Gate")
 	var json := ContentSerializer.to_json(a, lib())
 	assert_eq(json["mode"], "Coop")
 	assert_eq(json["players"], {"min": 2, "max": 6})
-	assert_eq(json["level"], "Levels/Chapter 2/2 Three at the Gate")
+	assert_eq(json["level"], "Level/Chapter 2/2 Three at the Gate")
 	var b := MissionAsset.new()
 	var problems := []
 	ContentSerializer.load_into(b, json, lib(), problems, "x")

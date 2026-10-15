@@ -36,7 +36,7 @@ func test_unit_rows() -> void:
 
 func test_examples_hidden_by_default() -> void:
 	for r in BalanceSheet.unit_rows(lib()) + BalanceSheet.ability_rows(lib()) + BalanceSheet.status_rows(lib()):
-		assert_false(r.key.contains("/Examples/"), r.key)
+		assert_false(r.key.contains("/Example/"), r.key)
 	assert_true(BalanceSheet.status_rows(lib(), true).size() > BalanceSheet.status_rows(lib()).size())
 
 func test_ability_rows() -> void:
@@ -64,7 +64,7 @@ func test_csv() -> void:
 	var n := BalanceSheet.unit_rows(lib()).size() + BalanceSheet.ability_rows(lib()).size() + BalanceSheet.status_rows(lib()).size()
 	assert_eq(lines.size(), n + 3 + 2 + 1, "rows + 3 headers + 2 blank lines + the final newline")
 	assert_true(lines[0].begins_with("section,group,name,key,cost,MaxHp,Speed"))
-	assert_text(csv, "\nUnits,Towers,Archer,Units/Towers/Archer,100,20,2,")
+	assert_text(csv, "\nUnits,Towers,Archer,Unit/Tower/Archer,100,20,2,")
 	var path := "user://test_tools_balance.csv"
 	assert_eq(BalanceSheet.export_csv(lib(), path), "")
 	assert_eq(FileAccess.get_file_as_string(path), csv)

@@ -8,7 +8,7 @@ var _by_key := {}  # key → asset
 var _keys := {}    # asset → key
 var _files := {}   # asset → file name
 
-## Problems found while loading ("Units.json: Units/Enemies/Rabbit.stats[0]…: …").
+## Problems found while loading ("Units.json: Unit/Enemy/Rabbit.stats[0]…: …").
 var problems: Array[String] = []
 
 ## Files whose type is not a content asset type here (presentation settings: PresentationTimings, UITheme).
@@ -138,7 +138,7 @@ func _link_forms() -> void:
 		c.forms = forms
 		c.tokens = all_of("TokenAsset")
 
-## The object an entry key names ("Units/Enemies/Rabbit"), or null. (C# Get: `get` is Object's.)
+## The object an entry key names ("Unit/Enemy/Rabbit"), or null. (C# Get: `get` is Object's.)
 func get_asset(key) -> ContentAsset:
 	if key == null or not _by_key.has(key): return null
 	return _by_key[key]
@@ -173,7 +173,7 @@ func may_be_missing(key: String) -> bool:
 static func looks_like_content(key: String) -> bool:
 	return not key.begins_with("Assets/") or key.ends_with("GameCatalog.asset")
 
-## An asset's name from its key: "Units/Enemies/Rabbit" → "Rabbit", "Assets/Resources/GameCatalog.asset" → "GameCatalog".
+## An asset's name from its key: "Unit/Enemy/Rabbit" → "Rabbit", "Assets/Resources/GameCatalog.asset" → "GameCatalog".
 static func name_of(key: String) -> String:
 	var last := key.substr(key.rfind("/") + 1)
 	return last.substr(0, last.length() - ".asset".length()) if last.ends_with(".asset") else last

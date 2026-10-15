@@ -1,4 +1,4 @@
-<!-- Generated from the game content (Tools > Docs > Export Game Reference, or Tools/Offline/offline.sh docs). Do not edit by hand: change the content and export again. -->
+<!-- Generated from data/content by tools/game_reference.gd (or the TD Tools dock's Reference tab). Do not edit by hand: change the content and generate again. -->
 
 # Enemies
 
@@ -27,7 +27,7 @@ Slow and weak, but it rams the base.
 
 Appears in: First Steps, Two Roads, The Slime King, Rock Garden, Three at the Gate, The Drummer
 
-<sub>Source: `Assets/Data/Units/Enemies/Slime.asset` (`Content/Units.json` → `Units/Enemies/Slime`)</sub>
+<sub>Source: `data/content/Units.json` → `Unit/Enemy/Slime`</sub>
 
 Stats: HP 10 · Speed 1 · Range 1 · Power 5
 
@@ -44,7 +44,7 @@ A big, slow slime with 30 HP that rams the base.
 
 Appears in: First Steps, Spitters, The Glutton
 
-<sub>Source: `Assets/Data/Units/Enemies/Big Slime.asset` (`Content/Units.json` → `Units/Enemies/Big Slime`)</sub>
+<sub>Source: `data/content/Units.json` → `Unit/Enemy/Big Slime`</sub>
 
 Stats: HP 30 · Speed 1 · Range 1 · Power 5
 
@@ -61,7 +61,7 @@ Walks along its path like the other slimes, then spits at a tower or the base up
 
 Appears in: Spitters, Two Roads, The Slime King, Three at the Gate, The Drummer
 
-<sub>Source: `Assets/Data/Units/Enemies/Slime Archer.asset` (`Content/Units.json` → `Units/Enemies/Slime Archer`)</sub>
+<sub>Source: `data/content/Units.json` → `Unit/Enemy/Slime Archer`</sub>
 
 Stats: HP 15 · Speed 1 · Range 2 · Power 5
 
@@ -78,7 +78,7 @@ A small, fast slime: 2 tiles a turn, and it rams the base.
 
 Appears in: Spitters, Two Roads, The Slime King, Three at the Gate
 
-<sub>Source: `Assets/Data/Units/Enemies/Runner.asset` (`Content/Units.json` → `Units/Enemies/Runner`)</sub>
+<sub>Source: `data/content/Units.json` → `Unit/Enemy/Runner`</sub>
 
 Stats: HP 15 · Speed 2 · Range 1 · Power 5
 
@@ -95,7 +95,7 @@ A slime whose shield absorbs 10 damage and refills to 10 at the start of each of
 
 Appears in: Two Roads, The Slime King, The Drummer, The Glutton
 
-<sub>Source: `Assets/Data/Units/Enemies/Shield Slime.asset` (`Content/Units.json` → `Units/Enemies/Shield Slime`)</sub>
+<sub>Source: `data/content/Units.json` → `Unit/Enemy/Shield Slime`</sub>
 
 Stats: HP 20 · Speed 1 · Range 1 · Power 5
 
@@ -116,7 +116,7 @@ A melee enemy. It walks to the tower furthest ahead that it can reach this turn 
 
 Appears in: The Slime King, Three at the Gate, The Drummer, The Glutton
 
-<sub>Source: `Assets/Data/Units/Enemies/Brute.asset` (`Content/Units.json` → `Units/Enemies/Brute`)</sub>
+<sub>Source: `data/content/Units.json` → `Unit/Enemy/Brute`</sub>
 
 Stats: HP 30 · Speed 2 · Range 1 · Power 15
 
@@ -133,7 +133,7 @@ The boss: it walks to the towers ahead, slams everything next to it and crushes 
 
 Appears in: The Slime King
 
-<sub>Source: `Assets/Data/Units/Enemies/Slime King.asset` (`Content/Units.json` → `Units/Enemies/Slime King`)</sub>
+<sub>Source: `data/content/Units.json` → `Unit/Enemy/Slime King`</sub>
 
 Stats: HP 80 · Speed 1 · Range 1 · Radius 1 · Power 5 · tags: Boss
 
@@ -152,7 +152,7 @@ A quick hopper: it jumps over anything on its road and speeds up every second tu
 
 Appears in: Rock Garden, Three at the Gate
 
-<sub>Source: `Assets/Data/Units/Enemies/Rabbit.asset` (`Content/Units.json` → `Units/Enemies/Rabbit`)</sub>
+<sub>Source: `data/content/Units.json` → `Unit/Enemy/Rabbit`</sub>
 
 Stats: HP 30 · Speed 1 · Range 1 · Power 5
 
@@ -171,7 +171,7 @@ A brute that eats a rock next to it at the end of each turn and gains 100 Shield
 
 Appears in: Rock Garden
 
-<sub>Source: `Assets/Data/Units/Enemies/Rockjaw.asset` (`Content/Units.json` → `Units/Enemies/Rockjaw`)</sub>
+<sub>Source: `data/content/Units.json` → `Unit/Enemy/Rockjaw`</sub>
 
 Stats: HP 70 · Speed 1 · Range 1 · Power 18
 
@@ -192,7 +192,7 @@ A big horned rabbit: it hops three tiles at a time and speeds up every second tu
 
 Appears in: Rock Garden, Three at the Gate, The Drummer, The Glutton
 
-<sub>Source: `Assets/Data/Units/Enemies/Jackalope.asset` (`Content/Units.json` → `Units/Enemies/Jackalope`)</sub>
+<sub>Source: `data/content/Units.json` → `Unit/Enemy/Jackalope`</sub>
 
 Stats: HP 55 · Speed 3 · Range 1 · Power 9
 
@@ -211,7 +211,7 @@ Keeps the others going: it heals the most hurt enemy within 3 tiles, every other
 
 Appears in: Three at the Gate, The Drummer, The Glutton
 
-<sub>Source: `Assets/Data/Units/Enemies/Slime Shaman.asset` (`Content/Units.json` → `Units/Enemies/Slime Shaman`)</sub>
+<sub>Source: `data/content/Units.json` → `Unit/Enemy/Slime Shaman`</sub>
 
 Stats: HP 40 · Speed 1 · Range 3 · Potency 15
 
@@ -228,7 +228,7 @@ A huge brute under a shield that refills every turn. It smashes the tower furthe
 
 Appears in: Three at the Gate, The Drummer, The Glutton
 
-<sub>Source: `Assets/Data/Units/Enemies/Ironhide.asset` (`Content/Units.json` → `Units/Enemies/Ironhide`)</sub>
+<sub>Source: `data/content/Units.json` → `Unit/Enemy/Ironhide`</sub>
 
 Stats: HP 130 · Speed 1 · Range 1 · Power 22
 
@@ -249,7 +249,7 @@ A flying pest: it crosses chasms on its road and bites what it reaches.
 
 Appears in: The Drummer
 
-<sub>Source: `Assets/Data/Units/Enemies/Bat.asset` (`Content/Units.json` → `Units/Enemies/Bat`)</sub>
+<sub>Source: `data/content/Units.json` → `Unit/Enemy/Bat`</sub>
 
 Stats: HP 30 · Speed 2 · Range 1 · Power 8 · tags: Flying
 
@@ -266,7 +266,7 @@ The boss: when it arrives it eats every other enemy on the field, growing 20 max
 
 Appears in: The Glutton
 
-<sub>Source: `Assets/Data/Units/Enemies/Slime Glutton.asset` (`Content/Units.json` → `Units/Enemies/Slime Glutton`)</sub>
+<sub>Source: `data/content/Units.json` → `Unit/Enemy/Slime Glutton`</sub>
 
 Stats: HP 200 · Speed 1 · Range 1 · Radius 1 · Power 10 · tags: Boss
 

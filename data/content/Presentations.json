@@ -106,7 +106,7 @@
       "hitSound": null,
       "cameraShake": 0.5
     },
-    "Presentation/Examples/Chain Lightning Presentation": {
+    "Presentation/Example/Chain Lightning Presentation": {
       "number": 19,
       "casterAnimation": "Default",
       "customTrigger": "",
@@ -121,7 +121,7 @@
       "hitSound": null,
       "cameraShake": 0.2
     },
-    "Presentation/Examples/Execute Presentation": {
+    "Presentation/Example/Execute Presentation": {
       "number": 13,
       "casterAnimation": "Default",
       "customTrigger": "",
@@ -136,7 +136,7 @@
       "hitSound": null,
       "cameraShake": 0.3
     },
-    "Presentation/Examples/Fire Wall Presentation": {
+    "Presentation/Example/Fire Wall Presentation": {
       "number": 17,
       "casterAnimation": "Default",
       "customTrigger": "",
@@ -151,7 +151,7 @@
       "hitSound": null,
       "cameraShake": 0.2
     },
-    "Presentation/Examples/Fireball Presentation": {
+    "Presentation/Example/Fireball Presentation": {
       "number": 8,
       "casterAnimation": "Default",
       "customTrigger": "",
@@ -166,7 +166,7 @@
       "hitSound": null,
       "cameraShake": 0.6
     },
-    "Presentation/Examples/Pinning Shot Presentation": {
+    "Presentation/Example/Pinning Shot Presentation": {
       "number": 5,
       "casterAnimation": "Default",
       "customTrigger": "",
@@ -181,7 +181,7 @@
       "hitSound": null,
       "cameraShake": 0.15
     },
-    "Presentation/Examples/Provoke Presentation": {
+    "Presentation/Example/Provoke Presentation": {
       "number": 28,
       "casterAnimation": "Default",
       "customTrigger": "",
@@ -196,7 +196,7 @@
       "hitSound": null,
       "cameraShake": 0
     },
-    "Presentation/Examples/Shield Bash Presentation": {
+    "Presentation/Example/Shield Bash Presentation": {
       "number": 12,
       "casterAnimation": "Default",
       "customTrigger": "",
@@ -211,7 +211,7 @@
       "hitSound": null,
       "cameraShake": 0.25
     },
-    "Presentation/Examples/Volley Presentation": {
+    "Presentation/Example/Volley Presentation": {
       "number": 4,
       "casterAnimation": "Default",
       "customTrigger": "",

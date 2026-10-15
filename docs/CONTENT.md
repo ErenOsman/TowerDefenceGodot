@@ -41,29 +41,35 @@ The type → file table is `ContentFiles.FILES` (`sim/data/content_files.gd`); t
 ## Keys
 
 An entry's key is `<folder>/<path>/<name>`; the asset's name is the last part. References between entries are keys.
-The folder names the type (file names stay plural):
+The key folder names the type and is **singular**; the file names stay plural (Decisions 2026-10-15). Sub-folders
+that group entries are singular too (`Unit/Enemy/`, `Ability/Example/`); free-form ones stay as they are
+(`Level/Chapter 1/`, `Unit/Other/`). The table is `ContentFiles.KEY_FOLDERS` (+ `PLURAL_SUBFOLDERS`, the sub-folder
+names that must not come back); `tests/test_content_keys.gd` enforces it and that every reference resolves, and the
+content check refuses a candidate key outside its folder.
 
-| Type | Key folder | Example |
-| --- | --- | --- |
-| StatusAsset | `Statuses/` | `Statuses/Burn` |
-| ReactionAsset | `Reactions/` | `Reactions/Burn Tick` |
-| AbilityAsset | `Abilities/` | `Abilities/Shoot` |
-| PassiveAsset | `Passives/` | `Passives/Spiked Counter-attack` |
-| EntityAsset | `Units/` (`Units/Towers/`, `Units/Towers/Forms/`, `Units/Enemies/`, `Units/Bases/`, …) | `Units/Enemies/Rabbit` |
-| TowerAsset | `Towers/` | `Towers/Archer Tower` |
-| LevelAsset | `Levels/` | `Levels/Chapter 1/1 First Steps` |
-| TerrainAsset | `Terrains/` | `Terrains/Ground` |
-| TileAsset | `Tiles/` | `Tiles/Spawn Burrow` |
-| FormAsset | `Forms/` | `Forms/Fire Archer` |
-| TokenAsset | `Tokens/` | `Tokens/Ember Core` |
-| MissionAsset | `Missions/` | `Missions/Patrol` |
-| SequenceAsset | `Sequences/` | `Sequences/Tutorial Steps` |
-| AbilityPresentationAsset | `Presentation/` | `Presentation/Shoot` |
-| GameRulesAsset, CodexAsset | `Settings/` | `Settings/GameRules`, `Settings/Codex` |
-| GameCatalogAsset | `Assets/Resources/GameCatalog.asset` | (the one catalog) |
+| Type | File | Key folder | Example | Unity key (frozen, before 2026-10-15) |
+| --- | --- | --- | --- | --- |
+| StatusAsset | `Statuses.json` | `Status/` | `Status/Burn` | `Statuses/Burn` |
+| ReactionAsset | `Reactions.json` | `Reaction/` | `Reaction/Burn Tick` | `Reactions/Burn Tick` |
+| AbilityAsset | `Abilities.json` | `Ability/` | `Ability/Shoot`, `Ability/Example/Walk` | `Abilities/Shoot`, `Abilities/Examples/Walk` |
+| PassiveAsset | `Passives.json` | `Passive/` | `Passive/Spiked Counter-attack` | `Passives/…` |
+| EntityAsset | `Units.json` | `Unit/` (`Unit/Tower/`, `Unit/Tower/Form/`, `Unit/Enemy/`, `Unit/Base/`, `Unit/Other/`, `Unit/Other/Example/`) | `Unit/Enemy/Rabbit` | `Units/Enemies/Rabbit` |
+| TowerAsset | `Towers.json` | `Tower/` | `Tower/Archer Tower` | `Towers/Archer Tower` |
+| LevelAsset | `Levels.json` | `Level/` (`Level/Chapter 1/`, `Level/Tutorial/`, `Level/Other/`) | `Level/Chapter 1/1 First Steps` | `Levels/Chapter 1/1 First Steps` |
+| TerrainAsset | `Terrains.json` | `Terrain/` | `Terrain/Ground` | `Terrains/Ground` |
+| TileAsset | `Tiles.json` | `Tile/` | `Tile/Spawn Burrow` | `Tiles/Spawn Burrow` |
+| FormAsset | `Forms.json` | `Form/` | `Form/Fire Archer` | (Godot overlay `Forms/…`) |
+| TokenAsset | `Tokens.json` | `Token/` | `Token/Ember Core` | (Godot overlay `Tokens/…`) |
+| MissionAsset | `Missions.json` | `Mission/` | `Mission/Patrol` | (Godot overlay `Missions/…`) |
+| SequenceAsset | `Sequences.json` | `Sequence/` | `Sequence/Tutorial Steps` | `Sequences/Tutorial Steps` |
+| AbilityPresentationAsset | `Presentations.json` | `Presentation/` (unchanged) | `Presentation/Shoot`, `Presentation/Example/…` | `Presentation/Shoot`, `Presentation/Examples/…` |
+| GameRulesAsset, CodexAsset | `Rules.json`, `Codex.json` | `Settings/` (unchanged) | `Settings/GameRules`, `Settings/Codex` | same |
+| GameCatalogAsset | `Catalog.json` | `Assets/Resources/GameCatalog.asset` (unchanged) | the one catalog | same |
+
+Ids (`"id"`) are what saves, rules and the co-op protocol use, never keys, so the rename touched no save.
 
 Art references (sprites, models, sounds) are Unity-style asset paths kept as strings (`Assets/Art/Icons/Units/Archer.png#Archer`);
-`game/` maps them to `res://art/…`. Ids (`"id"`) are what saves and rules use: never change a shipped id.
+`game/` maps them to `res://art/…`. Never change a shipped id.
 
 ## Layout
 

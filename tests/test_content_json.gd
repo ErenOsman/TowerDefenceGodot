@@ -9,9 +9,9 @@ func test_assets_to_json_to_library_to_json_changes_nothing() -> void:
 	var source := ContentLibrary.load("res://data/content")
 	var examples := []
 	for a in source.all:
-		if source.key_of(a).contains("Examples/") or a is TerrainAsset: examples.append(a)
+		if source.key_of(a).contains("Example/") or a is TerrainAsset: examples.append(a)
 	# what the examples reference must be in the files too (Base, Slime, Archer…): take their closure
-	var level: LevelAsset = source.get_asset("Levels/Other/Example Level")
+	var level: LevelAsset = source.get_asset("Level/Other/Example Level")
 	examples.append(level)
 	var queue := examples.duplicate()
 	while not queue.is_empty():
@@ -52,26 +52,26 @@ func test_assets_to_json_to_library_to_json_changes_nothing() -> void:
 	for k in copy.terrain_keys:
 		if k.symbol == "#": wall = k.terrain
 	assert_true(is_same(wall, library.get_asset("TerrainAsset/Wall")))
-	assert_false(is_same(wall, source.get_asset("Terrains/Wall")))
+	assert_false(is_same(wall, source.get_asset("Terrain/Wall")))
 
 func test_the_library_reports_bad_entries_instead_of_throwing() -> void:
 	var library := ContentLibrary.new()
 	library.add([
-		["Units.json", "{ \"type\": \"EntityAsset\", \"assets\": { \"Units/A\": { \"displayName\": \"A\", \"nonsense\": 1, \"abilities\": [\"Abilities/Missing\"] } } }"],
+		["Units.json", "{ \"type\": \"EntityAsset\", \"assets\": { \"Unit/A\": { \"displayName\": \"A\", \"nonsense\": 1, \"abilities\": [\"Ability/Missing\"] } } }"],
 		["Broken.json", "{ \"type\": \"EntityAsset\", \"assets\": { "],
 		["Odd.json", "{ \"type\": \"NoSuchType\", \"assets\": {} }"],
 	])
-	assert_not_null(library.get_asset("Units/A"), "a good entry still loads")
+	assert_not_null(library.get_asset("Unit/A"), "a good entry still loads")
 	var problems := library.problems
 	assert_true(problems.any(func(p): return p.contains("nonsense") and p.contains("no such field")), "\n".join(problems))
-	assert_true(problems.any(func(p): return p.contains("Abilities/Missing") and p.contains("not found")))
+	assert_true(problems.any(func(p): return p.contains("Ability/Missing") and p.contains("not found")))
 	assert_true(problems.any(func(p): return p.begins_with("Broken.json")), "a broken file is reported with its name")
 	assert_true(library.skipped.any(func(p): return p.begins_with("Odd.json")), "an unknown type is skipped, not an error")
 
 func test_bad_values_are_reported_and_art_stays_a_string() -> void:
 	var library := ContentLibrary.new()
-	library.add([["Statuses.json", "{ \"type\": \"StatusAsset\", \"assets\": { \"Statuses/S\": { \"stacking\": \"Sideways\", \"icon\": \"Assets/Art/Icons/S.png#S\", \"reactions\": [\"Assets/Data/Nope\"] } } }"]])
-	var s: StatusAsset = library.get_asset("Statuses/S")
+	library.add([["Statuses.json", "{ \"type\": \"StatusAsset\", \"assets\": { \"Status/S\": { \"stacking\": \"Sideways\", \"icon\": \"Assets/Art/Icons/S.png#S\", \"reactions\": [\"Assets/Data/Nope\"] } } }"]])
+	var s: StatusAsset = library.get_asset("Status/S")
 	assert_eq(s.stacking, Stacking.Stack, "a bad enum name keeps the default")
 	assert_true(library.problems.any(func(p): return p.contains("'Sideways' is not one of Stack, Refresh")), "\n".join(library.problems))
 	assert_eq(s.icon, "Assets/Art/Icons/S.png#S")
@@ -81,7 +81,7 @@ func test_bad_values_are_reported_and_art_stays_a_string() -> void:
 	assert_true(ContentSerializer.slot_of("StatusAsset", "shieldPool").optional)
 	assert_eq(ContentSerializer.slot_of("AttackStepData", "areaFilter").spec, "TargetFilter")
 	assert_null(ContentSerializer.slot_of("StatusAsset", "stacking"))
-	assert_eq(ContentFiles.asset_path_of("Units/Enemies/Rabbit"), "Assets/Data/Units/Enemies/Rabbit.asset")
+	assert_eq(ContentFiles.asset_path_of("Unit/Enemy/Rabbit"), "Assets/Data/Unit/Enemy/Rabbit.asset")
 	assert_eq(ContentFiles.asset_path_of("Assets/Art/Icons/S.png#S"), "Assets/Art/Icons/S.png")
 	assert_eq(ContentLibrary.name_of("Assets/Resources/GameCatalog.asset"), "GameCatalog")
 

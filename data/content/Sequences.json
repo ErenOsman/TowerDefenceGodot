@@ -1,7 +1,7 @@
 {
   "type": "SequenceAsset",
   "assets": {
-    "Sequences/Slime King Entrance": {
+    "Sequence/Slime King Entrance": {
       "number": 2,
       "lines": [
         {
@@ -30,7 +30,7 @@
         }
       ]
     },
-    "Sequences/Tutorial Steps": {
+    "Sequence/Tutorial Steps": {
       "number": 1,
       "lines": [
         {

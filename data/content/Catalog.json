@@ -11,32 +11,32 @@
           "requireAll": true,
           "levels": [
             {
-              "level": "Levels/Chapter 1/1 First Steps",
+              "level": "Level/Chapter 1/1 First Steps",
               "requirement": "Previous",
               "requires": [],
               "requireAll": true,
-              "firstClearReward": "Towers/Guardian Tower"
+              "firstClearReward": "Tower/Guardian Tower"
             },
             {
-              "level": "Levels/Chapter 1/2 Spitters",
+              "level": "Level/Chapter 1/2 Spitters",
               "requirement": "Previous",
               "requires": [],
               "requireAll": true,
-              "firstClearReward": "Towers/Mage Tower"
+              "firstClearReward": "Tower/Mage Tower"
             },
             {
-              "level": "Levels/Chapter 1/3 Two Roads",
+              "level": "Level/Chapter 1/3 Two Roads",
               "requirement": "Previous",
               "requires": [],
               "requireAll": true,
-              "firstClearReward": "Towers/Priest Tower"
+              "firstClearReward": "Tower/Priest Tower"
             },
             {
-              "level": "Levels/Chapter 1/4 The Slime King",
+              "level": "Level/Chapter 1/4 The Slime King",
               "requirement": "Previous",
               "requires": [],
               "requireAll": true,
-              "firstClearReward": "Towers/Wisp Tower"
+              "firstClearReward": "Tower/Wisp Tower"
             }
           ]
         },
@@ -48,59 +48,59 @@
           "requireAll": true,
           "levels": [
             {
-              "level": "Levels/Chapter 2/1 Rock Garden",
+              "level": "Level/Chapter 2/1 Rock Garden",
               "requirement": "Previous",
               "requires": [],
               "requireAll": true,
-              "firstClearReward": "Towers/Ballista Tower"
+              "firstClearReward": "Tower/Ballista Tower"
             },
             {
-              "level": "Levels/Chapter 2/2 Three at the Gate",
+              "level": "Level/Chapter 2/2 Three at the Gate",
               "requirement": "Previous",
               "requires": [],
               "requireAll": true,
-              "firstClearReward": "Towers/Alchemist Tower"
+              "firstClearReward": "Tower/Alchemist Tower"
             },
             {
-              "level": "Levels/Chapter 2/3 The Drummer",
+              "level": "Level/Chapter 2/3 The Drummer",
               "requirement": "Previous",
               "requires": [],
               "requireAll": true,
-              "firstClearReward": "Towers/Drummer Tower"
+              "firstClearReward": "Tower/Drummer Tower"
             },
             {
-              "level": "Levels/Chapter 2/4 The Glutton",
+              "level": "Level/Chapter 2/4 The Glutton",
               "requirement": "Previous",
               "requires": [],
               "requireAll": true,
-              "firstClearReward": "Towers/Cannon Tower"
+              "firstClearReward": "Tower/Cannon Tower"
             }
           ]
         }
       ],
       "towerTypes": [
-        "Towers/Archer Tower",
-        "Towers/Guardian Tower",
-        "Towers/Mage Tower",
-        "Towers/Priest Tower",
-        "Towers/Wisp Tower",
-        "Towers/Ballista Tower",
-        "Towers/Alchemist Tower",
-        "Towers/Drummer Tower",
-        "Towers/Cannon Tower"
+        "Tower/Archer Tower",
+        "Tower/Guardian Tower",
+        "Tower/Mage Tower",
+        "Tower/Priest Tower",
+        "Tower/Wisp Tower",
+        "Tower/Ballista Tower",
+        "Tower/Alchemist Tower",
+        "Tower/Drummer Tower",
+        "Tower/Cannon Tower"
       ],
-      "startingTowers": ["Towers/Archer Tower"],
-      "tutorial": "Levels/Tutorial/Tutorial",
-      "tutorialReward": "Towers/Archer Tower",
-      "campUnlock": "Levels/Chapter 1/4 The Slime King",
+      "startingTowers": ["Tower/Archer Tower"],
+      "tutorial": "Level/Tutorial/Tutorial",
+      "tutorialReward": "Tower/Archer Tower",
+      "campUnlock": "Level/Chapter 1/4 The Slime King",
       "codex": "Settings/Codex",
-      "guildUnlock": "Levels/Chapter 2/4 The Glutton",
+      "guildUnlock": "Level/Chapter 2/4 The Glutton",
       "missions": [
-        "Missions/Patrol",
-        "Missions/Night Watch",
-        "Missions/Hold the Gate",
-        "Missions/Drum Line",
-        "Missions/The Glutton Returns"
+        "Mission/Patrol",
+        "Mission/Night Watch",
+        "Mission/Hold the Gate",
+        "Mission/Drum Line",
+        "Mission/The Glutton Returns"
       ]
     }
   }

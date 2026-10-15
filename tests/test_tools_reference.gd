@@ -1,7 +1,6 @@
 extends TestCase
 ## Export Game Reference (game/dev/game_reference.gd) on the real content: the Unity GameReference page layout,
-## numbers through the converter, deterministic output; and byte-identical to the Unity repo's
-## Docs/Reference/*.md when ~/game has the same content JSON as data/content.
+## numbers through the converter, deterministic output.
 
 static var _lib: ContentLibrary
 static var _pages: Dictionary
@@ -28,7 +27,7 @@ func test_towers_page() -> void:
 	assert_text(t, "| [Archer](#archer) | 100 | 20 | 2 |")
 	assert_text(t, "starting tower |")
 	assert_text(t, "Cost **100** energy · type ID `archer`")
-	assert_text(t, "<sub>Source: `Assets/Data/Towers/Archer Tower.asset` (`Content/Towers.json` → `Towers/Archer Tower`)")
+	assert_text(t, "<sub>Source: `data/content/Towers.json` → `Tower/Archer Tower`")
 	assert_text(t, "Stats: HP 20 · Speed 2 · Range 2 · Power 10")
 	assert_text(t, "1. **Shoot** _(Attack, Projectile)_: Shoots an arrow for 10 at an enemy up to 2 tiles away.\n   Range 2 · Damage 10 · Cooldown 1")
 	var sections := 0
@@ -82,18 +81,6 @@ func test_export_writes_files() -> void:
 		assert_eq(FileAccess.get_file_as_string(dir.path_join(p)), pages()[p], p)
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(dir.path_join(p)))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(dir))
-
-func test_same_as_unity_when_content_matches() -> void:
-	var unity := OS.get_environment("HOME").path_join("game")
-	if not DirAccess.dir_exists_absolute(unity.path_join("Docs/Reference")): return # no Unity repo here
-	for f in DirAccess.get_files_at("res://data/content"):
-		if not f.ends_with(".json"): continue
-		var theirs := unity.path_join("Content").path_join(f)
-		if not FileAccess.file_exists(theirs) or FileAccess.get_file_as_string(theirs) != FileAccess.get_file_as_string("res://data/content/" + f):
-			return # content differs (not synced): the pages may differ too
-	for p in pages():
-		var theirs := unity.path_join("Docs/Reference").path_join(p)
-		assert_eq(pages()[p], FileAccess.get_file_as_string(theirs), "%s differs from the Unity export" % p)
 
 func assert_text(text: String, part: String, msg := "") -> void:
 	assert_true(text.contains(part), "%s missing: %s" % [msg, part.c_escape()])

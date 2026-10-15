@@ -32,10 +32,10 @@ the Unity repo.
 ## The level
 
 (Godot overlay until the Unity Levels.json changes; the Unity agent must make the same change.) The catalog's
-tutorial level `Levels/Tutorial/Tutorial` ("First Defence") is shortened (Eren 2026-10-14: the slime took too long):
+tutorial level `Level/Tutorial/Tutorial` ("First Defence") is shortened (Eren 2026-10-14: the slime took too long):
 
 - **Map** 7 × 5 (was 12 × 5), all Ground. **Road** row 2, 6 tiles from the spawn at (0,2) to (5,2) (was 11);
-  the **castle** (`Units/Bases/Base`) at (6,2).
+  the **castle** (`Unit/Base/Base`) at (6,2).
 - **Build tiles** beside the road at the castle end: columns 4–6 of rows 0, 1, 3, 4 (12 tiles). The tutorial lights
   (5,1) and (5,3); the road line points at (2,2); the walk goes 2 tiles toward the slime ((5,1) → (3,1)).
 - **Waves** unchanged: "One Slime" (a Slime at round 1), then "A Slime and a Runner" after it. **Energy** unchanged:

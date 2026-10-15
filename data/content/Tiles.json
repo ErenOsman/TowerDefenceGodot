@@ -1,94 +1,94 @@
 {
   "type": "TileAsset",
   "assets": {
-    "Tiles/Ground A": { "number": 1, "id": "ground_a", "view": "Assets/Art/Models/Map Kit/Ground A.fbx", "kind": "Ground", "sides": "" },
-    "Tiles/Ground B": { "number": 2, "id": "ground_b", "view": "Assets/Art/Models/Map Kit/Ground B.fbx", "kind": "Ground", "sides": "" },
-    "Tiles/Ground C": { "number": 3, "id": "ground_c", "view": "Assets/Art/Models/Map Kit/Ground C.fbx", "kind": "Ground", "sides": "" },
-    "Tiles/Ground D": { "number": 4, "id": "ground_d", "view": "Assets/Art/Models/Map Kit/Ground D.fbx", "kind": "Ground", "sides": "" },
-    "Tiles/Build Ground A": {
+    "Tile/Ground A": { "number": 1, "id": "ground_a", "view": "Assets/Art/Models/Map Kit/Ground A.fbx", "kind": "Ground", "sides": "" },
+    "Tile/Ground B": { "number": 2, "id": "ground_b", "view": "Assets/Art/Models/Map Kit/Ground B.fbx", "kind": "Ground", "sides": "" },
+    "Tile/Ground C": { "number": 3, "id": "ground_c", "view": "Assets/Art/Models/Map Kit/Ground C.fbx", "kind": "Ground", "sides": "" },
+    "Tile/Ground D": { "number": 4, "id": "ground_d", "view": "Assets/Art/Models/Map Kit/Ground D.fbx", "kind": "Ground", "sides": "" },
+    "Tile/Build Ground A": {
       "number": 5,
       "id": "build_ground_a",
       "view": "Assets/Art/Models/Map Kit/Build Ground A.fbx",
       "kind": "Ground",
       "sides": ""
     },
-    "Tiles/Build Ground B": {
+    "Tile/Build Ground B": {
       "number": 6,
       "id": "build_ground_b",
       "view": "Assets/Art/Models/Map Kit/Build Ground B.fbx",
       "kind": "Ground",
       "sides": ""
     },
-    "Tiles/Wall A": { "number": 7, "id": "wall_a", "view": "Assets/Art/Models/Map Kit/Wall A.fbx", "kind": "Ground", "sides": "" },
-    "Tiles/Wall B": { "number": 8, "id": "wall_b", "view": "Assets/Art/Models/Map Kit/Wall B.fbx", "kind": "Ground", "sides": "" },
-    "Tiles/Chasm 0": { "number": 9, "id": "chasm_0", "view": "Assets/Art/Models/Map Kit/Chasm 0.fbx", "kind": "Ground", "sides": "" },
-    "Tiles/Chasm 1": { "number": 10, "id": "chasm_1", "view": "Assets/Art/Models/Map Kit/Chasm 1.fbx", "kind": "Edge", "sides": "N" },
-    "Tiles/Chasm 2 Corner": {
+    "Tile/Wall A": { "number": 7, "id": "wall_a", "view": "Assets/Art/Models/Map Kit/Wall A.fbx", "kind": "Ground", "sides": "" },
+    "Tile/Wall B": { "number": 8, "id": "wall_b", "view": "Assets/Art/Models/Map Kit/Wall B.fbx", "kind": "Ground", "sides": "" },
+    "Tile/Chasm 0": { "number": 9, "id": "chasm_0", "view": "Assets/Art/Models/Map Kit/Chasm 0.fbx", "kind": "Ground", "sides": "" },
+    "Tile/Chasm 1": { "number": 10, "id": "chasm_1", "view": "Assets/Art/Models/Map Kit/Chasm 1.fbx", "kind": "Edge", "sides": "N" },
+    "Tile/Chasm 2 Corner": {
       "number": 11,
       "id": "chasm_2_corner",
       "view": "Assets/Art/Models/Map Kit/Chasm 2 Corner.fbx",
       "kind": "Edge",
       "sides": "NW"
     },
-    "Tiles/Chasm 2 Opposite": {
+    "Tile/Chasm 2 Opposite": {
       "number": 12,
       "id": "chasm_2_opposite",
       "view": "Assets/Art/Models/Map Kit/Chasm 2 Opposite.fbx",
       "kind": "Edge",
       "sides": "NS"
     },
-    "Tiles/Chasm 3": { "number": 13, "id": "chasm_3", "view": "Assets/Art/Models/Map Kit/Chasm 3.fbx", "kind": "Edge", "sides": "NSW" },
-    "Tiles/Chasm 4": { "number": 14, "id": "chasm_4", "view": "Assets/Art/Models/Map Kit/Chasm 4.fbx", "kind": "Edge", "sides": "NESW" },
-    "Tiles/Road Straight": {
+    "Tile/Chasm 3": { "number": 13, "id": "chasm_3", "view": "Assets/Art/Models/Map Kit/Chasm 3.fbx", "kind": "Edge", "sides": "NSW" },
+    "Tile/Chasm 4": { "number": 14, "id": "chasm_4", "view": "Assets/Art/Models/Map Kit/Chasm 4.fbx", "kind": "Edge", "sides": "NESW" },
+    "Tile/Road Straight": {
       "number": 15,
       "id": "road_straight",
       "view": "Assets/Art/Models/Map Kit/Road Straight.fbx",
       "kind": "Road",
       "sides": "NS"
     },
-    "Tiles/Road Corner": {
+    "Tile/Road Corner": {
       "number": 16,
       "id": "road_corner",
       "view": "Assets/Art/Models/Map Kit/Road Corner.fbx",
       "kind": "Road",
       "sides": "NW"
     },
-    "Tiles/Road T": { "number": 17, "id": "road_t", "view": "Assets/Art/Models/Map Kit/Road T.fbx", "kind": "Road", "sides": "NSW" },
-    "Tiles/Road Cross": {
+    "Tile/Road T": { "number": 17, "id": "road_t", "view": "Assets/Art/Models/Map Kit/Road T.fbx", "kind": "Road", "sides": "NSW" },
+    "Tile/Road Cross": {
       "number": 18,
       "id": "road_cross",
       "view": "Assets/Art/Models/Map Kit/Road Cross.fbx",
       "kind": "Road",
       "sides": "NESW"
     },
-    "Tiles/Road End": { "number": 19, "id": "road_end", "view": "Assets/Art/Models/Map Kit/Road End.fbx", "kind": "Road", "sides": "N" },
-    "Tiles/Road Single": { "number": 20, "id": "road_single", "view": "Assets/Art/Models/Map Kit/Road Single.fbx", "kind": "Road", "sides": "" },
-    "Tiles/Bridge": { "number": 21, "id": "bridge", "view": "Assets/Art/Models/Map Kit/Bridge.fbx", "kind": "Ground", "sides": "" },
-    "Tiles/Board Edge Side": {
+    "Tile/Road End": { "number": 19, "id": "road_end", "view": "Assets/Art/Models/Map Kit/Road End.fbx", "kind": "Road", "sides": "N" },
+    "Tile/Road Single": { "number": 20, "id": "road_single", "view": "Assets/Art/Models/Map Kit/Road Single.fbx", "kind": "Road", "sides": "" },
+    "Tile/Bridge": { "number": 21, "id": "bridge", "view": "Assets/Art/Models/Map Kit/Bridge.fbx", "kind": "Ground", "sides": "" },
+    "Tile/Board Edge Side": {
       "number": 22,
       "id": "board_edge_side",
       "view": "Assets/Art/Models/Map Kit/Board Edge Side.fbx",
       "kind": "Border",
       "sides": "N"
     },
-    "Tiles/Board Edge Corner": {
+    "Tile/Board Edge Corner": {
       "number": 23,
       "id": "board_edge_corner",
       "view": "Assets/Art/Models/Map Kit/Board Edge Corner.fbx",
       "kind": "Border",
       "sides": "NW"
     },
-    "Tiles/Bush": { "number": 24, "id": "bush", "view": "Assets/Art/Models/Map Kit/Bush.fbx", "kind": "Prop", "sides": "" },
-    "Tiles/Fence": { "number": 25, "id": "fence", "view": "Assets/Art/Models/Map Kit/Fence.fbx", "kind": "Prop", "sides": "" },
-    "Tiles/Signpost": { "number": 26, "id": "signpost", "view": "Assets/Art/Models/Map Kit/Signpost.fbx", "kind": "Prop", "sides": "" },
-    "Tiles/Spawn Burrow": {
+    "Tile/Bush": { "number": 24, "id": "bush", "view": "Assets/Art/Models/Map Kit/Bush.fbx", "kind": "Prop", "sides": "" },
+    "Tile/Fence": { "number": 25, "id": "fence", "view": "Assets/Art/Models/Map Kit/Fence.fbx", "kind": "Prop", "sides": "" },
+    "Tile/Signpost": { "number": 26, "id": "signpost", "view": "Assets/Art/Models/Map Kit/Signpost.fbx", "kind": "Prop", "sides": "" },
+    "Tile/Spawn Burrow": {
       "number": 27,
       "id": "spawn_burrow",
       "view": "Assets/Art/Models/Map Kit/Spawn Burrow.fbx",
       "kind": "Prop",
       "sides": ""
     },
-    "Tiles/Tree Pine": { "number": 28, "id": "tree_pine", "view": "Assets/Art/Models/Map Kit/Tree Pine.fbx", "kind": "Prop", "sides": "" },
-    "Tiles/Tree Round": { "number": 29, "id": "tree_round", "view": "Assets/Art/Models/Map Kit/Tree Round.fbx", "kind": "Prop", "sides": "" }
+    "Tile/Tree Pine": { "number": 28, "id": "tree_pine", "view": "Assets/Art/Models/Map Kit/Tree Pine.fbx", "kind": "Prop", "sides": "" },
+    "Tile/Tree Round": { "number": 29, "id": "tree_round", "view": "Assets/Art/Models/Map Kit/Tree Round.fbx", "kind": "Prop", "sides": "" }
   }
 }

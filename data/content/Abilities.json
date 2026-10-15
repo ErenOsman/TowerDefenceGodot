@@ -1,7 +1,7 @@
 {
   "type": "AbilityAsset",
   "assets": {
-    "Abilities/Acid Flask": {
+    "Ability/Acid Flask": {
       "number": 32,
       "id": "acid-flask",
       "displayName": "Acid Flask",
@@ -54,7 +54,7 @@
                 { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" },
                 {
                   "$type": "ApplyStatusStepData",
-                  "status": "Statuses/Acid",
+                  "status": "Status/Acid",
                   "stacks": "Self.Potency",
                   "duration": "3",
                   "on": "Target",
@@ -84,7 +84,7 @@
       "presentation": "Presentation/Acid Flask Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Bash": {
+    "Ability/Bash": {
       "number": 10,
       "id": "bash",
       "displayName": "Bash",
@@ -159,7 +159,7 @@
       "presentation": "Presentation/Bash Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Bite": {
+    "Ability/Bite": {
       "number": 29,
       "id": "bite",
       "displayName": "Bite",
@@ -234,7 +234,7 @@
       "presentation": "Presentation/Bite Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Blink": {
+    "Ability/Blink": {
       "number": 26,
       "id": "blink",
       "displayName": "Blink",
@@ -270,7 +270,7 @@
       "presentation": "Presentation/Blink Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Bolt": {
+    "Ability/Bolt": {
       "number": 31,
       "id": "bolt",
       "displayName": "Bolt",
@@ -345,7 +345,7 @@
       "presentation": "Presentation/Bolt Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Bombard": {
+    "Ability/Bombard": {
       "number": 34,
       "id": "bombard",
       "displayName": "Bombard",
@@ -420,7 +420,7 @@
       "presentation": "Presentation/Bombard Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Brute Walk": {
+    "Ability/Brute Walk": {
       "number": 13,
       "id": "Brute Walk",
       "displayName": "Brute Walk",
@@ -456,7 +456,7 @@
       "presentation": null,
       "faceTargetOnCast": false
     },
-    "Abilities/Crush": {
+    "Ability/Crush": {
       "number": 15,
       "id": "crush",
       "displayName": "Crush",
@@ -538,7 +538,7 @@
       "presentation": "Presentation/Crush Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Examples/Chain Lightning": {
+    "Ability/Example/Chain Lightning": {
       "number": 19,
       "id": "Chain Lightning",
       "displayName": "Chain Lightning",
@@ -610,10 +610,10 @@
           }
         ]
       },
-      "presentation": "Presentation/Examples/Chain Lightning Presentation",
+      "presentation": "Presentation/Example/Chain Lightning Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Examples/Execute": {
+    "Ability/Example/Execute": {
       "number": 20,
       "id": "Execute",
       "displayName": "Execute",
@@ -685,10 +685,10 @@
           }
         ]
       },
-      "presentation": "Presentation/Examples/Execute Presentation",
+      "presentation": "Presentation/Example/Execute Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Examples/Fire Wall": {
+    "Ability/Example/Fire Wall": {
       "number": 11,
       "id": "Fire Wall",
       "displayName": "Fire Wall",
@@ -718,13 +718,13 @@
       "instinct": { "preset": "Default", "must": "", "prefer": [] },
       "steps": {
         "items": [
-          { "$type": "SpawnStepData", "entity": "Units/Other/Examples/Fire Tile", "at": "AimTile", "summon": false, "team": -1 }
+          { "$type": "SpawnStepData", "entity": "Unit/Other/Example/Fire Tile", "at": "AimTile", "summon": false, "team": -1 }
         ]
       },
-      "presentation": "Presentation/Examples/Fire Wall Presentation",
+      "presentation": "Presentation/Example/Fire Wall Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Examples/Fireball": {
+    "Ability/Example/Fireball": {
       "number": 16,
       "id": "Fireball",
       "displayName": "Fireball",
@@ -798,10 +798,10 @@
           }
         ]
       },
-      "presentation": "Presentation/Examples/Fireball Presentation",
+      "presentation": "Presentation/Example/Fireball Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Examples/Pinning Shot": {
+    "Ability/Example/Pinning Shot": {
       "number": 18,
       "id": "Pinning Shot",
       "displayName": "Pinning Shot",
@@ -854,7 +854,7 @@
                 { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" },
                 {
                   "$type": "ApplyStatusStepData",
-                  "status": "Statuses/Examples/Rooted",
+                  "status": "Status/Example/Rooted",
                   "stacks": "1",
                   "duration": "1",
                   "on": "Target",
@@ -881,10 +881,10 @@
           }
         ]
       },
-      "presentation": "Presentation/Examples/Pinning Shot Presentation",
+      "presentation": "Presentation/Example/Pinning Shot Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Examples/Provoke": {
+    "Ability/Example/Provoke": {
       "number": 1,
       "id": "Provoke",
       "displayName": "Provoke",
@@ -916,7 +916,7 @@
         "items": [
           {
             "$type": "ApplyStatusStepData",
-            "status": "Statuses/Taunted",
+            "status": "Status/Taunted",
             "stacks": "1",
             "duration": "2",
             "on": "Target",
@@ -924,10 +924,10 @@
           }
         ]
       },
-      "presentation": "Presentation/Examples/Provoke Presentation",
+      "presentation": "Presentation/Example/Provoke Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Examples/Raise Skeleton": {
+    "Ability/Example/Raise Skeleton": {
       "number": 12,
       "id": "Raise Skeleton",
       "displayName": "Raise Skeleton",
@@ -957,13 +957,13 @@
       "instinct": { "preset": "Default", "must": "", "prefer": [] },
       "steps": {
         "items": [
-          { "$type": "SpawnStepData", "entity": "Units/Other/Examples/Skeleton", "at": "AimTile", "summon": true, "team": -1 }
+          { "$type": "SpawnStepData", "entity": "Unit/Other/Example/Skeleton", "at": "AimTile", "summon": true, "team": -1 }
         ]
       },
       "presentation": null,
       "faceTargetOnCast": false
     },
-    "Abilities/Examples/Shield Bash": {
+    "Ability/Example/Shield Bash": {
       "number": 17,
       "id": "Shield Bash",
       "displayName": "Shield Bash",
@@ -1036,10 +1036,10 @@
           }
         ]
       },
-      "presentation": "Presentation/Examples/Shield Bash Presentation",
+      "presentation": "Presentation/Example/Shield Bash Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Examples/Volley": {
+    "Ability/Example/Volley": {
       "number": 4,
       "id": "Volley",
       "displayName": "Volley",
@@ -1095,10 +1095,10 @@
           }
         ]
       },
-      "presentation": "Presentation/Examples/Volley Presentation",
+      "presentation": "Presentation/Example/Volley Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Examples/Walk": {
+    "Ability/Example/Walk": {
       "number": 21,
       "id": "Walk",
       "displayName": "Walk",
@@ -1134,7 +1134,7 @@
       "presentation": null,
       "faceTargetOnCast": false
     },
-    "Abilities/Firebolt": {
+    "Ability/Firebolt": {
       "number": 7,
       "id": "firebolt",
       "displayName": "Firebolt",
@@ -1187,7 +1187,7 @@
                 { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" },
                 {
                   "$type": "ApplyStatusStepData",
-                  "status": "Statuses/Burn",
+                  "status": "Status/Burn",
                   "stacks": "Self.Potency",
                   "duration": "2",
                   "on": "Target",
@@ -1217,7 +1217,7 @@
       "presentation": "Presentation/Firebolt Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Guardian Taunt": {
+    "Ability/Guardian Taunt": {
       "number": 3,
       "id": "guardian-taunt",
       "displayName": "Taunt",
@@ -1249,7 +1249,7 @@
         "items": [
           {
             "$type": "ApplyStatusStepData",
-            "status": "Statuses/Taunted",
+            "status": "Status/Taunted",
             "stacks": "1",
             "duration": "2",
             "on": "Target",
@@ -1260,7 +1260,7 @@
       "presentation": "Presentation/Guardian Taunt Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Hop": {
+    "Ability/Hop": {
       "number": 27,
       "id": "hop",
       "displayName": "Hop",
@@ -1296,7 +1296,7 @@
       "presentation": "Presentation/Hop Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Mend": {
+    "Ability/Mend": {
       "number": 2,
       "id": "mend",
       "displayName": "Mend",
@@ -1332,7 +1332,7 @@
       "presentation": "Presentation/Mend Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Nibble": {
+    "Ability/Nibble": {
       "number": 28,
       "id": "nibble",
       "displayName": "Nibble",
@@ -1407,7 +1407,7 @@
       "presentation": "Presentation/Nibble Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Path Walk": {
+    "Ability/Path Walk": {
       "number": 14,
       "id": "Path Walk",
       "displayName": "Path Walk",
@@ -1443,7 +1443,7 @@
       "presentation": null,
       "faceTargetOnCast": false
     },
-    "Abilities/Quicken": {
+    "Ability/Quicken": {
       "number": 35,
       "id": "quicken",
       "displayName": "Quicken",
@@ -1475,7 +1475,7 @@
         "items": [
           {
             "$type": "ApplyStatusStepData",
-            "status": "Statuses/Haste",
+            "status": "Status/Haste",
             "stacks": "1",
             "duration": "-1",
             "on": "Self",
@@ -1486,7 +1486,7 @@
       "presentation": "Presentation/Quicken Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Rally": {
+    "Ability/Rally": {
       "number": 33,
       "id": "rally",
       "displayName": "Rally",
@@ -1538,7 +1538,7 @@
               "items": [
                 {
                   "$type": "ApplyStatusStepData",
-                  "status": "Statuses/Rallied",
+                  "status": "Status/Rallied",
                   "stacks": "1",
                   "duration": "Self.Duration",
                   "on": "Target",
@@ -1552,7 +1552,7 @@
       "presentation": "Presentation/Rally Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Ram": {
+    "Ability/Ram": {
       "number": 24,
       "id": "Ram",
       "displayName": "Ram",
@@ -1628,7 +1628,7 @@
       "presentation": "Presentation/Ram Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Shoot": {
+    "Ability/Shoot": {
       "number": 22,
       "id": "Shoot",
       "displayName": "Shoot",
@@ -1703,7 +1703,7 @@
       "presentation": "Presentation/Shoot Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Slam": {
+    "Ability/Slam": {
       "number": 6,
       "id": "slam",
       "displayName": "Slam",
@@ -1778,7 +1778,7 @@
       "presentation": "Presentation/Slam Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Slime Mend": {
+    "Ability/Slime Mend": {
       "number": 30,
       "id": "slime-mend",
       "displayName": "Slime Mend",
@@ -1814,7 +1814,7 @@
       "presentation": "Presentation/Slime Mend Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Smash": {
+    "Ability/Smash": {
       "number": 23,
       "id": "Smash",
       "displayName": "Smash",
@@ -1889,7 +1889,7 @@
       "presentation": "Presentation/Smash Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Smite": {
+    "Ability/Smite": {
       "number": 8,
       "id": "smite",
       "displayName": "Smite",
@@ -1970,7 +1970,7 @@
       "presentation": "Presentation/Smite Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Spark": {
+    "Ability/Spark": {
       "number": 25,
       "id": "spark",
       "displayName": "Spark",
@@ -2045,7 +2045,7 @@
       "presentation": "Presentation/Spark Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Spit": {
+    "Ability/Spit": {
       "number": 9,
       "id": "spit",
       "displayName": "Spit",
@@ -2120,7 +2120,7 @@
       "presentation": "Presentation/Spit Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Tower Walk": {
+    "Ability/Tower Walk": {
       "number": 5,
       "id": "Tower Walk",
       "displayName": "Tower Walk",
@@ -2156,7 +2156,7 @@
       "presentation": null,
       "faceTargetOnCast": false
     },
-    "Abilities/Fire Shot": {
+    "Ability/Fire Shot": {
       "id": "fire-shot",
       "displayName": "Fire Shot",
       "description": "Shoots a burning arrow up to Range tiles away: the target burns (2 a turn for 2 turns).",
@@ -2208,7 +2208,7 @@
                 { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" },
                 {
                   "$type": "ApplyStatusStepData",
-                  "status": "Statuses/Burn",
+                  "status": "Status/Burn",
                   "stacks": "2",
                   "duration": "2",
                   "on": "Target",
@@ -2238,7 +2238,7 @@
       "presentation": "Presentation/Shoot Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Fire Volley": {
+    "Ability/Fire Volley": {
       "id": "fire-volley",
       "displayName": "Fire Volley",
       "description": "Rains burning arrows on a tile up to Range tiles away: every enemy on and around it is hit and burns (2 a turn for 2 turns). 2 turn cooldown.",
@@ -2290,7 +2290,7 @@
                 { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" },
                 {
                   "$type": "ApplyStatusStepData",
-                  "status": "Statuses/Burn",
+                  "status": "Status/Burn",
                   "stacks": "2",
                   "duration": "2",
                   "on": "Target",
@@ -2320,7 +2320,7 @@
       "presentation": "Presentation/Shoot Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Venom Shot": {
+    "Ability/Venom Shot": {
       "id": "venom-shot",
       "displayName": "Venom Shot",
       "description": "Shoots a poisoned arrow up to Range tiles away: acid eats the target (2 a turn for 3 turns).",
@@ -2372,7 +2372,7 @@
                 { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" },
                 {
                   "$type": "ApplyStatusStepData",
-                  "status": "Statuses/Acid",
+                  "status": "Status/Acid",
                   "stacks": "2",
                   "duration": "3",
                   "on": "Target",
@@ -2402,7 +2402,7 @@
       "presentation": "Presentation/Shoot Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Long Shot": {
+    "Ability/Long Shot": {
       "id": "long-shot",
       "displayName": "Long Shot",
       "description": "Shoots a heavy arrow at an enemy up to Range tiles away.",
@@ -2476,7 +2476,7 @@
       "presentation": "Presentation/Shoot Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Shield Bash": {
+    "Ability/Shield Bash": {
       "id": "shield-bash",
       "displayName": "Shield Bash",
       "description": "Slams an adjacent enemy with the shield and pushes it back 1 tile.",
@@ -2551,7 +2551,7 @@
       "presentation": "Presentation/Bash Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Fireball": {
+    "Ability/Fireball": {
       "id": "fireball",
       "displayName": "Fireball",
       "description": "Hurls a big fireball up to Range tiles away: everyone on and around the tile it hits is hit and burns (placeholder).",
@@ -2603,7 +2603,7 @@
                 { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" },
                 {
                   "$type": "ApplyStatusStepData",
-                  "status": "Statuses/Burn",
+                  "status": "Status/Burn",
                   "stacks": "Self.Potency",
                   "duration": "2",
                   "on": "Target",
@@ -2633,7 +2633,7 @@
       "presentation": "Presentation/Firebolt Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Frost Bolt": {
+    "Ability/Frost Bolt": {
       "id": "frost-bolt",
       "displayName": "Frost Bolt",
       "description": "Hurls an icy bolt at an enemy up to Range tiles away and pushes it back 1 tile (placeholder).",
@@ -2708,7 +2708,7 @@
       "presentation": "Presentation/Firebolt Presentation",
       "faceTargetOnCast": false
     },
-    "Abilities/Chain Spark": {
+    "Ability/Chain Spark": {
       "id": "chain-spark",
       "displayName": "Chain Spark",
       "description": "Zaps an enemy up to Range tiles away; the spark jumps to 2 more enemies nearby (placeholder).",

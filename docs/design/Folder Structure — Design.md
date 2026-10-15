@@ -1,45 +1,49 @@
 # Folder Structure — Design
 
-Started 2026-10-05; the [Decisions](#decisions) table records how each part was settled.
+Started 2026-10-05; the [Decisions](#decisions) table records how each part was settled. Godot pass 2026-10-15: rewritten for the Godot project (`~/godot/projects/td`), the game since 2026-10-15; the Unity tree is in [History](#history).
 
 Where everything in the project lives, and the rules that keep it there. The goal is that someone new — a person or an agent — can guess where a thing is before searching, and knows where a new thing goes without asking.
 
 ## Principles
 
 1. **One home per thing.** Every file has exactly one right folder, decided by *what it is*, not by who made it or when.
-2. **Content by type, art by unit.** Game data is sorted by asset type (all abilities together); art is sorted by the unit it belongs to (everything the Slime needs in one folder).
-3. **Docs outside Assets.** Documentation is read on GitHub and in editors, never imported by Unity.
-4. **Generated files say so, and are never edited by hand.** The game reference, placeholder models and Chapter 1 content come from tools; change the tool or the source, then regenerate.
-5. **Demo content is kept apart.** Examples the game does not use live in `Examples/` subfolders, so the real content reads clean.
-6. **Resources only for what is loaded by name.** Everything in Resources ships with the game whether used or not.
-7. **Moves keep GUIDs.** Assets move inside Unity (drag in the Project window, `Tools > Project > Sort Data and Art`, or the move queue), never by file moves that leave the `.meta` behind.
+2. **Content by type, art by kind and unit.** Game data is sorted by asset type (all abilities in `data/content/Abilities.json`); art is sorted by kind (models, icons, portraits) and named after the unit it belongs to (`art/models/Slime.fbx`, `art/icons/Units/Slime.png`, `art/portraits/Slime.png`). A unit's model, rig and clips are one FBX from the Blender pipeline, so its look is one file.
+3. **Docs apart from the game.** Documentation is Markdown in `docs/`, read on GitHub and in editors; the game never loads it.
+4. **Generated files say so, and are never edited by hand.** The game reference (`docs/reference/`), `data/coop.json` and the UI theme come from tools; change the tool or the source, then regenerate.
+5. **Demo content is kept apart.** Examples the game does not use live under `Example/` key folders (`Ability/Example/…`, `Unit/Other/Example/…`, `Presentation/Example/…`) and levels outside the catalog under `Level/Other/`, so the real content reads clean.
+6. **The simulation is engine-free.** Everything under `sim/` is plain GDScript (`RefCounted`, no Node, no Resource, no `load`; only `sim/data/` uses `JSON` and `FileAccess`), so the rules run headless, in tests and in tools.
+7. **One global class per file.** Every `class_name X` lives in its own `.gd` whose name is the snake_case of `X` (`LevelSession` → `sim/level/level_session.gd`, `TdHealthBar` → `game/ui/elements/td_health_bar.gd`). A name Godot already owns gets a `Td` prefix (PORT.md "Renames").
+8. **Moves keep uids.** Scripts and scenes are referenced by `uid://` as well as by path: move a file in the editor's FileSystem dock, or together with its `.uid` / `.import` file, never alone. Content is found by key and type, never by file position.
 
 ## The tree
 
 ```text
-TowerDefenceProject/
+td/                           ~/godot/projects/td; open project.godot with Godot 4.7 (Standard, no .NET)
 ├── README.md                 what the project is, how to open it, where to start
-├── CLAUDE.md                 entry point for Claude Code (points to Assets/.agents)
-├── Docs/                     all documentation (see Docs/README.md)
-│   ├── Design/               design docs, one per system
-│   ├── Reference/            GENERATED: towers, enemies, statuses, levels with their numbers
-│   ├── Notes/                older snapshots
-│   └── Changelog.md, Decisions.md, Glossary.md, README.md, Combat — Implementation Notes.md
-├── Assets/
-│   ├── .agents/              guides for agents and people: AGENTS (rules), CONTEXT (architecture), MAPPING (file map)
-│   ├── Scripts/              code, see below
-│   ├── Editor/               editor-only code, see below
-│   ├── Tests/EditMode/       Edit Mode tests (Game.Tests)
-│   ├── Data/                 game content (ScriptableObjects), by type
-│   ├── Art/                  models, materials, textures, icons, UI sprites, fonts, VFX
-│   ├── Audio/                music, sound effects, the mixer
-│   ├── Prefabs/UI/           UI prefabs by screen (model and effect prefabs live in Art)
-│   ├── Scenes/               Boot, MainMenu, LevelSelect, Game; Test/ for scratch scenes
-│   ├── Resources/            only GameCatalog
-│   └── TextMesh Pro/         package content (not ours; leave as is)
-├── Packages/, ProjectSettings/   Unity project files (tracked)
-├── Builds/                   game builds by platform and version (git-ignored), see Builds below
-└── Library/, Temp/, Logs/, UserSettings/, *.csproj, *.sln   generated (git-ignored)
+├── PORT.md                   how the simulation was ported from the C# and checked; naming rules and renames
+├── project.godot             project settings, autoloads, the TD Tools plugin
+├── export_presets.cfg        export presets (Web)
+├── web_shell.html            the web export's HTML shell
+├── default_bus_layout.tres   audio buses
+├── check.sh, test.sh         parse-check every script; run the tests
+├── art/                      imported art: models, map kit, hub kits, icons, portraits, UI sprites, fonts, music
+├── data/                     game data: content/*.json (the source of truth), tutorial.json, coop.json
+├── sim/                      the simulation: the game rules, engine-free
+├── game/                     the game layer: app shell, board, level, UI, net, dev tools (+ ARCH.md, boot.tscn)
+├── addons/td_tools/          the TD Tools editor dock
+├── tests/                    the test suite (test_*.gd)
+├── tools/                    command-line tool scripts: check, golden, soak, content check, generators, renders
+├── docs/                     all documentation
+└── .godot/                   import cache (generated, git-ignored)
+```
+
+```text
+docs/
+├── design/                   design docs, one per system (this file)
+├── reference/                GENERATED: towers, enemies, statuses, levels, Codex with their numbers
+├── notes/                    handoff notes, kit READMEs, UI notes (notes/ui: Unity-era notes kept for the kit)
+├── archive/                  Unity-era docs kept as history (changelog, C# combat notes, the old index)
+└── Decisions.md, Glossary.md, AI Usage.md, CONTENT.md, GODOT-NOTES.md, COOP-PROTOCOL.md
 ```
 
 ## Code: `Assets/Scripts` and `Assets/Editor`
@@ -63,6 +67,11 @@ Rules: editor code never lives under `Scripts/` (AGENTS Rule 9); UI scripts neve
 ## Content: `Assets/Data`
 
 One folder per asset type; `DataFolders` in `Editor/Game` is the single source of these paths.
+
+> **Godot build (the game since 2026-10-15):** there are no `.asset` files; content is `data/content/<Type>.json` and
+> each entry's key mirrors this folder layout with **singular** folder names (`Status/Burn`, `Unit/Enemy/Rabbit`,
+> `Ability/Example/Walk`, `Level/Chapter 1/1 First Steps`; file names stay plural). See `docs/CONTENT.md` "Keys". The
+> table below is the frozen Unity project's layout.
 
 | Folder | Holds |
 | --- | --- |

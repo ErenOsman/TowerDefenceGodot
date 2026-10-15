@@ -3,40 +3,40 @@
   "assets": {
     "Settings/Codex": {
       "towers": [
-        "Towers/Archer Tower",
-        "Towers/Guardian Tower",
-        "Towers/Mage Tower",
-        "Towers/Priest Tower",
-        "Towers/Wisp Tower",
-        "Towers/Ballista Tower",
-        "Towers/Alchemist Tower",
-        "Towers/Drummer Tower",
-        "Towers/Cannon Tower"
+        "Tower/Archer Tower",
+        "Tower/Guardian Tower",
+        "Tower/Mage Tower",
+        "Tower/Priest Tower",
+        "Tower/Wisp Tower",
+        "Tower/Ballista Tower",
+        "Tower/Alchemist Tower",
+        "Tower/Drummer Tower",
+        "Tower/Cannon Tower"
       ],
       "enemies": [
-        "Units/Enemies/Slime",
-        "Units/Enemies/Runner",
-        "Units/Enemies/Big Slime",
-        "Units/Enemies/Slime Archer",
-        "Units/Enemies/Shield Slime",
-        "Units/Enemies/Brute",
-        "Units/Enemies/Slime King",
-        "Units/Enemies/Rabbit",
-        "Units/Enemies/Rockjaw",
-        "Units/Enemies/Bat",
-        "Units/Enemies/Slime Glutton",
-        "Units/Enemies/Jackalope",
-        "Units/Enemies/Slime Shaman",
-        "Units/Enemies/Ironhide"
+        "Unit/Enemy/Slime",
+        "Unit/Enemy/Runner",
+        "Unit/Enemy/Big Slime",
+        "Unit/Enemy/Slime Archer",
+        "Unit/Enemy/Shield Slime",
+        "Unit/Enemy/Brute",
+        "Unit/Enemy/Slime King",
+        "Unit/Enemy/Rabbit",
+        "Unit/Enemy/Rockjaw",
+        "Unit/Enemy/Bat",
+        "Unit/Enemy/Slime Glutton",
+        "Unit/Enemy/Jackalope",
+        "Unit/Enemy/Slime Shaman",
+        "Unit/Enemy/Ironhide"
       ],
       "statuses": [
-        "Statuses/Taunted",
-        "Statuses/Shield",
-        "Statuses/Burn",
-        "Statuses/Haste",
-        "Statuses/Gorged",
-        "Statuses/Acid",
-        "Statuses/Rallied"
+        "Status/Taunted",
+        "Status/Shield",
+        "Status/Burn",
+        "Status/Haste",
+        "Status/Gorged",
+        "Status/Acid",
+        "Status/Rallied"
       ],
       "tips": [
         {

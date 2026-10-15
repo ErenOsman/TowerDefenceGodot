@@ -1,4 +1,4 @@
-<!-- Generated from the game content (Tools > Docs > Export Game Reference, or Tools/Offline/offline.sh docs). Do not edit by hand: change the content and export again. -->
+<!-- Generated from data/content by tools/game_reference.gd (or the TD Tools dock's Reference tab). Do not edit by hand: change the content and generate again. -->
 
 # Levels
 
@@ -10,23 +10,22 @@ Map legend: `.` ground, `+` build tile, `#` wall, `~` chasm, `B` base, `1` `2`�
 
 Slimes are coming down the road. Place your Archer near the base and stop them.
 
-<sub>Source: `Assets/Data/Levels/Tutorial/Tutorial.asset` (`Content/Levels.json` → `Levels/Tutorial/Tutorial`)</sub>
+<sub>Source: `data/content/Levels.json` → `Level/Tutorial/Tutorial`</sub>
 
 - Energy: **100** at the start, **+0** each round
-- Hand: its own: Archer · map 12×5 · 1 road · 2 waves
+- Hand: its own: Archer · map 7×5 · 1 road · 2 waves
 - Unlocks: the first launch (not listed in level select)
 - First clear gives: Archer (skipping the tutorial gives it too)
 - Intro: 12 lines (`Tutorial Steps`), the first time it is played
 - ID `tutorial`
 
 ```text
- 4 . . . . . . . . . + + +
- 3 . . . . . . . . . + + +
- 2 S 1 1 1 1 1 1 1 1 1 1 B
- 1 . . . . . . . . . + + +
- 0 . . . . . . . . . + + +
-                       1 1
-   0 1 2 3 4 5 6 7 8 9 0 1
+ 4 . . . . + + +
+ 3 . . . . + + +
+ 2 S 1 1 1 1 1 B
+ 1 . . . . + + +
+ 0 . . . . + + +
+   0 1 2 3 4 5 6
 ```
 
 **Wave 1: One Slime** (starts round 1)
@@ -48,7 +47,7 @@ Slimes are coming down the road. Place your Archer near the base and stop them.
 
 Slimes walk one road to your base, and a Big Slime takes several arrows. Place archers beside it.
 
-<sub>Source: `Assets/Data/Levels/Chapter 1/1 First Steps.asset` (`Content/Levels.json` → `Levels/Chapter 1/1 First Steps`)</sub>
+<sub>Source: `data/content/Levels.json` → `Level/Chapter 1/1 First Steps`</sub>
 
 - Energy: **200** at the start, **+20** each round
 - Hand: up to **4** towers · map 10×5 · 1 road · 3 waves
@@ -91,7 +90,7 @@ Slimes walk one road to your base, and a Big Slime takes several arrows. Place a
 
 Slime Archers stop where they can spit at your towers. Keep your towers healthy.
 
-<sub>Source: `Assets/Data/Levels/Chapter 1/2 Spitters.asset` (`Content/Levels.json` → `Levels/Chapter 1/2 Spitters`)</sub>
+<sub>Source: `data/content/Levels.json` → `Level/Chapter 1/2 Spitters`</sub>
 
 - Energy: **200** at the start, **+20** each round
 - Hand: up to **4** towers · map 11×6 · 1 road · 3 waves
@@ -141,7 +140,7 @@ Slime Archers stop where they can spit at your towers. Keep your towers healthy.
 
 Two roads meet at the base, and Shield Slimes soak up your first shots.
 
-<sub>Source: `Assets/Data/Levels/Chapter 1/3 Two Roads.asset` (`Content/Levels.json` → `Levels/Chapter 1/3 Two Roads`)</sub>
+<sub>Source: `data/content/Levels.json` → `Level/Chapter 1/3 Two Roads`</sub>
 
 - Energy: **200** at the start, **+25** each round
 - Hand: up to **4** towers · map 12×5 · 2 roads · 3 waves
@@ -190,7 +189,7 @@ Two roads meet at the base, and Shield Slimes soak up your first shots.
 
 Brutes smash the towers ahead of them, and then the Slime King arrives.
 
-<sub>Source: `Assets/Data/Levels/Chapter 1/4 The Slime King.asset` (`Content/Levels.json` → `Levels/Chapter 1/4 The Slime King`)</sub>
+<sub>Source: `data/content/Levels.json` → `Level/Chapter 1/4 The Slime King`</sub>
 
 - Energy: **200** at the start, **+25** each round
 - Hand: up to **4** towers · map 12×6 · 1 road · 3 waves
@@ -241,7 +240,7 @@ Brutes smash the towers ahead of them, and then the Slime King arrives.
 
 Two rows of rocks cut the field. Rabbits hop over them; Rockjaws eat their way through.
 
-<sub>Source: `Assets/Data/Levels/Chapter 2/1 Rock Garden.asset` (`Content/Levels.json` → `Levels/Chapter 2/1 Rock Garden`)</sub>
+<sub>Source: `data/content/Levels.json` → `Level/Chapter 2/1 Rock Garden`</sub>
 
 - Energy: **400** at the start, **+40** each round
 - Hand: up to **5** towers · map 14×7 · 1 road · 3 waves
@@ -294,7 +293,7 @@ Two rows of rocks cut the field. Rabbits hop over them; Rockjaws eat their way t
 
 Three Brutes are already halfway down the road when you arrive.
 
-<sub>Source: `Assets/Data/Levels/Chapter 2/2 Three at the Gate.asset` (`Content/Levels.json` → `Levels/Chapter 2/2 Three at the Gate`)</sub>
+<sub>Source: `data/content/Levels.json` → `Level/Chapter 2/2 Three at the Gate`</sub>
 
 - Energy: **450** at the start, **+40** each round
 - Hand: up to **5** towers · map 14×7 · 1 road · 3 waves
@@ -345,7 +344,7 @@ Three Brutes are already halfway down the road when you arrive.
 
 A drummer stands on your side: towers near the drum hit harder. Mind the chasm below.
 
-<sub>Source: `Assets/Data/Levels/Chapter 2/3 The Drummer.asset` (`Content/Levels.json` → `Levels/Chapter 2/3 The Drummer`)</sub>
+<sub>Source: `data/content/Levels.json` → `Level/Chapter 2/3 The Drummer`</sub>
 
 - Energy: **450** at the start, **+40** each round
 - Hand: up to **5** towers · map 14×8 · 2 roads · 3 waves
@@ -399,7 +398,7 @@ A drummer stands on your side: towers near the drum hit harder. Mind the chasm b
 
 Three roads, one base. The strongest slimes come first, and then something that eats them.
 
-<sub>Source: `Assets/Data/Levels/Chapter 2/4 The Glutton.asset` (`Content/Levels.json` → `Levels/Chapter 2/4 The Glutton`)</sub>
+<sub>Source: `data/content/Levels.json` → `Level/Chapter 2/4 The Glutton`</sub>
 
 - Energy: **550** at the start, **+45** each round
 - Hand: up to **5** towers · map 15×9 · 3 roads · 2 waves

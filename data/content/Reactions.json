@@ -1,7 +1,7 @@
 {
   "type": "ReactionAsset",
   "assets": {
-    "Reactions/Acid Tick": {
+    "Reaction/Acid Tick": {
       "number": 18,
       "trigger": "OnTurnStart",
       "condition": "",
@@ -17,7 +17,7 @@
         ]
       }
     },
-    "Reactions/Burn Tick": {
+    "Reaction/Burn Tick": {
       "number": 13,
       "trigger": "OnTurnStart",
       "condition": "",
@@ -33,7 +33,7 @@
         ]
       }
     },
-    "Reactions/Counter Strike": {
+    "Reaction/Counter Strike": {
       "number": 9,
       "trigger": "OnHitTaken",
       "condition": "Self.DistanceTo(Source) <= 1",
@@ -49,7 +49,7 @@
         ]
       }
     },
-    "Reactions/Devour": {
+    "Reaction/Devour": {
       "number": 16,
       "trigger": "OnSpawned",
       "condition": "",
@@ -88,7 +88,7 @@
         ]
       }
     },
-    "Reactions/Eat Rock": {
+    "Reaction/Eat Rock": {
       "number": 15,
       "trigger": "OnTurnEnd",
       "condition": "",
@@ -123,7 +123,7 @@
                 { "$type": "RemoveStepData", "reason": "eaten", "on": "Target" },
                 {
                   "$type": "ApplyStatusStepData",
-                  "status": "Statuses/Shield",
+                  "status": "Status/Shield",
                   "stacks": "100",
                   "duration": "-1",
                   "on": "Self",
@@ -135,7 +135,7 @@
         ]
       }
     },
-    "Reactions/Examples/Burn": {
+    "Reaction/Example/Burn": {
       "number": 5,
       "trigger": "OnAnyTurnStart",
       "condition": "Self.DistanceTo(Target) == 0",
@@ -151,7 +151,7 @@
         ]
       }
     },
-    "Reactions/Examples/Burn Out": {
+    "Reaction/Example/Burn Out": {
       "number": 4,
       "trigger": "OnStatusRemoved",
       "condition": "",
@@ -167,7 +167,7 @@
         ]
       }
     },
-    "Reactions/Examples/Collision Damage": {
+    "Reaction/Example/Collision Damage": {
       "number": 1,
       "trigger": "OnCollision",
       "condition": "",
@@ -183,7 +183,7 @@
         ]
       }
     },
-    "Reactions/Examples/Enrage": {
+    "Reaction/Example/Enrage": {
       "number": 6,
       "trigger": "OnAllyHitTaken",
       "condition": "",
@@ -197,7 +197,7 @@
         "items": [
           {
             "$type": "ApplyStatusStepData",
-            "status": "Statuses/Examples/Enraged",
+            "status": "Status/Example/Enraged",
             "stacks": "1",
             "duration": "-1",
             "on": "Self",
@@ -206,7 +206,7 @@
         ]
       }
     },
-    "Reactions/Examples/Execute Reset": {
+    "Reaction/Example/Execute Reset": {
       "number": 10,
       "trigger": "OnKill",
       "condition": "",
@@ -218,11 +218,11 @@
       "worksWhenDead": false,
       "response": {
         "items": [
-          { "$type": "ResetCooldownStepData", "ability": "Abilities/Examples/Execute", "on": "Self", "turns": "" }
+          { "$type": "ResetCooldownStepData", "ability": "Ability/Example/Execute", "on": "Self", "turns": "" }
         ]
       }
     },
-    "Reactions/Examples/Ignite": {
+    "Reaction/Example/Ignite": {
       "number": 7,
       "trigger": "OnSpawned",
       "condition": "",
@@ -236,7 +236,7 @@
         "items": [
           {
             "$type": "ApplyStatusStepData",
-            "status": "Statuses/Examples/Burning",
+            "status": "Status/Example/Burning",
             "stacks": "1",
             "duration": "2",
             "on": "Self",
@@ -245,7 +245,7 @@
         ]
       }
     },
-    "Reactions/Examples/Overwatch": {
+    "Reaction/Example/Overwatch": {
       "number": 8,
       "trigger": "OnEnterTile",
       "condition": "Target.IsEnemy and Self.DistanceTo(Target) <= 3 and Self.CanAct",
@@ -259,14 +259,14 @@
         "items": [
           {
             "$type": "CastAbilityStepData",
-            "ability": "Abilities/Examples/Pinning Shot",
+            "ability": "Ability/Example/Pinning Shot",
             "aimAt": "EventTarget",
             "aimByInstinct": false
           }
         ]
       }
     },
-    "Reactions/Examples/Poison Tick": {
+    "Reaction/Example/Poison Tick": {
       "number": 2,
       "trigger": "OnTurnStart",
       "condition": "",
@@ -282,7 +282,7 @@
         ]
       }
     },
-    "Reactions/Examples/Thorns": {
+    "Reaction/Example/Thorns": {
       "number": 3,
       "trigger": "OnHitTaken",
       "condition": "",
@@ -298,7 +298,7 @@
         ]
       }
     },
-    "Reactions/Gorge": {
+    "Reaction/Gorge": {
       "number": 17,
       "trigger": "OnKill",
       "condition": "",
@@ -312,7 +312,7 @@
         "items": [
           {
             "$type": "ApplyStatusStepData",
-            "status": "Statuses/Gorged",
+            "status": "Status/Gorged",
             "stacks": "1",
             "duration": "-1",
             "on": "Self",
@@ -322,7 +322,7 @@
         ]
       }
     },
-    "Reactions/Shield Refill": {
+    "Reaction/Shield Refill": {
       "number": 12,
       "trigger": "OnTurnStart",
       "condition": "Self.Stacks(shield) < 10",
@@ -336,7 +336,7 @@
         "items": [
           {
             "$type": "ApplyStatusStepData",
-            "status": "Statuses/Shield",
+            "status": "Status/Shield",
             "stacks": "10 - Self.Stacks(shield)",
             "duration": "-1",
             "on": "Self",
@@ -345,7 +345,7 @@
         ]
       }
     },
-    "Reactions/Shield Up": {
+    "Reaction/Shield Up": {
       "number": 11,
       "trigger": "OnSpawned",
       "condition": "",
@@ -359,7 +359,7 @@
         "items": [
           {
             "$type": "ApplyStatusStepData",
-            "status": "Statuses/Shield",
+            "status": "Status/Shield",
             "stacks": "10",
             "duration": "-1",
             "on": "Self",
@@ -368,7 +368,7 @@
         ]
       }
     },
-    "Reactions/Spiked Counter Strike": {
+    "Reaction/Spiked Counter Strike": {
       "trigger": "OnHitTaken",
       "condition": "Self.DistanceTo(Source) <= 1",
       "chance": "1",

@@ -100,7 +100,7 @@ A place like the Camp (stations on a ring; panels until there is art):
 | `playsPerDay` | 1 by default |
 | `requires`, `requireAll` | level / mission ids that must be won first; empty = open with the Guild |
 | `sharedPool`, `coopHandCap` | the co-op rules (Multiplayer — Design); replaces `coop.json` |
-| `firstWinTokens`, `winTokens` | `[{ "token": "Tokens/Fire Arrow", "amount": 1 }]` |
+| `firstWinTokens`, `winTokens` | `[{ "token": "Token/Fire Arrow", "amount": 1 }]` |
 
 Catalog: `guildUnlock` (a level) and `missions` (ordered mission list, the board's order). The Workshop's catalog
 drop fields `firstWinTokens` / `winTokens` on chapter levels are dropped: tokens come from missions only.

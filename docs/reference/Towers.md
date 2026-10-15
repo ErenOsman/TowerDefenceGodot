@@ -1,4 +1,4 @@
-<!-- Generated from the game content (Tools > Docs > Export Game Reference, or Tools/Offline/offline.sh docs). Do not edit by hand: change the content and export again. -->
+<!-- Generated from data/content by tools/game_reference.gd (or the TD Tools dock's Reference tab). Do not edit by hand: change the content and generate again. -->
 
 # Towers
 
@@ -22,7 +22,7 @@ Shoots enemies up to 2 tiles away and can move between shots.
 
 Cost **100** energy · type ID `archer`
 
-<sub>Source: `Assets/Data/Towers/Archer Tower.asset` (`Content/Towers.json` → `Towers/Archer Tower`) · `Assets/Data/Units/Towers/Archer.asset` (`Content/Units.json` → `Units/Towers/Archer`)</sub>
+<sub>Source: `data/content/Towers.json` → `Tower/Archer Tower` · `data/content/Units.json` → `Unit/Tower/Archer`</sub>
 
 Stats: HP 20 · Speed 2 · Range 2 · Power 10
 
@@ -39,7 +39,7 @@ A sturdy tower that taunts enemies into hitting it instead of the others.
 
 Cost **100** energy · type ID `guardian`
 
-<sub>Source: `Assets/Data/Towers/Guardian Tower.asset` (`Content/Towers.json` → `Towers/Guardian Tower`) · `Assets/Data/Units/Towers/Guardian.asset` (`Content/Units.json` → `Units/Towers/Guardian`)</sub>
+<sub>Source: `data/content/Towers.json` → `Tower/Guardian Tower` · `data/content/Units.json` → `Unit/Tower/Guardian`</sub>
 
 Stats: HP 40 · Speed 2 · Range 2 · Power 5
 
@@ -62,7 +62,7 @@ Slow but hits groups: Firebolt burns everything around the tile it hits.
 
 Cost **120** energy · type ID `mage`
 
-<sub>Source: `Assets/Data/Towers/Mage Tower.asset` (`Content/Towers.json` → `Towers/Mage Tower`) · `Assets/Data/Units/Towers/Mage.asset` (`Content/Units.json` → `Units/Towers/Mage`)</sub>
+<sub>Source: `data/content/Towers.json` → `Tower/Mage Tower` · `data/content/Units.json` → `Unit/Tower/Mage`</sub>
 
 Stats: HP 15 · Speed 2 · Range 3 · Radius 1 · Power 8 · Potency 2
 
@@ -79,7 +79,7 @@ Keeps the others standing: Mend heals the most hurt tower.
 
 Cost **100** energy · type ID `priest`
 
-<sub>Source: `Assets/Data/Towers/Priest Tower.asset` (`Content/Towers.json` → `Towers/Priest Tower`) · `Assets/Data/Units/Towers/Priest.asset` (`Content/Units.json` → `Units/Towers/Priest`)</sub>
+<sub>Source: `data/content/Towers.json` → `Tower/Priest Tower` · `data/content/Units.json` → `Unit/Tower/Priest`</sub>
 
 Stats: HP 15 · Speed 2 · Range 3 · Power 5 · Potency 10
 
@@ -98,7 +98,7 @@ A spirit tower: it zaps from afar and blinks across the field, over walls and ro
 
 Cost **200** energy · type ID `wisp`
 
-<sub>Source: `Assets/Data/Towers/Wisp Tower.asset` (`Content/Towers.json` → `Towers/Wisp Tower`) · `Assets/Data/Units/Towers/Wisp.asset` (`Content/Units.json` → `Units/Towers/Wisp`)</sub>
+<sub>Source: `data/content/Towers.json` → `Tower/Wisp Tower` · `data/content/Units.json` → `Unit/Tower/Wisp`</sub>
 
 Stats: HP 15 · Speed 2 · Range 3 · Power 10
 
@@ -115,7 +115,7 @@ A siege bow: it hits hard from far away, but cannot shoot what stands next to it
 
 Cost **240** energy · type ID `ballista`
 
-<sub>Source: `Assets/Data/Towers/Ballista Tower.asset` (`Content/Towers.json` → `Towers/Ballista Tower`) · `Assets/Data/Units/Towers/Ballista.asset` (`Content/Units.json` → `Units/Towers/Ballista`)</sub>
+<sub>Source: `data/content/Towers.json` → `Tower/Ballista Tower` · `data/content/Units.json` → `Unit/Tower/Ballista`</sub>
 
 Stats: HP 20 · Speed 1 · Range 4 · Power 25
 
@@ -132,7 +132,7 @@ Throws flasks of acid onto groups: the acid keeps eating them for a few turns, s
 
 Cost **220** energy · type ID `alchemist`
 
-<sub>Source: `Assets/Data/Towers/Alchemist Tower.asset` (`Content/Towers.json` → `Towers/Alchemist Tower`) · `Assets/Data/Units/Towers/Alchemist.asset` (`Content/Units.json` → `Units/Towers/Alchemist`)</sub>
+<sub>Source: `data/content/Towers.json` → `Tower/Alchemist Tower` · `data/content/Units.json` → `Unit/Tower/Alchemist`</sub>
 
 Stats: HP 15 · Speed 2 · Range 3 · Radius 1 · Power 4 · Potency 3
 
@@ -149,7 +149,7 @@ A drummer beating a war drum: towers within 2 tiles of it hit 3 harder, and Rall
 
 Cost **200** energy · type ID `drummer`
 
-<sub>Source: `Assets/Data/Towers/Drummer Tower.asset` (`Content/Towers.json` → `Towers/Drummer Tower`) · `Assets/Data/Units/Towers/Drummer.asset` (`Content/Units.json` → `Units/Towers/Drummer`)</sub>
+<sub>Source: `data/content/Towers.json` → `Tower/Drummer Tower` · `data/content/Units.json` → `Unit/Tower/Drummer`</sub>
 
 Stats: HP 25 · Duration 2 · Speed 2
 
@@ -170,7 +170,7 @@ Slow and heavy: a shell every third turn that wrecks a whole group. It cannot fi
 
 Cost **280** energy · type ID `cannon`
 
-<sub>Source: `Assets/Data/Towers/Cannon Tower.asset` (`Content/Towers.json` → `Towers/Cannon Tower`) · `Assets/Data/Units/Towers/Cannon.asset` (`Content/Units.json` → `Units/Towers/Cannon`)</sub>
+<sub>Source: `data/content/Towers.json` → `Tower/Cannon Tower` · `data/content/Units.json` → `Unit/Tower/Cannon`</sub>
 
 Stats: HP 30 · Speed 1 · Range 3 · Radius 1 · Power 30
 

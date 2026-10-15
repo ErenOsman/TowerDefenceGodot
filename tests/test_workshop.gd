@@ -11,7 +11,7 @@ func lib() -> ContentLibrary:
 
 func _archer_type(c: AssetConverter = null) -> TowerType:
 	if c == null: c = AssetConverter.new()
-	return c.tower_type(lib().get_asset("Towers/Archer Tower"))
+	return c.tower_type(lib().get_asset("Tower/Archer Tower"))
 
 func _owned(type := "archer", id := "t1") -> OwnedTower:
 	var o := OwnedTower.new()
@@ -37,10 +37,10 @@ func test_workshop_content_loads_without_problems() -> void:
 	assert_eq(lib().problems.size(), 0, "\n".join(lib().problems))
 	assert_eq(lib().all_of("FormAsset").size(), 9)
 	assert_eq(lib().all_of("TokenAsset").size(), 6)
-	assert_eq(lib().file_of(lib().get_asset("Units/Towers/Forms/Fire Archer")), "Units.json", "form units live in the file of their type")
-	assert_eq(lib().file_of(lib().get_asset("Forms/Fire Archer")), "Forms.json")
-	assert_not_null(lib().get_asset("Units/Towers/Archer"))
-	var archer: TowerAsset = lib().get_asset("Towers/Archer Tower")
+	assert_eq(lib().file_of(lib().get_asset("Unit/Tower/Form/Fire Archer")), "Units.json", "form units live in the file of their type")
+	assert_eq(lib().file_of(lib().get_asset("Form/Fire Archer")), "Forms.json")
+	assert_not_null(lib().get_asset("Unit/Tower/Archer"))
+	var archer: TowerAsset = lib().get_asset("Tower/Archer Tower")
 	assert_seq(archer.forms.map(func(f): return f.get_id()), ["archer-fire", "archer-inferno", "archer-poison", "archer-longbow"])
 	assert_eq(lib().catalog.tokens.size(), 6)
 	assert_eq(lib().catalog.forms.size(), 9)
@@ -72,13 +72,13 @@ func test_workshop_validation_catches_bad_forms() -> void:
 	var errors := AssetValidator.validate_form(f)
 	for part in ["no form ID", "no tower", "no entity", "costs no tokens"]:
 		assert_true(errors.any(func(e): return e.contains(part)), part)
-	var a: FormAsset = lib().get_asset("Forms/Fire Archer")
+	var a: FormAsset = lib().get_asset("Form/Fire Archer")
 	var deep := FormAsset.new()
 	deep.name = "Deep"; deep.id = "deep"; deep.tower = a.tower; deep.entity = a.entity; deep.unlock = a.unlock
-	deep.parent = lib().get_asset("Forms/Inferno Archer")
+	deep.parent = lib().get_asset("Form/Inferno Archer")
 	assert_true(AssetValidator.validate_form(deep).any(func(e): return e.contains("deep")))
 	var other := FormAsset.new()
-	other.name = "Other"; other.id = "other"; other.tower = lib().get_asset("Towers/Mage Tower"); other.entity = a.entity
+	other.name = "Other"; other.id = "other"; other.tower = lib().get_asset("Tower/Mage Tower"); other.entity = a.entity
 	other.unlock = a.unlock; other.parent = a
 	assert_true(AssetValidator.validate_form(other).any(func(e): return e.contains("another tower")))
 
@@ -101,7 +101,7 @@ func test_workshop_starter_numbers() -> void:
 	assert_num(longbow.base_stats["Power"], 12.0)
 	assert_num(longbow.base_stats["Range"], 3.0)
 	assert_num(longbow.base_stats["Speed"], 1.0)
-	var guardian := AssetConverter.new().tower_type(lib().get_asset("Towers/Guardian Tower"))
+	var guardian := AssetConverter.new().tower_type(lib().get_asset("Tower/Guardian Tower"))
 	var bastion := guardian.find_form("guardian-bastion").entity
 	assert_num(bastion.base_stats["MaxHp"], 55.0)
 	assert_num(bastion.base_stats["Range"], 3.0)
@@ -321,7 +321,7 @@ func test_workshop_hand_builds_forms_keeping_the_tower_id() -> void:
 
 func test_workshop_level_places_the_form() -> void:
 	var c := AssetConverter.new()
-	var level := c.level(lib().get_asset("Levels/Chapter 1/1 First Steps"))
+	var level := c.level(lib().get_asset("Level/Chapter 1/1 First Steps"))
 	var type := _archer_type(c)
 	var f := FormDef.new()
 	f.id = "cheap"; f.name = "Cheap Fire Archer"; f.cost = 1; f.entity = type.find_form("archer-fire").entity

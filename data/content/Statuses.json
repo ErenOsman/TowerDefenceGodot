@@ -1,7 +1,7 @@
 {
   "type": "StatusAsset",
   "assets": {
-    "Statuses/Acid": {
+    "Status/Acid": {
       "number": 12,
       "id": "acid",
       "displayName": "Acid",
@@ -15,7 +15,7 @@
       "durationUnit": "Turns",
       "modifiers": [],
       "replacements": [],
-      "reactions": ["Reactions/Acid Tick"],
+      "reactions": ["Reaction/Acid Tick"],
       "passiveCondition": "",
       "aura": "",
       "shieldPool": "",
@@ -23,7 +23,7 @@
       "fixedTeam": 0,
       "persistsThroughDeath": false
     },
-    "Statuses/Burn": {
+    "Status/Burn": {
       "number": 7,
       "id": "burn",
       "displayName": "Burn",
@@ -37,7 +37,7 @@
       "durationUnit": "Turns",
       "modifiers": [],
       "replacements": [],
-      "reactions": ["Reactions/Burn Tick"],
+      "reactions": ["Reaction/Burn Tick"],
       "passiveCondition": "",
       "aura": "",
       "shieldPool": "",
@@ -45,7 +45,7 @@
       "fixedTeam": 0,
       "persistsThroughDeath": false
     },
-    "Statuses/Examples/Burning": {
+    "Status/Example/Burning": {
       "number": 1,
       "id": "Burning",
       "displayName": "Burning",
@@ -59,7 +59,7 @@
       "durationUnit": "Rounds",
       "modifiers": [],
       "replacements": [],
-      "reactions": ["Reactions/Examples/Burn Out"],
+      "reactions": ["Reaction/Example/Burn Out"],
       "passiveCondition": "",
       "aura": "",
       "shieldPool": "",
@@ -67,7 +67,7 @@
       "fixedTeam": 0,
       "persistsThroughDeath": false
     },
-    "Statuses/Examples/Enraged": {
+    "Status/Example/Enraged": {
       "number": 2,
       "id": "Enraged",
       "displayName": "Enraged",
@@ -91,7 +91,7 @@
       "fixedTeam": 0,
       "persistsThroughDeath": false
     },
-    "Statuses/Examples/Poison": {
+    "Status/Example/Poison": {
       "number": 3,
       "id": "Poison",
       "displayName": "Poison",
@@ -105,7 +105,7 @@
       "durationUnit": "Turns",
       "modifiers": [],
       "replacements": [],
-      "reactions": ["Reactions/Examples/Poison Tick"],
+      "reactions": ["Reaction/Example/Poison Tick"],
       "passiveCondition": "",
       "aura": "",
       "shieldPool": "",
@@ -113,7 +113,7 @@
       "fixedTeam": 0,
       "persistsThroughDeath": false
     },
-    "Statuses/Examples/Rooted": {
+    "Status/Example/Rooted": {
       "number": 4,
       "id": "Rooted",
       "displayName": "Rooted",
@@ -135,7 +135,7 @@
       "fixedTeam": 0,
       "persistsThroughDeath": false
     },
-    "Statuses/Gorged": {
+    "Status/Gorged": {
       "number": 11,
       "id": "gorged",
       "displayName": "Gorged",
@@ -159,7 +159,7 @@
       "fixedTeam": 0,
       "persistsThroughDeath": false
     },
-    "Statuses/Haste": {
+    "Status/Haste": {
       "number": 9,
       "id": "haste",
       "displayName": "Haste",
@@ -183,7 +183,7 @@
       "fixedTeam": 0,
       "persistsThroughDeath": false
     },
-    "Statuses/Rallied": {
+    "Status/Rallied": {
       "number": 13,
       "id": "rallied",
       "displayName": "Rallied",
@@ -208,7 +208,7 @@
       "fixedTeam": 0,
       "persistsThroughDeath": false
     },
-    "Statuses/Shield": {
+    "Status/Shield": {
       "number": 14,
       "id": "shield",
       "displayName": "Shield",
@@ -230,7 +230,7 @@
       "fixedTeam": 0,
       "persistsThroughDeath": false
     },
-    "Statuses/Taunted": {
+    "Status/Taunted": {
       "number": 5,
       "id": "Taunted",
       "displayName": "Taunted",

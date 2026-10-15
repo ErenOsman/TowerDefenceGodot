@@ -2,15 +2,15 @@ class_name GameReference
 extends RefCounted
 ## Export Game Reference (GameReference.cs, Tools > Docs > Export Game Reference): Markdown pages describing the
 ## content as the game catalog has it (towers, enemies, abilities, passives, statuses, chapters, levels, maps and
-## waves). Same page layout and text as the Unity tool, so a page written here diffs cleanly against the Unity
-## repo's Docs/Reference/*.md. Numbers come through the AssetConverter (the same defs the game plays). Output is
+## waves). Same page layout and sections as the Unity tool (the frozen Unity repo's Docs/Reference/*.md); written to
+## docs/reference/ by tools/game_reference.gd. Numbers come through the AssetConverter (the same defs the game plays). Output is
 ## deterministic (no dates). Used by the TD Tools dock (res://addons/td_tools) and tests; pure logic, no nodes.
 ##   GameReference.pages(lib) → {"README.md": text, "Towers.md": …}; GameReference.export(folder, lib) → problem or "".
 
 const Folder := "res://docs/reference"
-const Header := "<!-- Generated from the game content (Tools > Docs > Export Game Reference, or Tools/Offline/offline.sh docs). Do not edit by hand: change the content and export again. -->"
-## The Unity repo's content folder name, as the Source lines show it (Content/Units.json).
-const ContentFolder := "Content"
+const Header := "<!-- Generated from data/content by tools/game_reference.gd (or the TD Tools dock's Reference tab). Do not edit by hand: change the content and generate again. -->"
+## The content folder, as the Source lines show it (data/content/Units.json).
+const ContentFolder := "data/content"
 
 ## The pages (file name → Markdown) of a loaded content library.
 static func pages(lib: ContentLibrary) -> Dictionary:
@@ -76,7 +76,7 @@ class _Reference:
 
 	func index() -> String:
 		_page("Game reference")
-		_line("What the game contains, exported from the assets the game plays. For how the rules work, see the design docs in `Docs/Design/`.")
+		_line("What the game contains, exported from the assets the game plays. For how the rules work, see the design docs in `docs/design/`.")
 		_line()
 		_line("| Page | Contents |")
 		_line("|---|---|")
@@ -399,14 +399,14 @@ class _Reference:
 		var st := "MaxHp" if label == "HP" else label
 		return Num.to_str(def.base_stats[st]) if def.base_stats.has(st) else "—"
 
-	## Where the assets live: "Source: Assets/Data/… (Content/Units.json → Units/…)".
+	## Where the assets live: "Source: `data/content/Units.json` → `Unit/…`".
 	func _source(assets: Array) -> String:
 		var parts := PackedStringArray()
 		for a in assets:
 			if a == null: continue
 			var key = lib.key_of(a) if lib != null else null
-			parts.append("`%s` (`%s/%s` → `%s`)" % [ContentFiles.asset_path_of(key if key != null else a.name), GameReference.ContentFolder,
-				ContentFiles.file_of(ContentSerializer.type_of(a)), key if key != null else ""])
+			parts.append("`%s/%s` → `%s`" % [GameReference.ContentFolder, ContentFiles.file_of(ContentSerializer.type_of(a)),
+				key if key != null else a.name])
 		return "<sub>Source: " + " · ".join(parts) + "</sub>"
 
 	func _tags(tags) -> String:

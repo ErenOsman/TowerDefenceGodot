@@ -221,7 +221,7 @@ func _probe(asset, made, probe: Dictionary) -> void:
 
 # ------------------------------------------------------------------ helpers
 
-## Every reference to a candidate key from another entry ("Units/Towers/Mage (abilities)").
+## Every reference to a candidate key from another entry ("Unit/Tower/Mage (abilities)").
 func _index_refs() -> void:
 	for a in lib.all:
 		var owner = lib.key_of(a)

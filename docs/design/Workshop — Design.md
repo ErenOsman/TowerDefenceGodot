@@ -125,11 +125,11 @@ files and fields; everything keyed by stable ids like the rest.
 | `id` | stable id, saved on towers (`archer-fire`) |
 | `displayName`, `description`, `icon` | the form's own name and portrait ("Fire Archer"; the portrait may be the base portrait until the Blender agent renders one) |
 | `badge` | the small badge sprite shown on cards, tray pieces and the board medallion (`Assets/Art/Icons/Forms/fire.png`) |
-| `tower` | the base tower type (`Towers/Archer Tower`) |
+| `tower` | the base tower type (`Tower/Archer Tower`) |
 | `parent` | the parent form, or empty for a root child |
-| `entity` | the `EntityAsset` the tower fights as in this form (`Units/Towers/Fire Archer`): a full entity like any other tower's, so forms need no new mechanics |
+| `entity` | the `EntityAsset` the tower fights as in this form (`Unit/Tower/Form/Fire Archer`): a full entity like any other tower's, so forms need no new mechanics |
 | `cost` | energy cost in this form; `-1` = the base tower's |
-| `unlock` | the tokens to spend: `[{ "token": "Tokens/Fire Arrow", "amount": 1 }]` |
+| `unlock` | the tokens to spend: `[{ "token": "Token/Fire Arrow", "amount": 1 }]` |
 | `order` | where the node sits around the root (0, 1, 2… clockwise from the top); children sit beyond their parent |
 
 ### Content/Tokens.json — `TokenAsset`

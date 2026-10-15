@@ -23,7 +23,7 @@ static func _listed(lib: ContentLibrary, type_name: String, examples: bool) -> A
 	var out := []
 	for a in lib.all_of(type_name):
 		var key = lib.key_of(a)
-		if not examples and key is String and key.contains("/Examples/"): continue
+		if not examples and key is String and (key.contains("/Example/") or key.contains("/Examples/")): continue
 		out.append(a)
 	return out
 

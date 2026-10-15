@@ -27,7 +27,7 @@ func build() -> void:
 	top.add_child(search)
 	examples = CheckBox.new()
 	examples.text = "Examples"
-	examples.tooltip_text = "Also list the demo assets under Examples/."
+	examples.tooltip_text = "Also list the demo assets under Example/."
 	examples.toggled.connect(func(_on): fill())
 	top.add_child(examples)
 	top.add_child(D.label("", true))

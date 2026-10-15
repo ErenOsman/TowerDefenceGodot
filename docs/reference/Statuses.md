@@ -1,4 +1,4 @@
-<!-- Generated from the game content (Tools > Docs > Export Game Reference, or Tools/Offline/offline.sh docs). Do not edit by hand: change the content and export again. -->
+<!-- Generated from data/content by tools/game_reference.gd (or the TD Tools dock's Reference tab). Do not edit by hand: change the content and generate again. -->
 
 # Statuses
 
@@ -12,7 +12,7 @@ lasts 3 turns · stacking: Stack (up to 99) · tags: Debuff, Poison
 
 ID `acid`
 
-<sub>Source: `Assets/Data/Statuses/Acid.asset` (`Content/Statuses.json` → `Statuses/Acid`)</sub>
+<sub>Source: `data/content/Statuses.json` → `Status/Acid`</sub>
 
 ## Burn
 
@@ -22,7 +22,7 @@ lasts 2 turns · stacking: Replace · tags: Debuff, Fire
 
 ID `burn`
 
-<sub>Source: `Assets/Data/Statuses/Burn.asset` (`Content/Statuses.json` → `Statuses/Burn`)</sub>
+<sub>Source: `data/content/Statuses.json` → `Status/Burn`</sub>
 
 ## Gorged
 
@@ -32,7 +32,7 @@ lasts until removed · stacking: Stack (up to 99) · tags: Buff, Permanent
 
 ID `gorged`
 
-<sub>Source: `Assets/Data/Statuses/Gorged.asset` (`Content/Statuses.json` → `Statuses/Gorged`)</sub>
+<sub>Source: `data/content/Statuses.json` → `Status/Gorged`</sub>
 
 ## Haste
 
@@ -42,7 +42,7 @@ lasts until removed · stacking: Stack (up to 99) · tags: Buff
 
 ID `haste`
 
-<sub>Source: `Assets/Data/Statuses/Haste.asset` (`Content/Statuses.json` → `Statuses/Haste`)</sub>
+<sub>Source: `data/content/Statuses.json` → `Status/Haste`</sub>
 
 ## Rallied
 
@@ -52,7 +52,7 @@ lasts 2 turns · stacking: Refresh · tags: Buff
 
 ID `rallied`
 
-<sub>Source: `Assets/Data/Statuses/Rallied.asset` (`Content/Statuses.json` → `Statuses/Rallied`)</sub>
+<sub>Source: `data/content/Statuses.json` → `Status/Rallied`</sub>
 
 ## Shield
 
@@ -62,7 +62,7 @@ lasts until removed · stacking: Stack (up to 9999) · shield: Stacks · tags: B
 
 ID `shield`
 
-<sub>Source: `Assets/Data/Statuses/Shield.asset` (`Content/Statuses.json` → `Statuses/Shield`)</sub>
+<sub>Source: `data/content/Statuses.json` → `Status/Shield`</sub>
 
 ## Taunted
 
@@ -72,4 +72,4 @@ lasts 2 turns · stacking: Refresh · tags: Taunted, Debuff
 
 ID `Taunted`
 
-<sub>Source: `Assets/Data/Statuses/Taunted.asset` (`Content/Statuses.json` → `Statuses/Taunted`)</sub>
+<sub>Source: `data/content/Statuses.json` → `Status/Taunted`</sub>

@@ -1,7 +1,7 @@
 class_name ContentAsset
 extends RefCounted
 ## Base of every content asset (the C# ScriptableObject): its asset name (the last part of its key,
-## "Units/Enemies/Rabbit" → "Rabbit"). Not a C# class: the port's stand-in for UnityEngine.ScriptableObject.
+## "Unit/Enemy/Rabbit" → "Rabbit"). Not a C# class: the port's stand-in for UnityEngine.ScriptableObject.
 
 var name: String = ""
 

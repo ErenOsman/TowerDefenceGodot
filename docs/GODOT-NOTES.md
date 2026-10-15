@@ -64,7 +64,7 @@ See `docs/Decisions.md` (2026-10-13 rows) — they are logged in the Unity repo 
 **Source of truth: `docs/design/Guided Tutorial — Design.md`** (decisions, the step table, the refusals, the data
 grammar of `data/tutorial.json`). This section only says how the Godot build does it.
 
-- The tutorial level plays the guided tutorial instead of `Sequences/Tutorial Steps` when `data/tutorial.json` exists
+- The tutorial level plays the guided tutorial instead of `Sequence/Tutorial Steps` when `data/tutorial.json` exists
   (`game/level/guided_tutorial.gd`, owned by the LevelController; other levels' intros and entrances still use
   SequenceRun). **Move these texts into the Unity content** once Unity gets the same gating.
 - Presentation (2026-10-14, rebuilt from the bubble version): every step speaks through the **dialogue box**
@@ -99,8 +99,8 @@ Starter content; placeholder names and numbers) are ordinary content in `data/co
 | `Tokens.json` (`TokenAsset`) | `fire-arrow, poison-gland, yew-bow, steel-plate, arcane-shard, ember-core` (`id, displayName, description, icon, rarity`); icons `Assets/Art/UI/KitB/tokens/<token id>.png` |
 | `Missions.json` (`MissionAsset`) | the 5 starter missions: `patrol` (Two Roads, Any 1–4), `night-watch` (Rock Garden, Any 1–4), `hold-the-gate` (Three at the Gate, Coop 2–6), `drum-line` (The Drummer, Any 1–4, 2 plays a day), `glutton-returns` (The Glutton, Coop 2–6); all separate energy pools (sharedPool false), coopHandCap 3. Fields: `id, displayName, description, icon ("" until the kit has mission art), level, mode (Solo/Coop/Any), players {min, max}, playsPerDay, requires [level or mission keys], requireAll, sharedPool, coopHandCap, firstWinTokens, winTokens` |
 | `Catalog.json`, `Rules.json` | the catalog's `guildUnlock` (= Chapter 2's last level) and `missions` (the board order); the rules' `towerEnergyPerDay` = 1. **Chapter levels drop no tokens**, missions are the only token source |
-| `Levels.json` | the **short tutorial level** `Levels/Tutorial/Tutorial`: 7 × 5, road (0,2)–(5,2), castle (6,2), build tiles columns 4–6 of rows 0/1/3/4, same waves/energy/hand (Guided Tutorial — Design § The level; Eren 2026-10-14). `data/tutorial.json`'s tiles match it. Golden plays the frozen Unity snapshot's 12 × 5 entry (see "Golden" below) |
-| `Units.json`, `Abilities.json`, `Passives.json`, `Reactions.json` | the form entities (`Units/Towers/Forms/*`: copies of the base tower with the doc's stat changes, base model/icon/miniature) and their abilities (Fire Shot, Fire Volley, Venom Shot, Long Shot, Shield Bash, Fireball, Frost Bolt, Chain Spark), the Spiked Counter-attack passive and its 8-damage reaction |
+| `Levels.json` | the **short tutorial level** `Level/Tutorial/Tutorial`: 7 × 5, road (0,2)–(5,2), castle (6,2), build tiles columns 4–6 of rows 0/1/3/4, same waves/energy/hand (Guided Tutorial — Design § The level; Eren 2026-10-14). `data/tutorial.json`'s tiles match it. Golden plays the frozen Unity snapshot's 12 × 5 entry (see "Golden" below) |
+| `Units.json`, `Abilities.json`, `Passives.json`, `Reactions.json` | the form entities (`Unit/Tower/Form/*`: copies of the base tower with the doc's stat changes, base model/icon/miniature) and their abilities (Fire Shot, Fire Volley, Venom Shot, Long Shot, Shield Bash, Fireball, Frost Bolt, Chain Spark), the Spiked Counter-attack passive and its 8-damage reaction |
 
 How it is read:
 - `ContentLibrary.load_game()` (GameApp, the level's fallback) = `load(data/content)`; `load_game(extra)` merges a
@@ -248,7 +248,7 @@ Offline check of candidate content entries, used by the wiki's Content Editor (/
   tables[{title, columns, rows}], warnings[]}], candidates[], baseline{}, elapsed_ms}`; exit 0 ok / 1 errors / 2 usage.
   `--schema` prints `ContentSerializer.SCHEMA` + enum names + stats + tags between `CONTENT_SCHEMA_BEGIN/_END`
   (key order kept: `JSON.stringify(…, "", false)`).
-- `--context <dir>` (more content-format files, not loaded): duplicate checks against them (the wiki passes Unity's live Content, its approved set and open entries). Errors also: a key not starting with its type's folder (Statuses/…), an id used by another entry of the type, keys differing only by case/spaces; warnings: duplicate display name or number.
+- `--context <dir>` (more content-format files, not loaded): duplicate checks against them (the wiki passes Unity's live Content, its approved set and open entries). Errors also: a key not starting with its type's folder (Status/…), an id used by another entry of the type, keys differing only by case/spaces; warnings: duplicate display name or number.
 - Loader: `ContentLibrary.load(folder, extra)` / `load_game(extra)` merge the candidate folder over data/content
   (same key → the candidate wins). Nothing is written. An empty candidate folder checks the content alone (ok + a warning). Test: `tests/test_content_candidate.gd`.
 - Logic: `tools/content_check_runner.gd` (no class_name, so the daemon needs no restart). Errors = load problems,

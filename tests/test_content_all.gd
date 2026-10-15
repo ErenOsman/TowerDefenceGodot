@@ -22,8 +22,8 @@ func test_loads_without_problems() -> void:
 	assert_not_null(lib().catalog)
 	assert_not_null(lib().rules)
 	assert_eq(lib().catalog.name, "GameCatalog")
-	assert_eq(lib().file_of(lib().get_asset("Units/Enemies/Rabbit")), "Units.json")
-	assert_eq(lib().key_of(lib().find("EntityAsset", "Rabbit")), "Units/Enemies/Rabbit")
+	assert_eq(lib().file_of(lib().get_asset("Unit/Enemy/Rabbit")), "Units.json")
+	assert_eq(lib().key_of(lib().find("EntityAsset", "Rabbit")), "Unit/Enemy/Rabbit")
 
 func test_everything_converts() -> void:
 	var c := AssetConverter.new()
@@ -50,7 +50,7 @@ func test_validate_all_has_no_errors() -> void:
 
 func test_archer_numbers() -> void:
 	var c := AssetConverter.new()
-	var tower := c.tower_type(lib().get_asset("Towers/Archer Tower"))
+	var tower := c.tower_type(lib().get_asset("Tower/Archer Tower"))
 	assert_eq(tower.id, "archer")
 	assert_eq(tower.name, "Archer")
 	var archer := tower.entity
@@ -71,13 +71,13 @@ func test_archer_numbers() -> void:
 	assert_false(attack.can_miss)
 	assert_true(attack.on_hit[0] is DamageStep)
 	assert_eq(attack.bounce_area.max_radius.expression, "2")
-	assert_same_obj(c.asset_of(shoot), lib().get_asset("Abilities/Shoot"))
+	assert_same_obj(c.asset_of(shoot), lib().get_asset("Ability/Shoot"))
 
 func assert_same_obj(a, b, msg := "") -> void:
 	if not is_same(a, b): fail("expected the same object: %s vs %s. %s" % [a, b, msg])
 
 func test_first_steps_level() -> void:
-	var asset: LevelAsset = lib().get_asset("Levels/Chapter 1/1 First Steps")
+	var asset: LevelAsset = lib().get_asset("Level/Chapter 1/1 First Steps")
 	assert_eq(asset.get_id(), "chapter1-1")
 	assert_eq(asset.get_display_name(), "First Steps")
 	var d := AssetConverter.new().level(asset)
@@ -117,7 +117,7 @@ func test_rules_and_catalog() -> void:
 	assert_eq(cat.tutorial.name, "Tutorial")
 	assert_not_null(cat.codex)
 	assert_true(cat.codex.towers.size() > 0)
-	assert_eq(cat.find_level("chapter1-1"), lib().get_asset("Levels/Chapter 1/1 First Steps"))
+	assert_eq(cat.find_level("chapter1-1"), lib().get_asset("Level/Chapter 1/1 First Steps"))
 	assert_eq(AssetValidator.validate_catalog(cat).size(), 0, "\n".join(AssetValidator.validate_catalog(cat)))
 	var progress := LevelProgress.new()
 	assert_eq(cat.next_main_level(progress).get_id(), "chapter1-1")
@@ -125,14 +125,14 @@ func test_rules_and_catalog() -> void:
 	assert_eq(levels.entries.size(), 8)
 
 func test_codex_enemies_of_a_level() -> void:
-	var names := CodexAsset.enemies_of(lib().get_asset("Levels/Chapter 1/1 First Steps")).map(func(e): return e.name)
+	var names := CodexAsset.enemies_of(lib().get_asset("Level/Chapter 1/1 First Steps")).map(func(e): return e.name)
 	assert_seq(names, ["Slime", "Big Slime"])
 
 func test_sequences_and_presentations() -> void:
-	var seq: SequenceAsset = lib().get_asset("Sequences/Tutorial Steps")
+	var seq: SequenceAsset = lib().get_asset("Sequence/Tutorial Steps")
 	assert_true(seq.lines.size() > 0)
 	assert_true(seq.lines[0] is SequenceLine)
-	var shoot: AbilityAsset = lib().get_asset("Abilities/Shoot")
+	var shoot: AbilityAsset = lib().get_asset("Ability/Shoot")
 	assert_eq(shoot.presentation, lib().get_asset("Presentation/Shoot Presentation"))
 	assert_eq(shoot.icon, "Assets/Art/Icons/Abilities/Shoot.png#Shoot")
 

@@ -176,9 +176,9 @@ Three text layers of the same size, one character per tile, top row first, then 
   "~~~~~~~~~~~~~~"
 ],
 "terrainKeys": [
-  { "symbol": ".", "terrain": "Terrains/Ground" },
-  { "symbol": "#", "terrain": "Terrains/Wall" },
-  { "symbol": "~", "terrain": "Terrains/Chasm" }
+  { "symbol": ".", "terrain": "Terrain/Ground" },
+  { "symbol": "#", "terrain": "Terrain/Wall" },
+  { "symbol": "~", "terrain": "Terrain/Chasm" }
 ],
 "build": [
   "........+++++.",
@@ -209,7 +209,7 @@ Three text layers of the same size, one character per tile, top row first, then 
 ]
 ```
 
-- **Terrain:** any character, named in `terrainKeys` (`.` `#` `~` by convention for Ground, Wall and Chasm). A new terrain gets its own character, e.g. `{ "symbol": "=", "terrain": "Terrains/Bridge" }`. The terrain layer's rows set the map's size; the other layers match it.
+- **Terrain:** any character, named in `terrainKeys` (`.` `#` `~` by convention for Ground, Wall and Chasm). A new terrain gets its own character, e.g. `{ "symbol": "=", "terrain": "Terrain/Bridge" }`. The terrain layer's rows set the map's size; the other layers match it.
 - **Build:** `+` where towers may be placed, `.` elsewhere.
 - **Road:** box characters as above, `.` for no road.
 - **Paths:** tile lists, several positions to a line. The order cannot be drawn in a grid (loops, branches), so paths stay lists.

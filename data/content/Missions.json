@@ -1,12 +1,12 @@
 {
   "type": "MissionAsset",
   "assets": {
-    "Missions/Patrol": {
+    "Mission/Patrol": {
       "id": "patrol",
       "displayName": "Patrol",
       "description": "Walk the two roads before the slimes do.",
       "icon": null,
-      "level": "Levels/Chapter 1/3 Two Roads",
+      "level": "Level/Chapter 1/3 Two Roads",
       "mode": "Any",
       "players": { "min": 1, "max": 4 },
       "playsPerDay": 1,
@@ -15,18 +15,18 @@
       "sharedPool": false,
       "coopHandCap": 3,
       "firstWinTokens": [
-        { "token": "Tokens/Fire Arrow", "amount": 1 }
+        { "token": "Token/Fire Arrow", "amount": 1 }
       ],
       "winTokens": [
-        { "token": "Tokens/Yew Bow", "amount": 1 }
+        { "token": "Token/Yew Bow", "amount": 1 }
       ]
     },
-    "Missions/Night Watch": {
+    "Mission/Night Watch": {
       "id": "night-watch",
       "displayName": "Night Watch",
       "description": "Hold the rock garden through the night.",
       "icon": null,
-      "level": "Levels/Chapter 2/1 Rock Garden",
+      "level": "Level/Chapter 2/1 Rock Garden",
       "mode": "Any",
       "players": { "min": 1, "max": 4 },
       "playsPerDay": 1,
@@ -35,19 +35,19 @@
       "sharedPool": false,
       "coopHandCap": 3,
       "firstWinTokens": [
-        { "token": "Tokens/Arcane Shard", "amount": 1 }
+        { "token": "Token/Arcane Shard", "amount": 1 }
       ],
       "winTokens": [
-        { "token": "Tokens/Fire Arrow", "amount": 1 },
-        { "token": "Tokens/Poison Gland", "amount": 1 }
+        { "token": "Token/Fire Arrow", "amount": 1 },
+        { "token": "Token/Poison Gland", "amount": 1 }
       ]
     },
-    "Missions/Hold the Gate": {
+    "Mission/Hold the Gate": {
       "id": "hold-the-gate",
       "displayName": "Hold the Gate",
       "description": "Three come at the gate. Bring friends.",
       "icon": null,
-      "level": "Levels/Chapter 2/2 Three at the Gate",
+      "level": "Level/Chapter 2/2 Three at the Gate",
       "mode": "Coop",
       "players": { "min": 2, "max": 6 },
       "playsPerDay": 1,
@@ -56,18 +56,18 @@
       "sharedPool": false,
       "coopHandCap": 3,
       "firstWinTokens": [
-        { "token": "Tokens/Steel Plate", "amount": 1 }
+        { "token": "Token/Steel Plate", "amount": 1 }
       ],
       "winTokens": [
-        { "token": "Tokens/Steel Plate", "amount": 1 }
+        { "token": "Token/Steel Plate", "amount": 1 }
       ]
     },
-    "Missions/Drum Line": {
+    "Mission/Drum Line": {
       "id": "drum-line",
       "displayName": "Drum Line",
       "description": "Silence the drummer before the march begins.",
       "icon": null,
-      "level": "Levels/Chapter 2/3 The Drummer",
+      "level": "Level/Chapter 2/3 The Drummer",
       "mode": "Any",
       "players": { "min": 1, "max": 4 },
       "playsPerDay": 2,
@@ -76,19 +76,19 @@
       "sharedPool": false,
       "coopHandCap": 3,
       "firstWinTokens": [
-        { "token": "Tokens/Fire Arrow", "amount": 1 }
+        { "token": "Token/Fire Arrow", "amount": 1 }
       ],
       "winTokens": [
-        { "token": "Tokens/Arcane Shard", "amount": 1 },
-        { "token": "Tokens/Poison Gland", "amount": 1 }
+        { "token": "Token/Arcane Shard", "amount": 1 },
+        { "token": "Token/Poison Gland", "amount": 1 }
       ]
     },
-    "Missions/The Glutton Returns": {
+    "Mission/The Glutton Returns": {
       "id": "glutton-returns",
       "displayName": "The Glutton Returns",
       "description": "It is hungry again. Stop it together.",
       "icon": null,
-      "level": "Levels/Chapter 2/4 The Glutton",
+      "level": "Level/Chapter 2/4 The Glutton",
       "mode": "Coop",
       "players": { "min": 2, "max": 6 },
       "playsPerDay": 1,
@@ -97,10 +97,10 @@
       "sharedPool": false,
       "coopHandCap": 3,
       "firstWinTokens": [
-        { "token": "Tokens/Ember Core", "amount": 1 }
+        { "token": "Token/Ember Core", "amount": 1 }
       ],
       "winTokens": [
-        { "token": "Tokens/Ember Core", "amount": 1 }
+        { "token": "Token/Ember Core", "amount": 1 }
       ]
     }
   }

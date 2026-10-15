@@ -12,7 +12,7 @@ func lib() -> ContentLibrary:
 		_conv = AssetConverter.new()
 	return _lib
 
-func _type(asset := "Towers/Archer Tower") -> TowerType:
+func _type(asset := "Tower/Archer Tower") -> TowerType:
 	lib()
 	return _conv.tower_type(lib().get_asset(asset))
 
@@ -48,10 +48,10 @@ func test_tree_ids_paths_and_layout() -> void:
 	assert_eq(pos["archer-poison"], Vector2(520, 280))
 	assert_eq(pos["archer-longbow"], Vector2(320, 570))
 	assert_eq(pos["archer-inferno"], Vector2(120, 80))
-	var g := WorkshopLogic.positions(_type("Towers/Guardian Tower"))
+	var g := WorkshopLogic.positions(_type("Tower/Guardian Tower"))
 	assert_eq(g["guardian-bastion"], Vector2(120, 280))
 	assert_eq(g["guardian-spiked"], Vector2(520, 280))
-	assert_eq(WorkshopLogic.positions(_type("Towers/Priest Tower")).size(), 1, "no forms: the root alone")
+	assert_eq(WorkshopLogic.positions(_type("Tower/Priest Tower")).size(), 1, "no forms: the root alone")
 
 func test_arrow_keys_pick_the_neighbour() -> void:
 	var pos := WorkshopLogic.positions(_type())
@@ -88,7 +88,7 @@ func test_lines() -> void:
 	o.forms = ["archer-fire"]
 	o.form = "archer-fire"
 	assert_eq(WorkshopLogic.form_line(o, t), "Form of Archer · 1 of 4 forms unlocked")
-	assert_eq(WorkshopLogic.form_line(_owned("priest"), _type("Towers/Priest Tower")), "Default form · no forms yet")
+	assert_eq(WorkshopLogic.form_line(_owned("priest"), _type("Tower/Priest Tower")), "Default form · no forms yet")
 	assert_eq(WorkshopLogic.now_line(o, t), "Form: Fire Archer")
 	assert_eq(WorkshopLogic.now_line(_owned(), t), "Form: Default")
 	assert_eq(WorkshopLogic.subtitle(t, ""), "Base form")
@@ -126,7 +126,7 @@ func test_trait_lines() -> void:
 	assert_seq(WorkshopLogic.trait_lines(t.find_form("archer-inferno").entity, vocab), ["Burn around the target"])
 	assert_seq(WorkshopLogic.trait_lines(t.find_form("archer-poison").entity, vocab), ["Acid on hit"])
 	assert_seq(WorkshopLogic.trait_lines(t.find_form("archer-longbow").entity, vocab), [])
-	assert_seq(WorkshopLogic.trait_lines(_type("Towers/Guardian Tower").entity, vocab), ["Applies Taunted"])
+	assert_seq(WorkshopLogic.trait_lines(_type("Tower/Guardian Tower").entity, vocab), ["Applies Taunted"])
 
 # ------------------------------------------------------------------ the Codex Forms page
 

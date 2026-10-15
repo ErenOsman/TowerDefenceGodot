@@ -72,9 +72,9 @@ func test_content_problems_rows() -> void:
 	assert_eq(rows.filter(func(r): return r.error).size(), 0, "\n".join(rows.map(func(r): return r.message)))
 	assert_eq(ContentProblems.counts([]), "0 errors, 0 warnings")
 	assert_eq(ContentProblems.counts([{"error": true}, {"error": false}, {"error": false}]), "1 error, 2 warnings")
-	var line := ContentProblems.line_of("res://data/content/Abilities.json", "Abilities/Shoot")
+	var line := ContentProblems.line_of("res://data/content/Abilities.json", "Ability/Shoot")
 	assert_true(line > 1)
-	assert_text(FileAccess.get_file_as_string("res://data/content/Abilities.json").split("\n")[line - 1], "\"Abilities/Shoot\"")
+	assert_text(FileAccess.get_file_as_string("res://data/content/Abilities.json").split("\n")[line - 1], "\"Ability/Shoot\"")
 	# a broken file shows up as a row with its file
 	var lib := ContentLibrary.new()
 	lib.add([["Broken.json", "{ nope"]])

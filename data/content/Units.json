@@ -1,7 +1,7 @@
 {
   "type": "EntityAsset",
   "assets": {
-    "Units/Bases/Base": {
+    "Unit/Base/Base": {
       "number": 1,
       "id": "Base",
       "displayName": "Base",
@@ -22,7 +22,7 @@
       "miniature": "Assets/Art/Icons/Units/Miniatures/Base.png#Base",
       "plateOffset": 0
     },
-    "Units/Bases/Fortress": {
+    "Unit/Base/Fortress": {
       "number": 28,
       "id": "fortress",
       "displayName": "Fortress",
@@ -43,7 +43,7 @@
       "miniature": "Assets/Art/Icons/Units/Miniatures/Fortress.png#Fortress",
       "plateOffset": 0
     },
-    "Units/Enemies/Bat": {
+    "Unit/Enemy/Bat": {
       "number": 19,
       "id": "bat",
       "displayName": "Bat",
@@ -61,12 +61,12 @@
       ],
       "footing": "OnPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Path Walk", "Abilities/Bite"],
+      "abilities": ["Ability/Path Walk", "Ability/Bite"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null
     },
-    "Units/Enemies/Big Slime": {
+    "Unit/Enemy/Big Slime": {
       "number": 6,
       "id": "big-slime",
       "displayName": "Big Slime",
@@ -84,12 +84,12 @@
       ],
       "footing": "OnPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Path Walk", "Abilities/Ram"],
+      "abilities": ["Ability/Path Walk", "Ability/Ram"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null
     },
-    "Units/Enemies/Brute": {
+    "Unit/Enemy/Brute": {
       "number": 7,
       "id": "Brute",
       "displayName": "Brute",
@@ -107,12 +107,12 @@
       ],
       "footing": "OnPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Brute Walk", "Abilities/Smash"],
+      "abilities": ["Ability/Brute Walk", "Ability/Smash"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null
     },
-    "Units/Enemies/Ironhide": {
+    "Unit/Enemy/Ironhide": {
       "number": 22,
       "id": "ironhide",
       "displayName": "Ironhide",
@@ -130,12 +130,12 @@
       ],
       "footing": "OnPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Brute Walk", "Abilities/Smash"],
-      "passives": ["Passives/Shielded"],
+      "abilities": ["Ability/Brute Walk", "Ability/Smash"],
+      "passives": ["Passive/Shielded"],
       "dieWithSummoner": false,
       "entrance": null
     },
-    "Units/Enemies/Jackalope": {
+    "Unit/Enemy/Jackalope": {
       "number": 24,
       "id": "jackalope",
       "displayName": "Jackalope",
@@ -153,12 +153,12 @@
       ],
       "footing": "OnPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Quicken", "Abilities/Hop", "Abilities/Nibble"],
+      "abilities": ["Ability/Quicken", "Ability/Hop", "Ability/Nibble"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null
     },
-    "Units/Enemies/Rabbit": {
+    "Unit/Enemy/Rabbit": {
       "number": 17,
       "id": "rabbit",
       "displayName": "Rabbit",
@@ -176,12 +176,12 @@
       ],
       "footing": "OnPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Quicken", "Abilities/Hop", "Abilities/Nibble"],
+      "abilities": ["Ability/Quicken", "Ability/Hop", "Ability/Nibble"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null
     },
-    "Units/Enemies/Rockjaw": {
+    "Unit/Enemy/Rockjaw": {
       "number": 18,
       "id": "rockjaw",
       "displayName": "Rockjaw",
@@ -199,12 +199,12 @@
       ],
       "footing": "OnPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Brute Walk", "Abilities/Smash"],
-      "passives": ["Passives/Rock Eater"],
+      "abilities": ["Ability/Brute Walk", "Ability/Smash"],
+      "passives": ["Passive/Rock Eater"],
       "dieWithSummoner": false,
       "entrance": null
     },
-    "Units/Enemies/Runner": {
+    "Unit/Enemy/Runner": {
       "number": 12,
       "id": "runner",
       "displayName": "Runner",
@@ -222,12 +222,12 @@
       ],
       "footing": "OnPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Path Walk", "Abilities/Ram"],
+      "abilities": ["Ability/Path Walk", "Ability/Ram"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null
     },
-    "Units/Enemies/Shield Slime": {
+    "Unit/Enemy/Shield Slime": {
       "number": 9,
       "id": "shield-slime",
       "displayName": "Shield Slime",
@@ -245,12 +245,12 @@
       ],
       "footing": "OnPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Path Walk", "Abilities/Ram"],
-      "passives": ["Passives/Shielded"],
+      "abilities": ["Ability/Path Walk", "Ability/Ram"],
+      "passives": ["Passive/Shielded"],
       "dieWithSummoner": false,
       "entrance": null
     },
-    "Units/Enemies/Slime": {
+    "Unit/Enemy/Slime": {
       "number": 4,
       "id": "Slime",
       "displayName": "Slime",
@@ -268,12 +268,12 @@
       ],
       "footing": "OnPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Path Walk", "Abilities/Ram"],
+      "abilities": ["Ability/Path Walk", "Ability/Ram"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null
     },
-    "Units/Enemies/Slime Archer": {
+    "Unit/Enemy/Slime Archer": {
       "number": 5,
       "id": "slime-archer",
       "displayName": "Slime Archer",
@@ -291,12 +291,12 @@
       ],
       "footing": "OnPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Path Walk", "Abilities/Spit"],
+      "abilities": ["Ability/Path Walk", "Ability/Spit"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null
     },
-    "Units/Enemies/Slime Glutton": {
+    "Unit/Enemy/Slime Glutton": {
       "number": 21,
       "id": "slime-glutton",
       "displayName": "Slime Glutton",
@@ -315,12 +315,12 @@
       ],
       "footing": "OnPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Path Walk", "Abilities/Slam", "Abilities/Crush"],
-      "passives": ["Passives/Glutton"],
+      "abilities": ["Ability/Path Walk", "Ability/Slam", "Ability/Crush"],
+      "passives": ["Passive/Glutton"],
       "dieWithSummoner": false,
       "entrance": null
     },
-    "Units/Enemies/Slime King": {
+    "Unit/Enemy/Slime King": {
       "number": 10,
       "id": "slime-king",
       "displayName": "Slime King",
@@ -339,12 +339,12 @@
       ],
       "footing": "OnPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Path Walk", "Abilities/Slam", "Abilities/Crush"],
+      "abilities": ["Ability/Path Walk", "Ability/Slam", "Ability/Crush"],
       "passives": [],
       "dieWithSummoner": false,
-      "entrance": "Sequences/Slime King Entrance"
+      "entrance": "Sequence/Slime King Entrance"
     },
-    "Units/Enemies/Slime Shaman": {
+    "Unit/Enemy/Slime Shaman": {
       "number": 23,
       "id": "slime-shaman",
       "displayName": "Slime Shaman",
@@ -362,12 +362,12 @@
       ],
       "footing": "OnPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Slime Mend", "Abilities/Path Walk"],
+      "abilities": ["Ability/Slime Mend", "Ability/Path Walk"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null
     },
-    "Units/Other/Examples/Fire Tile": {
+    "Unit/Other/Example/Fire Tile": {
       "number": 2,
       "id": "Fire Tile",
       "displayName": "Fire Tile",
@@ -380,11 +380,11 @@
       "footing": "Any",
       "blocksProjectiles": true,
       "abilities": [],
-      "passives": ["Passives/Examples/Fire Tile Rules"],
+      "passives": ["Passive/Example/Fire Tile Rules"],
       "dieWithSummoner": false,
       "entrance": null
     },
-    "Units/Other/Examples/Skeleton": {
+    "Unit/Other/Example/Skeleton": {
       "number": 3,
       "id": "Skeleton",
       "displayName": "Skeleton",
@@ -404,7 +404,7 @@
       "dieWithSummoner": true,
       "entrance": null
     },
-    "Units/Other/Rock": {
+    "Unit/Other/Rock": {
       "number": 16,
       "id": "rock",
       "displayName": "Rock",
@@ -423,7 +423,7 @@
       "dieWithSummoner": false,
       "entrance": null
     },
-    "Units/Towers/Alchemist": {
+    "Unit/Tower/Alchemist": {
       "number": 26,
       "id": "alchemist",
       "displayName": "Alchemist",
@@ -443,14 +443,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Acid Flask", "Abilities/Tower Walk"],
+      "abilities": ["Ability/Acid Flask", "Ability/Tower Walk"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Alchemist.png#Alchemist",
       "plateOffset": 0
     },
-    "Units/Towers/Archer": {
+    "Unit/Tower/Archer": {
       "number": 8,
       "id": "Archer",
       "displayName": "Archer",
@@ -468,14 +468,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Shoot", "Abilities/Tower Walk"],
+      "abilities": ["Ability/Shoot", "Ability/Tower Walk"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Archer.png#Archer",
       "plateOffset": 0
     },
-    "Units/Towers/Ballista": {
+    "Unit/Tower/Ballista": {
       "number": 25,
       "id": "ballista",
       "displayName": "Ballista",
@@ -493,14 +493,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Bolt", "Abilities/Tower Walk"],
+      "abilities": ["Ability/Bolt", "Ability/Tower Walk"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Ballista.png#Ballista",
       "plateOffset": 0
     },
-    "Units/Towers/Cannon": {
+    "Unit/Tower/Cannon": {
       "number": 27,
       "id": "cannon",
       "displayName": "Cannon",
@@ -519,14 +519,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Bombard", "Abilities/Tower Walk"],
+      "abilities": ["Ability/Bombard", "Ability/Tower Walk"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Cannon.png#Cannon",
       "plateOffset": 0
     },
-    "Units/Towers/Drummer": {
+    "Unit/Tower/Drummer": {
       "number": 20,
       "id": "drummer",
       "displayName": "Drummer",
@@ -543,14 +543,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Rally", "Abilities/Tower Walk"],
-      "passives": ["Passives/Drum Beat"],
+      "abilities": ["Ability/Rally", "Ability/Tower Walk"],
+      "passives": ["Passive/Drum Beat"],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Drummer.png#Drummer",
       "plateOffset": 0
     },
-    "Units/Towers/Guardian": {
+    "Unit/Tower/Guardian": {
       "number": 11,
       "id": "guardian",
       "displayName": "Guardian",
@@ -568,14 +568,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Guardian Taunt", "Abilities/Bash", "Abilities/Tower Walk"],
-      "passives": ["Passives/Counter-attack"],
+      "abilities": ["Ability/Guardian Taunt", "Ability/Bash", "Ability/Tower Walk"],
+      "passives": ["Passive/Counter-attack"],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Guardian.png#Guardian",
       "plateOffset": 0
     },
-    "Units/Towers/Mage": {
+    "Unit/Tower/Mage": {
       "number": 13,
       "id": "mage",
       "displayName": "Mage",
@@ -595,14 +595,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Firebolt", "Abilities/Tower Walk"],
+      "abilities": ["Ability/Firebolt", "Ability/Tower Walk"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Mage.png#Mage",
       "plateOffset": 0
     },
-    "Units/Towers/Priest": {
+    "Unit/Tower/Priest": {
       "number": 14,
       "id": "priest",
       "displayName": "Priest",
@@ -621,14 +621,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Mend", "Abilities/Smite", "Abilities/Tower Walk"],
+      "abilities": ["Ability/Mend", "Ability/Smite", "Ability/Tower Walk"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Priest.png#Priest",
       "plateOffset": 0
     },
-    "Units/Towers/Wisp": {
+    "Unit/Tower/Wisp": {
       "number": 15,
       "id": "wisp",
       "displayName": "Wisp",
@@ -646,14 +646,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Spark", "Abilities/Blink"],
+      "abilities": ["Ability/Spark", "Ability/Blink"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Wisp.png#Wisp",
       "plateOffset": 0
     },
-    "Units/Towers/Forms/Fire Archer": {
+    "Unit/Tower/Form/Fire Archer": {
       "id": "fire-archer",
       "displayName": "Fire Archer",
       "description": "Arrows catch fire: every hit sets the enemy burning.",
@@ -670,14 +670,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Fire Shot", "Abilities/Tower Walk"],
+      "abilities": ["Ability/Fire Shot", "Ability/Tower Walk"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Archer.png#Archer",
       "plateOffset": 0
     },
-    "Units/Towers/Forms/Inferno Archer": {
+    "Unit/Tower/Form/Inferno Archer": {
       "id": "inferno-archer",
       "displayName": "Inferno Archer",
       "description": "Flaming volleys: each shot burns the target and everything next to it.",
@@ -694,14 +694,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Fire Volley", "Abilities/Tower Walk"],
+      "abilities": ["Ability/Fire Volley", "Ability/Tower Walk"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Archer.png#Archer",
       "plateOffset": 0
     },
-    "Units/Towers/Forms/Poison Archer": {
+    "Unit/Tower/Form/Poison Archer": {
       "id": "poison-archer",
       "displayName": "Poison Archer",
       "description": "Tipped arrows: acid keeps eating the target for three turns.",
@@ -718,14 +718,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Venom Shot", "Abilities/Tower Walk"],
+      "abilities": ["Ability/Venom Shot", "Ability/Tower Walk"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Archer.png#Archer",
       "plateOffset": 0
     },
-    "Units/Towers/Forms/Longbow": {
+    "Unit/Tower/Form/Longbow": {
       "id": "longbow",
       "displayName": "Longbow",
       "description": "A tall bow that hits hard from far away, on slow feet.",
@@ -742,14 +742,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Long Shot", "Abilities/Tower Walk"],
+      "abilities": ["Ability/Long Shot", "Ability/Tower Walk"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Archer.png#Archer",
       "plateOffset": 0
     },
-    "Units/Towers/Forms/Bastion": {
+    "Unit/Tower/Form/Bastion": {
       "id": "bastion",
       "displayName": "Bastion",
       "description": "A walking wall: heavy armour, a long taunt and a shield that pushes enemies back.",
@@ -766,14 +766,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Guardian Taunt", "Abilities/Shield Bash", "Abilities/Tower Walk"],
-      "passives": ["Passives/Counter-attack"],
+      "abilities": ["Ability/Guardian Taunt", "Ability/Shield Bash", "Ability/Tower Walk"],
+      "passives": ["Passive/Counter-attack"],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Guardian.png#Guardian",
       "plateOffset": 0
     },
-    "Units/Towers/Forms/Spiked Guardian": {
+    "Unit/Tower/Form/Spiked Guardian": {
       "id": "spiked-guardian",
       "displayName": "Spiked Guardian",
       "description": "Spikes on the shield: whatever hits it gets hit back for 8.",
@@ -790,14 +790,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Guardian Taunt", "Abilities/Bash", "Abilities/Tower Walk"],
-      "passives": ["Passives/Spiked Counter-attack"],
+      "abilities": ["Ability/Guardian Taunt", "Ability/Bash", "Ability/Tower Walk"],
+      "passives": ["Passive/Spiked Counter-attack"],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Guardian.png#Guardian",
       "plateOffset": 0
     },
-    "Units/Towers/Forms/Pyromancer": {
+    "Unit/Tower/Form/Pyromancer": {
       "id": "pyromancer",
       "displayName": "Pyromancer",
       "description": "Hurls big fireballs that burn everything around the tile they hit (placeholder).",
@@ -816,14 +816,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Fireball", "Abilities/Tower Walk"],
+      "abilities": ["Ability/Fireball", "Ability/Tower Walk"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Mage.png#Mage",
       "plateOffset": 0
     },
-    "Units/Towers/Forms/Frost Mage": {
+    "Unit/Tower/Form/Frost Mage": {
       "id": "frost-mage",
       "displayName": "Frost Mage",
       "description": "Icy bolts that push enemies back (placeholder).",
@@ -842,14 +842,14 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Frost Bolt", "Abilities/Tower Walk"],
+      "abilities": ["Ability/Frost Bolt", "Ability/Tower Walk"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
       "miniature": "Assets/Art/Icons/Units/Miniatures/Mage.png#Mage",
       "plateOffset": 0
     },
-    "Units/Towers/Forms/Storm Mage": {
+    "Unit/Tower/Form/Storm Mage": {
       "id": "storm-mage",
       "displayName": "Storm Mage",
       "description": "Sparks that jump between enemies (placeholder).",
@@ -868,7 +868,7 @@
       ],
       "footing": "OffPath",
       "blocksProjectiles": true,
-      "abilities": ["Abilities/Chain Spark", "Abilities/Tower Walk"],
+      "abilities": ["Ability/Chain Spark", "Ability/Tower Walk"],
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,

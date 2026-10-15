@@ -114,7 +114,7 @@ func test_the_frame_goes_round_the_map_facing_out() -> void:
 ## as the C# TileLook gives it (cells listed row by row from y = 0 up, x across; all 11 levels were compared once).
 func test_first_steps_look_matches_the_csharp() -> void:
 	var lib := ContentLibrary.load("res://data/content")
-	var level: LevelAsset = lib.get_asset("Levels/Chapter 1/1 First Steps")
+	var level: LevelAsset = lib.get_asset("Level/Chapter 1/1 First Steps")
 	var look := TileLook.ground(level, lib.rules.tiles)
 	var props := TileLook.props(level, lib.rules.tiles)
 	var s := level.size

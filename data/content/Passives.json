@@ -1,7 +1,7 @@
 {
   "type": "PassiveAsset",
   "assets": {
-    "Passives/Counter-attack": {
+    "Passive/Counter-attack": {
       "number": 1,
       "displayName": "Counter-attack",
       "description": "When an adjacent enemy hits it, it hits back for 5 (once per turn). Only while at half HP or more.",
@@ -11,10 +11,10 @@
       "offCondition": "",
       "modifiers": [],
       "replacements": [],
-      "reactions": ["Reactions/Counter Strike"],
+      "reactions": ["Reaction/Counter Strike"],
       "aura": ""
     },
-    "Passives/Drum Beat": {
+    "Passive/Drum Beat": {
       "number": 7,
       "displayName": "War Beat",
       "description": "Towers within 2 tiles get 3 more Power.",
@@ -29,7 +29,7 @@
       "reactions": [],
       "aura": "Target.IsAlly and Self.DistanceTo(Target) <= 2"
     },
-    "Passives/Examples/Bloodthirst": {
+    "Passive/Example/Bloodthirst": {
       "number": 3,
       "displayName": "Bloodthirst",
       "description": "A kill makes Execute ready again.",
@@ -39,10 +39,10 @@
       "offCondition": "",
       "modifiers": [],
       "replacements": [],
-      "reactions": ["Reactions/Examples/Execute Reset"],
+      "reactions": ["Reaction/Example/Execute Reset"],
       "aura": ""
     },
-    "Passives/Examples/Fire Tile Rules": {
+    "Passive/Example/Fire Tile Rules": {
       "number": 2,
       "displayName": "",
       "description": "",
@@ -52,10 +52,10 @@
       "offCondition": "",
       "modifiers": [],
       "replacements": [],
-      "reactions": ["Reactions/Examples/Ignite", "Reactions/Examples/Burn"],
+      "reactions": ["Reaction/Example/Ignite", "Reaction/Example/Burn"],
       "aura": ""
     },
-    "Passives/Glutton": {
+    "Passive/Glutton": {
       "number": 8,
       "displayName": "Glutton",
       "description": "When it arrives it eats every other enemy on the field; each kill gives it 20 more max HP.",
@@ -65,10 +65,10 @@
       "offCondition": "",
       "modifiers": [],
       "replacements": [],
-      "reactions": ["Reactions/Devour", "Reactions/Gorge"],
+      "reactions": ["Reaction/Devour", "Reaction/Gorge"],
       "aura": ""
     },
-    "Passives/Rock Eater": {
+    "Passive/Rock Eater": {
       "number": 6,
       "displayName": "Rock Eater",
       "description": "At the end of each of its turns it eats a rock next to it and gains 100 Shield.",
@@ -78,10 +78,10 @@
       "offCondition": "",
       "modifiers": [],
       "replacements": [],
-      "reactions": ["Reactions/Eat Rock"],
+      "reactions": ["Reaction/Eat Rock"],
       "aura": ""
     },
-    "Passives/Shielded": {
+    "Passive/Shielded": {
       "number": 4,
       "displayName": "Shielded",
       "description": "Arrives with a Shield that absorbs 10 damage, and refills it to 10 at the start of each of its turns.",
@@ -91,10 +91,10 @@
       "offCondition": "",
       "modifiers": [],
       "replacements": [],
-      "reactions": ["Reactions/Shield Up", "Reactions/Shield Refill"],
+      "reactions": ["Reaction/Shield Up", "Reaction/Shield Refill"],
       "aura": ""
     },
-    "Passives/Spiked Counter-attack": {
+    "Passive/Spiked Counter-attack": {
       "displayName": "Spiked Counter-attack",
       "description": "When an adjacent enemy hits it, its spikes hit back for 8 (once per turn). Only while at half HP or more.",
       "icon": "Assets/Art/Icons/Passives/SpikedCounter.png#SpikedCounter",
@@ -103,7 +103,7 @@
       "offCondition": "",
       "modifiers": [],
       "replacements": [],
-      "reactions": ["Reactions/Spiked Counter Strike"],
+      "reactions": ["Reaction/Spiked Counter Strike"],
       "aura": ""
     }
   }

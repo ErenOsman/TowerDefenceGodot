@@ -1,7 +1,7 @@
 {
   "type": "TerrainAsset",
   "assets": {
-    "Terrains/Chasm": {
+    "Terrain/Chasm": {
       "number": 3,
       "id": "chasm",
       "displayName": "Chasm",
@@ -11,17 +11,11 @@
       "blocksSight": false,
       "tags": [],
       "whenUnstandable": "Die",
-      "tiles": ["Tiles/Chasm 0"],
+      "tiles": ["Tile/Chasm 0"],
       "buildTiles": [],
-      "edgeTiles": [
-        "Tiles/Chasm 1",
-        "Tiles/Chasm 2 Corner",
-        "Tiles/Chasm 2 Opposite",
-        "Tiles/Chasm 3",
-        "Tiles/Chasm 4"
-      ]
+      "edgeTiles": ["Tile/Chasm 1", "Tile/Chasm 2 Corner", "Tile/Chasm 2 Opposite", "Tile/Chasm 3", "Tile/Chasm 4"]
     },
-    "Terrains/Ground": {
+    "Terrain/Ground": {
       "number": 1,
       "id": "ground",
       "displayName": "Ground",
@@ -31,11 +25,11 @@
       "blocksSight": false,
       "tags": ["Solid"],
       "whenUnstandable": "Die",
-      "tiles": ["Tiles/Ground A", "Tiles/Ground B", "Tiles/Ground C", "Tiles/Ground D"],
-      "buildTiles": ["Tiles/Build Ground A", "Tiles/Build Ground B"],
+      "tiles": ["Tile/Ground A", "Tile/Ground B", "Tile/Ground C", "Tile/Ground D"],
+      "buildTiles": ["Tile/Build Ground A", "Tile/Build Ground B"],
       "edgeTiles": []
     },
-    "Terrains/Wall": {
+    "Terrain/Wall": {
       "number": 2,
       "id": "wall",
       "displayName": "Wall",
@@ -45,7 +39,7 @@
       "blocksSight": true,
       "tags": ["Solid"],
       "whenUnstandable": "Push",
-      "tiles": ["Tiles/Wall A", "Tiles/Wall B"],
+      "tiles": ["Tile/Wall A", "Tile/Wall B"],
       "buildTiles": [],
       "edgeTiles": []
     }
