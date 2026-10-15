@@ -1,6 +1,6 @@
 # Chapter 2 — Design
 
-Started 2026-10-05. Built by `Tools > Deprecated > Create Chapter 2` (after Create Chapter 1). Numbers are first guesses, to be tuned in play.
+Started 2026-10-05. Godot pass 2026-10-15. The levels are content entries `Level/Chapter 2/…` in `data/content/Levels.json` (first generated in the Unity project by its Create Chapter 2 tool; now edited as content). Numbers are first guesses, to be tuned in play.
 
 The second main chapter, played from the Camp after Chapter 1. Each level is built around one main gimmick (the user's), filled out with stronger enemies, fuller waves and a new, pricier tower as its first-clear reward.
 
@@ -37,7 +37,7 @@ Every Chapter 2 level lets in 5 towers of the hand.
 
 ## Rules this chapter added
 
-- Starting units (allies, neutral obstacles, enemies on a road): `LevelAsset.startingUnits`.
+- Starting units (allies, neutral obstacles, enemies on a road): a level entry's `startingUnits`.
 - Hopping over units on a road (`PatternDef.jumpsOverUnits` + Jump step).
 - Flying over chasms; a road across a chasm is for flyers only (Validate All checks it).
 - Abilities that need a free tile (`needsFreeTile`: Blink).
@@ -45,5 +45,5 @@ Every Chapter 2 level lets in 5 towers of the hand.
 
 ## Open questions
 
-- Real models: the new units use the slime / brute placeholders or a plain shape.
+- Real models: the new units use the slime / brute placeholders or a plain shape. (The Godot build has Blender models for all of them in `art/models/`: Rockjaw, Jackalope, Ironhide, Drummer, Bat, Slime Glutton…)
 - Towers' quick cast may pick a rock (rocks are a valid target for attacks): keep, or have the instinct skip rocks?
