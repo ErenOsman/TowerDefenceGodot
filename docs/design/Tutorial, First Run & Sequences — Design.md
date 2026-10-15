@@ -1,22 +1,22 @@
 # Tutorial, First Run & Sequences — Design
 
-Started 2026-10-05. Not built yet; the [build plan](#build-plan) lists the phases.
+Started 2026-10-05. Godot pass 2026-10-15: all six phases are built in the Godot build; [In the Godot build](#in-the-godot-build) says where.
 
 The first time the game starts, the player names themselves and plays a short tutorial level that teaches placing, selecting, shooting and ending a round. It can be skipped, and it appears only once.
 
 **2026-10-14:** the tutorial itself is redesigned as a guided, hand-holding tutorial spoken through the visual-novel
 dialogue box: see **Guided Tutorial — Design**. This doc keeps the first-run flow and the sequence system.
 
-The tutorial's guidance and the conversations at the start of levels use one system: **sequences** of lines shown in **speech bubbles** (`UI_TextBubble`).
+The tutorial's guidance and the conversations at the start of levels use one system: **sequences** of lines shown in **speech bubbles** (`TdTextBubble`).
 
 ## Decisions
 
 | Topic | Decision |
 | --- | --- |
 | When it shows | Only on the first launch: the save has no profile yet |
-| Name screen | Its own scene, **WelcomeScene** (build index 4, `SceneID.Welcome`) |
+| Name screen | Its own scene, **Welcome** (`SceneFlow.Welcome`, `game/ui/screens/welcome.tscn`) |
 | Guidance | Step by step: each step waits for the player to do it; the tutorial is a sequence (see below) |
-| Text on screen | Speech bubbles (`UI_TextBubble`) driven by sequences — the same system for the tutorial and for level intros |
+| Text on screen | Speech bubbles (`TdTextBubble`) driven by sequences — the same system for the tutorial and for level intros |
 | Who speaks | The base: its bubble points at the base on the board, with the base's name. Other speakers can be added later |
 | Level intros | Play the first time a level starts; Retry and replays skip them |
 | Portraits | Name only for now; the bubble keeps a portrait slot for later |
@@ -40,7 +40,7 @@ Skipping (either way) marks the tutorial skipped and gives the 2nd Archer. Closi
 
 ## Save: the profile
 
-A new `profile` section in `GameData`:
+A new `profile` section in `GameData` (`PlayerProfile`, `sim/meta/player_profile.gd`):
 
 | Field | Meaning |
 | --- | --- |
@@ -49,29 +49,29 @@ A new `profile` section in `GameData`:
 
 - **First launch** = no profile in the save. The Welcome screen creates it.
 - **Saves from before this feature** get a profile on load, marked `Skipped`, so existing players never see the Welcome screen.
-- **Testing:** reset the save in `Tools > Runtime > Persistent Data Viewer` to see the first run again.
+- **Testing:** reset the save (the TD Tools dock's Save tab, or the F1 dev panel's Save tab) to see the first run again.
 
 ## Welcome screen
 
 - A name field: not empty, at most 16 characters, prefilled with a default name.
 - **Start** (main button) and **Skip tutorial** (smaller).
 - Shows the name in the main menu afterwards ("Welcome back, Eren").
-- Built like the other screens: a scene builder in the Tools menu, prefab-based UI, the boot loading screen routes here on first launch.
+- Built like the other screens (`game/ui/screens/welcome.gd`, built in code from the kit); the boot loading screen routes here on first launch.
 
 ## The tutorial level
 
-- A `LevelAsset` with id `tutorial`, outside the catalog's chapters, so level select never lists it.
-- A 12×5 map, one road, the base at its end, build tiles around it; the Archer walks out to meet the enemies.
-- **Fixed hand:** 1 Archer of its own. A new `LevelAsset` field (the level's own hand) overrides the player's hand; the player's collection is not touched.
+- A level entry with id `tutorial` (`Level/Tutorial/Tutorial`), outside the catalog's chapters, so level select never lists it.
+- A 12×5 map, one road, the base at its end, build tiles around it; the Archer walks out to meet the enemies. (Shortened to 7 × 5 on 2026-10-14: Guided Tutorial — Design § The level.)
+- **Fixed hand:** 1 Archer of its own. A level field (`fixedHand`, the level's own hand) overrides the player's hand; the player's collection is not touched.
 - Energy: enough for exactly 1 Archer, no income needed.
 - Waves: wave 1 — 1 Slime; wave 2 — a Slime and a Runner, starting after wave 1 is cleared.
 - First clear: +1 Archer to the player's collection, `tutorial = Done`, then the main menu.
 
 ## Sequences and speech bubbles
 
-### The speech bubble — `UI_TextBubble`
+### The speech bubble — `TdTextBubble`
 
-A reusable UI element (`Scripts/UI/Elements/TextBubble/`, prefab-based so it can be restyled):
+A reusable UI element (`game/ui/elements/td_text_bubble.gd`, built from the kit so it can be restyled):
 
 - **Speaker:** a name line and an optional portrait.
 - **Text:** rich text, revealed letter by letter (a click or Space shows it all at once, a second click goes on). `{player}` is replaced by the player's name.
@@ -80,7 +80,7 @@ A reusable UI element (`Scripts/UI/Elements/TextBubble/`, prefab-based so it can
 
 ### Sequences
 
-A `SequenceAsset` (`Create > Game > Sequence`) is a list of lines, played in order. Each line has:
+A sequence (`SequenceAsset`, an entry in `data/content/Sequences.json`, keys `Sequence/<Name>`) is a list of lines, played in order. Each line has:
 
 | Field | Meaning |
 | --- | --- |
@@ -90,15 +90,15 @@ A `SequenceAsset` (`Create > Game > Sequence`) is a list of lines, played in ord
 | Continues when | A click (default), after N seconds, or a game event: a tower placed, a unit selected, an ability cast, a quick cast, the round ended, a wave cleared, the level won |
 | Pauses play | Whether commands wait while the line shows (intros: yes; tutorial steps: no, the player has to act) |
 
-- A **level intro** is a sequence on the level (`LevelAsset.intro`) that plays before round 1, the first time the level is played (the save remembers which intros were seen). Every level may have one.
+- A **level intro** is a sequence on the level (the level entry's `intro`) that plays before round 1, the first time the level is played (the save remembers which intros were seen). Every level may have one.
 - **The tutorial** is the tutorial level's intro plus its steps: lines that continue on game events.
-- **Entrance lines** are a sequence on an enemy (`EntityAsset.entrance`): the base speaks them the first time the player meets that enemy on the board (the save remembers it, like intros), once its arrival has played and no other sequence is showing. Lines pointing at *Subject* point at that enemy. The Slime King has two (`Data/Sequences/Slime King Entrance`, made by `Create Chapter 1`).
+- **Entrance lines** are a sequence on an enemy (the unit entry's `entrance`): the base speaks them the first time the player meets that enemy on the board (the save remembers it, like intros), once its arrival has played and no other sequence is showing. Lines pointing at *Subject* point at that enemy. The Slime King has two (`Sequence/Slime King Entrance`).
 - Sequences only show text and read events; they never change the game (like the presenters).
 - The Director's playback and a sequence don't fight: a line waiting for a game event waits until the action that caused it has finished playing.
 
 ### Tutorial lines
 
-Built by `Tools > Deprecated > Create Tutorial` (`Data/Sequences/Tutorial Steps`). Placing a tower selects it, so there is no separate "select it" step; its panel then opens over the bubble, so two centred lines explain the panel and ask for a right-click to close it. The first Slime appears at the end of round 1 at the far end of a 12-tile road, and the Archer shoots 2 tiles, so the tutorial teaches walking toward it and shooting once it is in range.
+The content entry `Sequence/Tutorial Steps` (first generated by the Unity build's Create Tutorial tool). The Godot build plays the guided tutorial instead while `data/tutorial.json` exists (Guided Tutorial — Design); these lines stay as the fallback. Placing a tower selects it, so there is no separate "select it" step; its panel then opens over the bubble, so two centred lines explain the panel and ask for a right-click to close it. The first Slime appears at the end of round 1 at the far end of a 12-tile road, and the Archer shoots 2 tiles, so the tutorial teaches walking toward it and shooting once it is in range.
 
 | # | Text | Continues when | Points at |
 | --- | --- | --- | --- |
@@ -115,16 +115,20 @@ Built by `Tools > Deprecated > Create Tutorial` (`Data/Sequences/Tutorial Steps`
 | 11 | A Slime and a fast Runner now. When one is in range, {click:QuickCast} Shoot: your Archer picks a target by itself. | a quick cast | the first enemy |
 | 12 | Hold them off until the wave is over. | the level won | the base |
 
-## Build plan
+## In the Godot build
 
-1. **Save profile and first-run routing** — `profile` in `GameData` (old saves marked Skipped), `SceneID.Welcome`, the boot loading screen picks Welcome or the main menu.
-2. **Welcome scene** — name field, Start, Skip tutorial; scene builder; the main menu greets by name.
-3. **Tutorial level** — fixed-hand field on levels, the tutorial level asset (built by a menu like Create Chapter 1), starting towers 2 → 1 and the reward/skip giving the 2nd, win → main menu, not in level select.
-4. **Sequences** — `SequenceAsset` and speakers, the sequence player (lines, waits, game events, skip), `LevelAsset.intro`; testable without a scene.
-5. **Speech bubble** — `UI_TextBubble` element and prefab, pointing at units, tiles and UI, letter-by-letter text, Skip; the level plays its intro.
-6. **The tutorial sequence** — its lines, Skip tutorial in the pause menu.
+All six phases are built:
 
-Phases 1, 3 and 4 are code and data; 2, 5 and 6 need scene and prefab work in Unity.
+| Phase | Where |
+| --- | --- |
+| Save profile and first-run routing | `PlayerProfile` (`sim/meta/`), the save in `game/app/game_data.gd` (old saves marked Skipped), `SceneFlow.Welcome`; the boot loading screen picks Welcome or the main menu |
+| Welcome scene | `game/ui/screens/welcome.gd` (name field, at most `PlayerProfile.MaxNameLength` characters, Start, Skip tutorial); the main menu greets by name |
+| Tutorial level | `fixedHand` on levels, the tutorial level entry, starting towers 1 and the reward/skip giving the 2nd, win → main menu, not in level select |
+| Sequences | `SequenceAsset` and speakers, `SequenceRun` (`sim/presentation/sequence_run.gd`: lines, waits, game events, skip), the level's `intro`; tested without a scene (`tests/test_sequence.gd`) |
+| Speech bubble | `TdTextBubble`, pointing at units, tiles and UI, letter-by-letter text, Skip; the level plays its intro. Lines that point at nothing speak through the dialogue box (`TdDialogueBox` in `HudSequence`), like the guided tutorial (docs/GODOT-NOTES.md "Tutorial lines") |
+| The tutorial sequence | Replaced by the guided tutorial (`game/level/guided_tutorial.gd`); Skip tutorial in the pause menu |
+
+History: in the Unity plan phases 1, 3 and 4 were code and data, and 2, 5 and 6 needed scene and prefab work (a scene builder in the Tools menu, prefab-based UI).
 
 ## Open questions
 
