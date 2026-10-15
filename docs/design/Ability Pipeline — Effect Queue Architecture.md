@@ -1,6 +1,6 @@
 # Ability Pipeline — Effect Queue Architecture
 
-Oct 1, 2026 · @Eren
+Oct 1, 2026 · @Eren · Godot pass 2026-10-15
 
 ## Summary
 
@@ -22,7 +22,7 @@ This design builds on Formula System — Design and Condition System — Design,
 - Nothing reacts and nobody dies in the middle of a batch.
 - A tooltip, an outcome preview and the AI see exactly what play will do.
 - A new ability, status or passive is an asset built from existing steps, not code.
-- The combat core runs without Unity, so tests, AI and a possible server share it.
+- The combat core runs without the engine (`sim/`, plain GDScript), so tests, AI and a possible server share it.
 
 **Non-goals**
 
@@ -38,11 +38,11 @@ Child effects created by Apply also go to the front, behind the reactions of the
 
 ## Core concepts
 
-The following terms are used throughout this document.
+The following terms are used throughout this document. The code blocks marked *design sketch* are the Oct 1 design, written in C# before anything was built; the built classes are their GDScript ports under `sim/combat/` (`effect.gd`, `ability_instance.gd`, `resolver.gd`, `targeting.gd`…; names per PORT.md: `Effect.IsValid` → `is_valid`, `UnitId` → `int`). The definitions shown in GDScript are the built classes.
 
 | Term | Meaning |
 | --- | --- |
-| GameState | All combat data: units, stats, statuses, grid, turn order and RNG state. Plain C#, cloneable, no `UnityEngine`. |
+| GameState | All combat data: units, stats, statuses, grid, turn order and RNG state. Plain GDScript (`sim/combat/game_state.gd`), cloneable, no engine calls. |
 | Effect | The unit the resolver runs: `DamageEffect`, `HealEffect`, `ApplyStatusEffect`, `StepEffect`, `PushEffect`… Composite effects such as `CastAbility` and `Attack` only expand into other effects. |
 | Queue | A deque of pending work. Child effects and reaction responses go to the front, so a cause finishes before unrelated work continues. |
 | Queue item | What the resolver takes in one go: a single effect, or a batch. |
@@ -57,6 +57,8 @@ The following terms are used throughout this document.
 ### Effect
 
 An effect is checked, possibly replaced, then applied. Applying it changes state, writes events and may push child effects.
+
+Design sketch (built: `sim/combat/effect.gd`):
 
 ```csharp
 public abstract class Effect
@@ -88,6 +90,8 @@ public abstract class Effect
 3. **Reactions.** Reactions collected from this item's events are checked and rolled, and their effects are pushed to the front of the queue.
 
 ### AbilityInstance
+
+Design sketch (built: `sim/combat/ability_instance.gd`):
 
 ```csharp
 public sealed class AbilityInstance
@@ -148,6 +152,8 @@ The resolver applies the following rules. No other component determines resoluti
 
 ### The resolver
 
+Design sketch (built: `Resolver.run` in `sim/combat/resolver.gd`):
+
 ```csharp
 public void Run(Effect command)
 {
@@ -184,7 +190,7 @@ Statuses, passives, items, tiles and GameRules affect combat through three kinds
 | Replacement | An effect: cancel, redirect or replace it | Before the effect applies | This document |
 | Reaction | Nothing directly; it queues new effects | At the checkpoint after its event | Condition System, extended here |
 
-The resolver finds all three by walking `GameState`: units, then their statuses, passives and items, then tiles and GameRules. No rule is a C# event subscription, which is what lets previews clone the state (Simulation).
+The resolver finds all three by walking `GameState`: units, then their statuses, passives and items, then tiles and GameRules. No rule is an event subscription (a signal), which is what lets previews clone the state (Simulation).
 
 ### Modifiers
 
@@ -197,18 +203,16 @@ The resolver finds all three by walking `GameState`: units, then their statuses,
 
 A replacement intercepts an effect before it applies. It reads state but never changes it; anything it causes happens as effects.
 
-```csharp
-[Serializable]
-public sealed class ReplacementRule
-{
-    public EffectKind matches = EffectKind.Damage;
-    public Tag[] withTags;                                   // e.g. Fire
-    [ConditionSlot(EvalPoint.Replacement)]
-    public Condition condition;                              // Self, Source, Target, effect kind and tags
-    public ReplaceAction action;                             // Cancel | Redirect | Replace
-    [SerializeReference] public List<Step> instead = new();  // used by Replace
-}
+```gdscript
+class_name ReplacementRule                        # sim/combat/replacement_rule.gd
+var matches: int = EffectKind.Damage
+var with_tags: Array = []                         # e.g. Fire
+var condition: Condition = Condition.new()        # Replacement point: Self, Source, Target, effect kind and tags
+var action: int = ReplaceAction.Cancel            # Cancel | Redirect | Replace
+var instead: Array = []                           # Steps, used by Replace
 ```
+
+In content, replacements are entries of a passive's, a status's or the rules' `replacements` list.
 
 | Example | Rule |
 | --- | --- |
@@ -223,27 +227,20 @@ Cancels run before redirects, and redirects before replaces. An effect is redire
 
 A reaction listens to an event, checks a condition, rolls a chance and queues its response effects. It follows the Condition System's trigger, condition and chance model, extended with a response list, timing, limits and tag filters.
 
-```csharp
-[CreateAssetMenu(menuName = "Game/Reaction")]
-public sealed class ReactionDefinition : ScriptableObject
-{
-    public Trigger trigger = Trigger.OnHitTaken;               // event + side
-
-    [ConditionSlot(EvalPoint.ReactionTrigger)]
-    public Condition condition;                                 // empty = always true
-
-    [FormulaSlot(Phase.OnHit)]
-    public Formula chance = new Formula("1");
-    public RollPer rollPer = RollPer.Hit;                       // or Attack
-
-    public Timing timing = Timing.AfterItem;                    // or AfterAbility
-    public Limit limit = Limit.None;                            // OncePerAbility | OncePerTurn
-    public Tag[] ignoreTags = { Tag.Reflected };
-    public bool worksWhenDead;
-
-    [SerializeReference] public List<Step> response = new();    // effects to queue
-}
+```gdscript
+class_name ReactionDef                            # sim/combat/reaction_def.gd
+var trigger: int = Trigger.OnHitTaken             # event + side
+var condition: Condition = Condition.new()        # Reaction-trigger point; empty = always true
+var chance: Formula = Formula.new("1")            # OnHit phase
+var roll_per: int = RollPer.Hit                   # or Attack
+var timing: int = Timing.AfterItem                # or AfterAbility
+var limit: int = Limit.None                       # OncePerAbility | OncePerTurn
+var ignore_tags: Array = [Tags.Reflected]
+var works_when_dead: bool = false
+var response: Array = []                          # Steps: effects to queue
 ```
+
+Reactions are content entries in `data/content/Reactions.json` (`Reaction/<Name>`) with the same fields (`trigger`, `condition`, `chance`, `rollPer`, `timing`, `limit`, `ignoreTags`, `worksWhenDead`, `response`); `AssetConverter` turns an entry into a `ReactionDef`.
 
 - **Order of checks.** Reactions are gathered by trigger as events are written. At the checkpoint, in rule 9 order, each reaction's condition is evaluated, then its chance is rolled, then its response is queued. Only reactions that pass their condition roll, as the Condition System requires.
 - **Roll frequency.** `rollPer: Attack` rolls once per `Attack` effect and stores the result on the `AbilityInstance` for its other hits.
@@ -284,7 +281,7 @@ The Formula System and the Condition System are used without modification. This 
 | `Absorbed`, `HpLost`, `Overkill` | `DamageEffect` | Later effects in the same chain; `DamageDealt` triggers |
 | `Amount`, `Overheal` | `HealEffect` | Later effects in the same chain; `Healed` triggers |
 
-The validator extends the Formula System's phase check: a chain step may read only variables that an earlier step of the same chain produces. A Lifesteal step placed before its Damage step fails in the editor with `HpLost is not produced yet`.
+The validator extends the Formula System's phase check: a chain step may read only variables that an earlier step of the same chain produces. A Lifesteal step placed before its Damage step fails validation (Validate All, `AssetValidator`) with `HpLost is not produced yet`.
 
 ### Condition evaluation points in the queue
 
@@ -311,6 +308,8 @@ The validator extends the Formula System's phase check: a chain step may read on
 ## Targeting and patterns
 
 Targeting is a pure query shared by the UI, the AI and the resolver, so a tile the UI highlights is always a tile the ability can hit.
+
+Design sketch (built: `sim/combat/targeting.gd`, `Targeting.can_cast`, `valid_aims`, `area_targets`):
 
 ```csharp
 public static class Targeting
@@ -386,8 +385,8 @@ A status is a set of rules with a lifetime, and a turn is delimited by two event
 The Director turns the event log into a timeline. Logic never waits for animation, and presentation never changes logic.
 
 - **Beats.** The events of one queue item form a beat. Beats play in order; events inside a beat play in parallel across units.
-- **Presenters.** Each event type has a default presenter: `DamageDealt` → flinch and number, `UnitMoved` → walk or slide, `StatusApplied` → icon and VFX, `UnitDied` → death. An ability's presentation asset can override its own beats, for example cast → projectile → explosion.
-- **Sync points.** A beat can wait for a signal from the beat before it, such as the impact frame of a swing (an Animation Event) or a projectile's arrival, before showing numbers.
+- **Presenters.** Each event type has a default presenter: `DamageDealt` → flinch and number, `UnitMoved` → walk or slide, `StatusApplied` → icon and VFX, `UnitDied` → death. An ability's presentation entry (`Presentations.json`) can override its own beats, for example cast → projectile → explosion.
+- **Sync points.** A beat can wait for a signal from the beat before it, such as the impact frame of a swing (the clip's impact key, else `art/models/impacts.json`; `EntityRig`) or a projectile's arrival, before showing numbers.
 - **View model.** HP bars, status icons and on-screen positions come from a view model that presenters update as they play. The UI never reads `GameState`, so HP drops when the fireball lands, not when the logic ran.
 - **Skip.** Fast-forward applies the remaining view updates at once; the logic has already finished, so nothing is lost.
 - **Other readers.** The combat log, replays and golden tests read the same event log.
@@ -405,34 +404,42 @@ Previews and AI run the same resolver on a copy of the state, so their predictio
 - **Determinism.** One project-owned, integer-based RNG per battle (Formula System). Draws happen only in `Apply` and reaction checks, in queue order, so the same state, commands and seed write the same event log; golden tests compare those logs.
 - **Saves and replays.** Between commands the queue is empty, so a save consists of `GameState` alone. A replay consists of the starting state, the seed and the command list.
 
-## Authoring in Unity
+## Authoring
 
-Abilities, statuses and reactions are ScriptableObjects. Their structure is a list of steps, while numbers and conditions remain text, as the Formula System specifies.
+Abilities, statuses and reactions are content entries in `data/content/Abilities.json`, `Statuses.json` and `Reactions.json` (keys `Ability/<Name>`, `Status/<Name>`, `Reaction/<Name>`; docs/CONTENT.md). Their structure is a list of steps, while numbers and conditions remain text, as the Formula System specifies. `AssetConverter` turns each entry into the simulation's def (`AbilityDef`, `StatusDef`, `ReactionDef`) and each step item into its `Step` class.
 
-```csharp
-[CreateAssetMenu(menuName = "Game/Ability")]
-public sealed class AbilityDefinition : ScriptableObject
-{
-    public Tag[] tags;                                           // Attack, Spell, Fire…
-    public Cost[] costs;
+An ability entry (abridged from `Ability/Example/Fireball`):
 
-    [ConditionSlot(EvalPoint.CastGate)]     public Condition castGate;
-    public PatternDef targeting;                                 // Formula System
-    [ConditionSlot(EvalPoint.TargetFilter)] public Condition targetFilter;
-
-    [SerializeReference] public List<Step> steps = new();        // Attack, Push, If, Repeat, Bounce…
-    public PresentationDef presentation;                         // optional Director override
+```json
+"Ability/Example/Fireball": {
+  "id": "Fireball",
+  "tags": ["Attack", "Spell", "Fire"],
+  "costs": [{ "resource": "Mana", "amount": 5 }],
+  "castGate": "",
+  "targeting": { "shape": "Diamond", "minRadius": "0", "maxRadius": "6", … },
+  "targetFilter": "",
+  "steps": { "items": [
+    { "$type": "AttackStepData",
+      "area": { "shape": "Circle", "minRadius": "0", "maxRadius": "1", … },
+      "areaFilter": "",
+      "power": "100",
+      "canMiss": true, "canCrit": true,
+      "onHit": { "items": [ { "$type": "DamageStepData", "amount": "ActionPower", "tags": [], "on": "Target" } ] } }
+  ] },
+  "presentation": "Presentation/Example/Fireball Presentation"
 }
+```
 
-[Serializable]
-public sealed class AttackStep : Step
-{
-    public PatternDef area;
-    [ConditionSlot(EvalPoint.TargetFilter)] public Condition areaFilter;
-    [FormulaSlot(Phase.Attack)] public Formula power = new Formula("100");
-    public bool canMiss = true, canCrit = true;                  // chances come from GameRules
-    [SerializeReference] public List<Step> onHit = new();        // one chain per target
-}
+The step it becomes (`sim/combat/attack_step.gd`, abridged):
+
+```gdscript
+class_name AttackStep extends Step
+var area: PatternDef = PatternDef.single()
+var area_filter: Condition = Condition.new()      # Target-filter point for area candidates
+var power: Formula = Formula.new("100")           # Attack phase; frozen for every hit of this attack
+var can_miss: bool = true                         # chances come from GameRules
+var can_crit: bool = true
+var on_hit: Array = []                            # Steps: one chain per target
 ```
 
 `area` and `power` are fields of `AttackStep`, so one ability can contain several attacks.
@@ -450,21 +457,22 @@ public sealed class AttackStep : Step
 | `Bounce` | The next batch, after the previous checkpoint | Chain lightning; skips units already hit |
 | `CastAbility` | A new ability with its own instance | For reactions such as counters |
 
-- **Type picker.** If the Unity version in use offers no type picker for `[SerializeReference]` lists, the project adds a small PropertyDrawer or an open-source one.
-- **Renames.** Saved data records each step's class name. Renaming a step class requires Unity's `[MovedFrom]` attribute; otherwise saved steps are lost.
-- **Steps and text.** Nesting and lists are what the Inspector edits well. Formulas and conditions inside steps remain text, with the formula tooling's diffs and validation.
+- **Step types.** Each step item names its type in `$type` (`AttackStepData`, `DamageStepData`…; one `sim/data/<name>_step_data.gd` per type). `ContentSerializer.SCHEMA` lists every type's fields; the wiki Content Editor and `tools/content_check.gd -- --schema` read it.
+- **Renames.** Saved data records each step's type name. Renaming a step class means renaming its `$type` in every content file; an unknown `$type` is a load problem (`tests/test_content_all.gd` fails), so saved steps are never lost silently.
+- **Steps and text.** Nesting and lists are what the editors (the wiki Content Editor, the JSON itself) handle well. Formulas and conditions inside steps remain text, with the formula tooling's diffs and validation.
 - **Validation.** The Formula System's validator also checks step order for chain variables, event facts in responses, and that `Repeat` and `Bounce` counts resolve to at least 1.
 
-| Assembly | Holds | References |
-| --- | --- | --- |
-| `Game.Formulas` | Formula and condition core (No Engine References) | none |
-| `Game.Combat` | `GameState`, effects, resolver, rules, events, targeting (No Engine References) | `Game.Formulas` |
-| `Game.Combat.Unity` | Ability, status and reaction assets; steps | `Game.Combat`, `Game.Formulas.Unity` |
-| `Game.Combat.Presentation` | Director, presenters, view model | `Game.Combat`, `Game.Combat.Unity` |
-| `Game.Combat.Editor` | Drawers, validators, playground | `Game.Combat.Unity`, `Game.Formulas.Editor` |
-| `Game.Combat.Tests` | Edit Mode and golden tests | `Game.Combat`, `Game.Formulas` |
+| Folder | Holds |
+| --- | --- |
+| `sim/formulas/` | Formula and condition core (engine-free) |
+| `sim/combat/` | `GameState`, effects, resolver, rules, events, targeting, steps (engine-free) |
+| `sim/data/` | Ability, status and reaction assets (content entries), the converter to the defs, the validator |
+| `sim/presentation/` | Director, view model (`ViewFrame`, `FrameRecorder`) |
+| `game/level/presenters/` | Presenters, one per event kind |
+| `addons/td_tools/`, `game/dev/` | Validate All, Balance Sheet, Level Playtester |
+| `tests/`, `tools/golden.gd` | Unit tests (`test_combat.gd`, `test_asset.gd`…) and the golden logs |
 
-The core sees assets only through interfaces such as `IAbilityDef`, `IAttackStep` and `IStatusDef`, so core tests can use plain C# fakes.
+Only `sim/` is the core; nothing in it touches the engine, and `game/` reads the event log and the view model, never the reverse. The core works on its own defs (`AbilityDef`, `StatusDef`, `ReactionDef`), so core tests build defs directly in code (`tests/test_combat.gd`) without any content file.
 
 ## Example flows
 
@@ -535,17 +543,11 @@ U carries 3 stacks of Poison applied by an enemy Shaman, and U has no armor.
 2. `DamageEffect` 15. If U dies, `UnitDied` is written and the Shaman's `OnKill` reactions follow.
 3. U's commands, then `TurnEnded(U)`: Poison's duration counts down, and at 0 it is removed with `StatusRemoved`.
 
-## Implementation roadmap
+## In the Godot build
 
-The headless core is built first. Presentation work starts only after tests verify the event log.
+All of it is built, in `sim/` (a 1:1 port of the C# core, checked against it by `tools/golden.gd`). The core loop (`GameState`, `Effect`, `Resolver` with batches and checkpoints, `EventLog`) writes the same log for the same seed (`test_same_seed_writes_the_same_log`); the Formula System's Shield Breaker deals 211 (`test_shield_breaker_deals_211`); `Targeting.can_cast`, `valid_aims` and `area_targets` serve the UI, the AI and the resolver; scoped modifiers, replacements, reactions with limits and tags, statuses and turns run, and the depth limit stops a two-unit heal loop (`test_depth_limit_stops_a_heal_loop`); Fireball, Shield Bash, Walk and Chain Lightning exist as content entries (`tests/test_asset.gd` plays them from the assets); the Director, presenters and view model let HP drop on the impact frame and skip (`tests/test_director.gd`); cloning and the preview passes drive the previews (`AimPreview`, `PhaseForecast`); units pick their aims with `Instinct` (Instinct — Design).
 
-1. **Core loop.** `GameState`, `Effect`, the resolver with batches and checkpoints, and the event log printed to the console; `DamageEffect`, `HealEffect`, `StepEffect`. Done when a scripted fight writes the same log on every run.
-2. **Formulas.** `Attack` with the Power snapshot, the damage pipeline, the seeded RNG, and hit and crit rolls. Done when the Formula System's Shield Breaker example deals 211.
-3. **Targeting.** `CanCast`, `ValidAims`, `AreaTargets` and canonical order. Done when UI highlights and `AreaTargets` agree in tests.
-4. **Rules.** Scoped modifiers, replacements, reactions with limits and tags, statuses and turns. Done when Thorns, Enrage, Bodyguard and Poison tests pass and the depth limit stops a two-unit heal loop.
-5. **Assets.** `AbilityDefinition` with steps, drawers and validator checks. Done when Fireball, Shield Bash, Walk and Chain Lightning exist as assets rather than code.
-6. **Presentation.** Director, presenters and the view model. Done when HP drops on the impact frame and skipping works.
-7. **Preview and AI.** Cloning, preview passes, outcome preview and AI scoring. Done when preview and execution agree on every ability without a random term.
+History: the doc's roadmap built the headless core first (core loop, formulas, targeting, rules, assets, presentation, preview and AI, each with a test as its done-criterion) in the Unity project's C#, with abilities as ScriptableObjects holding `[SerializeReference]` step lists edited in the Inspector, and one assembly per layer (`Game.Formulas`, `Game.Combat` with no engine references, `Game.Combat.Unity` for the assets, `Game.Combat.Presentation`, `Game.Combat.Editor`, `Game.Combat.Tests`). The Godot build ported that core to GDScript and moved the assets into `data/content/*.json`.
 
 ## Open decisions
 
