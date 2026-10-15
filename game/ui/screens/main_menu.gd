@@ -107,9 +107,9 @@ func refresh() -> void:
 	var cont: TdMenuButton = buttons["Continue"]
 	cont.visible = next != null
 	if next != null: cont.text = "Continue: %s" % next.get_display_name()
-	# one primary per screen: Continue when there is one, else Play
-	cont.style = TdButton.Style.MENU_PRIMARY
-	buttons["Play"].style = TdButton.Style.MENU_WOOD if next != null else TdButton.Style.MENU_PRIMARY
+	# Play is always the blue primary, Continue is a wood button (Eren 2026-10-15)
+	cont.style = TdButton.Style.MENU_WOOD
+	buttons["Play"].style = TdButton.Style.MENU_PRIMARY
 	buttons["Play"].text = "Play"
 
 func _first_button() -> TdButton:

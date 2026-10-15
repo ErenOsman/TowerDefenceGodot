@@ -140,7 +140,6 @@ func _build_mod() -> void:
 	top.custom_minimum_size = Vector2(0, 56)
 	_mod.add_child(top)
 	var back_b := TdMenu.button(TdButton.Style.SECONDARY, "Back", Vector2(190, 52), TdTheme.texture("icon_back"))
-	back_b.set_key_hint("Esc")
 	back_b.size_flags_vertical = SIZE_SHRINK_CENTER
 	back_b.clicked.connect(back_to_picker)
 	top.add_child(back_b)

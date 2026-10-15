@@ -45,7 +45,7 @@ func _build() -> void:
 	_frame.offset_left = -FRAME.x / 2.0; _frame.offset_right = FRAME.x / 2.0
 	_frame.offset_top = -FRAME.y / 2.0; _frame.offset_bottom = FRAME.y / 2.0
 	add_child(_frame)
-	var back_b := _key_button("Missions", "icon_back", "Esc", Vector2(232, 52))
+	var back_b := _key_button("Missions", "icon_back", "", Vector2(232, 52))
 	back_b.position = Vector2(64, 34)
 	back_b.pressed.connect(back)
 	_frame.add_child(back_b)

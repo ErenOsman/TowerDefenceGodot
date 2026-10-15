@@ -103,7 +103,6 @@ func _on_open() -> void:
 	message_label.text = message
 	message_label.visible = message != ""
 	cancel_button.text = cancel_text
-	cancel_button.set_key_hint("Esc")
 	cancel_button.fit_to_content(BUTTON.x)
 	confirm_button.style = TdButton.Style.DANGER if danger else TdButton.Style.PRIMARY
 	confirm_button.text = confirm_text

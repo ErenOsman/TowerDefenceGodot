@@ -96,7 +96,7 @@ func _build() -> void:
 	_build_list()
 	_build_detail()
 	_build_hand()
-	var back_b := _key_button("Back", "icon_back", "Esc", BACK_RECT.size)
+	var back_b := _key_button("Back", "icon_back", "", BACK_RECT.size)
 	back_b.position = BACK_RECT.position
 	back_b.pressed.connect(back)
 	_frame.add_child(back_b)

@@ -174,7 +174,17 @@ func _row(page: Container, text: String, control: Control, sub := "") -> HBoxCon
 	holder.alignment = BoxContainer.ALIGNMENT_END
 	holder.add_child(control)
 	row.add_child(holder)
-	page.add_child(row)
+	# two-tone rows (Eren 2026-10-15): wood and a slightly darker wood, alternating
+	var wrap := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	var base: Color = TdTheme.color("wood.800")
+	sb.bg_color = base if page.get_child_count() % 2 == 0 else base.darkened(0.08)
+	sb.set_corner_radius_all(8)
+	sb.content_margin_left = 12; sb.content_margin_right = 12; sb.content_margin_top = 2; sb.content_margin_bottom = 2
+	wrap.add_theme_stylebox_override("panel", sb)
+	wrap.mouse_filter = MOUSE_FILTER_IGNORE
+	wrap.add_child(row)
+	page.add_child(wrap)
 	return row
 
 func _slider_row(page: Container, text: String, setting: String, setter: Callable, sub := "") -> void:
