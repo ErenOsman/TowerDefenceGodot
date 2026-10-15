@@ -1,6 +1,6 @@
 # Tower Defence — UI Design Rules
 
-Oct 8, 2026 · @Eren · Godot pass 2026-10-15
+Oct 8, 2026 · @Eren
 
 ## Purpose
 
@@ -136,6 +136,7 @@ The whole game uses one scaling setup (`project.godot`): stretch mode **`canvas_
 - **Corners:** one radius per size: 4 for small controls (34×34 buttons, icons, chips), 8 for buttons, cards and rows, 12 for windows and the tooltip. Corners come from the kit's 9-slice sprites (`res://art/ui/KitB/`, drawn by `TdSliceBox`), one sprite per radius.
 - **Anchors:** bars anchor to their edge. Windows use proportional anchors (as Settings and Level Select do) with a minimum size, so they work at 16:10 and 21:9.
 - **Windows:** small 760×360 (end screen, confirms), medium 70% × 70% (chapter select), large 76% × 80% (hand editor, Codex, Settings). Title at the top-left with 24 padding, close (×) at the top-right, main buttons at the bottom-right. **One way to close:** a window that opens over something (Credits, Codex, Settings, hand editor) has only the × (Esc and right click close it too; the Esc hint is in its tooltip), never an extra Back or Done that only closes. Full screens that replace another (Level select) use a Back button bottom-left instead. Choice windows like Pause close with their primary button (Continue).
+- **Confirmations:** every yes/no question uses one reusable popup, `TdConfirm` (small window, title, one line saying what happens, a danger or cobalt confirm button on the right, Cancel on the left; Esc and right click cancel): Skip tutorial, Unlock a form, Quit, Reset to defaults, removing a player (Eren, 2026-10-15).
 - **Screen zones of the game HUD:**
   - Top bar: 60 tall. Status on the left (Energy, Health, Wave), the phase in the middle, Pause · Skip · End turn on the right. End turn is the widest (300) and stays in the top-right corner.
   - Bottom bar: 120 tall, the hand.
@@ -150,7 +151,7 @@ Build new UI from these parts (`game/ui/elements`, `game/ui/theme`) before writi
 | --- | --- | --- | --- |
 | Primary button | `TdButton` (PRIMARY) | 220×60, wide 300×60 | Fill `accent.fill`, label `type.body` Bold. **One per screen** (Start, End turn, Play) |
 | Secondary button | `TdButton` (SECONDARY) | 220×60, small 150×44 | Fill `ink.600`, outline `ink.400`. Back, Retry, Settings |
-| Danger button | `TdButton` (DANGER) | as secondary | Fill `#B83A3A` (white text 5.7:1). Sell, Quit, Reset keys. Asks for confirmation if it can't be undone |
+| Danger button | `TdButton` (DANGER) | as secondary | Fill `#B83A3A` (white text 5.7:1). Sell, Quit, Reset keys. Asks for confirmation if it can't be undone, through the one shared confirm popup `TdConfirm` |
 | Icon button | `TdButton` (ICON) | 44×44, at least 34×34 | Icon 24, always has a tooltip (Info, Upgrade, Close) |
 | Ability button | `TdButton` (ABILITY) | full bar width × 56 | Icon left, name, cost in `gold` on the right. Quick cast = `good` edge, blocked = `bad` edge |
 | Card | `HudHandPiece` (tray), `TdHandCard` (menus); chapter cards are `TdButton`s, stations live in `TdStationWorld` | Hand 100×100, chapter 260×120, station 380×150 | Fill `ink.700`, outline `ink.400`, radius 8. States: normal, placed, can't afford, locked, benched (section 6) |
@@ -327,7 +328,7 @@ Replaces the old hand editor. Large window (76% × 80%) titled "Your hand", × o
 - **Hand row (top):** up to 8 tray pieces in order (miniature, cost coin, key number); empty slots are dashed sockets; drag to reorder (the key follows), × on hover removes. From the Camp all 8 slots look the same; before a level a divider sits after that level's cap ("Two Roads takes the first 4") and the slots after it are slightly dimmed.
 - **Layouts:** four fixed tabs beside the hand row (Eren, 2026-10-13). Layout 1 holds the starting hand, 2–4 start empty ("Empty 0/8"); each keeps its own 8 slots; rename only (24 characters; the pencil, and the name commits on Enter or when the field loses focus), no add or delete. A tab shows only the layout's name: no mini tower icons and no "0/8" count (user, 2026-10-14). The active layout (cobalt outline) is the one levels use.
 - **Filters (left):** search, role chips (Attack, Spell, Support, Control, derived from the tower's abilities; no Movement chip and no "Can move" toggle, since every tower has Tower Walk), delivery chips (from the abilities' tags), a cost slider with ≤100 / ≤200 / 200+, toggles (Heals, Applies statuses, Hide my hand), a result count and Clear filters. Sort: Default (the release order, by the tower type's hidden number; Eren, 2026-10-13), Name, Cost.
-- **Collection grid (centre):** compact cards: portrait, name, cost coin, and the key badge when the tower is in the hand. No stats on the cards.
+- **Collection grid (centre):** compact cards: portrait, name, cost coin, and the key badge when the tower is in the hand. No stats on the cards and no tooltip on them (the detail panel is the information; Eren, 2026-10-15).
 - **Detail (right):** no model image; name, number, cost, description, stat tiles, compact ability rows, passives; "Add to hand" (first empty slot), disabled with a reason when the hand is full.
 - **Adding:** Add to hand, double-click, or drag a card onto a slot (onto a filled slot it replaces that tower).
 
@@ -363,7 +364,7 @@ In the game: tile previews are decals just above the board (`game/board`, dashed
 
 - **Always on:** the top bar (energy, base health, wave x / y, phase, End turn) and the hand. Nothing else stays on screen by default.
 - **On demand:** the right bar (when a tower or enemy is selected), tooltips (hover), the full plate (hovered or selected unit). Every unit always shows its compact plate (HP bar + up to 3 status chips, inside its tile; 2026-10-10, see the Icon bar row).
-- **Phase is the loudest text.** The phase label sits in the top-bar centre in `type.h3`. On a new round a banner shows for 0.8 s; a newer banner replaces an old one, and banners never block clicks.
+- **Phase is the loudest text.** The phase label sits in the top-bar centre in `type.h3`. On a new round a banner shows for 0.8 s; a newer banner replaces an old one, and banners never block clicks. A wave banner shows only the wave's name (no "begins"); the phase chip reads "Your turn" / "Enemy turn" (never "Level phase") (Eren, 2026-10-15).
 - **End turn** is the primary button, in the bottom-right corner. It glows softly when the player has nothing left to do, and it is disabled during the enemy turn.
 - **Tooltips never cover what they describe:** ability and passive tooltips open left of the right bar; hand card tooltips open straight above their own card (above the action bar when it shows), centred on the card and clamped to the screen, the tail pointing down at the card; they never jump to the side of the action bar (user, 2026-10-09); board tooltips follow the mouse at (16, −16).
 - **Readable over the board:** bars are `ink.850` at 92%, so the board's greens and browns never show through text. Anything drawn straight over the board (plates, numbers, banners) has an outline.
@@ -373,7 +374,7 @@ In the game: tile previews are decals just above the board (`game/board`, dashed
 
 Rules added after the screen test of 2026-10-08 (16:9, 16:10 and 4:3):
 
-- **The camera frames the free area, not the whole screen.** The board is fitted between the top bar and the bottom row and centred on the WHOLE screen width; the right bar is not kept clear and may cover the board's edge while it is open (Eren, 2026-10-11). Mid-screen banners centre on the screen.
+- **The camera frames the free area, not the whole screen.** The board is fitted between the top bar and the bottom row and centred on the WHOLE screen width; the right bar is not kept clear and may cover the board's edge while it is open (Eren, 2026-10-11). Mid-screen banners centre on the screen. The inspector card may cover edge build tiles (accepted). Turning the camera never refits the board; the zoom-out limit after a turn keeps tall boards clear of the HUD (Eren, 2026-10-15).
 - **Tooltips stay off the board's previews.** While a range, aim or area preview shows, the tooltip opens where it covers none of it (inside the right bar under the ability list, or the far corner of the board).
 - **Card size follows the text:** hand cards grow to about 104×112 so the name (`type.small`) and the cost (`type.micro`) fit at the minimum sizes; the bottom bar stays 120.
 - **No text as images:** labels like "Wave" are text, so they scale and stay readable.
@@ -396,7 +397,7 @@ Every status and ability has its own icon ([kit](http://92.5.94.11/art/ui/kit-b/
 - **Two-tone glyph:** cream fill `#F5EAD6` with a dark rim `#120C09`, baked into the PNG. No other colours inside the glyph.
 - **Meaning comes from the chip:** its colour and its shape. On screen an icon has at most three colours (chip, cream, rim). Shape keeps it readable without colour.
 - **Sizes:** 48 (Codex, Info status rows), 40 (status chips on the right bar card), 34 (inspector, action bar), 32 (status chips on the full board plate), 28 (compact board plate, no badges), 24 (tooltips, text; status chips at 24 show no badges). Every glyph is checked at 24 px on wood, paper and board green.
-- **In the game:** `res://art/icons/Statuses/<Name>.png` and `res://art/icons/Abilities/<Name>.png` (no spaces: `AcidFlask.png`), set as the `icon` of each entry (written as the content's art path, `Assets/Art/Icons/Abilities/AcidFlask.png#AcidFlask`, which `ArtPaths` maps to `res://art/icons/…`) in `data/content/Statuses.json` / `Abilities.json` (`Status/Burn`, `Ability/Acid Flask`) by Eren.
+- **In the game:** `res://art/icons/Statuses/<Name>.png` and `res://art/icons/Abilities/<Name>.png` (no spaces: `AcidFlask.png`), set as the `icon` of each entry in `data/content/Statuses.json` / `Abilities.json` (`Status/Burn`, `Ability/Acid Flask`) by Eren.
 
 **Statuses.** Every status is a circle (user, 2026-10-09): buff = circle with a thin double rim, debuff and untagged = plain circle. Shapes by kind: ability = square, passive = square with a double rim, status = circle (buffs double-rimmed), so the shape alone says what a chip is. A status has **both** stacks and a duration (re-applying adds stacks and restarts the timer), so the chip always shows both:
 
