@@ -580,7 +580,7 @@ func _unit_page(entity: EntityAsset, description: String) -> void:
 	var vocab: Vocabulary = GameApp.rules.vocabulary if GameApp.rules != null else CombatVocabulary.create()
 	var values := {}
 	var tiles := stat_tiles(me, vocab)
-	_stats.columns = 3 if tiles.size() > 4 else 2 # wraps in the text column; the page never grows
+	_stats.columns = 2 # always two per row, extra stats go down, never a third column (Eren 2026-10-15)
 	for tile in tiles:
 		_stats.add_child(TdTowerCard.stat_tile(tile[0], tile[1], tile[2], 200))
 		if tile[0] != "MaxHp": values[tile[0]] = tile[2]
