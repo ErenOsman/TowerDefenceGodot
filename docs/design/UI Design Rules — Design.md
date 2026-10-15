@@ -137,6 +137,9 @@ The whole game uses one scaling setup (`project.godot`): stretch mode **`canvas_
 - **Anchors:** bars anchor to their edge. Windows use proportional anchors (as Settings and Level Select do) with a minimum size, so they work at 16:10 and 21:9.
 - **Windows:** small 760×360 (end screen, confirms), medium 70% × 70% (chapter select), large 76% × 80% (hand editor, Codex, Settings). Title at the top-left with 24 padding, close (×) at the top-right, main buttons at the bottom-right. **One way to close:** a window that opens over something (Credits, Codex, Settings, hand editor) has only the × (Esc and right click close it too; the Esc hint is in its tooltip), never an extra Back or Done that only closes. Full screens that replace another (Level select) use a Back button bottom-left instead. Choice windows like Pause close with their primary button (Continue).
 - **Confirmations:** every yes/no question uses one reusable popup, `TdConfirm` (small window, title, one line saying what happens, a danger or cobalt confirm button on the right, Cancel on the left; Esc and right click cancel): Skip tutorial, Unlock a form, Quit, Reset to defaults, removing a player (Eren, 2026-10-15).
+- **Key chips:** Back, Continue and Cancel buttons show no key chip (no "Esc" label), though Esc still works (user, 2026-10-15). Key chips stay on battle controls (End turn "Enter", ability numbers, Pass "Tab").
+- **Main menu:** Play is always the cobalt primary, even when Continue exists; Continue is a wood (secondary) button (user, 2026-10-15).
+- **End screen buttons:** no "Next level". The row is Retry · Level select (Guild after a mission) · Return (the main menu, or the Camp once it is unlocked); the primary is Level select / Guild (user, 2026-10-15).
 - **Screen zones of the game HUD:**
   - Top bar: 60 tall. Status on the left (Energy, Health, Wave), the phase in the middle, Pause · Skip · End turn on the right. End turn is the widest (300) and stays in the top-right corner.
   - Bottom bar: 120 tall, the hand.
@@ -162,7 +165,7 @@ Build new UI from these parts (`game/ui/elements`, `game/ui/theme`) before writi
 | Bar | `HudTopBar` | section 4 | `ink.850` at 92%, 1 px `ink.500` line on the board side |
 | Speech bubble | `TdTextBubble` | 640×180 | `ink.850`, replaced by the dialogue box (see Dialogue below), speaker in `teal` `type.h3`, text `type.body`, hint `type.small` italic |
 | Plate | `TdEntityStatus` + `TdHealthBar` | \~120 wide, 10 tall bar | Over the board, so outlined text. Shows on hover, selection, after a hit and while dying |
-| Settings row | the slider, toggle, dropdown and key-slot rows of the Settings window (`game/ui/screens/settings.gd`) | full width × 56 | Label left (`type.body`), control right, 24 between rows |
+| Settings row | the slider, toggle, dropdown and key-slot rows of the Settings window (`game/ui/screens/settings.gd`) | full width × 56 | Label left (`type.body`), control right, 24 between rows; rows alternate two browns, `wood.800` and one about 8% darker (user, 2026-10-15) |
 | Text field | `LineEdit` (kit `fields/field_paper_*`) | 56 tall | `ink.700`, placeholder `text.disabled`, focus outline `accent` |
 
 Text markup inside components uses the tokens: ability `gold`, passive and status `status`, harmful `bad`, helpful `good`, neutral `neutral`, tower `accent.light`, values `gold`, notes `text.muted`.
