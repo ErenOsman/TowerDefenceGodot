@@ -3,7 +3,7 @@
 Written 2026-10-14 by the Godot agent from Eren's decisions (2026-10-13/14). Godot pass 2026-10-15. This file is the
 source of truth for the tutorial level's guidance; "Tutorial, First Run & Sequences — Design" keeps the first-run flow
 and the sequence system (level intros, entrance lines), but its tutorial part is replaced by this doc. How the Godot
-build does it (box, rings, docking, render proof) is in `docs/GODOT-NOTES.md` ("Tutorial lines").
+build does it (box, rings, docking, render proof) is in `docs/Implementation Notes.md` ("Tutorial lines").
 
 ## Why a new tutorial
 

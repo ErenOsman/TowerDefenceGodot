@@ -213,7 +213,7 @@ Three text layers of the same size, one character per tile, top row first, then 
 - **Build:** `+` where towers may be placed, `.` elsewhere.
 - **Road:** box characters as above, `.` for no road.
 - **Paths:** tile lists, several positions to a line. The order cannot be drawn in a grid (loops, branches), so paths stay lists.
-- `python3 tools/content_format.py` writes hand-edited files in the content layout (docs/CONTENT.md "Layout").
+- `python3 tools/content_format.py` writes hand-edited files in the content layout (docs/Content.md "Layout").
 
 ## Level Editor
 

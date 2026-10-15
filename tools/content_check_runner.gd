@@ -92,7 +92,7 @@ func _run(args: Array) -> Dictionary:
 var _baseline := {}
 var _context_dir := ""
 
-## The key folder of each asset type (singular: "Status/Burn"; ContentFiles.KEY_FOLDERS, docs/CONTENT.md).
+## The key folder of each asset type (singular: "Status/Burn"; ContentFiles.KEY_FOLDERS, docs/Content.md).
 const KEY_FOLDERS: Dictionary = ContentFiles.KEY_FOLDERS
 
 ## The key folder of each type as the content actually uses it: the first path segment most of the type's existing
@@ -150,7 +150,7 @@ func _duplicates(by_file: Dictionary) -> void:
 			if not (entry is Dictionary): continue
 			if folder != "" and not str(key).begins_with(folder + "/"):
 				var tail: String = str(key).substr(str(key).find("/") + 1) if str(key).contains("/") else str(key)
-				errors.append("%s: the key must start with '%s/' (the folder the game's %s keys use; docs/CONTENT.md): e.g. %s/%s" % [key, folder, t, folder, tail])
+				errors.append("%s: the key must start with '%s/' (the folder the game's %s keys use; docs/Content.md): e.g. %s/%s" % [key, folder, t, folder, tail])
 			for other in pool.get(t, {}):
 				if other == key: continue
 				var o: Array = pool[t][other]

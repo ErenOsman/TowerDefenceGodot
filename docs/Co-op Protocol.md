@@ -1,4 +1,4 @@
-# Co-op relay protocol (v1) — Godot build
+# Co-op Protocol — the co-op relay protocol (v1)
 
 Design: `docs/design/Multiplayer — Design.md` (co-op section, decisions of 2026-10-13). The relay only passes messages;
 it never runs the rules. Both clients run the same `CoopSession` (lockstep on commands) and compare a checksum each round.

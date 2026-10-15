@@ -197,7 +197,7 @@ Built 2026-10-14: the content (`Forms.json`, `Tokens.json`: the starter forms an
 All rules; tests `tests/test_workshop.gd`); the level builds a tower from its form; the end screen grants drops; the
 screens: the Camp's Workshop station opens the picker, the Modify view, the tree, the card, confirm
 (`game/ui/screens/workshop.gd`, logic in `WorkshopLogic`, tests `tests/test_workshop_ui.gd`), badges on hand cards, tray
-pieces and board medallions (`TdFormBadge`), the Codex's Forms page. How it differs in detail: docs/GODOT-NOTES.md
+pieces and board medallions (`TdFormBadge`), the Codex's Forms page. How it differs in detail: docs/Implementation Notes.md
 ("Workshop screens").
 
 **Art:** the 6 token icons and a badge per form are UI kit sprites in `art/ui/KitB/tokens/<token id>.png` and

@@ -2,7 +2,7 @@
 
 # Codex
 
-What the in-game Codex lists, in its order (`Data/Settings/Codex`; `Tools > Content > Fill Codex` adds new content). Players see an entry once they have discovered it: towers when owned, enemies and statuses when met in a level; tips always. See [Codex — Design](../Design/Codex%20—%20Design.md).
+What the in-game Codex lists, in its order (`Settings/Codex` in `data/content/Codex.json`; add new content to its lists there, by hand or in the wiki Content Editor). Players see an entry once they have discovered it: towers when owned, enemies and statuses when met in a level; tips always. See [Codex — Design](../design/Codex%20—%20Design.md).
 
 ## Towers (9)
 

@@ -1,6 +1,6 @@
 class_name RelayClient
 extends Node
-## Autoload `Net`: the co-op relay client (docs/COOP-PROTOCOL.md). Talks JSON text frames over a WebSocketPeer to the
+## Autoload `Net`: the co-op relay client (docs/Co-op Protocol.md). Talks JSON text frames over a WebSocketPeer to the
 ## relay (ws://92.5.94.11/ws/relay), or to an in-process FakeRelay (tests, the lobby's Offline practice). Polled from
 ## _process (no threads: works in the web export). Keeps what the relay last said (rooms, room, match) and emits a
 ## signal for every relay message. Sends hello (content hash + the profile's player name) as soon as the socket

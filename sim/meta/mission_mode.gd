@@ -1,7 +1,7 @@
 class_name MissionMode
 extends RefCounted
 ## How a mission is played (Missions & Guild — Design, MissionAsset.mode): Solo from the mission board, Coop in a
-## room only (with a player range), or Any (alone from the board or in a room). Godot-first (see GODOT-NOTES.md).
+## room only (with a player range), or Any (alone from the board or in a room). Godot-first (see docs/Implementation Notes.md).
 
 const Solo := 0
 const Coop := 1

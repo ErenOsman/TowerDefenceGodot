@@ -1,6 +1,6 @@
 class_name ContentHash
 extends RefCounted
-## The co-op game version (docs/COOP-PROTOCOL.md, `version`): SHA-256 over the content JSON files' bytes,
+## The co-op game version (docs/Co-op Protocol.md, `version`): SHA-256 over the content JSON files' bytes,
 ## concatenated in ordinal file-name order, followed by the protocol version string; the first 16 hex digits.
 ## Two clients may only meet in a room when their hashes match (Multiplayer — Design, content match).
 ## Godot-only (no C# counterpart). Uses HashingContext (engine hashing, no Node/Resource).

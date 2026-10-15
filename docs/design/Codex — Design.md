@@ -48,7 +48,7 @@ The **Codex** is the game's reference book: every tower, enemy and status the pl
 | Panel | `game/ui/screens/codex.gd` + `codex.tscn` (a `TdPopup`, opened from the main menu, the Camp and the pause menu: `open()`, `close()`, `closed`, `open_at(section, id)`), `TdModelPreview` (`game/ui/screens/parts/td_model_preview.gd`: the turning model in its own SubViewport world with its own lights, on unscaled time, drag to turn) |
 
 - The panel builds its tree in code from the kit (`TdMenu`, `TdButton`): tabs with icons, the "5 / 9 discovered" progress with a bar, the list (medallion, name, "• New") and the page on paper with stat tiles and ability / passive rows. Locked rows show a lock and "Not met yet" instead of **???**.
-- Tower and enemy pages have page tabs: Overview · Abilities · Forms · Immunities (Immunities disabled; Forms disabled on enemies; docs/GODOT-NOTES.md "Workshop screens").
+- Tower and enemy pages have page tabs: Overview · Abilities · Forms · Immunities (Immunities disabled; Forms disabled on enemies; docs/Implementation Notes.md "Workshop screens").
 - The model plays its Idle clip and sways around a three-quarter front view instead of turning all the way round; a drag turns it freely. It moves over the paused game too.
 
 ## Adding to it

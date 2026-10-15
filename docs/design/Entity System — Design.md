@@ -53,7 +53,7 @@ The Formula System reads an entity through its `IEntity` interface.
 
 An entity's runtime state is a plain GDScript object owned by `GameState`. It holds identity, placement, base values, resources and the instances that change during a battle.
 
-Design sketch, written in C# before the build (built: `Entity` in `sim/combat/entity.gd`, names per PORT.md: `EntityId` → `int`, `Position` → `position: Vector2i` or null):
+Design sketch, written in C# before the build (built: `Entity` in `sim/combat/entity.gd`, names per docs/Sim Port.md: `EntityId` → `int`, `Position` → `position: Vector2i` or null):
 
 ```csharp
 public sealed class Entity : IEntity

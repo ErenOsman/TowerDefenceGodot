@@ -2,7 +2,7 @@
 """The content file layout (data/content/*.json), as Unity's MiniJson.Write laid it out: two-space indent, keys in
 order, small objects of plain values on one line (<= 120 chars), short lists of plain values on one line (<= 8 items,
 <= 100 chars), lists of short lists (tile positions) several to a line, UTF-8 without escapes, one final newline.
-Writers of data/content (the wiki's Content Editor, tools, hand edits) use it so diffs stay small; docs/CONTENT.md.
+Writers of data/content (the wiki's Content Editor, tools, hand edits) use it so diffs stay small; docs/Content.md.
 
   python3 tools/content_format.py            reformat every data/content/*.json in place
   python3 tools/content_format.py --check    exit 1 and list the files that are not in this layout

@@ -73,7 +73,7 @@ Leaves read data (Stat, Var, Const) and inner nodes compute, so a new formula is
 
 The core is plain GDScript with no engine calls (`sim/formulas/`). In the design `Num` is a thin wrapper around `decimal`; see Numbers, rounding and randomness.
 
-Design sketch, written in C# before the build (built: `IFormulaNode`, the node classes, `EvalContext` and `Trace` in `sim/formulas/`, names per PORT.md: `Evaluate` → `evaluate`, `EvalContext.Self` → `self_`):
+Design sketch, written in C# before the build (built: `IFormulaNode`, the node classes, `EvalContext` and `Trace` in `sim/formulas/`, names per docs/Sim Port.md: `Evaluate` → `evaluate`, `EvalContext.Self` → `self_`):
 
 ```csharp
 [Flags] public enum Needs { None = 0, Target = 1, Power = 2, Damage = 4, Self = 8 }
@@ -266,11 +266,11 @@ public readonly struct Num {
 }
 ```
 
-**In the Godot build.** GDScript has no `decimal`, so a `Num` is a plain `float` and `sim/formulas/num.gd` holds static helpers with the decimal semantics: every arithmetic result goes through `Num.fix` (snapped to 9 decimals, so 0.1 + 0.2 == 0.3 and 1.15 × 100 floors to 115), division and modulo by zero give 0, modulo is floored, rounding is half away from zero. All formula arithmetic goes through `Num.add/sub/mul/div/mod` (PORT.md "Types"). The golden logs (`tools/golden.gd`) check that the GDScript simulation writes the same events as the C# `decimal` one.
+**In the Godot build.** GDScript has no `decimal`, so a `Num` is a plain `float` and `sim/formulas/num.gd` holds static helpers with the decimal semantics: every arithmetic result goes through `Num.fix` (snapped to 9 decimals, so 0.1 + 0.2 == 0.3 and 1.15 × 100 floors to 115), division and modulo by zero give 0, modulo is floored, rounding is half away from zero. All formula arithmetic goes through `Num.add/sub/mul/div/mod` (docs/Sim Port.md "Types"). The golden logs (`tools/golden.gd`) check that the GDScript simulation writes the same events as the C# `decimal` one.
 
 - **Fractional data:** fractional values come from formula text or from integer fields (e.g. 2000 basis points = 20% for a modifier amount). No simulation data lives in `float` fields of the content: in `data/content` every fractional rule value is formula text (`"0.05"`), parsed with the decimal rules above. (The design's reason was that Unity does not serialize `decimal`.)
 - **Rounding:** never inside a formula; once, at the slot output, per the slot's rule. Damage → int, `floor`; Range and radii → int, `floor`, at least 0; Power → not rounded.
-- **Randomness:** only through `rand()` and the seeded RNG in the context, a project-owned, integer-based generator: xorshift64* (`XorShiftRng`, `sim/formulas/xor_shift_rng.gd`; PORT.md has its test vectors). The engine's random functions share global state and are not used in the engine-free core, and an engine's generator is not guaranteed to produce the same sequence across versions. Crits draw from the same RNG in a fixed order.
+- **Randomness:** only through `rand()` and the seeded RNG in the context, a project-owned, integer-based generator: xorshift64* (`XorShiftRng`, `sim/formulas/xor_shift_rng.gd`; docs/Sim Port.md has its test vectors). The engine's random functions share global state and are not used in the engine-free core, and an engine's generator is not guaranteed to produce the same sequence across versions. Crits draw from the same RNG in a fixed order.
 - **Previews:** tooltips run two passes, with `rand()` returning its lower and then its upper bound, so the tooltip reads "36–44 damage". This holds while the formula is monotonic in the random term, which damage variance almost always is.
 - **Breakdowns:** with `Trace` enabled, each node records its contribution; the same English text feeds tooltips and debugging and costs nothing when disabled.
 

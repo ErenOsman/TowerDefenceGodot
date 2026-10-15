@@ -95,9 +95,9 @@ class _Reference:
 		_page("Codex")
 		var codex: CodexAsset = catalog.codex
 		if codex == null:
-			_line("The game catalog has no Codex yet: run `Tools > Content > Fill Codex`.")
+			_line("The game catalog has no Codex yet: add the Codex entry `Settings/Codex` to `data/content/Codex.json` (by hand or in the wiki Content Editor) and set the catalog's `codex`.")
 			return _done()
-		_line("What the in-game Codex lists, in its order (`Data/Settings/Codex`; `Tools > Content > Fill Codex` adds new content). Players see an entry once they have discovered it: towers when owned, enemies and statuses when met in a level; tips always. See [Codex — Design](../Design/Codex%20—%20Design.md).")
+		_line("What the in-game Codex lists, in its order (`Settings/Codex` in `data/content/Codex.json`; add new content to its lists there, by hand or in the wiki Content Editor). Players see an entry once they have discovered it: towers when owned, enemies and statuses when met in a level; tips always. See [Codex — Design](../design/Codex%20—%20Design.md).")
 		var names := []
 		for t in codex.towers:
 			if t != null: names.append("%s (%d energy)" % [t.get_display_name(), t.cost])

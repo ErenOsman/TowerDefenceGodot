@@ -134,7 +134,7 @@ Built (2026-10-14/15): the content and rules (`MissionAsset`, the catalog's `gui
 mission drops) and the screens: the Signpost to the Guild, the Guild (`game/ui/screens/guild.gd`, a 3D hall from the
 Blender kit's `art/guild/`, built like the Camp by `TdStationWorld`), the mission board and detail
 (`mission_board.gd`, `mission_detail.gd`), the lobby's mission picker with "Done today", the auto-leave message. How
-it is wired: docs/GODOT-NOTES.md ("Missions & Guild rules", "Missions & Guild screens"). Still open: a mission card
+it is wired: docs/Implementation Notes.md ("Missions & Guild rules", "Missions & Guild screens"). Still open: a mission card
 look (missions have no icon art yet; their `icon` is empty).
 
 History: the plan first had the content, rules and screens built in the Unity repo (`UI_Guild` and its stations)

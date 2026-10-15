@@ -1,6 +1,6 @@
 # Multiplayer — Design
 
-Status: **co-op designed** (2026-10-07; lobby and room rules updated 2026-10-13) **and built in the Godot build** (Godot pass 2026-10-15): the rules in `sim/level/coop_session.gd` (`CoopSession`, `CoopLevelSession`), the relay client and protocol in `game/net/` (`RelayClient`, `NetProtocol`, `CoopLevels`; the protocol in docs/COOP-PROTOCOL.md), the lobby and room in `game/ui/screens/coop/`; how they differ from this doc is in docs/GODOT-NOTES.md ("Co-op rules"). The first mode is live co-op, reached from the Camp's Multiplayer station (since 2026-10-14 from the Guild), with the relay on Eren's Oracle server. The rest of this doc keeps the other modes for later.
+Status: **co-op designed** (2026-10-07; lobby and room rules updated 2026-10-13) **and built in the Godot build** (Godot pass 2026-10-15): the rules in `sim/level/coop_session.gd` (`CoopSession`, `CoopLevelSession`), the relay client and protocol in `game/net/` (`RelayClient`, `NetProtocol`, `CoopLevels`; the protocol in docs/Co-op Protocol.md), the lobby and room in `game/ui/screens/coop/`; how they differ from this doc is in docs/Implementation Notes.md ("Co-op rules"). The first mode is live co-op, reached from the Camp's Multiplayer station (since 2026-10-14 from the Guild), with the relay on Eren's Oracle server. The rest of this doc keeps the other modes for later.
 
 ## What the game already gives us
 

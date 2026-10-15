@@ -1,6 +1,6 @@
 class_name CoopMode
 extends RefCounted
-## The co-op side of a level (Multiplayer — Design, co-op; docs/COOP-PROTOCOL.md): owned by LevelController when a
+## The co-op side of a level (Multiplayer — Design, co-op; docs/Co-op Protocol.md): owned by LevelController when a
 ## match was launched from the lobby, absent in single player (which stays untouched). It builds the CoopSession from
 ## the relay's match_start (level, seed, players' hands in slot order, energy rule from data/coop.json), and keeps
 ## both clients in lockstep: your commands are sent to the relay and applied only when the relay echoes them, so

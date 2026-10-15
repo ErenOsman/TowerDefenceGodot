@@ -1,6 +1,6 @@
 class_name NetProtocol
 extends RefCounted
-## The co-op relay protocol v1 (docs/COOP-PROTOCOL.md): JSON text frames, one object per frame, field `t` = type.
+## The co-op relay protocol v1 (docs/Co-op Protocol.md): JSON text frames, one object per frame, field `t` = type.
 ## Encoding/decoding, the client → relay message builders, limits, the player-facing text for relay errors, and
 ## pure helpers the screens share (room diff → chat notes, swear filter used by the fake relay). No Node, no I/O.
 

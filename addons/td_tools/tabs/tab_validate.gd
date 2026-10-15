@@ -2,7 +2,7 @@
 extends "res://addons/td_tools/tabs/tab_base.gd"
 ## Validate All (ContentCheck, Tools > Combat > Validate All) on data/content: one row per finding. A click selects
 ## the JSON file in the FileSystem dock and copies the entry key (shown with its line); a double click opens the
-## file outside. data/content is the source of truth (docs/CONTENT.md); there is nothing to sync from.
+## file outside. data/content is the source of truth (docs/Content.md); there is nothing to sync from.
 
 var tree: Tree
 var errors_only: CheckBox

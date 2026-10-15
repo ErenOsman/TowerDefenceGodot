@@ -125,7 +125,7 @@ All six phases are built:
 | Welcome scene | `game/ui/screens/welcome.gd` (name field, at most `PlayerProfile.MaxNameLength` characters, Start, Skip tutorial); the main menu greets by name |
 | Tutorial level | `fixedHand` on levels, the tutorial level entry, starting towers 1 and the reward/skip giving the 2nd, win → main menu, not in level select |
 | Sequences | `SequenceAsset` and speakers, `SequenceRun` (`sim/presentation/sequence_run.gd`: lines, waits, game events, skip), the level's `intro`; tested without a scene (`tests/test_sequence.gd`) |
-| Speech bubble | `TdTextBubble`, pointing at units, tiles and UI, letter-by-letter text, Skip; the level plays its intro. Lines that point at nothing speak through the dialogue box (`TdDialogueBox` in `HudSequence`), like the guided tutorial (docs/GODOT-NOTES.md "Tutorial lines") |
+| Speech bubble | `TdTextBubble`, pointing at units, tiles and UI, letter-by-letter text, Skip; the level plays its intro. Lines that point at nothing speak through the dialogue box (`TdDialogueBox` in `HudSequence`), like the guided tutorial (docs/Implementation Notes.md "Tutorial lines") |
 | The tutorial sequence | Replaced by the guided tutorial (`game/level/guided_tutorial.gd`); Skip tutorial in the pause menu |
 
 History: in the Unity plan phases 1, 3 and 4 were code and data, and 2, 5 and 6 needed scene and prefab work (a scene builder in the Tools menu, prefab-based UI).

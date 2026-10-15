@@ -1,5 +1,5 @@
 extends TestCase
-## The key convention of data/content (docs/CONTENT.md "Keys"): every key starts with its type's singular key folder
+## The key convention of data/content (docs/Content.md "Keys"): every key starts with its type's singular key folder
 ## (ContentFiles.KEY_FOLDERS: Status/Burn in Statuses.json), no plural folder is left anywhere in a key
 ## (Unit/Enemy/…, not Units/Enemies/…), and every reference to a content key resolves. The frozen oracle snapshot
 ## (~/godot/oracle/content, Unity's plural keys) still loads, since the loader assumes no prefix.

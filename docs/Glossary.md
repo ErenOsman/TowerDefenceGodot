@@ -1,6 +1,6 @@
 # Glossary
 
-The game's terms, one or two lines each. Code names are in `code`; the design doc that covers a term in depth is linked. Design docs are in [`design/`](design/). Godot pass 2026-10-15: code names are the Godot build's (GDScript, per PORT.md).
+The game's terms, one or two lines each. Code names are in `code`; the design doc that covers a term in depth is linked. Design docs are in [`design/`](design/). Godot pass 2026-10-15: code names are the Godot build's (GDScript, per docs/Sim Port.md).
 
 ## Playing a level
 

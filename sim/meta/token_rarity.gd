@@ -1,7 +1,7 @@
 class_name TokenRarity
 extends RefCounted
 ## How rare a token kind is (Workshop — Design, TokenAsset.rarity): a hint for the token header's order and the
-## drop tables; no rule reads it. Godot-first (the Unity repo has no Workshop content yet; see GODOT-NOTES.md).
+## drop tables; no rule reads it. Godot-first (the Unity repo has no Workshop content yet; see docs/Implementation Notes.md).
 
 const Common := 0
 const Rare := 1

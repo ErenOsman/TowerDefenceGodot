@@ -11,7 +11,7 @@ const OUT := "/home/ubuntu/godot/golden-gd"
 const REF := "/home/ubuntu/godot/golden"
 ## The content golden plays: the frozen snapshot of the Unity content the C# oracle recorded with (plural keys,
 ## the 12×5 tutorial, no Workshop/missions), NOT res://data/content, which has moved on. A sim-vs-C# regression
-## check on fixed content; see ~/godot/oracle/README.md and docs/GODOT-NOTES.md "Golden".
+## check on fixed content; see ~/godot/oracle/README.md and docs/Implementation Notes.md "Golden".
 const CONTENT := "/home/ubuntu/godot/oracle/content"
 
 func _initialize() -> void:

@@ -38,7 +38,7 @@ Child effects created by Apply also go to the front, behind the reactions of the
 
 ## Core concepts
 
-The following terms are used throughout this document. The code blocks marked *design sketch* are the Oct 1 design, written in C# before anything was built; the built classes are their GDScript ports under `sim/combat/` (`effect.gd`, `ability_instance.gd`, `resolver.gd`, `targeting.gd`…; names per PORT.md: `Effect.IsValid` → `is_valid`, `UnitId` → `int`). The definitions shown in GDScript are the built classes.
+The following terms are used throughout this document. The code blocks marked *design sketch* are the Oct 1 design, written in C# before anything was built; the built classes are their GDScript ports under `sim/combat/` (`effect.gd`, `ability_instance.gd`, `resolver.gd`, `targeting.gd`…; names per docs/Sim Port.md: `Effect.IsValid` → `is_valid`, `UnitId` → `int`). The definitions shown in GDScript are the built classes.
 
 | Term | Meaning |
 | --- | --- |
@@ -406,7 +406,7 @@ Previews and AI run the same resolver on a copy of the state, so their predictio
 
 ## Authoring
 
-Abilities, statuses and reactions are content entries in `data/content/Abilities.json`, `Statuses.json` and `Reactions.json` (keys `Ability/<Name>`, `Status/<Name>`, `Reaction/<Name>`; docs/CONTENT.md). Their structure is a list of steps, while numbers and conditions remain text, as the Formula System specifies. `AssetConverter` turns each entry into the simulation's def (`AbilityDef`, `StatusDef`, `ReactionDef`) and each step item into its `Step` class.
+Abilities, statuses and reactions are content entries in `data/content/Abilities.json`, `Statuses.json` and `Reactions.json` (keys `Ability/<Name>`, `Status/<Name>`, `Reaction/<Name>`; docs/Content.md). Their structure is a list of steps, while numbers and conditions remain text, as the Formula System specifies. `AssetConverter` turns each entry into the simulation's def (`AbilityDef`, `StatusDef`, `ReactionDef`) and each step item into its `Step` class.
 
 An ability entry (abridged from `Ability/Example/Fireball`):
 

@@ -1,4 +1,4 @@
-# Porting the game to Godot 4.7 — conventions (READ FIRST)
+# Sim Port — porting the simulation to Godot 4.7: conventions (READ FIRST)
 
 The Unity game at `~/game` (read-only!) is being rebuilt in this Godot project. Its rules live in an
 engine-free C# simulation (`~/game/Assets/Scripts/Game/`), which we port **1:1 to GDScript**: same

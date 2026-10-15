@@ -12,7 +12,7 @@ Where everything in the project lives, and the rules that keep it there. The goa
 4. **Generated files say so, and are never edited by hand.** The game reference (`docs/reference/`), `data/coop.json` and the UI theme come from tools; change the tool or the source, then regenerate.
 5. **Demo content is kept apart.** Examples the game does not use live under `Example/` key folders (`Ability/Example/…`, `Unit/Other/Example/…`, `Presentation/Example/…`) and levels outside the catalog under `Level/Other/`, so the real content reads clean.
 6. **The simulation is engine-free.** Everything under `sim/` is plain GDScript (`RefCounted`, no Node, no Resource, no `load`; only `sim/data/` uses `JSON` and `FileAccess`), so the rules run headless, in tests and in tools.
-7. **One global class per file.** Every `class_name X` lives in its own `.gd` whose name is the snake_case of `X` (`LevelSession` → `sim/level/level_session.gd`, `TdHealthBar` → `game/ui/elements/td_health_bar.gd`). A name Godot already owns gets a `Td` prefix (PORT.md "Renames").
+7. **One global class per file.** Every `class_name X` lives in its own `.gd` whose name is the snake_case of `X` (`LevelSession` → `sim/level/level_session.gd`, `TdHealthBar` → `game/ui/elements/td_health_bar.gd`). A name Godot already owns gets a `Td` prefix (docs/Sim Port.md "Renames").
 8. **Moves keep uids.** Scripts and scenes are referenced by `uid://` as well as by path: move a file in the editor's FileSystem dock, or together with its `.uid` / `.import` file, never alone. Content is found by key and type, never by file position.
 
 ## The tree
@@ -20,7 +20,6 @@ Where everything in the project lives, and the rules that keep it there. The goa
 ```text
 td/                           ~/godot/projects/td; open project.godot with Godot 4.7 (Standard, no .NET)
 ├── README.md                 what the project is, how to open it, where to start
-├── PORT.md                   how the simulation was ported from the C# and checked; naming rules and renames
 ├── project.godot             project settings, autoloads, the TD Tools plugin
 ├── export_presets.cfg        export presets (Web)
 ├── web_shell.html            the web export's HTML shell
@@ -29,7 +28,7 @@ td/                           ~/godot/projects/td; open project.godot with Godot
 ├── art/                      imported art: models, map kit, hub kits, icons, portraits, UI sprites, fonts, music
 ├── data/                     game data: content/*.json (the source of truth), tutorial.json, coop.json
 ├── sim/                      the simulation: the game rules, engine-free
-├── game/                     the game layer: app shell, board, level, UI, net, dev tools (+ ARCH.md, boot.tscn)
+├── game/                     the game layer: app shell, board, level, UI, net, dev tools (+ boot.tscn)
 ├── addons/td_tools/          the TD Tools editor dock
 ├── tests/                    the test suite (test_*.gd)
 ├── tools/                    command-line tool scripts: check, golden, soak, content check, generators, renders
@@ -43,7 +42,8 @@ docs/
 ├── reference/                GENERATED: towers, enemies, statuses, levels, Codex with their numbers
 ├── notes/                    handoff notes, kit READMEs, UI notes (notes/ui: Unity-era notes kept for the kit)
 ├── archive/                  Unity-era docs kept as history (changelog, C# combat notes, the old index)
-└── Decisions.md, Glossary.md, AI Usage.md, CONTENT.md, GODOT-NOTES.md, COOP-PROTOCOL.md
+└── Decisions.md, Glossary.md, AI Usage.md, Content.md, Implementation Notes.md, Co-op Protocol.md,
+                              Sim Port.md (the simulation port's conventions), Architecture.md (the game layer)
 ```
 
 ## Code: `sim/`, `game/`, `addons/`
@@ -69,18 +69,18 @@ The folder decides what a script may touch.
 | `game/dev/` | Developer tools shared by the game and the editor dock: the F1 dev panel (`TdDevPanel`), `SaveTools`, `BalanceSheet`, `GameReference`, `DevLog` | Godot |
 | `addons/td_tools/` | The TD Tools editor dock (`tabs/`: Save, Validate, Balance, Playtest, Reference); editor-only | Godot editor |
 
-Rules: nothing under `sim/` touches the engine (PORT.md "Style"); `game/` reads the `ViewFrame` (`Director.shown`) for what is drawn, never `GameState`, and changes the game only through `LevelController` commands (game/ARCH.md); editor-only code lives only in `addons/`, and logic the dock and the running game share goes in `game/dev/`; one global class per file (Principle 7). The game layer's architecture is in `game/ARCH.md`, the simulation's conventions in `PORT.md`.
+Rules: nothing under `sim/` touches the engine (docs/Sim Port.md "Style"); `game/` reads the `ViewFrame` (`Director.shown`) for what is drawn, never `GameState`, and changes the game only through `LevelController` commands (docs/Architecture.md); editor-only code lives only in `addons/`, and logic the dock and the running game share goes in `game/dev/`; one global class per file (Principle 7). The game layer's architecture is in `docs/Architecture.md`, the simulation's conventions in `docs/Sim Port.md`.
 
 ## Content: `data/`
 
 | Path | Holds |
 | --- | --- |
-| `data/content/<Type>.json` | All game content, one file per asset type (`Abilities.json`, `Units.json`, `Levels.json`, `Catalog.json`…): `{"type": "<AssetType>", "assets": {"<key>": {entry}, …}}`. The source of truth (docs/CONTENT.md) |
+| `data/content/<Type>.json` | All game content, one file per asset type (`Abilities.json`, `Units.json`, `Levels.json`, `Catalog.json`…): `{"type": "<AssetType>", "assets": {"<key>": {entry}, …}}`. The source of truth (docs/Content.md) |
 | `data/content/PresentationTimings.json`, `UITheme.json` | Presentation settings read by the game layer (not content assets) |
 | `data/tutorial.json` | The guided tutorial's lines and steps (Guided Tutorial — Design) |
 | `data/coop.json` | GENERATED from the co-op missions by `tools/coop_json.gd`; the relay reads it |
 
-- **Keys mirror a folder layout, one key folder per type, singular** (`Status/Burn`, `Ability/Shoot`, `Unit/Tower/Archer`, `Unit/Enemy/Rabbit`, `Level/Chapter 1/1 First Steps`); the file names stay plural. Units by role: `Unit/Tower/`, `Unit/Tower/Form/`, `Unit/Enemy/`, `Unit/Base/`, `Unit/Other/` (hazards, objects); levels by chapter (`Level/Chapter 1/`), `Level/Other/` for levels outside the catalog. The table is `ContentFiles.KEY_FOLDERS`; `tests/test_content_keys.gd` enforces it (docs/CONTENT.md "Keys").
+- **Keys mirror a folder layout, one key folder per type, singular** (`Status/Burn`, `Ability/Shoot`, `Unit/Tower/Archer`, `Unit/Enemy/Rabbit`, `Level/Chapter 1/1 First Steps`); the file names stay plural. Units by role: `Unit/Tower/`, `Unit/Tower/Form/`, `Unit/Enemy/`, `Unit/Base/`, `Unit/Other/` (hazards, objects); levels by chapter (`Level/Chapter 1/`), `Level/Other/` for levels outside the catalog. The table is `ContentFiles.KEY_FOLDERS`; `tests/test_content_keys.gd` enforces it (docs/Content.md "Keys").
 - **Below the type folder, organise freely**: a free-form sub-folder (`Level/Chapter 1/`, `Unit/Other/`) is fine; grouping sub-folders are singular (`Example/`, not `Examples/`).
 - **Content is found by type and key**, never by file position (`ContentLibrary.get_asset(key)`, `find("TypeName", name)`, `all_of("TypeName")`); references between entries are keys; saves, rules and co-op use the entries' `id` fields, never keys.
 - **The game catalog** (`Catalog.json`, the one `GameCatalogAsset`) is the root of what the game uses: anything it reaches (directly or through other entries) is game content; anything else is an example.
@@ -126,7 +126,7 @@ Builds live outside the repo and never go into git:
 
 ## Server tooling (the daemons)
 
-Two resident Godot processes keep the project loaded on the server, so `./check.sh`, `./test.sh` and the render scripts skip the start-up, the import and the lock: `td-godot-headless` (check and test in-process: `tools/daemon.gd` + `tests/suite_runner.gd`) and `td-godot-render` (tool-script renders in a child Godot on an Xvfb display). Client `~/godot/jobs.sh`, full doc `~/godot/README-daemon.md`, notes in docs/GODOT-NOTES.md "Godot daemons". `TD_NO_DAEMON=1 ./test.sh` forces a direct run. They live outside the repo (`~/godot/daemon/`, systemd user units); only `tools/daemon.gd` is in the tree.
+Two resident Godot processes keep the project loaded on the server, so `./check.sh`, `./test.sh` and the render scripts skip the start-up, the import and the lock: `td-godot-headless` (check and test in-process: `tools/daemon.gd` + `tests/suite_runner.gd`) and `td-godot-render` (tool-script renders in a child Godot on an Xvfb display). Client `~/godot/jobs.sh`, full doc `~/godot/README-daemon.md`, notes in docs/Implementation Notes.md "Godot daemons". `TD_NO_DAEMON=1 ./test.sh` forces a direct run. They live outside the repo (`~/godot/daemon/`, systemd user units); only `tools/daemon.gd` is in the tree.
 
 ## Naming
 
@@ -148,7 +148,7 @@ Two resident Godot processes keep the project loaded on the server, so `./check.
 
 ## Decisions
 
-The 2026-10-05 rows settled the Unity project's tree (see History); they are kept as written. The content key rules (singular key folders, plural files) are in docs/Decisions.md (2026-10-15) and docs/CONTENT.md.
+The 2026-10-05 rows settled the Unity project's tree (see History); they are kept as written. The content key rules (singular key folders, plural files) are in docs/Decisions.md (2026-10-15) and docs/Content.md.
 
 | Date | Question | Decision |
 | --- | --- | --- |

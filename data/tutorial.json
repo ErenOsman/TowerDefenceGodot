@@ -1,5 +1,5 @@
 {
- "_about": "The guided tutorial (game/level/guided_tutorial.gd). Lines in the Sequences.json line format plus two tutorial-only fields: allow (the one thing the player may do while the line shows) and advance (what moves it on). Grammar: docs/GODOT-NOTES.md, Tutorial lines.",
+ "_about": "The guided tutorial (game/level/guided_tutorial.gd). Lines in the Sequences.json line format plus two tutorial-only fields: allow (the one thing the player may do while the line shows) and advance (what moves it on). Grammar: docs/Implementation Notes.md, Tutorial lines.",
  "lines": [
   {
    "speaker": "Princess",

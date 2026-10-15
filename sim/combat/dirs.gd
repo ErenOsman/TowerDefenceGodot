@@ -1,6 +1,6 @@
 class_name Dirs
 extends RefCounted
-## Helpers for the C# Pos and Dir structs, which are both Vector2i in the port (see PORT.md Types).
+## Helpers for the C# Pos and Dir structs, which are both Vector2i in the port (see docs/Sim Port.md Types).
 ## A Dir is a unit step: each component is -1, 0 or 1. Dir.dx/dy → .x/.y; Dir.Reverse → Dirs.reverse(d) (= -d);
 ## Pos + Dir → p + d. Pos.Manhattan/Chebyshev and the C# ToString forms are here too.
 

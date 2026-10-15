@@ -2,7 +2,7 @@ class_name GameState
 extends RefCounted
 ## All combat data: entities, statuses, grid, turn order and RNG state. Plain data, cloneable,
 ## no engine calls. Definitions (abilities, statuses, rules) are shared read-only.
-## C# Get(id) is get_entity(id): Object.get() cannot be overridden (see PORT.md Renames).
+## C# Get(id) is get_entity(id): Object.get() cannot be overridden (see docs/Sim Port.md Renames).
 
 var rules: GameRules
 var grid: BattleGrid

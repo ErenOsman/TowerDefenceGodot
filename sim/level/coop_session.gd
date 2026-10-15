@@ -14,7 +14,7 @@ extends RefCounted
 ##
 ## The presentation reads `session` (a LevelSession) exactly as in single player: same state, log,
 ## Director and ViewFrames. Clients stay in step by applying the relay's commands in relay order
-## (apply_command) and comparing checksum() after each round (docs/COOP-PROTOCOL.md).
+## (apply_command) and comparing checksum() after each round (docs/Co-op Protocol.md).
 
 const MaxPlayers := 6
 const DefaultHandCap := 3
@@ -296,7 +296,7 @@ func cast(player: String, unit: Entity, ability: AbilityDef, aim: Aim) -> bool:
 
 # ------------------------------------------------------------------ protocol commands
 
-## Applies one protocol command (docs/COOP-PROTOCOL.md, CoopSession.Command) for a player:
+## Applies one protocol command (docs/Co-op Protocol.md, CoopSession.Command) for a player:
 ##   {"k": "place", "tower": String, "x": int, "y": int}   {"k": "sell", "tower": String}
 ##   {"k": "cast", "unit": int, "ability": String (AbilityDef.name), "x": int, "y": int, "path": [[x, y], …] (walks; optional)}
 ##   {"k": "pass"}   {"k": "end_turn"}

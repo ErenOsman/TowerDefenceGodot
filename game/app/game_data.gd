@@ -19,7 +19,7 @@ var tokens: TokenWallet = TokenWallet.new()
 ## "missions"; a save without it has no mission history.
 var missions: MissionProgress = MissionProgress.new()
 
-## The saved hand layouts (Godot-only: the Unity GameData has no such field; see docs/GODOT-NOTES.md): LAYOUTS fixed
+## The saved hand layouts (Godot-only: the Unity GameData has no such field; see docs/Implementation Notes.md): LAYOUTS fixed
 ## entries {"name": String, "hand": [owned tower ids]}; the active one is the hand levels use (towers.hand mirrors it).
 ## Saved under "handLayouts" as {"active": n, "layouts": [{"name", "hand"}, …]}.
 const LAYOUTS := 4

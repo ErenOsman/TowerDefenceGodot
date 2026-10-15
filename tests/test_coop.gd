@@ -1,5 +1,5 @@
 extends TestCase
-## Co-op rules (Multiplayer — Design, co-op; docs/COOP-PROTOCOL.md): CoopSession turns, pass/end turn, energy
+## Co-op rules (Multiplayer — Design, co-op; docs/Co-op Protocol.md): CoopSession turns, pass/end turn, energy
 ## pools, control, protocol commands, leavers, determinism and checksums; CoopList; ContentHash. Godot-only.
 
 const BaseTile := Vector2i(6, 1)

@@ -1,5 +1,5 @@
 extends TestCase
-## The co-op relay protocol (docs/COOP-PROTOCOL.md): frames, builders, limits, room helpers, error text, checksum.
+## The co-op relay protocol (docs/Co-op Protocol.md): frames, builders, limits, room helpers, error text, checksum.
 
 func test_encode_decode_round_trip() -> void:
 	var m := NetProtocol.create("Akşam savunması", "chapter1-1", 4, "gizli", ["archer", "mage"])

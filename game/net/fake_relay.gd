@@ -1,6 +1,6 @@
 class_name FakeRelay
 extends RefCounted
-## An in-process co-op relay speaking protocol v1 (docs/COOP-PROTOCOL.md), for tests and the lobby's "Offline
+## An in-process co-op relay speaking protocol v1 (docs/Co-op Protocol.md), for tests and the lobby's "Offline
 ## practice" (one local player). Same rules as the real relay: hello first, lobby of rooms on the same version,
 ## create/join/leave/ready/set_level/set_count/kick/chat/set_hand/start, cmd stamped with the player and broadcast to
 ## the room in arrival order (sender included), checksums compared per round (mismatch → desync), leaving during a

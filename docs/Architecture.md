@@ -1,4 +1,4 @@
-# Game layer architecture (res://game) — read with PORT.md
+# Architecture — the game layer (res://game); read with docs/Sim Port.md
 
 Godot pass 2026-10-15: the Godot build is the game; the Unity repo (`~/game`) is frozen and read-only.
 
@@ -15,7 +15,7 @@ the look comes from the UI/UX docs.
 - `docs/design/Level Select — Design.md`, `Camp & Chapters — Design.md`, `Codex — Design.md`, `Guided Tutorial — Design.md`,
   `Tutorial, First Run & Sequences — Design.md`, `Tiles — Design.md` (step 5: the look of tiles), `Workshop — Design.md`,
   `Missions & Guild — Design.md`, `Multiplayer — Design.md`, `Game Overview — Design.md`.
-- `docs/GODOT-NOTES.md` — where the Godot build differs, and how its newer parts (co-op, Workshop, Guild, tutorial) are wired.
+- `docs/Implementation Notes.md` — where the Godot build differs, and how its newer parts (co-op, Workshop, Guild, tutorial) are wired.
 - `~/game/Assets/.agents/CONTEXT.md` — how the frozen Unity game was wired (scene flow, save, keys, sequences, codex, camp, rewards).
 - `~/uiux/UI-RULES.md` — short rules copy; `~/uiux/kit-b/README.md`, `slices.json`, `manifest_ui.json`, `tokens.json` — the sprite kit.
 

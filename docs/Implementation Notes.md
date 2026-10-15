@@ -1,9 +1,9 @@
-# Godot notes — how the Godot build does things
+# Implementation Notes — how the Godot build does things
 
 The Godot build is the game (since 2026-10-15; docs/Decisions.md "Project and tools"). This file says how it does
 things: engine notes, tools, data that lives outside the content files, and the places where it deliberately differs
 from the frozen Unity build (kept as the archive and the C# oracle). The design docs (`docs/design/`), the decision log
-and the glossary are the live copies (docs/README.md); content is `data/content/*.json` (docs/CONTENT.md). After a
+and the glossary are the live copies (docs/README.md); content is `data/content/*.json` (docs/Content.md). After a
 content change: `./test.sh`, `tools/soak.gd`, regenerate the reference (`tools/game_reference.gd`); golden
 (`tools/golden.gd`) plays a frozen snapshot and checks the simulation only (see "Golden").
 
@@ -93,7 +93,7 @@ grammar of `data/tutorial.json`). This section only says how the Godot build doe
 ## Workshop & Missions content
 The Workshop's starter content (Workshop — Design § Starter content) and the missions (Missions & Guild — Design §
 Starter content; placeholder names and numbers) are ordinary content in `data/content/` (they lived in an overlay,
-`data/content-godot/`, until 2026-10-15; merged when the Godot build became the game — see docs/CONTENT.md):
+`data/content-godot/`, until 2026-10-15; merged when the Godot build became the game — see docs/Content.md):
 
 | File | What |
 | --- | --- |
@@ -122,7 +122,7 @@ How it is read:
   fewestTowersLost, lastPlayed}], "plays": [{id, day, count}], "tired": [{tower, day, count}]}` (`count` is the doc's
   shape plus a count so `towerEnergyPerDay` > 1 works; a missing count reads 1); `profile.guildSeen`. Old saves load
   with no forms, no tokens, no mission history.
-- Co-op hand entries are `"<type id>@<form id>"` for formed towers (docs/COOP-PROTOCOL.md).
+- Co-op hand entries are `"<type id>@<form id>"` for formed towers (docs/Co-op Protocol.md).
 - **Duplication:** `data/coop.json` is no longer the co-op list (`CoopLevels.list()` = `CoopList.from_missions`, the
   Coop/Any missions) but stays for the relay, which reads `sharedPool` from it by level id. It is generated from the
   missions (`godot --headless --path . -s tools/coop_json.gd`); `test_missions` fails while they disagree.
@@ -155,9 +155,11 @@ How it is read:
   of: in front of the prop, beside it (the freer side first), above it — free = no prop's projected bounds (floors /
   halls excluded) and no other button (`TdStationWorld.place_buttons`). The Guild's Camp station is the bottom-left
   "← Camp" button plus the Guild Door as a hotspot (`TdStationWorld.hotspot`).
-- Camp: the Signpost station "Missions" in layout slot 4 (prop `Signpost`, the map-kit piece: `GameApp.camp_scene`
-  falls back to `res://art/tiles/<name>.fbx`); locked (lock icon, "Opens after Chapter 2", the Disabled look, like
-  the locked Workshop) until `GameApp.guild_unlocked()`, then opens the Guild with a gold "New" until the first visit.
+- Camp: the Signpost prop itself opens the Guild; it has no station button (user decision 2026-10-14). It stands in
+  layout slot 4 (the "Missions" slot; prop `Signpost`, the map-kit piece: `GameApp.camp_scene` falls back to
+  `res://art/tiles/<name>.fbx`) and is a hotspot like the Guild Door (`TdStationWorld.hotspot`): hover glow and the
+  tooltip "Guild · missions and co-op", a click opens the Guild, a gold "New" floats by it until the first visit.
+  Before `GameApp.guild_unlocked()` it is dimmed, its tooltip says "Opens after Chapter 2" and a click shakes it.
   The Camp's Multiplayer opens the lobby until the Guild opens, then becomes the shortcut "Multiplayer → Guild" (the
   Guild with its lobby open, after the welcome card) and disappears once `profile.guildSeen` (UI review 2026-10-14).
 - Mission board = `MissionBoardScreen` (`mission_board.gd`, a TdPopup over the Guild; `MissionBoard` is the rules

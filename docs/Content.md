@@ -7,7 +7,7 @@ missions, the short tutorial map, the catalog's Guild fields, the rules' tower e
 the same day and deleted. `tools/sync_from_unity.sh` was deleted as well.
 
 The one exception is the golden check: `~/godot/oracle/content/` is a frozen snapshot of the Unity content that the C#
-oracle and `tools/golden.gd` play (see docs/GODOT-NOTES.md, "Golden"). Never edit it to follow game changes.
+oracle and `tools/golden.gd` play (see docs/Implementation Notes.md, "Golden"). Never edit it to follow game changes.
 
 ## The files
 

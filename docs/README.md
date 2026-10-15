@@ -14,12 +14,12 @@ this repo instead.
 | What a word means | [Glossary](Glossary.md) |
 | Why something is the way it is | [Decision log](Decisions.md) (newest first, by area) |
 | How a system works, what is decided | the design docs below |
-| How the Godot build does things (engine notes, tools, golden, daemons, content check) | [GODOT-NOTES](GODOT-NOTES.md) |
-| The content files, the key convention and who writes them | [CONTENT](CONTENT.md) |
-| The co-op relay protocol | [COOP-PROTOCOL](COOP-PROTOCOL.md) |
+| How the Godot build does things (engine notes, tools, golden, daemons, content check) | [Implementation Notes](Implementation%20Notes.md) |
+| The content files, the key convention and who writes them | [Content](Content.md) |
+| The co-op relay protocol | [Co-op Protocol](Co-op%20Protocol.md) |
 | What was made by AI, and what to replace first | [AI Usage](AI%20Usage.md) |
 | What towers, enemies, statuses and levels exist, with their numbers | [Game reference](reference/README.md) (generated, see below) |
-| The simulation port and its verification | [../PORT.md](../PORT.md), the game layer [../game/ARCH.md](../game/ARCH.md) |
+| The simulation port and its verification | [Sim Port](Sim%20Port.md), the game layer [Architecture](Architecture.md) |
 
 ### Design docs (`design/`)
 

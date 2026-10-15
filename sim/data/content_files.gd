@@ -1,7 +1,7 @@
 class_name ContentFiles
 extends RefCounted
 ## Where content lives: the JSON file of each asset type (res://data/content/<Type>.json, the source of truth; see
-## docs/CONTENT.md) and the asset path an entry key names.
+## docs/Content.md) and the asset path an entry key names.
 
 ## The content JSON folder (C# Folder = "Content", relative to the frozen Unity project).
 const Folder := "res://data/content"
@@ -17,7 +17,7 @@ const FILES := {
 	"FormAsset": "Forms", "TokenAsset": "Tokens", "MissionAsset": "Missions",
 }
 
-## The key folder of each asset type (docs/CONTENT.md "Keys"): every key of the type starts with "<folder>/"; folder
+## The key folder of each asset type (docs/Content.md "Keys"): every key of the type starts with "<folder>/"; folder
 ## names are singular, file names plural (Status/Burn in Statuses.json). The catalog's key is its own fixed path, the
 ## rules and the Codex live under Settings/. Only the game content is held to it: the loader takes any key (golden
 ## plays the frozen Unity snapshot, whose keys are plural).

@@ -1,7 +1,7 @@
 class_name EvalContext
 extends RefCounted
 ## Everything readable during one resolution.
-## `self` is a GDScript keyword, so the C# field Self is `self_` here (see PORT.md Renames).
+## `self` is a GDScript keyword, so the C# field Self is `self_` here (see docs/Sim Port.md Renames).
 ## C# evaluation throws InvalidOperationException when a subject, variable or the RNG is missing; here the
 ## node records the message in `error` (first one wins) and evaluates to 0. Callers that caught it in C#
 ## (AbilityText.TryEval) check `ctx.error != ""` after evaluating.

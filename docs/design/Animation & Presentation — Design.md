@@ -152,7 +152,7 @@ The timing logic is engine-free and tested; only drawing and input live in Godot
 | `game/ui/hud/` | HUD panels: top bar, hand, inspector and action bar with range previews, info popups, end screen |
 | `tests/` | `test_director.gd` (grouping, beats, Skip, Instant with fake presenters) |
 
-The game layer reads the `ViewFrame` and calls `LevelController` commands; `sim/` never references `game/` (game/ARCH.md).
+The game layer reads the `ViewFrame` and calls `LevelController` commands; `sim/` never references `game/` (docs/Architecture.md).
 
 ## Settled after review
 
