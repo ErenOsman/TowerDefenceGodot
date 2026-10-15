@@ -19,7 +19,7 @@ build does it (box, rings, docking, render proof) is in `docs/Implementation Not
 | Topic | Decision | Source |
 | --- | --- | --- |
 | Shape | **Short** and **hand-holding ("babysit")**: one small step per line, the player does each thing once, nothing is only told | Eren 2026-10-14 |
-| What it teaches | Place a tower, **towers move** (Tower Walk), shoot, cooldowns (End turn to recover), quick cast, End turn; then "finish the wave" freely | Eren 2026-10-14 |
+| What it teaches | Place a tower, **towers move** (Tower Walk), shoot, cooldowns (End turn to recover), End turn; then "finish the wave" freely | Eren 2026-10-14 |
 | Gating | At every step **only the allowed action is possible**: its target is ringed (tile, button, tray piece, unit); anything else is refused with a shake and a specific refusal line | Eren 2026-10-14 |
 | Presentation | The Princess speaks through the **visual-novel dialogue box** at the bottom of the screen: name plate, letter-by-letter text, "Click or press Space", "Tutorial · n/N" with the bobbing next mark, **Skip** top-right. Not bubbles on the board. The Princess stands on the board as a 3D prop while she speaks | Eren 2026-10-14 (box) · 2026-10-08 (dialogue style, the Princess speaks, the Base does not) |
 | Box placement | Bottom by default; when the ringed target would be under the box, the box **docks at the top** for that step. The box never covers the target | agents |
@@ -62,12 +62,11 @@ tutorial level `Level/Tutorial/Tutorial` ("First Defence") is shortened (Eren 20
 | 11 | Now click the slime. | the slime | the shot is cast |
 | 12 | Nice shot. | nothing | 1.5 s |
 | 13 | Shoot needs a turn to recover. Click End turn. | End turn | the round ended |
-| 14 | A Runner is fast. {click:QuickCast} Shoot to fire at the nearest target. | quick cast Shoot (or a normal Shoot); End turn while nothing is in range | a cast |
-| 15 | That's it: place, move, shoot, end turn. Finish the wave. | everything | the level is won |
+| 14 | That's it: place, move, shoot, end turn. Finish the wave. | everything | the level is won |
 
 Refusals (shake + the refusal replaces the box's note line for about 2 s, in the warning colour): "Not now: click the
 slime first." style, naming what the step needs (the Archer piece, the lit tile, your Archer, Tower Walk, Shoot, End
-turn, the slime, "Shift-click Shoot"); "Finish this step first." on talk lines. End turn shows dimmed on steps that do
+turn, the slime, ; "Finish this step first." on talk lines. End turn shows dimmed on steps that do
 not allow it. The hint line under the action bar is hidden while the tutorial speaks.
 
 ## The box during a step

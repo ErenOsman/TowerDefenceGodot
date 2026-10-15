@@ -208,25 +208,6 @@
   },
   {
    "speaker": "Princess",
-   "text": "A Runner is fast. {click:QuickCast} Shoot to fire at the nearest target.",
-   "pointAt": "UI",
-   "tileX": 0,
-   "tileY": 0,
-   "uiElement": "@ability:attack",
-   "continueOn": "Event",
-   "seconds": 3,
-   "waitFor": "QuickCast",
-   "pausesPlay": false,
-   "allow": [
-    "quick_cast",
-    "ability:Shoot",
-    "aim_unit:enemy",
-    "end_turn:until_castable"
-   ],
-   "advance": "event:cast"
-  },
-  {
-   "speaker": "Princess",
    "text": "That's it: place, move, shoot, end turn. Finish the wave.",
    "pointAt": "Nothing",
    "tileX": 0,

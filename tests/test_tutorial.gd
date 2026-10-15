@@ -67,7 +67,7 @@ func _to_walk(place := Vector2i(5, 1)) -> void:
 	_idle()
 
 func test_the_lines_load_in_order_with_their_rules() -> void:
-	assert_eq(g.steps.size(), 15)
+	assert_eq(g.steps.size(), 14)
 	assert_eq(g.index, 0)
 	assert_eq(g.run.current.text, "Slimes come down this road…")
 	assert_eq(g.steps[1].line.text, "…to your castle. Keep it safe.")
@@ -76,7 +76,7 @@ func test_the_lines_load_in_order_with_their_rules() -> void:
 	assert_true(c.sequence == g.run, "the HUD reads the tutorial's run")
 	assert_true(c.sequence.blocking, "a talk line pauses play")
 	for st in g.steps: assert_true(st.line.text.length() <= 90, "short line: " + st.line.text)
-	assert_eq(g.steps[13].line.text, "A Runner is fast. Shift-click Shoot to fire at the nearest target.", "{click:QuickCast} filled")
+	assert_eq(g.steps[13].line.text, "That's it: place, move, shoot, end turn. Finish the wave.", "the last step is free play (the quick-cast step was removed, Eren 2026-10-15)")
 
 func test_the_whole_tutorial_step_by_step() -> void:
 	# road, then castle: talk only — every action is refused
@@ -229,24 +229,8 @@ func test_the_whole_tutorial_step_by_step() -> void:
 	c.end_round()
 	_idle()
 
-	# quick cast Shoot; End turn only while nothing is in range
-	assert_eq(g.index, 13)
-	turns = 0
-	while g.index == 13 and turns < 30:
-		c.select(archer.id)
-		if c.input_allowed("end_turn"):
-			assert_false(g.can_hit(_ability("Shoot"), false) and c.session.can_cast(archer, _ability("Shoot")), "End turn only while Shoot has nothing to hit")
-			assert_eq(g.display_line().ui_element, "EndTurnButton")
-			c.end_round()
-		else:
-			r = g.refusals
-			c.end_round()
-			_refused(r, 13, "End turn while the Runner can be shot", "Not now: Shift-click Shoot first.")
-			assert_eq(g.display_line().ui_element, "@ability:attack")
-			c.quick_cast(_ability("Shoot"))
-		_idle()
-		turns += 1
-	assert_eq(g.index, 14, "a quick cast moved it on")
+	# the quick-cast step was removed (Eren 2026-10-15): End turn goes straight to free play
+	assert_eq(g.index, 13, "free play after the cooldown step")
 
 	# free play until the win
 	assert_false(g.hides_card)
