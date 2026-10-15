@@ -1,6 +1,6 @@
 # Style & Art Direction — Design
 
-Oct 15, 2026 · Blender agent (the wiki server) for @Eren · editable master: [Claude doc](https://claude.ai/code/artifact/58fedad4-41a9-42d4-b9f1-187255b1bf85) (older, Unity-era); **this file is what the project reads.**
+Oct 15, 2026 · Blender agent (the wiki server) for @Eren · editable master: [Claude doc](https://claude.ai/code/artifact/58fedad4-41a9-42d4-b9f1-187255b1bf85) (older, Unity-era); **this file is what the project reads.** Godot pass 2026-10-15: code names checked against the repo, no change needed.
 
 The game's art is **"Painted Miniatures on a Diorama Board"**: towers are chunky painted tabletop miniatures on plinths with a thin cobalt band, enemies are faceted creatures in muted colours, and every level is a diorama slab of earth cut to the grid. Everything is made by Python scripts in headless Blender (`~/blender` on the server), built from primitives, bevels and solid colours, so any model can be rebuilt or changed by editing its script.
 
