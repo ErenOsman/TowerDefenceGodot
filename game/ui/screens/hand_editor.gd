@@ -86,10 +86,12 @@ func _build() -> void:
 	_layouts.size_flags_horizontal = SIZE_EXPAND_FILL
 	_layouts.size_flags_vertical = SIZE_SHRINK_BEGIN
 	top.add_child(_layouts)
+	_layouts.visible = GameApp.camp_unlocked() # no layouts until Chapter 1 is cleared (Eren 2026-10-15)
 	var body := TdMenu.hbox(16)
 	body.size_flags_vertical = SIZE_EXPAND_FILL
 	col.add_child(body)
 	collection = TdCollection.new()
+	collection.filters_shown = GameApp.camp_unlocked() # no filters until Chapter 1 is cleared (Eren 2026-10-15)
 	collection.extras = true
 	collection.hand_keys = true
 	collection.columns = GRID_COLUMNS

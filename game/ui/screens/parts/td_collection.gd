@@ -21,6 +21,8 @@ var tile_size := TdTowerTile.SIZE
 var gap := 10
 ## Width of the filter column.
 var filter_width := 248.0
+## Whether the filter well is shown at all (hidden until Chapter 1 is cleared, Eren 2026-10-15: new players see only the grid).
+var filters_shown := true
 
 var entries: Array = []
 var hand: Array = []
@@ -60,7 +62,9 @@ func _init() -> void:
 func build() -> void:
 	if _built: return
 	_built = true
-	add_child(_build_filters())
+	var filters_well := _build_filters()
+	filters_well.visible = filters_shown
+	add_child(filters_well)
 	add_child(_build_grid())
 
 func _build_filters() -> Control:
