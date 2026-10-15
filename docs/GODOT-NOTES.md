@@ -237,3 +237,30 @@ skip the start-up, the import and the lock. Full doc: `/home/ubuntu/godot/README
   a result looks stale. A new `class_name` restarts the daemon by itself (that job runs in a child process); a dead
   daemon falls back on its own.
 - Don't wrap daemon calls in `flock …/.td.lock` (the daemon serialises its own jobs). The lock stays for direct runs and exports.
+- Job `content_check <candidate dir> [level id]` (and `content_check --schema`): see "Content check" below.
+
+## Content check (tools/content_check.gd, 2026-10-15)
+Offline check of candidate content entries, used by the wiki's Content Editor (/admin; `~/wiki/README.md`).
+- Run: `/home/ubuntu/godot/jobs.sh content_check <dir> [level id]` (daemon job, in-process, ~1–3 s) or directly
+  `godot --headless --path . -s tools/content_check.gd -- <dir> [level id]`. `<dir>` holds `<Type>.json` files in the
+  content format (`{"type": "StatusAsset", "assets": {key: entry}}`, file names as in data/content). Output: ONE JSON
+  object between `CONTENT_CHECK_BEGIN` / `CONTENT_CHECK_END`: `{ok, errors[], warnings[], probes[{entry, kind, lines[],
+  tables[{title, columns, rows}], warnings[]}], candidates[], baseline{}, elapsed_ms}`; exit 0 ok / 1 errors / 2 usage.
+  `--schema` prints `ContentSerializer.SCHEMA` + enum names + stats + tags between `CONTENT_SCHEMA_BEGIN/_END`
+  (key order kept: `JSON.stringify(…, "", false)`).
+- Loader: `ContentLibrary.load(folder, overlay, extra)` / `load_game(extra)` merge a further folder over the overlay
+  (same key → the candidate wins; its Extras.json patches last). Nothing is written. Test: `tests/test_content_candidate.gd`.
+- Logic: `tools/content_check_runner.gd` (no class_name, so the daemon needs no restart). Errors = load problems,
+  ContentCheck (Validate All) findings and conversion failures that the content without the candidates does not have
+  (those are only counted in `baseline`), unknown fields; warnings = new warnings, missing fields, probe warnings.
+  Probes (real game rules, seed 12345): Status → 1 / typical (what the content's abilities apply) / max stacks on a
+  100-HP and a shielded dummy, 12 rounds of start_round/start_turn/end_turn/end_round, per-turn tables ("never expires",
+  "ticks for 0", "kills a 100-HP unit in N turns", "stacks never reach 0 with the remove rule", "does nothing by
+  itself"); Ability → cast by a dummy with the stats of a unit that has it at foes at 1/2/5 tiles, a group of three
+  and allies, per-target HP/shield/status table, valid aims, "no valid aim", "cost unaffordable", cooldown recovery;
+  Unit → stats, abilities, 3 rounds on a 9 × 3 probe road (enemy side walks the road, tower side casts at road
+  dummies); Tower → cost vs other towers and vs the energy of the levels from where it unlocks, then its entity;
+  Level (or the optional level id) → the golden policy of tools/golden.gd for 40 rounds (same result as golden: e.g.
+  chapter1-2 Lost round 13, 579 events), round table, script errors; Reaction / Passive → granted to a dummy, its
+  trigger fired once; Form / Token / Mission → "found in", unlock/drop sanity (a mission also plays its level).
+

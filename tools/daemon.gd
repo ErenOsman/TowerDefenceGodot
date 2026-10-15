@@ -16,6 +16,9 @@ extends SceneTree
 ##   test [--filter name]  → the test suite in-process (tests/suite_runner.gd), output and exit code like tests/run.gd
 ##   shot [godot args…] <tools/x.gd> [--] [args…]   (render daemon only) → the tool script in a child Godot process
 ##   reload [--all]        → reload changed scripts (--all: every script)
+##   content_check <candidate dir> [level id] | --schema
+##                         → tools/content_check_runner.gd in-process (pure data + sim, no autoloads or nodes): one JSON
+##                           object between CONTENT_CHECK_BEGIN / CONTENT_CHECK_END (see tools/content_check.gd)
 ##   restart               → finish and quit(0); systemd starts a fresh process
 ## Before every job but ping/restart: art/ and data/ assets without a .import (or newer than it) → a child
 ## `godot --headless --import` under /home/ubuntu/godot/.td.lock (this process cannot import).
@@ -221,12 +224,13 @@ func _run_job(job: Dictionary, running_path: String) -> void:
 		"test": code = await _job_test(args)
 		"shot": code = await _job_shot(job)
 		"reload": code = _job_reload(args)
+		"content_check": code = await _job_content_check(args)
 		"restart":
 			print("restarting (systemd starts a new process in ~5 s)")
 			_restart_reason = "restart job"
 			code = 0
 		_:
-			print("unknown command '%s' (ping, check, test, shot, reload, restart)" % cmd)
+			print("unknown command '%s' (ping, check, test, shot, reload, content_check, restart)" % cmd)
 			code = 2
 	var text := cap.stop()
 	_write_done(id, text, code)
@@ -345,6 +349,27 @@ func _job_reload(args: Array) -> int:
 	print("reloaded %d scripts%s, %d broken" % [sync.reloaded, " (all)" if args.has("--all") else "", _broken().size()])
 	if sync.restart: print("class_name set changed: restarting after this job")
 	return 0
+
+## content_check <candidate dir> [level id] | --schema: the content check in-process. It only loads content into fresh
+## objects and runs headless fights (no autoloads, nodes or statics of the game layer), so the library reload is safe here.
+func _job_content_check(args: Array) -> int:
+	_world_teardown()
+	var sync := _sync_scripts()
+	_world_setup(true)
+	if sync.restart:
+		var a := ["--headless", "--path", proj, "-s", "tools/content_check.gd", "--"]
+		a.append_array(args)
+		return await _child_godot(a, 300, true)
+	var runner = load("res://tools/content_check_runner.gd")
+	if runner == null or not runner.can_instantiate():
+		print("content_check: tools/content_check_runner.gd does not compile")
+		return 1
+	var r: Dictionary = runner.run(args)
+	var marker: String = r.get("marker", "CONTENT_CHECK")
+	print(marker + "_BEGIN")
+	print(JSON.stringify(r.json, "", false))
+	print(marker + "_END")
+	return int(r.code)
 
 # ------------------------------------------------------------------ child processes
 

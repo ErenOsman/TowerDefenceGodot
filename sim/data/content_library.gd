@@ -47,14 +47,18 @@ var rules: GameRulesAsset:
 ## adds its entries to that file's (an entry with the same key replaces the folder's), other files are added, and
 ## the overlay's Extras.json patches fields of assets already loaded (apply_extras: the catalog's guildUnlock and
 ## missions, the rules' towerEnergyPerDay).
-static func load(folder: String = ContentFiles.Folder, overlay: String = "") -> ContentLibrary:
+## extra: a further overlay folder merged on top of the overlay the same way (same key → extra's entry wins; its
+## Extras.json patches after the overlay's). Used by the content check (tools/content_check.gd) to try candidate
+## entries without writing them into the game's folders.
+static func load(folder: String = ContentFiles.Folder, overlay: String = "", extra: String = "") -> ContentLibrary:
 	var library := ContentLibrary.new()
 	var texts := _texts_of(folder)
-	var extras = null
-	if overlay != "" and DirAccess.dir_exists_absolute(overlay):
-		for pair in _texts_of(overlay):
+	var extras := []
+	for layer in [overlay, extra]:
+		if layer == "" or not DirAccess.dir_exists_absolute(layer): continue
+		for pair in _texts_of(layer):
 			if pair[0] == ContentFiles.ExtrasFile:
-				extras = pair
+				extras.append(pair)
 				continue
 			var merged := false
 			for i in texts.size():
@@ -65,15 +69,16 @@ static func load(folder: String = ContentFiles.Folder, overlay: String = "") -> 
 			if not merged: texts.append(pair)
 		texts.sort_custom(func(a, b): return a[0] < b[0])
 	library.add(texts)
-	if extras != null:
+	for pair in extras:
 		var json := JSON.new()
-		if json.parse(extras[1]) != OK: library.problems.append("%s: line %d: %s" % [extras[0], json.get_error_line(), json.get_error_message()])
-		else: library.apply_extras(json.data, extras[0])
+		if json.parse(pair[1]) != OK: library.problems.append("%s: line %d: %s" % [pair[0], json.get_error_line(), json.get_error_message()])
+		else: library.apply_extras(json.data, pair[0])
 	return library
 
-## The game's content: res://data/content with the Godot-only overlay (res://data/content-godot) merged over it.
-static func load_game() -> ContentLibrary:
-	return ContentLibrary.load(ContentFiles.Folder, ContentFiles.OverlayFolder)
+## The game's content: res://data/content with the Godot-only overlay (res://data/content-godot) merged over it,
+## and an optional extra overlay folder (candidate entries) merged over both.
+static func load_game(extra: String = "") -> ContentLibrary:
+	return ContentLibrary.load(ContentFiles.Folder, ContentFiles.OverlayFolder, extra)
 
 static func _texts_of(folder: String) -> Array:
 	var names := []
