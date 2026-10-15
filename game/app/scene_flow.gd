@@ -9,6 +9,9 @@ extends Node
 ## scene's music (AudioMgr.play_scene_music).
 ## Scenes: res://game/boot.tscn, res://game/screens/<name>.tscn (also accepted under res://game/ui/screens/),
 ## res://game/level/level.tscn; a missing one falls back to res://game/app/placeholders/<name>.tscn.
+## slide(id, dir) is the other transition (Camp ⇄ Guild, Eren 2026-10-15): both screens visible, the old one moving
+## out to the left while the new one comes in from the right (dir -1: the other way), SLIDE_TIME, ease out, input
+## blocked; the new scene can wait for slide_finished (is_sliding) before showing its own cards. go() stays a cut.
 
 signal loading_started
 ## 0..1 while a scene loads.
@@ -17,6 +20,15 @@ signal loading_progress(progress: float)
 signal loading_completed
 ## The loading screen was closed over the opened level.
 signal loading_screen_closed
+## A slide() ended (the new scene sits in place, the old one is freed).
+signal slide_finished
+
+## The slide's length (seconds, unscaled time).
+const SLIDE_TIME := 0.45
+## True while a slide() runs (input is blocked; set together with is_loading).
+var is_sliding: bool = false
+## Renders: >= 0 holds a running slide at that progress (0..1, before the ease) until set back to -1.
+var slide_hold: float = -1.0
 
 enum { Boot, MainMenu, Game, LevelSelect, Welcome, Camp, Loading, Guild }
 const NAMES := ["Boot", "MainMenu", "Game", "LevelSelect", "Welcome", "Camp", "Loading", "Guild"]
@@ -74,6 +86,68 @@ func go(id: int, direct := false) -> void:
 		id = Loading
 	_change(id)
 
+## Changes scene with a horizontal slide: the current scene moves out to the left while the new one comes in from
+## the right (dir 1), or the other way (dir -1). Both are full-rect Controls; no black frame (the new scene is built
+## off-screen first); every input event is swallowed until the slide ends. Not for Game (that goes through Loading).
+func slide(id: int, dir := 1) -> void:
+	if is_loading:
+		push_warning("[SceneFlow] already loading a scene; ignoring slide(%s)" % name_of(id))
+		return
+	var path := path_of(id)
+	if path == "" or id == Game:
+		go(id)
+		return
+	is_loading = true
+	is_sliding = true
+	loading_started.emit()
+	await get_tree().process_frame # let the caller finish (a button's signal)
+	var packed := await _load(path)
+	var tree := get_tree()
+	var old := tree.current_scene
+	if packed == null:
+		push_error("[SceneFlow] could not load %s" % path)
+		is_loading = false
+		is_sliding = false
+		return
+	var w: float = tree.root.get_visible_rect().size.x
+	var inst := packed.instantiate()
+	current = id
+	if inst is Control: (inst as Control).position.x = w * dir # built off-screen
+	tree.root.add_child(inst)
+	tree.current_scene = inst
+	restore_game_speed()
+	_after_open(id)
+	loading_completed.emit()
+	if inst is Control: (inst as Control).position.x = w * dir # its _ready may have reset its offsets
+	await tree.process_frame # its first frame drawn off-screen (the 3D view sizes itself)
+	var t := 0.0
+	var last := Time.get_ticks_usec()
+	while t < 1.0:
+		var now := Time.get_ticks_usec()
+		if slide_hold >= 0.0: t = clampf(slide_hold, 0.0, 0.999)
+		else: t = minf(1.0, t + (now - last) / 1e6 / SLIDE_TIME)
+		last = now
+		_slide_pose(old, inst, w, dir, t)
+		if t >= 1.0: break
+		await tree.process_frame
+	if old != null and is_instance_valid(old):
+		old.get_parent().remove_child(old)
+		old.queue_free()
+	if is_instance_valid(inst) and inst is Control: (inst as Control).set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	is_loading = false
+	is_sliding = false
+	slide_finished.emit()
+
+## Places both scenes at slide progress t (0..1; ease out cubic).
+static func _slide_pose(old: Node, new: Node, w: float, dir: int, t: float) -> void:
+	var e := 1.0 - pow(1.0 - t, 3.0)
+	if old is Control and is_instance_valid(old): (old as Control).position.x = -w * dir * e
+	if new is Control and is_instance_valid(new): (new as Control).position.x = w * dir * (1.0 - e)
+
+## Every input event is swallowed while a slide runs (autoloads' _input comes before the GUI and _unhandled_input).
+func _input(event: InputEvent) -> void:
+	if is_sliding: get_viewport().set_input_as_handled()
+
 ## Reloads the current scene (a level restarts directly, like Unity).
 func restart_current() -> void:
 	if is_loading:
@@ -94,7 +168,8 @@ func restore_game_speed() -> void:
 	get_tree().paused = false
 	var sd := get_node_or_null("/root/SaveData")
 	var speed: float = sd.settings.game_speed if sd != null else 1.0
-	Engine.time_scale = speed if speed > 0.0 else 1.0
+	# the game speed only runs levels; menus, the Camp and the Guild always run at 1 (Eren 2026-10-15)
+	Engine.time_scale = speed if speed > 0.0 and current == Level else 1.0
 
 # ---------------------------------------------------------------- loading screen holds
 
