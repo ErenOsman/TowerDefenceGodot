@@ -1,10 +1,9 @@
 # Guided Tutorial — Design
 
-Written 2026-10-14 by the Godot agent from Eren's decisions (2026-10-13/14). This file is the source of truth for
-the tutorial level's guidance; "Tutorial, First Run & Sequences — Design" keeps the first-run flow and the sequence
-system (level intros, entrance lines), but its tutorial part is replaced by this doc. The current step list and the
-data grammar are mirrored in the Godot repo's `docs/GODOT-NOTES.md` ("Tutorial lines") until the content moves into
-the Unity repo.
+Written 2026-10-14 by the Godot agent from Eren's decisions (2026-10-13/14). Godot pass 2026-10-15. This file is the
+source of truth for the tutorial level's guidance; "Tutorial, First Run & Sequences — Design" keeps the first-run flow
+and the sequence system (level intros, entrance lines), but its tutorial part is replaced by this doc. How the Godot
+build does it (box, rings, docking, render proof) is in `docs/GODOT-NOTES.md` ("Tutorial lines").
 
 ## Why a new tutorial
 
@@ -89,7 +88,7 @@ not allow it. The hint line under the action bar is hidden while the tutorial sp
 
 ## Data
 
-`data/tutorial.json` (Godot repo; later Unity content): `_about` + `lines`, each line in the Sequences.json line
+`data/tutorial.json`: `_about` + `lines`, each line in the Sequences.json line
 format (`speaker`, `text`, `pointAt`, `tileX`/`tileY`, `uiElement`, `continueOn`, `seconds`, `waitFor`,
 `pausesPlay`) plus:
 
@@ -101,14 +100,16 @@ format (`speaker`, `text`, `pointAt`, `tileX`/`tileY`, `uiElement`, `continueOn`
   ability line has nothing selected).
 - Text macros: `{player}`, `{key:EndRound}`, `{click:QuickCast}` as in Sequences.
 
-## Build plan
+## In the Godot build
 
-1. **Godot (built 2026-10-14, rebuilt onto the dialogue box the same day):** `game/level/guided_tutorial.gd` owned by
-   the LevelController, `TdDialogueBox` for the speech, rings/pointers on targets, refusals, Skip; `tools/tutorial_shot.gd`
-   renders the steps.
-2. **Unity:** the same gating in the tutorial level (a `GuidedTutorial` over `SequenceRun`), the lines moved into
-   `Data/Sequences/Tutorial Steps` with the `allow` / `advance` fields on the line asset; the dialogue box already exists
-   (`UI_DialogueBox`).
+Built 2026-10-14 (rebuilt onto the dialogue box the same day): `game/level/guided_tutorial.gd` (`GuidedTutorial`, owned
+by the `LevelController`; it replaces `Sequence/Tutorial Steps` on the tutorial level while `data/tutorial.json`
+exists), `TdDialogueBox` in `HudSequence` for the speech, rings and pointers on targets, refusals, Skip;
+`tests/test_tutorial.gd` plays it; `tools/tutorial_shot.gd` renders the steps.
+
+History: the plan had a second step for the Unity build (the same gating as a `GuidedTutorial` over `SequenceRun`, the
+lines moved into `Data/Sequences/Tutorial Steps` with `allow` / `advance` on the line asset, speaking through
+`UI_DialogueBox`); it was never built, and the Unity build stopped on 2026-10-15.
 
 ## Open questions
 
