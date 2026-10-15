@@ -11,7 +11,7 @@ var id: String = ""
 var display_name: String = ""
 ## Player-facing text for tooltips.
 var description: String = ""
-## A Unity sprite path ("Assets/Art/Icons/…png#Name"; "" for none); the presentation layer maps it.
+## An art path ("art/icons/Abilities/<Name>.png"; "" for none); the presentation layer maps it (ArtPaths).
 var icon: String = ""
 
 ## C# Id: the id, else the asset name.

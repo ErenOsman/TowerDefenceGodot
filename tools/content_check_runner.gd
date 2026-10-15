@@ -168,6 +168,30 @@ func _duplicates(by_file: Dictionary) -> void:
 				if (num is float or num is int) and int(num) > 0 and (oe.get("number") is float or oe.get("number") is int) and int(oe.get("number")) == int(num):
 					warnings.append("%s: number %d is also %s%s" % [key, int(num), other, src])
 
+## Art fields ("art" in the schema, nested objects too) that name nothing: a WARNING per path (docs/Content.md
+## "Art paths": "art/…" files must exist in the project, "vfx/<name>" must be a VFX kit effect; the old Unity form
+## is mapped with ArtPaths first).
+func _check_art(entry, type_name: String, key: String) -> void:
+	if not (entry is Dictionary): return
+	var fields := ContentSerializer.fields_of(type_name)
+	for field in entry:
+		var desc: String = str(fields.get(field, ""))
+		var v = entry[field]
+		if desc == "art":
+			if v is String and v.strip_edges() != "" and not _art_exists(v):
+				warnings.append("%s: art path '%s' (%s) does not exist" % [key, v, field])
+		elif desc.begins_with("obj:") or desc.begins_with("list:obj:"):
+			var sub := desc.get_slice("obj:", 1)
+			for item in (v if v is Array else [v]): _check_art(item, sub, key)
+		elif desc == "poly" and v is Dictionary:
+			_check_art(v, str(v.get("$type", "")), key)
+
+static func _art_exists(v: String) -> bool:
+	var s := v.strip_edges()
+	if s.begins_with("vfx/") or s.begins_with("Assets/Art/VFX/Kit/"): return VfxKit.has_effect(VfxKit.effect_name(s))
+	var p := ArtPaths.resolve(s)
+	return p != "" and (ResourceLoader.exists(p) or FileAccess.file_exists(p))
+
 func _check(dir: String, level_id: String) -> void:
 	# the candidate files
 	var by_file := {}
@@ -202,6 +226,7 @@ func _check(dir: String, level_id: String) -> void:
 			for field in fields:
 				if not root["assets"][key].has(field):
 					warnings.append("%s: field '%s' is missing (it gets the default)" % [key, field])
+			_check_art(root["assets"][key], type_name, key)
 	if candidates.is_empty() and errors.is_empty():
 		warnings.append("no candidate entries in %s: the content alone was loaded and validated" % dir)
 	if not errors.is_empty() and by_file.is_empty(): return

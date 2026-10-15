@@ -720,7 +720,7 @@
       "id": "example-level",
       "displayName": "Example Level",
       "description": "Two waves of slimes walk one path to your base. Place archers beside the path.",
-      "icon": "Assets/Art/UI/coin.png#coin",
+      "icon": "art/ui/coin.png",
       "music": null,
       "terrain": [".........", "...#.....", ".........", "....~....", "........."],
       "terrainKeys": [

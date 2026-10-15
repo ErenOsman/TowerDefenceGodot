@@ -127,14 +127,16 @@ func lobby_scene() -> int:
 
 # ---------------------------------------------------------------- art
 
-## The Texture2D of an icon reference ("Assets/Art/Icons/…/X.png#X"), or of any UI sprite path; null when missing.
+## The Texture2D of an icon reference ("art/icons/<Group>/<Name>.png", or the old "Assets/Art/Icons/…/X.png#X"), or
+## of any UI sprite path; null when missing.
 func icon_texture(unity_path: String) -> Texture2D:
 	return _texture(ArtPaths.sprite(unity_path))
 
-## A KitB sprite ("Assets/Art/UI/KitB/<group>/<name>.png", or "<group>/<name>" for short); null when missing.
+## A KitB sprite ("art/ui/KitB/<group>/<name>.png", the old "Assets/Art/UI/KitB/…", or "<group>/<name>" for
+## short); null when missing.
 func kit_texture(unity_path: String) -> Texture2D:
 	var p := unity_path
-	if not p.begins_with("Assets/") and not p.begins_with("res://"):
+	if not p.begins_with("Assets/") and not p.begins_with("res://") and not p.begins_with("art/"):
 		p = "res://art/ui/KitB/" + p + ("" if p.ends_with(".png") else ".png")
 	return _texture(ArtPaths.kit(p))
 
@@ -142,8 +144,9 @@ func kit_texture(unity_path: String) -> Texture2D:
 func portrait_texture(unit_name: String) -> Texture2D:
 	return _texture(ArtPaths.portrait(unit_name))
 
-## The model scene of a view path ("Assets/Art/Models/<Unit>/<Unit> Blender.prefab" → res://art/models/<Unit>.fbx,
-## map kit pieces → res://art/tiles/); null when missing. Instantiate the result.
+## The model scene of a view path ("art/models/<Unit>.fbx", "art/tiles/<Piece>.fbx", or the old
+## "Assets/Art/Models/<Unit>/<Unit> Blender.prefab" → res://art/models/<Unit>.fbx, map kit pieces → res://art/tiles/);
+## null when missing. Instantiate the result.
 func model_scene(view_path: String) -> PackedScene:
 	return _scene(ArtPaths.model(view_path))
 

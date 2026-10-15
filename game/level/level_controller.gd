@@ -446,7 +446,7 @@ func _setup() -> void:
 ## (toward the camera), 1.6× a unit, facing the camera, Idle playing — popping in and out with her lines, and is
 ## freed when the sequence ends. It is a board node (never attached to the camera). Off: princess_on_board = false.
 @export var princess_on_board: bool = true
-const PRINCESS_VIEW := "Assets/Art/Models/Princess/Princess Blender.prefab"
+const PRINCESS_VIEW := "art/models/Princess.fbx"
 const PRINCESS_SCALE := 1.6
 var _princess: Node3D = null
 var _princess_rig: EntityRig = null

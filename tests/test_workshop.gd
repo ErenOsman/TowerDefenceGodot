@@ -49,7 +49,7 @@ func test_workshop_content_loads_without_problems() -> void:
 
 func test_workshop_forms_paths_and_art() -> void:
 	for f in lib().all_of("FormAsset"):
-		assert_eq(f.badge, "Assets/Art/UI/KitB/forms/%s.png" % f.get_id())
+		assert_eq(f.badge, "art/ui/KitB/forms/%s.png" % f.get_id())
 		assert_true(ResourceLoader.exists(ArtPaths.kit(f.badge)), f.badge)
 		assert_eq(f.icon, f.tower.icon, "the base tower's portrait for now")
 		assert_eq(f.entity.view, f.tower.entity.view, "the base model for now")

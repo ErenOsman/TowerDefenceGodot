@@ -133,7 +133,7 @@ func _read_sprites() -> void:
 		if ResourceLoader.exists(path):
 			sprites[name] = {"path": path, "w": e["w"], "h": e["h"], "border": e["border"], "outset": e["outset"]}
 
-## "Assets/Art/UI/KitB/buttons/btn_primary_normal.png#btn_primary_normal" -> "btn_primary_normal"
+## "art/ui/KitB/buttons/btn_primary_normal.png" (or the old "Assets/Art/UI/KitB/…png#btn_primary_normal") -> "btn_primary_normal"
 static func sprite_name(ref) -> String:
 	if ref == null: return ""
 	var s := str(ref)

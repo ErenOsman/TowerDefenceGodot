@@ -1,7 +1,7 @@
 class_name ContentLibrary
 extends RefCounted
 ## The game's content loaded straight from the JSON files (res://data/content, the source of truth: docs/Content.md):
-## every entry becomes an asset object named after its key, and references between entries are linked. References to art (sprites, prefabs, sounds: keys under "Assets/")
+## every entry becomes an asset object named after its key, and references between entries are linked. References to art (sprites, models, sounds: "art/…" paths, docs/Content.md "Art paths")
 ## stay strings; the rules never read them. Feed the objects to an AssetConverter and AssetValidator.
 
 var _by_key := {}  # key → asset

@@ -6,8 +6,8 @@
       "id": "Base",
       "displayName": "Base",
       "description": "Lose it and the level is lost.",
-      "icon": "Assets/Art/Icons/Units/Base.png#Base",
-      "view": "Assets/Art/Models/Base/Base Blender.prefab",
+      "icon": "art/icons/Units/Base.png",
+      "view": "art/models/Base.fbx",
       "kind": "Object",
       "tags": ["Base"],
       "stats": [
@@ -19,7 +19,7 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Base.png#Base",
+      "miniature": "art/icons/Units/Miniatures/Base.png",
       "plateOffset": 0
     },
     "Unit/Base/Fortress": {
@@ -27,8 +27,8 @@
       "id": "fortress",
       "displayName": "Fortress",
       "description": "Your base in Chapter 2: sturdier walls for harder enemies.",
-      "icon": "Assets/Art/Icons/Units/Fortress.png#Fortress",
-      "view": "Assets/Art/Models/Fortress/Fortress Blender.prefab",
+      "icon": "art/icons/Units/Fortress.png",
+      "view": "art/models/Fortress.fbx",
       "kind": "Object",
       "tags": ["Base"],
       "stats": [
@@ -40,7 +40,7 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Fortress.png#Fortress",
+      "miniature": "art/icons/Units/Miniatures/Fortress.png",
       "plateOffset": 0
     },
     "Unit/Enemy/Bat": {
@@ -48,8 +48,8 @@
       "id": "bat",
       "displayName": "Bat",
       "description": "A flying pest: it crosses chasms on its road and bites what it reaches.",
-      "icon": "Assets/Art/Icons/Units/Bat.png#Bat",
-      "view": "Assets/Art/Models/Bat/Bat Blender.prefab",
+      "icon": "art/icons/Units/Bat.png",
+      "view": "art/models/Bat.fbx",
       "kind": "Unit",
       "tags": ["Flying"],
       "stats": [
@@ -71,8 +71,8 @@
       "id": "big-slime",
       "displayName": "Big Slime",
       "description": "A big, slow slime with 30 HP that rams the base.",
-      "icon": "Assets/Art/Icons/Units/BigSlime.png#BigSlime",
-      "view": "Assets/Art/Models/Big Slime/Big Slime Blender.prefab",
+      "icon": "art/icons/Units/BigSlime.png",
+      "view": "art/models/Big Slime.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -94,8 +94,8 @@
       "id": "Brute",
       "displayName": "Brute",
       "description": "A melee enemy. It walks to the tower furthest ahead that it can reach this turn and smashes it.",
-      "icon": "Assets/Art/Icons/Units/Brute.png#Brute",
-      "view": "Assets/Art/Models/Brute/Brute Blender.prefab",
+      "icon": "art/icons/Units/Brute.png",
+      "view": "art/models/Brute.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -117,8 +117,8 @@
       "id": "ironhide",
       "displayName": "Ironhide",
       "description": "A huge brute under a shield that refills every turn. It smashes the tower furthest ahead.",
-      "icon": "Assets/Art/Icons/Units/Ironhide.png#Ironhide",
-      "view": "Assets/Art/Models/Ironhide/Ironhide Blender.prefab",
+      "icon": "art/icons/Units/Ironhide.png",
+      "view": "art/models/Ironhide.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -140,8 +140,8 @@
       "id": "jackalope",
       "displayName": "Jackalope",
       "description": "A big horned rabbit: it hops three tiles at a time and speeds up every second turn.",
-      "icon": "Assets/Art/Icons/Units/Jackalope.png#Jackalope",
-      "view": "Assets/Art/Models/Jackalope/Jackalope Blender.prefab",
+      "icon": "art/icons/Units/Jackalope.png",
+      "view": "art/models/Jackalope.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -163,8 +163,8 @@
       "id": "rabbit",
       "displayName": "Rabbit",
       "description": "A quick hopper: it jumps over anything on its road and speeds up every second turn.",
-      "icon": "Assets/Art/Icons/Units/Rabbit.png#Rabbit",
-      "view": "Assets/Art/Models/Rabbit/Rabbit Blender.prefab",
+      "icon": "art/icons/Units/Rabbit.png",
+      "view": "art/models/Rabbit.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -186,8 +186,8 @@
       "id": "rockjaw",
       "displayName": "Rockjaw",
       "description": "A brute that eats a rock next to it at the end of each turn and gains 100 Shield.",
-      "icon": "Assets/Art/Icons/Units/Rockjaw.png#Rockjaw",
-      "view": "Assets/Art/Models/Rockjaw/Rockjaw Blender.prefab",
+      "icon": "art/icons/Units/Rockjaw.png",
+      "view": "art/models/Rockjaw.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -209,8 +209,8 @@
       "id": "runner",
       "displayName": "Runner",
       "description": "A small, fast slime: 2 tiles a turn, and it rams the base.",
-      "icon": "Assets/Art/Icons/Units/Runner.png#Runner",
-      "view": "Assets/Art/Models/Runner/Runner Blender.prefab",
+      "icon": "art/icons/Units/Runner.png",
+      "view": "art/models/Runner.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -232,8 +232,8 @@
       "id": "shield-slime",
       "displayName": "Shield Slime",
       "description": "A slime whose shield absorbs 10 damage and refills to 10 at the start of each of its turns.",
-      "icon": "Assets/Art/Icons/Units/ShieldSlime.png#ShieldSlime",
-      "view": "Assets/Art/Models/Shield Slime/Shield Slime Blender.prefab",
+      "icon": "art/icons/Units/ShieldSlime.png",
+      "view": "art/models/Shield Slime.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -255,8 +255,8 @@
       "id": "Slime",
       "displayName": "Slime",
       "description": "Slow and weak, but it rams the base.",
-      "icon": "Assets/Art/Icons/Units/Slime.png#Slime",
-      "view": "Assets/Art/Models/Slime/Slime Blender.prefab",
+      "icon": "art/icons/Units/Slime.png",
+      "view": "art/models/Slime.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -278,8 +278,8 @@
       "id": "slime-archer",
       "displayName": "Slime Archer",
       "description": "Walks along its path like the other slimes, then spits at a tower or the base up to 2 tiles away for 5.",
-      "icon": "Assets/Art/Icons/Units/SlimeArcher.png#SlimeArcher",
-      "view": "Assets/Art/Models/Slime Archer/Slime Archer Blender.prefab",
+      "icon": "art/icons/Units/SlimeArcher.png",
+      "view": "art/models/Slime Archer.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -301,8 +301,8 @@
       "id": "slime-glutton",
       "displayName": "Slime Glutton",
       "description": "The boss: when it arrives it eats every other enemy on the field, growing 20 max HP for each, then slams and crushes its way to the base.",
-      "icon": "Assets/Art/Icons/Units/SlimeGlutton.png#SlimeGlutton",
-      "view": "Assets/Art/Models/Slime Glutton/Slime Glutton Blender.prefab",
+      "icon": "art/icons/Units/SlimeGlutton.png",
+      "view": "art/models/Slime Glutton.fbx",
       "kind": "Unit",
       "tags": ["Boss"],
       "stats": [
@@ -325,8 +325,8 @@
       "id": "slime-king",
       "displayName": "Slime King",
       "description": "The boss: it walks to the towers ahead, slams everything next to it and crushes the base.",
-      "icon": "Assets/Art/Icons/Units/SlimeKing.png#SlimeKing",
-      "view": "Assets/Art/Models/Slime King/Slime King Blender.prefab",
+      "icon": "art/icons/Units/SlimeKing.png",
+      "view": "art/models/Slime King.fbx",
       "kind": "Unit",
       "tags": ["Boss"],
       "stats": [
@@ -349,8 +349,8 @@
       "id": "slime-shaman",
       "displayName": "Slime Shaman",
       "description": "Keeps the others going: it heals the most hurt enemy within 3 tiles, every other turn.",
-      "icon": "Assets/Art/Icons/Units/SlimeShaman.png#SlimeShaman",
-      "view": "Assets/Art/Models/Slime Shaman/Slime Shaman Blender.prefab",
+      "icon": "art/icons/Units/SlimeShaman.png",
+      "view": "art/models/Slime Shaman.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -372,7 +372,7 @@
       "id": "Fire Tile",
       "displayName": "Fire Tile",
       "description": "Burns whoever starts a turn on it.",
-      "icon": "Assets/Art/UI/coin.png#coin",
+      "icon": "art/ui/coin.png",
       "view": null,
       "kind": "Hazard",
       "tags": [],
@@ -389,7 +389,7 @@
       "id": "Skeleton",
       "displayName": "Skeleton",
       "description": "A summoned skeleton.",
-      "icon": "Assets/Art/Icons/Units/Skeleton.png#Skeleton",
+      "icon": "art/icons/Units/Skeleton.png",
       "view": null,
       "kind": "Unit",
       "tags": ["Undead"],
@@ -409,8 +409,8 @@
       "id": "rock",
       "displayName": "Rock",
       "description": "A rock in the way: break it, hop over it, or let a Rockjaw eat it.",
-      "icon": "Assets/Art/Icons/Units/Rock.png#Rock",
-      "view": "Assets/Art/Models/Rock/Rock Blender.prefab",
+      "icon": "art/icons/Units/Rock.png",
+      "view": "art/models/Rock.fbx",
       "kind": "Object",
       "tags": ["Rock"],
       "stats": [
@@ -428,8 +428,8 @@
       "id": "alchemist",
       "displayName": "Alchemist",
       "description": "Throws flasks of acid onto groups: the acid keeps eating them for a few turns, stacking.",
-      "icon": "Assets/Art/Icons/Units/Alchemist.png#Alchemist",
-      "view": "Assets/Art/Models/Alchemist/Alchemist Blender.prefab",
+      "icon": "art/icons/Units/Alchemist.png",
+      "view": "art/models/Alchemist.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -447,7 +447,7 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Alchemist.png#Alchemist",
+      "miniature": "art/icons/Units/Miniatures/Alchemist.png",
       "plateOffset": 0
     },
     "Unit/Tower/Archer": {
@@ -455,8 +455,8 @@
       "id": "Archer",
       "displayName": "Archer",
       "description": "Shoots enemies up to 2 tiles away.",
-      "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
-      "view": "Assets/Art/Models/Archer/Archer Blender.prefab",
+      "icon": "art/icons/Units/Archer.png",
+      "view": "art/models/Archer.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -472,7 +472,7 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Archer.png#Archer",
+      "miniature": "art/icons/Units/Miniatures/Archer.png",
       "plateOffset": 0
     },
     "Unit/Tower/Ballista": {
@@ -480,8 +480,8 @@
       "id": "ballista",
       "displayName": "Ballista",
       "description": "A siege bow: it hits hard from far away, but cannot shoot what stands next to it.",
-      "icon": "Assets/Art/Icons/Units/Ballista.png#Ballista",
-      "view": "Assets/Art/Models/Ballista/Ballista Blender.prefab",
+      "icon": "art/icons/Units/Ballista.png",
+      "view": "art/models/Ballista.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -497,7 +497,7 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Ballista.png#Ballista",
+      "miniature": "art/icons/Units/Miniatures/Ballista.png",
       "plateOffset": 0
     },
     "Unit/Tower/Cannon": {
@@ -505,8 +505,8 @@
       "id": "cannon",
       "displayName": "Cannon",
       "description": "Slow and heavy: a shell every third turn that wrecks a whole group. It cannot fire at what is next to it.",
-      "icon": "Assets/Art/Icons/Units/Cannon.png#Cannon",
-      "view": "Assets/Art/Models/Cannon/Cannon Blender.prefab",
+      "icon": "art/icons/Units/Cannon.png",
+      "view": "art/models/Cannon.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -523,7 +523,7 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Cannon.png#Cannon",
+      "miniature": "art/icons/Units/Miniatures/Cannon.png",
       "plateOffset": 0
     },
     "Unit/Tower/Drummer": {
@@ -531,8 +531,8 @@
       "id": "drummer",
       "displayName": "Drummer",
       "description": "A drummer beating a war drum: towers within 2 tiles of it hit 3 harder, and Rally speeds them up for a while.",
-      "icon": "Assets/Art/Icons/Units/Drummer.png#Drummer",
-      "view": "Assets/Art/Models/Drummer/Drummer Blender.prefab",
+      "icon": "art/icons/Units/Drummer.png",
+      "view": "art/models/Drummer.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -547,7 +547,7 @@
       "passives": ["Passive/Drum Beat"],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Drummer.png#Drummer",
+      "miniature": "art/icons/Units/Miniatures/Drummer.png",
       "plateOffset": 0
     },
     "Unit/Tower/Guardian": {
@@ -555,8 +555,8 @@
       "id": "guardian",
       "displayName": "Guardian",
       "description": "A sturdy tower that taunts enemies into hitting it instead of the others.",
-      "icon": "Assets/Art/Icons/Units/Guardian.png#Guardian",
-      "view": "Assets/Art/Models/Guardian/Guardian Blender.prefab",
+      "icon": "art/icons/Units/Guardian.png",
+      "view": "art/models/Guardian.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -572,7 +572,7 @@
       "passives": ["Passive/Counter-attack"],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Guardian.png#Guardian",
+      "miniature": "art/icons/Units/Miniatures/Guardian.png",
       "plateOffset": 0
     },
     "Unit/Tower/Mage": {
@@ -580,8 +580,8 @@
       "id": "mage",
       "displayName": "Mage",
       "description": "Slow but hits groups: Firebolt burns everything around the tile it hits.",
-      "icon": "Assets/Art/Icons/Units/Mage.png#Mage",
-      "view": "Assets/Art/Models/Mage/Mage Blender.prefab",
+      "icon": "art/icons/Units/Mage.png",
+      "view": "art/models/Mage.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -599,7 +599,7 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Mage.png#Mage",
+      "miniature": "art/icons/Units/Miniatures/Mage.png",
       "plateOffset": 0
     },
     "Unit/Tower/Priest": {
@@ -607,8 +607,8 @@
       "id": "priest",
       "displayName": "Priest",
       "description": "Keeps the others standing: Mend heals the most hurt tower.",
-      "icon": "Assets/Art/Icons/Units/Priest.png#Priest",
-      "view": "Assets/Art/Models/Priest/Priest Blender.prefab",
+      "icon": "art/icons/Units/Priest.png",
+      "view": "art/models/Priest.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -625,7 +625,7 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Priest.png#Priest",
+      "miniature": "art/icons/Units/Miniatures/Priest.png",
       "plateOffset": 0
     },
     "Unit/Tower/Wisp": {
@@ -633,8 +633,8 @@
       "id": "wisp",
       "displayName": "Wisp",
       "description": "A spirit tower: it zaps from afar and blinks across the field, over walls and roads.",
-      "icon": "Assets/Art/Icons/Units/Wisp.png#Wisp",
-      "view": "Assets/Art/Models/Wisp/Wisp Blender.prefab",
+      "icon": "art/icons/Units/Wisp.png",
+      "view": "art/models/Wisp.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -650,15 +650,15 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Wisp.png#Wisp",
+      "miniature": "art/icons/Units/Miniatures/Wisp.png",
       "plateOffset": 0
     },
     "Unit/Tower/Form/Fire Archer": {
       "id": "fire-archer",
       "displayName": "Fire Archer",
       "description": "Arrows catch fire: every hit sets the enemy burning.",
-      "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
-      "view": "Assets/Art/Models/Archer/Archer Blender.prefab",
+      "icon": "art/icons/Units/Archer.png",
+      "view": "art/models/Archer.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -674,15 +674,15 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Archer.png#Archer",
+      "miniature": "art/icons/Units/Miniatures/Archer.png",
       "plateOffset": 0
     },
     "Unit/Tower/Form/Inferno Archer": {
       "id": "inferno-archer",
       "displayName": "Inferno Archer",
       "description": "Flaming volleys: each shot burns the target and everything next to it.",
-      "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
-      "view": "Assets/Art/Models/Archer/Archer Blender.prefab",
+      "icon": "art/icons/Units/Archer.png",
+      "view": "art/models/Archer.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -698,15 +698,15 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Archer.png#Archer",
+      "miniature": "art/icons/Units/Miniatures/Archer.png",
       "plateOffset": 0
     },
     "Unit/Tower/Form/Poison Archer": {
       "id": "poison-archer",
       "displayName": "Poison Archer",
       "description": "Tipped arrows: acid keeps eating the target for three turns.",
-      "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
-      "view": "Assets/Art/Models/Archer/Archer Blender.prefab",
+      "icon": "art/icons/Units/Archer.png",
+      "view": "art/models/Archer.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -722,15 +722,15 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Archer.png#Archer",
+      "miniature": "art/icons/Units/Miniatures/Archer.png",
       "plateOffset": 0
     },
     "Unit/Tower/Form/Longbow": {
       "id": "longbow",
       "displayName": "Longbow",
       "description": "A tall bow that hits hard from far away, on slow feet.",
-      "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
-      "view": "Assets/Art/Models/Archer/Archer Blender.prefab",
+      "icon": "art/icons/Units/Archer.png",
+      "view": "art/models/Archer.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -746,15 +746,15 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Archer.png#Archer",
+      "miniature": "art/icons/Units/Miniatures/Archer.png",
       "plateOffset": 0
     },
     "Unit/Tower/Form/Bastion": {
       "id": "bastion",
       "displayName": "Bastion",
       "description": "A walking wall: heavy armour, a long taunt and a shield that pushes enemies back.",
-      "icon": "Assets/Art/Icons/Units/Guardian.png#Guardian",
-      "view": "Assets/Art/Models/Guardian/Guardian Blender.prefab",
+      "icon": "art/icons/Units/Guardian.png",
+      "view": "art/models/Guardian.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -770,15 +770,15 @@
       "passives": ["Passive/Counter-attack"],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Guardian.png#Guardian",
+      "miniature": "art/icons/Units/Miniatures/Guardian.png",
       "plateOffset": 0
     },
     "Unit/Tower/Form/Spiked Guardian": {
       "id": "spiked-guardian",
       "displayName": "Spiked Guardian",
       "description": "Spikes on the shield: whatever hits it gets hit back for 8.",
-      "icon": "Assets/Art/Icons/Units/Guardian.png#Guardian",
-      "view": "Assets/Art/Models/Guardian/Guardian Blender.prefab",
+      "icon": "art/icons/Units/Guardian.png",
+      "view": "art/models/Guardian.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -794,15 +794,15 @@
       "passives": ["Passive/Spiked Counter-attack"],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Guardian.png#Guardian",
+      "miniature": "art/icons/Units/Miniatures/Guardian.png",
       "plateOffset": 0
     },
     "Unit/Tower/Form/Pyromancer": {
       "id": "pyromancer",
       "displayName": "Pyromancer",
       "description": "Hurls big fireballs that burn everything around the tile they hit (placeholder).",
-      "icon": "Assets/Art/Icons/Units/Mage.png#Mage",
-      "view": "Assets/Art/Models/Mage/Mage Blender.prefab",
+      "icon": "art/icons/Units/Mage.png",
+      "view": "art/models/Mage.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -820,15 +820,15 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Mage.png#Mage",
+      "miniature": "art/icons/Units/Miniatures/Mage.png",
       "plateOffset": 0
     },
     "Unit/Tower/Form/Frost Mage": {
       "id": "frost-mage",
       "displayName": "Frost Mage",
       "description": "Icy bolts that push enemies back (placeholder).",
-      "icon": "Assets/Art/Icons/Units/Mage.png#Mage",
-      "view": "Assets/Art/Models/Mage/Mage Blender.prefab",
+      "icon": "art/icons/Units/Mage.png",
+      "view": "art/models/Mage.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -846,15 +846,15 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Mage.png#Mage",
+      "miniature": "art/icons/Units/Miniatures/Mage.png",
       "plateOffset": 0
     },
     "Unit/Tower/Form/Storm Mage": {
       "id": "storm-mage",
       "displayName": "Storm Mage",
       "description": "Sparks that jump between enemies (placeholder).",
-      "icon": "Assets/Art/Icons/Units/Mage.png#Mage",
-      "view": "Assets/Art/Models/Mage/Mage Blender.prefab",
+      "icon": "art/icons/Units/Mage.png",
+      "view": "art/models/Mage.fbx",
       "kind": "Unit",
       "tags": [],
       "stats": [
@@ -872,7 +872,7 @@
       "passives": [],
       "dieWithSummoner": false,
       "entrance": null,
-      "miniature": "Assets/Art/Icons/Units/Miniatures/Mage.png#Mage",
+      "miniature": "art/icons/Units/Miniatures/Mage.png",
       "plateOffset": 0
     }
   }

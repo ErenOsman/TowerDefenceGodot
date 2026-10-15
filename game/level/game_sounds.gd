@@ -29,6 +29,7 @@ static func play_clip(clip, vol: float = 1.0) -> void:
 	if clip == null or (clip is String and clip == ""): return
 	var path := str(clip)
 	if path.begins_with("Assets/"): path = "res://art/sfx/" + path.get_file().get_basename() + ".ogg"
+	elif path.begins_with("art/"): path = "res://" + path # canonical content form ("art/sfx/<clip>.ogg")
 	if clip is String and not ResourceLoader.exists(path): return
 	var frame := Engine.get_process_frames()
 	if _played_frame.get(path, -1) == frame: return

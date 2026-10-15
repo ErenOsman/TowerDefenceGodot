@@ -24,12 +24,12 @@ the look comes from the UI/UX docs.
   FBX has an AnimationPlayer with clips `<Name>|Idle`, `|Walk`, `|Attack`, `|Cast`, `|Hit`, `|Die` (last frame = corpse),
   `|Spawn`; many have a `Muzzle` node (projectile start). Projectiles (`Arrow`, `Ballista Bolt`, `Cannon Shell`, `Fire Orb`,
   `Acid Flask`, `Spit Glob`, `Wisp Spark`) have one clip. 1 unit = 1 tile, origin at the feet, model faces −Z.
-  The Unity `view` path `Assets/Art/Models/<Unit>/<Unit> Blender.prefab` maps to `res://art/models/<Unit>.fbx`.
+  The content `view` is `art/models/<Unit>.fbx` (→ `res://art/models/<Unit>.fbx`; docs/Content.md "Art paths").
 - `res://art/tiles/*.fbx` — the 30-piece map kit (`~/blender/out/tiles/README.md` has the axis/side rules): Ground A–D,
   Build Ground A/B, Road Straight/Corner/T/Cross/End, Chasm 0–4 variants, Wall pieces, Board Edge Side/Corner, Bridge, Bush, Fence, Fire Tile…
 - `res://art/camp/*.fbx` — Camp props (Campfire, Codex Lectern, Miniature Shelf…).
 - `res://art/icons/{Abilities,Passives,Statuses,Units,Units/Miniatures}/*.png` — the Unity icon PNGs. A JSON icon ref
-  `Assets/Art/Icons/Abilities/Shoot.png#Shoot` → `res://art/icons/Abilities/Shoot.png`.
+  `art/icons/Abilities/Shoot.png` → `res://art/icons/Abilities/Shoot.png` (the old Unity form still maps).
 - `res://art/ui/KitB/<group>/*.png` — the style B sprite kit (895 sprites; 9-slice borders in `game/ui/theme/kit_slices.json`,
   a copy of `~/uiux/kit-b/slices.json`; 2× the 1920×1080 reference: draw at half size). Groups: abilities, abilities_face,
   ability, attack, backgrounds, badges, bars, board, buttons, chips, cooldown, endturn, fields, forms, hand, icons(_64/_128),
@@ -65,7 +65,9 @@ All of these read the `ViewFrame` (`Director.shown`) for what is drawn, never `G
   `test_hand_editor_logic.gd`, `test_workshop_ui.gd`, `test_mission_ui.gd`).
 - **HUD pieces under `game/ui/hud/`.** The level's HUD (`Hud` and its `Hud*` parts) lives there, not in the screens.
 - **Popups:** menu windows extend `TdPopup` (`game/ui/screens/parts/td_popup.gd`: Codex, Settings, hand editor, Workshop,
-  the co-op popups…); the HUD's windows (pause, info, end screen) extend `HudPopup`.
+  the co-op popups…); the HUD's windows (pause, info, end screen) extend `HudPopup`. Every yes/no question is
+  `TdConfirm.ask(parent, title, line, confirm_text, callback, {cancel_text, danger, icon, confirm_icon})`
+  (`game/ui/elements/td_confirm.gd`, a TdPopup: works over menus and the HUD; Enter = yes, Esc / right click = no).
 
 ## Conventions
 - Scenes as `.tscn` built in code where that is simpler (`_ready()` building the tree is fine; keep `.tscn` for layout-heavy screens).

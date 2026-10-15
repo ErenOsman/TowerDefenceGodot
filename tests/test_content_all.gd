@@ -134,7 +134,7 @@ func test_sequences_and_presentations() -> void:
 	assert_true(seq.lines[0] is SequenceLine)
 	var shoot: AbilityAsset = lib().get_asset("Ability/Shoot")
 	assert_eq(shoot.presentation, lib().get_asset("Presentation/Shoot Presentation"))
-	assert_eq(shoot.icon, "Assets/Art/Icons/Abilities/Shoot.png#Shoot")
+	assert_eq(shoot.icon, "art/icons/Abilities/Shoot.png")
 
 ## The JSON written back from the loaded objects equals the file (every field is read, nothing is lost).
 func test_json_round_trips() -> void:

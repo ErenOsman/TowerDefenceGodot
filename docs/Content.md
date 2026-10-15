@@ -68,8 +68,38 @@ content check refuses a candidate key outside its folder.
 
 Ids (`"id"`) are what saves, rules and the co-op protocol use, never keys, so the rename touched no save.
 
-Art references (sprites, models, sounds) are Unity-style asset paths kept as strings (`Assets/Art/Icons/Units/Archer.png#Archer`);
-`game/` maps them to `res://art/…`. Never change a shipped id.
+Art references (sprites, models, VFX, fonts, sounds) are strings in the canonical form below ("Art paths"). Never
+change a shipped id.
+
+## Art paths
+
+Art fields (`"art"` in the schema: `icon`, `miniature`, `view`, `badge`, `projectile`, `castVfx`/`impactVfx`/`hitVfx`,
+`loopVfx`, `spawnVfx`/`deathVfx`/`collisionVfx`, `*Sound`, `music`, `image`, and UITheme's sprite and font fields) hold a
+**repo-relative path without `res://`**, so the content stays engine-neutral and readable; `null` for none.
+
+| What | Canonical form | Example |
+|---|---|---|
+| unit / prop / projectile model | `art/models/<Name>.fbx` | `art/models/Archer.fbx`, `art/models/Arrow.fbx` |
+| map-kit tile | `art/tiles/<Name>.fbx` | `art/tiles/Ground A.fbx` |
+| icon (abilities, passives, statuses, units, miniatures) | `art/icons/<Group>/<Name>.png` (no `#Sub` suffix) | `art/icons/Units/Miniatures/Archer.png` |
+| UI kit sprite (UITheme, form badges, token icons) | `art/ui/<path>.png`; the kit name is the file name | `art/ui/KitB/buttons/btn_primary_normal.png` |
+| VFX kit effect | `vfx/<Effect name>` (a name in `game/level/vfx/effects.json`, not a file) | `vfx/Hit Spark` |
+| font | `art/fonts/<file>` | `art/fonts/Nunito-Bold.ttf` |
+| music | `art/music/<file>` | `art/music/battle.mp3` |
+| sound | `art/sfx/<file>` | (none in the content yet) |
+
+Camp/Guild props stay names (`Campfire` → `art/camp/Campfire.fbx`, layout.json) and portraits are found by unit name
+(`art/portraits/<Name>.png`); neither is a content field. VFX are `vfx/<name>` because `VfxKit.effect_name` already
+takes the last path part, so the kit needs no lookup table and the string says what it is.
+
+`game/app/art_paths.gd` (ArtPaths) maps an art path to `res://`: the canonical form is `"res://" + path`. It still
+reads the old Unity form (`Assets/Art/Icons/Units/Archer.png#Archer`, `Assets/Art/Models/Archer/Archer Blender.prefab`,
+`Assets/Art/VFX/Kit/Hit Spark.prefab`, `Assets/Art/Fonts/Nunito-Bold SDF.asset`…) because the oracle's content copy
+(`~/godot/oracle/content`, used by `tools/golden.gd`) keeps Unity paths; `tests/test_app_art.gd` asserts both forms
+resolve to the same file. The one-time rewrite (2026-10-15) is `tools/content_art_paths.py` (it documents the mapping;
+`--check` lists what it would change and paths that do not exist; run it on an old draft folder to migrate it).
+The content check (`tools/content_check.gd`) warns (not an error) when a candidate's art path names no file / effect.
+The Unity port maps these strings to its own assets (Addressables / a path table); they are not Unity asset paths.
 
 ## Layout
 

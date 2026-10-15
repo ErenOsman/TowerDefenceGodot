@@ -4,8 +4,8 @@ extends RefCounted
 ## CPUParticles3D (GL Compatibility; no GPU particles): one emitter per layer, textured billboards of the kit's
 ## paper cut-out sprites, colour and size over life from the spec's gradient and grow curve. Bursts free
 ## themselves; loops (status, trails) are returned for the caller to parent. Effects run on scaled time like the
-## game (CPUParticles3D follows Engine.time_scale). Content names effects by Unity prefab path
-## ("Assets/Art/VFX/Kit/Hit Spark.prefab"); effect_name() maps that to "Hit Spark". What is not approximated:
+## game (CPUParticles3D follows Engine.time_scale). Content names effects as "vfx/<name>"
+## ("vfx/Hit Spark"; the old Unity "Assets/Art/VFX/Kit/Hit Spark.prefab" too); effect_name() maps either to "Hit Spark". What is not approximated:
 ## noise (turbulence), stretched billboards (drawn as plain billboards) and sorting fudges.
 
 const SPEC := "res://game/level/vfx/effects.json"
@@ -28,7 +28,8 @@ static func _load() -> void:
 	_palette = j.get("palette", {})
 	for e in j.get("effects", []): _effects[e.name] = e
 
-## The effect name of a content reference ("Assets/Art/VFX/Kit/Hit Spark.prefab" → "Hit Spark"); "" for none.
+## The effect name of a content reference ("vfx/Hit Spark", or the old Unity prefab path
+## "Assets/Art/VFX/Kit/Hit Spark.prefab" → "Hit Spark"); "" for none.
 static func effect_name(ref) -> String:
 	if ref == null: return ""
 	var s := str(ref).strip_edges()
