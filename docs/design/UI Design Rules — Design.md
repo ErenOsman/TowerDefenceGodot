@@ -1,6 +1,6 @@
 # Tower Defence — UI Design Rules
 
-Oct 8, 2026 · @Eren
+Oct 8, 2026 · @Eren · Godot pass 2026-10-15
 
 ## Purpose
 
@@ -396,7 +396,7 @@ Every status and ability has its own icon ([kit](http://92.5.94.11/art/ui/kit-b/
 - **Two-tone glyph:** cream fill `#F5EAD6` with a dark rim `#120C09`, baked into the PNG. No other colours inside the glyph.
 - **Meaning comes from the chip:** its colour and its shape. On screen an icon has at most three colours (chip, cream, rim). Shape keeps it readable without colour.
 - **Sizes:** 48 (Codex, Info status rows), 40 (status chips on the right bar card), 34 (inspector, action bar), 32 (status chips on the full board plate), 28 (compact board plate, no badges), 24 (tooltips, text; status chips at 24 show no badges). Every glyph is checked at 24 px on wood, paper and board green.
-- **In the game:** `res://art/icons/Statuses/<Name>.png` and `res://art/icons/Abilities/<Name>.png` (no spaces: `AcidFlask.png`), set as the `icon` of each entry in `data/content/Statuses.json` / `Abilities.json` (`Status/Burn`, `Ability/Acid Flask`) by Eren.
+- **In the game:** `res://art/icons/Statuses/<Name>.png` and `res://art/icons/Abilities/<Name>.png` (no spaces: `AcidFlask.png`), set as the `icon` of each entry (written as the content's art path, `Assets/Art/Icons/Abilities/AcidFlask.png#AcidFlask`, which `ArtPaths` maps to `res://art/icons/…`) in `data/content/Statuses.json` / `Abilities.json` (`Status/Burn`, `Ability/Acid Flask`) by Eren.
 
 **Statuses.** Every status is a circle (user, 2026-10-09): buff = circle with a thin double rim, debuff and untagged = plain circle. Shapes by kind: ability = square, passive = square with a double rim, status = circle (buffs double-rimmed), so the shape alone says what a chip is. A status has **both** stacks and a duration (re-applying adds stacks and restarts the timer), so the chip always shows both:
 
