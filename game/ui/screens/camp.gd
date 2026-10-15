@@ -39,7 +39,7 @@ const FALLBACK_LAYOUT := {
 		{"slot": 5, "tile": [11.57, 3.87], "face_yaw": 0.0, "row": "front", "station": "Guild", "prop": "Signpost", "scale": 2.6},
 		{"slot": 6, "tile": [10.57, 6.66], "face_yaw": 0.0, "row": "back", "station": "Codex", "prop": "Codex Lectern", "scale": 3.2},
 	],
-	"decor": [{"prop": "Tent", "tile": [4.45, 8.85], "scale": 2.1, "yaw": 0}, {"prop": "Supplies", "tile": [12.2, 8.9], "scale": 2.6, "yaw": -15}],
+	"decor": [{"prop": "Tent", "tile": [4.3, 1.8], "scale": 2.1, "yaw": 0}, {"prop": "Supplies", "tile": [12.2, 8.9], "scale": 2.6, "yaw": -15}],
 }
 const BOARD := Vector2(14, 10)
 const TOUR := [
