@@ -628,7 +628,7 @@ func _tower_page(t: TowerAsset) -> void:
 	if page == "forms": _forms_rows(t, type, ids)
 	_apply_page()
 
-## The Overview's facts (mockup codex2): energy, role chips, "In your collection: 6", "First earned: the tutorial".
+## The Overview's facts (mockup codex2): energy, role chips, "In your collection: 6" (no "First earned", Eren 2026-10-15).
 func _tower_facts(t: TowerAsset, fa: FormAsset, ent: EntityAsset) -> void:
 	var cost := fa.cost if fa != null and fa.cost >= 0 else t.cost
 	_facts.add_child(_fact("icon_energy", "[color=%s][b]%d[/b][/color] energy" % [TdTheme.rich("ink"), cost], TdTheme.color("gold.ink")))
@@ -643,8 +643,6 @@ func _tower_facts(t: TowerAsset, fa: FormAsset, ent: EntityAsset) -> void:
 				Color(0.37, 0.29, 0.21, 0.3)))
 		_facts.add_child(chips)
 	_facts.add_child(_fact("icon_cards", "In your collection: [color=%s][b]%d[/b][/color]" % [TdTheme.rich("ink"), MenuLogic.owned_count(SaveData.towers, t.get_id())]))
-	var first := MenuLogic.first_earned(GameApp.catalog, t.get_id())
-	if first != "": _facts.add_child(_fact("icon_castle", "First earned: [color=%s][b]%s[/b][/color]" % [TdTheme.rich("ink"), first]))
 
 func _fact(icon: String, bbcode: String, tint := Color(0, 0, 0, 0)) -> Control:
 	var h := TdMenu.hbox(8)
