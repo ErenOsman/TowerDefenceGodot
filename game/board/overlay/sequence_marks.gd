@@ -1,7 +1,9 @@
 class_name SequenceMarks
 extends Control
 ## The tutorial / intro marks over the board (UI_SequenceBubble.cs: dim, ring, arrow): while a sequence line points
-## at a unit or a tile, a soft light ring pulses round its feet and, for a line read and clicked on, the board
+## at a unit or a tile, a soft light ring pulses round its feet — a TRUE circle on screen (Eren 2026-10-15, as the
+## selection ring: SelectRingLayer), centred on the projected ground point, its radius RING_TILES of the tile's width
+## on screen there (with no camera: half the given ring width) and, for a line read and clicked on, the board
 ## dims a little around it. A line pointing at nothing shows a bobbing arrow when given a point. The speech bubble
 ## itself is the HUD's. Never takes the pointer. Unscaled time.
 
@@ -14,6 +16,10 @@ var _ring_size := Vector2(110, 60)
 var _arrow_at = null
 var _dim_on := false
 var _fade := 0.0
+## The board camera (set by BattleOverlay): the ring's radius comes from the tile's size on screen.
+var cam: Camera3D = null
+## The ring's radius in tiles (the gold ring stands a little outside the selection ring).
+const RING_TILES := 0.62
 
 func _init() -> void:
 	name = "Sequence"
@@ -75,10 +81,11 @@ func tick(dt: float) -> void:
 		# centre is kept inside (an inset of 12 px)
 		var view := get_viewport_rect().size
 		var s := 1.0 + 0.08 * sin(_time * 4.0)
-		var want := _ring_size * s
 		var c: Vector2 = _ring_at
+		var want := ring_radius(c, _ring_size) * 2.0 * s
 		var room := Vector2(minf(c.x, view.x - c.x), minf(c.y, view.y - c.y)) - Vector2(12, 12) - Vector2(11, 11)
-		var fit := Vector2(clampf(want.x, 24.0, maxf(24.0, room.x * 2.0)), clampf(want.y, 16.0, maxf(16.0, room.y * 2.0)))
+		var d := clampf(want, 24.0, maxf(24.0, minf(room.x, room.y) * 2.0))
+		var fit := Vector2(d, d)
 		_ring.size = fit
 		var pos := c - fit * 0.5
 		pos.x = clampf(pos.x, 12.0 + 11.0, maxf(23.0, view.x - fit.x - 23.0))
@@ -89,6 +96,20 @@ func tick(dt: float) -> void:
 	if _arrow_at != null:
 		_arrow.reset_size()
 		_arrow.position = _arrow_at - Vector2(_arrow.size.x * 0.5, _arrow.size.y + 24.0 + absf(sin(_time * 3.0)) * 14.0)
+
+## The ring's radius (px, before the pulse) round a ground point on screen: RING_TILES of the tile's width there,
+## or half `fallback.x` without a camera / off the ground plane.
+func ring_radius(at: Vector2, fallback: Vector2) -> float:
+	if cam != null and is_instance_valid(cam) and cam.is_inside_tree():
+		var world = GridSpace.ground_under(cam, at)
+		if world is Vector3 and not cam.is_position_behind(world):
+			return RING_TILES * SelectRingLayer.px_per_tile(cam, world)
+	return fallback.x * 0.5
+
+## The screen rect the ring (with its glow) takes round a ground point (the HUD keeps the dialogue box off it).
+func ring_rect(at: Vector2, fallback: Vector2) -> Rect2:
+	var r := ring_radius(at, fallback) * 1.08 + 11.0
+	return Rect2(at - Vector2(r, r), Vector2(r, r) * 2.0)
 
 func _draw_ring() -> void:
 	var c := _ring.size * 0.5

@@ -33,11 +33,6 @@ const Stations := [
 	{"id": "Towers", "label": "Towers", "sub": "Your hand and layouts", "icon": "cards"},
 	{"id": "Camp", "label": "Camp", "sub": "Back to the Camp", "icon": "back"},
 ]
-const MovedToGuild := "Moved to the Guild"
-## The Camp's Signpost tooltip (the prop is the way to the Guild).
-const SignpostTip := "Guild · missions and co-op"
-## The Camp's Multiplayer station once the Guild is open (until the first Guild visit: then it is gone).
-const MultiplayerToGuild := "Multiplayer → Guild"
 const SpendInWorkshop := "Spend them in the Workshop."
 const TiredDetail := "Tired: went on a mission today. Rests in %s."
 
@@ -220,7 +215,7 @@ static func signpost_locked_text(catalog: GameCatalogAsset) -> String:
 			if e[0].level == catalog.guild_unlock: return "Opens after " + MenuLogic.chapter_name(catalog, e[1])
 	return "Opens after Chapter 2"
 
-## The Signpost station's tag: "New" until the Guild was visited once, else "".
+## The Camp's Guild button tag: "New" until the Guild was visited once, else "".
 static func signpost_tag(guild_seen: bool) -> String:
 	return "" if guild_seen else "New"
 

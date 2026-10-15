@@ -34,6 +34,7 @@ func setup(p_cam: Camera3D, icon_of: Callable = Callable()) -> void:
 	floaters.cam = cam
 	add_child(floaters)
 	sequence = SequenceMarks.new()
+	sequence.cam = cam
 	add_child(sequence)
 	banners = BannerLayer.new()
 	add_child(banners)

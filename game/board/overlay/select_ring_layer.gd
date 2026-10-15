@@ -50,12 +50,15 @@ func tick() -> void:
 ## The on-screen circle round a foot point: [centre Vector2, radius px] or null (behind the camera).
 static func screen_circle(camera: Camera3D, world: Vector3):
 	if camera.is_position_behind(world): return null
-	var centre := camera.unproject_position(world)
+	return [camera.unproject_position(world), RADIUS_TILES * SelectRingLayer.px_per_tile(camera, world)]
+
+## A tile's width on screen at a ground point (px), measured along the camera's right on the ground: the same in
+## every direction on screen, so a circle of a radius from it stays round.
+static func px_per_tile(camera: Camera3D, world: Vector3) -> float:
 	var right := camera.global_basis.x
 	right.y = 0.0
 	right = right.normalized() if right.length() > 0.001 else Vector3.RIGHT
-	var px_per_tile := (camera.unproject_position(world + right * 0.5) - camera.unproject_position(world - right * 0.5)).length()
-	return [centre, RADIUS_TILES * px_per_tile]
+	return (camera.unproject_position(world + right * 0.5) - camera.unproject_position(world - right * 0.5)).length()
 
 func _draw() -> void:
 	for d in _drawn:

@@ -7,7 +7,7 @@ extends SceneTree
 ## (Archer, Archer, Guardian, Priest, Mage). Night Watch is won and played today (Done today, first win claimed);
 ## for the board's locked card The Glutton Returns is given "Win Hold the Gate first" IN MEMORY only (the content opens
 ## every mission with the Guild). Co-op screens run against an in-process FakeRelay with bots (no network).
-## PNGs <out dir>/guild_<n>_<step>.png: camp_signpost_locked, camp_signpost, guild_welcome, guild, mission_board,
+## PNGs <out dir>/guild_<n>_<step>.png: camp_locked, camp_open, slide_mid (Camp → Guild held at t 0.5), guild_welcome, guild, mission_board,
 ## detail, detail_tired, detail_all_tired, detail_done, detail_coop, hand_editor_mission, lobby_mission_picker,
 ## lobby_list, lobby_auto_left, room_tired, end_mission, end_mission_last.
 
@@ -61,7 +61,7 @@ func _run() -> void:
 		camp = camp_scene.instantiate()
 		root.add_child(camp)
 		await _frames(40)
-		await _shot("camp_signpost_locked")
+		await _shot("camp_locked") # before Chapter 2: no Guild, no Workshop button
 		camp.queue_free()
 		await _frames(4)
 	_win_main(2, 99)
@@ -71,9 +71,8 @@ func _run() -> void:
 		camp = camp_scene.instantiate()
 		root.add_child(camp)
 		await _frames(40)
-		await _shot("camp_signpost")
-		camp.queue_free()
-		await _frames(4)
+		await _shot("camp_open") # the Guild button (with its New) by the Signpost; the mini tour points at it
+		camp.end_tour()
 	# Night Watch: won once and played today (Done today, first win claimed)
 	var nw: MissionDef = app.mission("night-watch")
 	var r := LevelResult.new()
@@ -96,9 +95,23 @@ func _run() -> void:
 	net.auto_poll = true
 	relay.player_pings = {}
 	net._rtt_in = 1e9
-	# the Guild: the welcome card, then the ring
-	var guild = load("res://game/ui/screens/guild.tscn").instantiate()
-	root.add_child(guild)
+	# the Guild: from the Camp's Guild button (the slide, posed mid-way once), then the welcome card, then the ring
+	var guild
+	if camp != null and is_instance_valid(camp):
+		if current_scene != null and current_scene != camp: current_scene.queue_free()
+		current_scene = camp
+		flow.slide_hold = 1.0 - pow(0.5, 1.0 / 3.0) # half-way after the ease out (each screen half visible)
+		camp.open_guild()
+		await _until(func(): return flow.current == flow.Guild, 30.0)
+		await _frames(20)
+		await _shot("slide_mid")
+		print("mid-slide: welcome shown=", current_scene.welcome_card.visible, " sliding=", flow.is_sliding)
+		flow.slide_hold = -1.0
+		await _until(func(): return not flow.is_sliding, 10.0)
+		guild = current_scene
+	else:
+		guild = load("res://game/ui/screens/guild.tscn").instantiate()
+		root.add_child(guild)
 	await _frames(40) # the guild hall loads and the station buttons settle
 	if not small: await _shot("guild_welcome")
 	guild.close_welcome()

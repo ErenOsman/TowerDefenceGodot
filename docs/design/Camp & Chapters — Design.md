@@ -28,18 +28,19 @@ A screen of stations (panels for now; built so they can become places in a visua
 | --- | --- |
 | **Chapters** | Main chapters in a row, side chapters below; locked ones show what opens them. Picking one opens its levels (the level select panel: list, detail, hand, Play) |
 | **Towers** | Every owned tower and the hand: the hand editor, full size |
-| **Workshop** | Modify towers: a tower turns into one of its forms, unlocked with tokens from missions (Workshop — Design). Locked with "Opens after Chapter 2" until Chapter 2's last level is won (`guildUnlock`, the same level that opens the Guild) |
+| **Workshop** | Modify towers: a tower turns into one of its forms, unlocked with tokens from missions (Workshop — Design). Not shown at all until Chapter 2's last level is won (`guildUnlock`, the same level that opens the Guild; Eren 2026-10-15: no greyed state) |
 | **Codex** | Opens the Codex |
-| **Signpost → Missions** | Appears once Chapter 2's last level is won (`guildUnlock`): opens the Guild, where missions (the source of tokens) and multiplayer live (Missions & Guild — Design). Until then the Signpost is a plain prop |
+| **Guild** (by the Signpost) | "Guild · Missions and co-op", where Multiplayer stood; not shown until Chapter 2's last level is won (`guildUnlock`). Opens the Guild, where missions (the source of tokens) and multiplayer live (Missions & Guild — Design): the Camp slides out to the left while the Guild comes in from the right. A gold "New" on the button until the first Guild visit. Until then the Signpost is a plain prop |
 | **Main menu** | Back to the main menu |
 
-First visit (`profile.campSeen`, `PlayerProfile.camp_seen`): a short welcome card, then each station's button highlighted in turn with one line about it; Skip ends it. Never again after that.
+First visit (`profile.campSeen`, `PlayerProfile.camp_seen`): a short welcome card, then each shown station's button highlighted in turn with one line about it; Skip ends it. Never again after that. After Chapter 2 is cleared, the next visit points once at the two buttons that appeared (Guild, then Workshop).
 
 ## Data
 
 - `campUnlock` in `data/content/Catalog.json` (`GameCatalogAsset.camp_unlock`): the level whose win opens the Camp (Chapter 1 level 4, `Level/Chapter 1/4 The Slime King`).
 - A catalog chapter's `kind` (Main / Side) and its unlock (`requires`, `requireAll`; `ChapterData`): for a main chapter the previous main chapter cleared (default); for a side chapter the listed levels won (all / any). A chapter's first level opens when the chapter does.
-- `PlayerProfile.camp_seen` (saved as `campSeen`): the first visit happened.
+- `PlayerProfile.camp_seen` (saved as `campSeen`): the first visit happened. `PlayerProfile.guild_tour_seen` (`guildTourSeen`): the mini tour pointing at the Guild and Workshop buttons after Chapter 2 happened.
+- `art/camp/layout.json` (and `art/guild/layout.json`): where the props stand (slots with their station, centre, decor). Eren can move props in the running game with the dev panel's layout editor (F1 → Edit layout; drag, Q/E, +/-, Ctrl+S saves the same file): `docs/Implementation Notes.md` § Layout editor.
 - Engine-free rules: `GameCatalogAsset.camp_unlocked(progress)` (`sim/data`), and in `sim/meta/level_catalog.gd` (`LevelCatalog`) the chapter unlocks (`is_chapter_unlocked`) and `next_main_level(progress)` for Continue.
 
 ## In the Godot build

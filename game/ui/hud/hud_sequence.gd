@@ -585,6 +585,7 @@ func _guided_ring_rect(line: SequenceLine):
 	var ground = _target(line, true)
 	if ground == null: return null
 	var rs := BOARD_RING * _ring_zoom()
+	if controller.overlay != null and controller.overlay.sequence != null: return controller.overlay.sequence.ring_rect(ground, rs) # the board's round ring
 	return Rect2(ground - rs * 0.5, rs)
 
 ## Tower names in a line in accent.light ("Click your [Archer] to place it.").

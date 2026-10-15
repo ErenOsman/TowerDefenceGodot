@@ -138,7 +138,8 @@ static func progress_from_dict(d) -> LevelProgress:
 
 static func profile_to_dict(p: PlayerProfile) -> Dictionary:
 	return {"created": p.created, "playerName": p.player_name, "tutorial": p.tutorial,
-		"campSeen": p.camp_seen, "guildSeen": p.guild_seen, "seenIntros": p.seen_intros.duplicate()}
+		"campSeen": p.camp_seen, "guildSeen": p.guild_seen,
+		"guildTourSeen": p.guild_tour_seen, "seenIntros": p.seen_intros.duplicate()}
 
 static func profile_from_dict(d) -> PlayerProfile:
 	var p := PlayerProfile.new()
@@ -149,6 +150,7 @@ static func profile_from_dict(d) -> PlayerProfile:
 	p.tutorial = maxi(0, TutorialState.parse(t)) if t is String else clampi(int(t), 0, TutorialState.Skipped)
 	p.camp_seen = bool(d.get("campSeen", false))
 	p.guild_seen = bool(d.get("guildSeen", false))
+	p.guild_tour_seen = bool(d.get("guildTourSeen", false))
 	p.seen_intros = _strings(d.get("seenIntros"))
 	return p
 

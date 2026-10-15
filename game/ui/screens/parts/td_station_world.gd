@@ -19,6 +19,9 @@ const FLOOR_DROP := 6.0
 var props := {}   # station id → Node3D
 var _all: Array = []   # every prop placed (stations, centre, decor): what buttons keep clear of
 var front := {}   # station id → true when its button goes below the prop (row "front")
+## Where each prop came from in the layout (the layout editor writes them back): [{node, kind ("slot" / "centre" /
+## "decor"), index (into slots / decor), prop}].
+var entries: Array = []
 var board := BOARD
 var vp: SubViewport
 var cam: Camera3D
@@ -53,17 +56,24 @@ func build(layout: Dictionary, prop_loader: Callable, map_ground := true) -> voi
 		var app := TdMenu.app()
 		var kit: Array = app.lib.rules.tiles if app != null and app.lib.rules != null else []
 		bv.build(BattleGrid.new(int(board.x), int(board.y)), level, kit, func(p): return app.model_scene(p))
-	for slot in layout.get("slots", []):
+	var slots: Array = layout.get("slots", [])
+	for i in slots.size():
+		var slot: Dictionary = slots[i]
 		if slot.get("prop") == null or slot.get("station") == null: continue
 		front[str(slot.station)] = str(slot.get("row", "back")) == "front"
 		props[str(slot.station)] = add_prop(prop_loader, str(slot.prop), tile_of(slot.tile), float(slot.get("scale", 1.0)), float(slot.get("face_yaw", 0.0)))
+		_entry(props[str(slot.station)], "slot", i, str(slot.prop))
 	var centre: Dictionary = layout.get("centre", {})
 	if not centre.is_empty() and centre.get("prop") != null: # a centre may be empty (the Guild's rug)
 		var c := add_prop(prop_loader, str(centre.prop), tile_of(centre.tile), float(centre.get("scale", 1.0)), float(centre.get("yaw", 0.0)))
+		_entry(c, "centre", -1, str(centre.prop))
 		if centre.get("station") != null: # the centre piece is a station too (the Guild's Mission Board)
 			props[str(centre.station)] = c
 			front[str(centre.station)] = str(centre.get("row", "back")) == "front"
-	for d in layout.get("decor", []): add_prop(prop_loader, str(d.prop), tile_of(d.tile), float(d.get("scale", 1.0)), float(d.get("yaw", 0.0)))
+	var decor: Array = layout.get("decor", [])
+	for i in decor.size():
+		var d: Dictionary = decor[i]
+		_entry(add_prop(prop_loader, str(d.prop), tile_of(d.tile), float(d.get("scale", 1.0)), float(d.get("yaw", 0.0))), "decor", i, str(d.prop))
 	cam = Camera3D.new()
 	cam.fov = 34.0
 	root3d.add_child(cam)
@@ -74,6 +84,16 @@ func build(layout: Dictionary, prop_loader: Callable, map_ground := true) -> voi
 	var cc := Vector3(fire.x, 0.0, -fire.y - 0.6)
 	cam.position = cc + Vector3(0, 14.5, 17.0)
 	cam.look_at(cc, Vector3.UP)
+
+func _entry(n: Node3D, kind: String, index: int, prop: String) -> void:
+	if n != null: entries.append({"node": n, "kind": kind, "index": index, "prop": prop})
+
+## Takes a prop out of the world (the layout editor's Delete on decor): no longer drawn nor an obstacle for buttons.
+func remove_prop(n: Node3D) -> void:
+	_all.erase(n)
+	for k in props.keys():
+		if props[k] == n: props.erase(k)
+	if is_instance_valid(n): n.queue_free()
 
 ## The props' Idle loops keep playing; the 3D view is not drawn while a full-screen window (Workshop, Hand,
 ## Codex, Settings… over the 88 % scrim) covers it (TdDiorama.animate_unless_covered; browser smoke test 2026-10-14).

@@ -86,10 +86,9 @@
    ],
    "face_yaw": 0.0,
    "row": "front",
-   "station": "Missions",
-   "prop": "Signpost",
-   "scale": 2.6,
-   "note": "Missions & Guild: the Signpost (map-kit piece art/tiles/Signpost.fbx) opens the Guild"
+   "station": null,
+   "prop": null,
+   "note": "free slot (the Signpost moved to slot 5 as the Guild station, 2026-10-15)"
   },
   {
    "slot": 5,
@@ -99,9 +98,10 @@
    ],
    "face_yaw": 0.0,
    "row": "front",
-   "station": "Multiplayer",
-   "prop": "Signal Post",
-   "scale": 2.4
+   "station": "Guild",
+   "prop": "Signpost",
+   "scale": 2.6,
+   "note": "Eren 2026-10-15: the Guild station button (where Multiplayer stood); the Signpost (map-kit piece art/tiles/Signpost.fbx) reads as the way to the Guild; hidden before Chapter 2"
   },
   {
    "slot": 6,

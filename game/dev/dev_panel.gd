@@ -4,7 +4,7 @@ extends CanvasLayer
 ## game with three tabs. Save: the save file as JSON text (edit, Save / Reload / Reset) and the quick actions
 ## (player name, grant all towers, complete Chapter 1, win first N levels, mark tutorial done, clear codex).
 ## Shortcuts: play any level with the current hand, instant playback, game speed, +100 energy in a running
-## level (LevelController.dev_add_energy). Log: the last 200 log lines (DevLog). Esc or F1 closes; the game is
+## level (LevelController.dev_add_energy), "Edit layout" over the Camp / Guild (TdLayoutEditor). Log: the last 200 log lines (DevLog). Esc or F1 closes; the game is
 ## paused while it is open. Created by the DevPanel autoload (game/dev/dev_panel_autoload.gd); it reads the app
 ## autoloads by path, so it also builds without them (tests).
 
@@ -27,6 +27,9 @@ var speed_slider: HSlider
 var speed_label: Label
 var energy_button: Button
 var level_label: Label
+## "Edit layout" (Camp / Guild): the layout editor (TdLayoutEditor) running, or null.
+var layout_toggle: CheckButton
+var layout_editor: TdLayoutEditor = null
 var log_text: TextEdit
 var _log_serial := -1
 var _reset_armed_until := 0.0
@@ -217,6 +220,16 @@ func _shortcuts_tab() -> Control:
 	coop_row.add_child(_button("Offline practice (co-op, one player)", _on_coop_practice))
 	col.add_child(coop_row)
 	col.add_child(HSeparator.new())
+	col.add_child(_label("Camp / Guild", "H3Label"))
+	var layout_row := HBoxContainer.new()
+	layout_row.add_theme_constant_override("separation", 12)
+	layout_toggle = CheckButton.new()
+	layout_toggle.text = "Edit layout (drag props · Q/E turn · +/- scale · Del · Ctrl+S saves layout.json)"
+	layout_toggle.focus_mode = Control.FOCUS_NONE
+	layout_toggle.toggled.connect(_on_layout_toggle)
+	layout_row.add_child(layout_toggle)
+	col.add_child(layout_row)
+	col.add_child(HSeparator.new())
 	col.add_child(_label("Playback", "H3Label"))
 	instant_toggle = CheckButton.new()
 	instant_toggle.text = "Instant playback (no animations)"
@@ -304,6 +317,28 @@ func refresh() -> void:
 		speed_slider.set_value_no_signal(sd.settings.game_speed)
 		speed_label.text = "%s×" % Num.to_str(sd.settings.game_speed)
 	_refresh_log()
+	var editing := layout_editor != null and is_instance_valid(layout_editor) and not layout_editor.is_queued_for_deletion()
+	layout_toggle.set_pressed_no_signal(editing)
+	layout_toggle.disabled = not editing and not (is_inside_tree() and TdLayoutEditor.can_edit(get_tree().current_scene))
+
+## "Edit layout": starts the layout editor over the Camp / Guild shown and closes the panel; off stops it.
+func _on_layout_toggle(on: bool) -> TdLayoutEditor:
+	if not on:
+		if layout_editor != null and is_instance_valid(layout_editor): layout_editor.stop()
+		layout_editor = null
+		_say("Layout editor off.")
+		return null
+	var s := get_tree().current_scene if is_inside_tree() else null
+	if not TdLayoutEditor.can_edit(s):
+		layout_toggle.set_pressed_no_signal(false)
+		_say("Open the Camp or the Guild first.")
+		return null
+	layout_editor = TdLayoutEditor.new()
+	get_tree().root.add_child(layout_editor)
+	layout_editor.start(s)
+	layout_editor.finished.connect(func(): layout_editor = null)
+	close_panel()
+	return layout_editor
 
 # ---------------------------------------------------------------- save tab
 

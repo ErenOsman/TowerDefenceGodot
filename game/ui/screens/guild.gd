@@ -1,6 +1,7 @@
 extends Control
 ## The Guild (Missions & Guild — Design § The Guild; mockups screens-b/guild.html, guild-welcome.html): a second
-## place like the Camp, opened from the Camp's Signpost once Chapter 2 is cleared (SceneFlow.Guild). A 3D guild hall
+## place like the Camp, opened from the Camp's Guild station once Chapter 2 is cleared (SceneFlow.Guild; the Camp
+## slides out to the left as the Guild comes in, SceneFlow.slide; "← Camp" slides back). A 3D guild hall
 ## built from res://art/guild/layout.json exactly like the Camp (TdStationWorld: the Blender agent's Guild kit — floor,
 ## hall walls, the Mission Board, Coop Table, Tower Rack, Guild Door; Idle loops; camp.gd's camera and
 ## light, plus a warm hearth light; v2 layout: Mission Board on the back wall, Guild Door at the front edge, an empty
@@ -8,8 +9,9 @@ extends Control
 ## Missions (primary, under the Mission Board: the mission board, then a mission's detail), Multiplayer (the co-op
 ## lobby, moved here from the Camp) and Towers (the hand editor, the same hands and layouts as the Camp's), each on
 ## the floor in front of its prop; Camp has no station button: "← Camp" bottom-left (like the Camp's "← Main menu")
-## and the Guild Door is a hotspot (hover highlight + "Back to the Camp", click goes back). The first visit shows the welcome card once (PlayerProfile.guild_seen). Back from a co-op
-## match (Net.reopen_lobby) or the Camp's "Multiplayer → Guild" opens the lobby. Texts: MissionUiLogic.
+## and the Guild Door is a hotspot (hover highlight + "Back to the Camp", click goes back). The first visit shows the
+## welcome card once (PlayerProfile.guild_seen), after the slide. Back from a co-op match (Net.reopen_lobby) the lobby
+## opens. Texts: MissionUiLogic.
 
 const SCREENS := "res://game/ui/screens/"
 ## Where the props stand: the Blender agent's Guild layout (the Camp's schema; its centre is the Missions station).
@@ -62,11 +64,15 @@ func _ready() -> void:
 	_build_welcome()
 	if GameApp.catalog != null and GameApp.catalog.grant_starting_towers(SaveData.towers): SaveData.save()
 	refresh()
-	welcome_card.visible = not SaveData.profile.guild_seen
-	# back from a co-op match, or the Camp's "Multiplayer → Guild": the lobby opens (after the welcome card)
+	# back from a co-op match: the lobby opens (after the welcome card)
 	if has_node("/root/Net") and get_node("/root/Net").reopen_lobby:
 		get_node("/root/Net").reopen_lobby = false
 		_lobby_pending = true
+	# opened by the Camp's slide (SceneFlow.slide): the welcome card and the lobby wait until the Guild is in place
+	if SceneFlow.is_sliding:
+		await SceneFlow.slide_finished
+		if not is_inside_tree(): return
+	welcome_card.visible = not SaveData.profile.guild_seen
 	if welcome_card.visible:
 		await get_tree().process_frame
 		TdPanelTransition.open(welcome_card.get_meta("card"))
@@ -233,7 +239,7 @@ func open_towers() -> TdPopup:
 	p.open()
 	return p
 
-## Camp: back to the Camp.
+## Camp: back to the Camp, sliding the other way (the Guild out to the right, the Camp in from the left).
 func back_to_camp() -> void:
 	SaveData.save()
-	SceneFlow.go(SceneFlow.Camp)
+	SceneFlow.slide(SceneFlow.Camp, -1)
