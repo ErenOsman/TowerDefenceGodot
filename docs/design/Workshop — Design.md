@@ -2,7 +2,7 @@
 
 Written 2026-10-14 by the Godot agent from Eren's decisions of 2026-10-13 (given to the UI/UX agent) and the approved
 mockups; Eren asked for the doc first and left the open points to the agents ("I trust you"), so the rest is decided
-here and marked **(agents)**. This file is the source of truth for the Workshop; the Camp doc's open question
+here and marked **(agents)**. Godot pass 2026-10-15. This file is the source of truth for the Workshop; the Camp doc's open question
 "what the Workshop modifies and what it costs" is answered by it.
 
 The **Workshop** is the Camp station where the player **modifies towers**: a tower turns into one of its **forms**
@@ -28,7 +28,7 @@ passives, look and name. The tower keeps its ID, its name tag and its place in t
 | Locked nodes | A form not yet unlocked shows its token coin in the tree node instead of a grey portrait; the portrait appears once unlocked | Eren 2026-10-14 |
 | No comparison | The form card shows the form's own stats and abilities; nothing is compared against the current form (no arrows, no Changed/Same tags) | Eren 2026-10-14 |
 | Confirm | Unlocking asks once ("Unlock Fire Archer for this Archer? Spends 1 Fire Arrow (you have 2 → 1)"); switching does not | mockup workshop-confirm |
-| Content | Forms and tokens are content JSON like everything else (`Content/Forms.json`, `Content/Tokens.json`); drops live in `Catalog.json`; no numbers in code | agents |
+| Content | Forms and tokens are content JSON like everything else (`data/content/Forms.json`, `data/content/Tokens.json`); drops live in `Catalog.json`; no numbers in code | agents |
 
 ## Player flow
 
@@ -115,24 +115,24 @@ Reference mockup (approved as the UI direction): http://92.5.94.11/art/ui/screen
 
 ## Data
 
-Content stays JSON under `Content/` (the single source of truth, read by Unity, the Godot build and the wiki). New
+Content stays JSON under `data/content/` (the single source of truth, read by the game and the wiki). New
 files and fields; everything keyed by stable ids like the rest.
 
-### Content/Forms.json — `FormAsset`
+### data/content/Forms.json — `FormAsset` (keys `Form/<Name>`)
 
 | Field | Meaning |
 | --- | --- |
 | `id` | stable id, saved on towers (`archer-fire`) |
 | `displayName`, `description`, `icon` | the form's own name and portrait ("Fire Archer"; the portrait may be the base portrait until the Blender agent renders one) |
-| `badge` | the small badge sprite shown on cards, tray pieces and the board medallion (`Assets/Art/Icons/Forms/fire.png`) |
+| `badge` | the small badge sprite shown on cards, tray pieces and the board medallion (`Assets/Art/UI/KitB/forms/archer-fire.png`, i.e. `res://art/ui/KitB/forms/`) |
 | `tower` | the base tower type (`Tower/Archer Tower`) |
 | `parent` | the parent form, or empty for a root child |
-| `entity` | the `EntityAsset` the tower fights as in this form (`Unit/Tower/Form/Fire Archer`): a full entity like any other tower's, so forms need no new mechanics |
+| `entity` | the unit entry the tower fights as in this form (`Unit/Tower/Form/Fire Archer`): a full entity like any other tower's, so forms need no new mechanics |
 | `cost` | energy cost in this form; `-1` = the base tower's |
 | `unlock` | the tokens to spend: `[{ "token": "Token/Fire Arrow", "amount": 1 }]` |
 | `order` | where the node sits around the root (0, 1, 2… clockwise from the top); children sit beyond their parent |
 
-### Content/Tokens.json — `TokenAsset`
+### data/content/Tokens.json — `TokenAsset` (keys `Token/<Name>`)
 
 | Field | Meaning |
 | --- | --- |
@@ -144,16 +144,17 @@ missions' drop lists (so it stays true when missions change).
 
 ### Missions.json — drops
 
-`firstWinTokens` and `winTokens` live on missions (`Content/Missions.json`, Missions & Guild — Design), each
+`firstWinTokens` and `winTokens` live on missions (`data/content/Missions.json`, Missions & Guild — Design), each
 `[{ "token": …, "amount": n }]`; chapter levels carry none. `GameReference` exports them with the mission and lists
-every form under its tower with its cost and where its tokens come from.
+every form under its tower with its cost and where its tokens come from (not built yet: `game/dev/game_reference.gd` has
+no forms, tokens or missions).
 
 ### Saves (`GameData`)
 
 - `OwnedTower.form` — the current form id, empty = default. `OwnedTower.forms` — unlocked form ids (never the default).
 - `GameData.tokens` — `TokenWallet`: `[{ "id": "fire-arrow", "count": 2 }]` plus `earned` totals per kind (for
-  stats; nothing reads it yet). Engine-free rules in `Game.Meta.Workshop`: `CanUnlock(tower, form, wallet) → reason`,
-  `Unlock`, `SetForm`, `Drops(result, record, entry)`; tested like `LevelCatalog`.
+  stats; nothing reads it yet). Engine-free rules in `sim/meta/workshop.gd` (`Workshop`, static): `can_unlock(tower, form, wallet)` (+ the reason),
+  `unlock`, `set_form`, `drops(result, record, source)`; tested in `tests/test_workshop.gd`.
 - `CodexProgress`: forms are discovered through the existing "owned" rule (owned = some tower has it unlocked).
 
 ### Engine-free model
@@ -161,8 +162,8 @@ every form under its tower with its cost and where its tokens come from.
 ```text
 FormDef  { id, name, description, towerType, parent, entity: EntityDef, cost (-1 = base), unlock: {tokenId: n}, badge, order }
 TowerType gains  forms: FormDef[]   (its tree, in content order)
-TowerCollection.Resolve(ownedTower) → (TowerType, FormDef or null): what the level builds (ConvertAsset / AssetConverter)
-Workshop.CanUnlock(tower, form, wallet): "Needs Fire Archer first" | "Needs 1 more Ember Core" | ok
+Workshop.resolve(ownedTower, towerType) → the TowerType the level builds (its form's entity and cost; AssetConverter)
+Workshop.can_unlock(tower, form, wallet): "Needs Fire Archer first" | "Needs 1 more Ember Core" | ok
 ```
 
 ## Starter content (placeholders: names, numbers and art are the mockup's; Eren rewrites)
@@ -189,21 +190,25 @@ Workshop.CanUnlock(tower, form, wallet): "Needs Fire Archer first" | "Needs 1 mo
 Chapters drop nothing: the Workshop and the Guild's missions both open when Chapter 2 is cleared, so the first
 form is a Chapter 2 reward in effect.
 
-## Build plan
+## In the Godot build
 
-1. **Content and rules (Unity):** `FormAsset`, `TokenAsset`, the catalog's drop lists, Validate All rules,
-   `Tools > Content > Create Starter Forms` (the table above), `GameReference` export; `OwnedTower.form/forms`,
-   `TokenWallet`, `Game.Meta.Workshop` with tests; the level builds a tower from its form; the end screen grants drops.
-2. **Screens (Unity):** the Workshop station opens the picker; the Modify view (`UI_Workshop`), the tree, the card,
-   confirm, badges on hand cards, tray pieces and board medallions; the Codex lists forms.
-3. **Godot build:** the same, from the synced content (the Godot agent builds it right after this doc; see
-   `GODOT-NOTES.md` in that repo for anything that differs).
-4. **Art:** the 6 token icons and a badge per form come from the UI kit as sprites (`Assets/Art/Icons/Forms/<form id>.png`
-   and `Assets/Art/Icons/Tokens/<token id>.png`, white and tintable, 64 and 128 px; the UI/UX agent has them made).
-   The starter badge set, one per form: Fire Archer (flame), Inferno Archer (big flame), Poison Archer (drop),
-   Longbow (bow), Bastion (shield), Spiked Guardian (spiked shield), Pyromancer (fireball), Frost Mage (snowflake),
-   Storm Mage (spark). Form portraits and models from the Blender agent when the forms are final; until then the
-   base portrait with the form's tint and badge.
+Built 2026-10-14: the content (`Forms.json`, `Tokens.json`: the starter forms and tokens above), the rules
+(`FormDef` in `sim/level/`, `TokenDef`, `TokenWallet`, `Workshop` in `sim/meta/`, `OwnedTower.form` / `forms`, Validate
+All rules; tests `tests/test_workshop.gd`); the level builds a tower from its form; the end screen grants drops; the
+screens: the Camp's Workshop station opens the picker, the Modify view, the tree, the card, confirm
+(`game/ui/screens/workshop.gd`, logic in `WorkshopLogic`, tests `tests/test_workshop_ui.gd`), badges on hand cards, tray
+pieces and board medallions (`TdFormBadge`), the Codex's Forms page. How it differs in detail: docs/GODOT-NOTES.md
+("Workshop screens").
+
+**Art:** the 6 token icons and a badge per form are UI kit sprites in `art/ui/KitB/tokens/<token id>.png` and
+`art/ui/KitB/forms/<form id>.png` (content paths `Assets/Art/UI/KitB/…`). The starter badge set, one per form: Fire
+Archer (flame), Inferno Archer (big flame), Poison Archer (drop), Longbow (bow), Bastion (shield), Spiked Guardian
+(spiked shield), Pyromancer (fireball), Frost Mage (snowflake), Storm Mage (spark). Form portraits and models from the
+Blender agent when the forms are final; until then the base portrait with the form's tint and badge.
+
+History: the plan first had the content, rules and screens built in the Unity repo (a Create Starter Forms tool,
+`UI_Workshop`) and then mirrored in the Godot build from the synced content; only the Godot build was done before the
+Unity build stopped on 2026-10-15.
 
 ## Open questions
 
