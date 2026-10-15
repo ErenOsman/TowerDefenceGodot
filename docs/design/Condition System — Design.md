@@ -1,6 +1,6 @@
 # Condition System — Design
 
-Oct 1, 2026 · @Eren
+Oct 1, 2026 · @Eren · Godot pass 2026-10-15
 
 ## Summary
 
@@ -8,7 +8,7 @@ A condition is a boolean expression in the formula language: evaluated by the fo
 
 - **Boolean formulas.** Conditions share the formula language, context, validation and tooling. Beyond stats, what they read comes from queries that game systems register, such as `Target.HasStatus(Poison)`.
 - **Explicit subjects.** Every read names whose state it reads: `Self`, `Source` or `Target`.
-- **Declared evaluation points.** Cast gates, target filters, effect triggers and passives each fix what a condition can read; a read the point cannot provide is rejected in the editor.
+- **Declared evaluation points.** Cast gates, target filters, effect triggers and passives each fix what a condition can read; a read the point cannot provide is rejected at authoring time (validation).
 - **No randomness in conditions.** An effect's proc chance is a separate field, so gates can be evaluated for UI and AI as often as needed.
 - **Triggers decide the side.** Whether an effect listens as attacker or defender is part of its trigger (`OnHitDealt`, `OnHitTaken`), applied when effects are gathered.
 - **Explainable.** A failed gate reports which part failed, in English, for tooltips and debugging.
@@ -20,7 +20,7 @@ Conditions succeed when designers can express any gate or filter by combining ex
 **Goals**
 
 - Any gate, filter or trigger check is written from existing queries, without code changes.
-- A condition that cannot work where it is attached fails in the editor, not in play.
+- A condition that cannot work where it is attached fails validation, not in play.
 - UI and AI can evaluate any gate any number of times, with no side effects and no RNG draws.
 - Players see why an action is unavailable.
 
@@ -34,7 +34,7 @@ Conditions succeed when designers can express any gate or filter by combining ex
 
 A condition has no evaluator of its own: it is a formula whose result is a boolean, parsed, validated and evaluated by the formula core.
 
-- **Shared with formulas:** the expression language, including `and`, `or`, `not` and game-registered queries, plus the context (Source, Target, Self, variables), validation, the trace, storage as text in assets and the editor tooling.
+- **Shared with formulas:** the expression language, including `and`, `or`, `not` and game-registered queries, plus the context (Source, Target, Self, variables), validation, the trace, storage as text in content entries and the authoring tooling.
 - **Added here:** evaluation points in place of damage phases, and two rules: a condition slot must produce a boolean, and a condition may not use `rand()`.
 - **Why expressions:** a separate condition type per check (health below, stat above, has status…) multiplies with every stat, subject and comparison, and cannot express "or" or "not". One expression covers them all: `Self.HpPct < 0.3 and not Self.HasStatus(Silence)`.
 
@@ -70,7 +70,7 @@ Each condition slot declares its evaluation point, which fixes the context it ca
 | Effect trigger | When the effect's event fires, per target and hit | `Self`, `Source`, `Target` and the event's facts |
 | Passive | At checkpoints (see Passives and re-evaluation) | `Self` |
 
-- A read the point cannot provide is an editor error, e.g. `Cast gate reads IsCrit, but no attack has been rolled.`
+- A read the point cannot provide is a validation error, e.g. `Cast gate reads IsCrit, but no attack has been rolled.`
 - `Self` is the condition's owner. In cast gates and target filters it is the caster, so it equals `Source`.
 - Event facts are variables produced by the combat flow: a hit provides `IsCrit` and `Damage`; other events provide their own.
 
@@ -109,35 +109,33 @@ Because a condition is a tree and never changes state, the system can say which 
 - **AI.** AI evaluates gates and filters on hypothetical states ("if I move here, can I cast Purify?") with the same evaluator, drawing no random numbers.
 - **Short-circuit.** `and` and `or` stop at the first deciding operand, left to right. Since conditions are pure, this affects only speed and the reported reason, never the result.
 
-## Authoring and validation in Unity
+## Authoring and validation
 
-Condition slots reuse the formula tooling unchanged: text fields in ScriptableObject assets, with the same drawer, validator, build gate and tests.
+Condition slots reuse the formula tooling unchanged: text fields in content entries (`data/content/*.json`), with the same validator, checks and tests. Each slot declares its evaluation point in the field schema (`ContentSerializer.SCHEMA`: `"castGate": "condition:CastGate"`, `"targetFilter": "condition:TargetFilter"`, `"passiveCondition": "condition:Passive"`), and `AssetValidator` checks every slot against its point (`ContextSpec`).
 
-```csharp
-[CreateAssetMenu(menuName = "Game/Effect")]
-public sealed class EffectDefinition : ScriptableObject {
-    public Trigger trigger = Trigger.OnHitDealt;
+A reaction entry with a condition and a chance (from `Reactions.json`; the design's "effect" became the reaction, Ability Pipeline — Effect Queue Architecture):
 
-    [ConditionSlot(EvalPoint.EffectTrigger)]
-    public Condition condition = new Condition("IsCrit");
-
-    [FormulaSlot(Phase.OnHit)]
-    public Formula chance = new Formula("0.5");
-
-    public StatusId applies = StatusId.Bleed;
-}
-
-[Serializable]
-public struct Condition {
-    [SerializeField] string expression;        // empty means always true
-    public Condition(string expression) => this.expression = expression;
-    public IFormulaNode Compiled => FormulaCache.Get(expression);
+```json
+"Reaction/Shield Refill": {
+  "trigger": "OnTurnStart",
+  "condition": "Self.Stacks(shield) < 10",
+  "chance": "1",
+  "response": { "items": [ { "$type": "ApplyStatusStepData", … } ] }
 }
 ```
 
-- **Drawer.** Shows true or false against the FormulaTestBench units and highlights the part that failed.
-- **Extra checks.** Beyond the formula checks: a non-boolean result in a condition slot, `rand()` inside a condition, and a passive that modifies what it reads.
-- **Tests.** Unit tests per query, and golden tests per gate (state → expected result and failure text), run in CI with the formula tests.
+The slot's value in the simulation (`sim/formulas/condition.gd`, abridged):
+
+```gdscript
+class_name Condition
+var expression: String = ""                       # empty means always true
+func evaluate(vocab: Vocabulary, ctx: EvalContext) -> bool
+func failure_reason(vocab: Vocabulary, ctx: EvalContext) -> Variant
+```
+
+- **Checks.** Validate All (TD Tools dock, Validate tab; `./test.sh` runs it in `tests/test_content_all.gd`) and the wiki Content Editor's Check (`tools/content_check.gd`) run the formula checks plus: a non-boolean result in a condition slot and `rand()` inside a condition (`sim/formulas/validator.gd`). The design's third check, a passive that modifies what it reads, is not built.
+- **Tests.** Unit tests per query, and gate tests (state → expected result and failure text), with the formula tests (`tests/test_formula.gd` and the combat tests).
+- **No live drawer yet.** The Unity Inspector drawer (true or false against the FormulaTestBench units, the failing part highlighted) has no Godot counterpart; the content check's probes play a candidate entry on test units instead.
 
 ## Examples
 
