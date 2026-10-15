@@ -251,6 +251,31 @@
       "teamOverride": "None",
       "fixedTeam": 0,
       "persistsThroughDeath": false
+    },
+    "Status/Zz Editor Test": {
+      "number": 15,
+      "id": "zz-editor-test",
+      "displayName": "Zz Editor Test",
+      "description": "A throwaway entry of the Content Editor test.",
+      "icon": "Assets/Art/Icons/Statuses/Rallied.png#Rallied",
+      "loopVfx": "Assets/Art/VFX/Kit/Rallied Loop.prefab",
+      "tags": ["Buff"],
+      "stacking": "Refresh",
+      "maxStacks": 99,
+      "duration": 2,
+      "durationUnit": "Turns",
+      "modifiers": [
+        { "target": "Power", "kind": "Flat", "amount": "2", "direction": "Outgoing", "requiredTags": [] },
+        { "target": "Speed", "kind": "Flat", "amount": "1", "direction": "Outgoing", "requiredTags": [] }
+      ],
+      "replacements": [],
+      "reactions": [],
+      "passiveCondition": "",
+      "aura": "",
+      "shieldPool": "",
+      "teamOverride": "None",
+      "fixedTeam": 0,
+      "persistsThroughDeath": false
     }
   }
 }
