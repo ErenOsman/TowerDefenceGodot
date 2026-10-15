@@ -95,7 +95,7 @@ func resolutions() -> Array:
 ## Engine.time_scale (0.5 slow, 1 normal, 2 fast).
 func set_game_speed(speed: float, save_to_disk := true) -> void:
 	var flow = get_node_or_null("/root/SceneFlow")
-	var in_level: bool = flow != null and flow.current == flow.Level
+	var in_level: bool = flow != null and flow.current == flow.Game
 	Engine.time_scale = speed if speed > 0.0 and in_level else 1.0 # only levels run at the game speed
 	_s.game_speed = speed
 	_done(save_to_disk)

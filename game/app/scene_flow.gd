@@ -169,7 +169,7 @@ func restore_game_speed() -> void:
 	var sd := get_node_or_null("/root/SaveData")
 	var speed: float = sd.settings.game_speed if sd != null else 1.0
 	# the game speed only runs levels; menus, the Camp and the Guild always run at 1 (Eren 2026-10-15)
-	Engine.time_scale = speed if speed > 0.0 and current == Level else 1.0
+	Engine.time_scale = speed if speed > 0.0 and current == Game else 1.0
 
 # ---------------------------------------------------------------- loading screen holds
 
