@@ -93,6 +93,18 @@
       "replacements": [],
       "reactions": ["Reactions/Shield Up", "Reactions/Shield Refill"],
       "aura": ""
+    },
+    "Passives/Spiked Counter-attack": {
+      "displayName": "Spiked Counter-attack",
+      "description": "When an adjacent enemy hits it, its spikes hit back for 8 (once per turn). Only while at half HP or more.",
+      "icon": "Assets/Art/Icons/Passives/SpikedCounter.png#SpikedCounter",
+      "hidden": false,
+      "condition": "Self.Hp * 2 >= Self.MaxHp",
+      "offCondition": "",
+      "modifiers": [],
+      "replacements": [],
+      "reactions": ["Reactions/Spiked Counter Strike"],
+      "aura": ""
     }
   }
 }

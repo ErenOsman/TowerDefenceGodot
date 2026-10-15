@@ -1,6 +1,6 @@
 extends SceneTree
 ## Regenerates res://data/coop.json from the co-op missions (Missions & Guild — Design): the relay reads that file
-## for a room's shared_pool, the game reads the missions. Run after changing data/content-godot/Missions.json:
+## for a room's shared_pool, the game reads the missions. Run after changing data/content/Missions.json:
 ##   godot --headless --path . -s tools/coop_json.gd
 ## (tests/test_missions.gd fails while the two disagree.)
 

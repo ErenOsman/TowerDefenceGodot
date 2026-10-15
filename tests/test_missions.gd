@@ -1,6 +1,6 @@
 extends TestCase
-## Missions & Guild — Design (Godot-first): the overlay content (Missions.json, Extras.json: the catalog's guildUnlock
-## and missions, the rules' towerEnergyPerDay), Validate All, MissionDef, MissionProgress (records, plays, tired
+## Missions & Guild — Design: the content (Missions.json, the catalog's guildUnlock and missions, the rules'
+## towerEnergyPerDay), Validate All, MissionDef, MissionProgress (records, plays, tired
 ## towers, saves), the MissionBoard rules (Guild / mission unlock, plays per day and the midnight reset, tower energy,
 ## rested hands, start_play, drops, found_in, the co-op checks and auto-leave), the co-op list built from missions
 ## (and data/coop.json kept in sync for the relay), the dev save actions.
@@ -48,7 +48,7 @@ func _mission(id := "x", plays := 1, mode := MissionMode.Solo) -> MissionDef:
 
 # ------------------------------------------------------------------ content
 
-func test_missions_overlay_loads() -> void:
+func test_missions_content_loads() -> void:
 	assert_eq(lib().problems.size(), 0, "\n".join(lib().problems))
 	assert_eq(lib().all_of("MissionAsset").size(), 5)
 	assert_eq(lib().file_of(lib().get_asset("Missions/Patrol")), "Missions.json")
@@ -56,10 +56,6 @@ func test_missions_overlay_loads() -> void:
 	assert_seq(c.missions.map(func(a): return a.get_id()), ["patrol", "night-watch", "hold-the-gate", "drum-line", "glutton-returns"])
 	assert_eq(c.guild_unlock.get_id(), "chapter2-4", "Chapter 2's last level")
 	assert_eq(lib().rules.tower_energy_per_day, 1)
-	var plain := ContentLibrary.load()
-	assert_eq(plain.all_of("MissionAsset").size(), 0, "load() without the overlay stays the synced content")
-	assert_null(plain.catalog.guild_unlock)
-	assert_eq(plain.catalog.missions.size(), 0)
 
 func test_missions_starter_table() -> void:
 	var p := m("patrol")
@@ -163,21 +159,17 @@ func test_mission_validation_rules() -> void:
 	assert_true(ce.any(func(e): return e.contains("missions[2] is empty")))
 	assert_true(ce.any(func(e): return e.contains("guildUnlock")))
 
-func test_extras_problems_are_reported() -> void:
-	var l := ContentLibrary.load()
-	l.apply_extras({"Nowhere/Thing": {}, "Settings/GameRules": {"towerEnergyPerDay": "x", "odd": 1}, "Assets/Resources/GameCatalog.asset": 3})
-	assert_eq(l.problems.size(), 4, "\n".join(l.problems))
-	l.apply_extras({"Settings/GameRules": {"towerEnergyPerDay": 2}})
-	assert_eq(l.rules.tower_energy_per_day, 2)
-	l.apply_extras([])
-	assert_eq(l.problems.size(), 5)
+func test_bad_mission_fields_are_reported() -> void:
+	var l := ContentLibrary.new()
+	l.add([["Rules.json", JSON.stringify({"type": "GameRulesAsset", "assets": {"Settings/GameRules": {"towerEnergyPerDay": "x", "odd": 1}}})]])
+	assert_true(l.problems.size() >= 2, "\n".join(l.problems))
+	assert_eq(l.rules.tower_energy_per_day, 1, "a bad value keeps the default")
 
-func test_content_hash_includes_missions_and_extras() -> void:
-	var names := ContentHash._files_of(ContentFiles.OverlayFolder, "content-godot/").map(func(f): return f[0])
-	assert_contains(names, "content-godot/Missions.json")
-	assert_contains(names, "content-godot/Extras.json")
-	assert_not_contains(names, "content-godot/CatalogDrops.json")
-	assert_ne(ContentHash.compute(), ContentHash.compute(ContentFiles.Folder, ""))
+func test_content_hash_includes_missions() -> void:
+	var names := ContentHash._files_of(ContentFiles.Folder, "").map(func(f): return f[0])
+	assert_contains(names, "Missions.json")
+	assert_not_contains(names, "Extras.json")
+	assert_false(DirAccess.dir_exists_absolute("res://data/content-godot"), "no overlay folder any more")
 
 func test_mission_asset_round_trips() -> void:
 	var a: MissionAsset = lib().get_asset("Missions/Hold the Gate")

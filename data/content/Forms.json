@@ -1,0 +1,143 @@
+{
+  "type": "FormAsset",
+  "assets": {
+    "Forms/Fire Archer": {
+      "id": "archer-fire",
+      "displayName": "Fire Archer",
+      "description": "Arrows catch fire: every hit sets the enemy burning.",
+      "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
+      "badge": "Assets/Art/UI/KitB/forms/archer-fire.png",
+      "tower": "Towers/Archer Tower",
+      "parent": null,
+      "entity": "Units/Towers/Forms/Fire Archer",
+      "cost": -1,
+      "unlock": [
+        { "token": "Tokens/Fire Arrow", "amount": 1 }
+      ],
+      "order": 0
+    },
+    "Forms/Inferno Archer": {
+      "id": "archer-inferno",
+      "displayName": "Inferno Archer",
+      "description": "Flaming volleys: each shot burns the target and everything next to it.",
+      "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
+      "badge": "Assets/Art/UI/KitB/forms/archer-inferno.png",
+      "tower": "Towers/Archer Tower",
+      "parent": "Forms/Fire Archer",
+      "entity": "Units/Towers/Forms/Inferno Archer",
+      "cost": -1,
+      "unlock": [
+        { "token": "Tokens/Ember Core", "amount": 1 },
+        { "token": "Tokens/Fire Arrow", "amount": 1 }
+      ],
+      "order": 0
+    },
+    "Forms/Poison Archer": {
+      "id": "archer-poison",
+      "displayName": "Poison Archer",
+      "description": "Tipped arrows: acid keeps eating the target for three turns.",
+      "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
+      "badge": "Assets/Art/UI/KitB/forms/archer-poison.png",
+      "tower": "Towers/Archer Tower",
+      "parent": null,
+      "entity": "Units/Towers/Forms/Poison Archer",
+      "cost": -1,
+      "unlock": [
+        { "token": "Tokens/Poison Gland", "amount": 1 }
+      ],
+      "order": 1
+    },
+    "Forms/Longbow": {
+      "id": "archer-longbow",
+      "displayName": "Longbow",
+      "description": "A tall bow that hits hard from far away, on slow feet.",
+      "icon": "Assets/Art/Icons/Units/Archer.png#Archer",
+      "badge": "Assets/Art/UI/KitB/forms/archer-longbow.png",
+      "tower": "Towers/Archer Tower",
+      "parent": null,
+      "entity": "Units/Towers/Forms/Longbow",
+      "cost": -1,
+      "unlock": [
+        { "token": "Tokens/Yew Bow", "amount": 2 }
+      ],
+      "order": 2
+    },
+    "Forms/Bastion": {
+      "id": "guardian-bastion",
+      "displayName": "Bastion",
+      "description": "A walking wall: heavy armour, a long taunt and a shield that pushes enemies back.",
+      "icon": "Assets/Art/Icons/Units/Guardian.png#Guardian",
+      "badge": "Assets/Art/UI/KitB/forms/guardian-bastion.png",
+      "tower": "Towers/Guardian Tower",
+      "parent": null,
+      "entity": "Units/Towers/Forms/Bastion",
+      "cost": -1,
+      "unlock": [
+        { "token": "Tokens/Steel Plate", "amount": 1 }
+      ],
+      "order": 0
+    },
+    "Forms/Spiked Guardian": {
+      "id": "guardian-spiked",
+      "displayName": "Spiked Guardian",
+      "description": "Spikes on the shield: whatever hits it gets hit back for 8.",
+      "icon": "Assets/Art/Icons/Units/Guardian.png#Guardian",
+      "badge": "Assets/Art/UI/KitB/forms/guardian-spiked.png",
+      "tower": "Towers/Guardian Tower",
+      "parent": null,
+      "entity": "Units/Towers/Forms/Spiked Guardian",
+      "cost": -1,
+      "unlock": [
+        { "token": "Tokens/Steel Plate", "amount": 1 },
+        { "token": "Tokens/Ember Core", "amount": 1 }
+      ],
+      "order": 1
+    },
+    "Forms/Pyromancer": {
+      "id": "mage-pyro",
+      "displayName": "Pyromancer",
+      "description": "Hurls big fireballs that burn everything around the tile they hit (placeholder).",
+      "icon": "Assets/Art/Icons/Units/Mage.png#Mage",
+      "badge": "Assets/Art/UI/KitB/forms/mage-pyro.png",
+      "tower": "Towers/Mage Tower",
+      "parent": null,
+      "entity": "Units/Towers/Forms/Pyromancer",
+      "cost": -1,
+      "unlock": [
+        { "token": "Tokens/Arcane Shard", "amount": 1 },
+        { "token": "Tokens/Ember Core", "amount": 1 }
+      ],
+      "order": 0
+    },
+    "Forms/Frost Mage": {
+      "id": "mage-frost",
+      "displayName": "Frost Mage",
+      "description": "Icy bolts that push enemies back (placeholder).",
+      "icon": "Assets/Art/Icons/Units/Mage.png#Mage",
+      "badge": "Assets/Art/UI/KitB/forms/mage-frost.png",
+      "tower": "Towers/Mage Tower",
+      "parent": null,
+      "entity": "Units/Towers/Forms/Frost Mage",
+      "cost": -1,
+      "unlock": [
+        { "token": "Tokens/Arcane Shard", "amount": 1 }
+      ],
+      "order": 1
+    },
+    "Forms/Storm Mage": {
+      "id": "mage-storm",
+      "displayName": "Storm Mage",
+      "description": "Sparks that jump between enemies (placeholder).",
+      "icon": "Assets/Art/Icons/Units/Mage.png#Mage",
+      "badge": "Assets/Art/UI/KitB/forms/mage-storm.png",
+      "tower": "Towers/Mage Tower",
+      "parent": null,
+      "entity": "Units/Towers/Forms/Storm Mage",
+      "cost": -1,
+      "unlock": [
+        { "token": "Tokens/Arcane Shard", "amount": 2 }
+      ],
+      "order": 2
+    }
+  }
+}

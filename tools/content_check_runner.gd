@@ -1,6 +1,6 @@
 extends RefCounted
 ## The content check job (tools/content_check.gd, daemon job `content_check`; used by the wiki's Content Editor):
-## loads the game content (data/content + the Godot overlay data/content-godot) with candidate entries merged on top
+## loads the game content (data/content) with candidate entries merged on top
 ## (ContentLibrary.load_game(candidate dir): same key → the candidate wins), validates everything (library problems,
 ## ContentCheck = Validate All, conversion of every candidate), reports only what the candidates add (findings that
 ## the content without them already has are counted in "baseline"), and probes each candidate by its type in small
@@ -92,10 +92,6 @@ func _check(dir: String, level_id: String) -> void:
 			errors.append("%s: line %d: %s" % [f, json.get_error_line(), json.get_error_message()])
 			continue
 		var root = json.data
-		if f == ContentFiles.ExtrasFile:
-			if root is Dictionary:
-				for k in root: candidates.append({"file": f, "type": "Extras", "key": k})
-			continue
 		if not (root is Dictionary) or not (root.get("assets") is Dictionary):
 			errors.append("%s: not a content file ({\"type\", \"assets\": {key: entry}})" % f)
 			continue
@@ -120,7 +116,7 @@ func _check(dir: String, level_id: String) -> void:
 				if not root["assets"][key].has(field):
 					warnings.append("%s: field '%s' is missing (it gets the default)" % [key, field])
 	if candidates.is_empty() and errors.is_empty():
-		errors.append("no candidate entries in %s" % dir)
+		warnings.append("no candidate entries in %s: the content alone was loaded and validated" % dir)
 	if not errors.is_empty() and by_file.is_empty(): return
 
 	# the content without and with the candidates
@@ -161,7 +157,6 @@ func _check(dir: String, level_id: String) -> void:
 
 	# convert and probe each candidate
 	for c in candidates:
-		if c.type == "Extras": continue
 		var asset = lib.get_asset(c.key)
 		if asset == null:
 			errors.append("%s: not loaded (see the load errors)" % c.key)

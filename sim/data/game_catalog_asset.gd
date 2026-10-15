@@ -30,7 +30,7 @@ var camp_unlock: LevelAsset = null
 ## What the Codex lists (towers, enemies, statuses, tips).
 var codex: CodexAsset = null
 
-# Missions & Guild (Godot-first: the overlay's Extras.json sets them)
+# Missions & Guild (Catalog.json "guildUnlock", "missions")
 ## The level whose win opens the Guild (the Camp's Signpost: Missions) — Chapter 2's last level. Null: no Guild.
 var guild_unlock: LevelAsset = null
 ## The mission board's missions, in board order: Array of MissionAsset.
@@ -124,7 +124,7 @@ func next_main_level(progress: LevelProgress) -> LevelAsset:
 
 ## The saved hand as level towers: each owned tower's type looked up in tower_types. Hand
 ## entries that are not owned or whose type is not listed are skipped and reported.
-## ids (Godot-first): build these owned tower ids instead of the whole hand (a mission's towers taken).
+## ids: build these owned tower ids instead of the whole hand (a mission's towers taken).
 func build_hand(towers: TowerCollection, convert: AssetConverter, problems = null, ids = null) -> Array:
 	var type_by_id := func(type_id: String) -> TowerType:
 		var t := find_tower(type_id)

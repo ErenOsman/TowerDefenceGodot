@@ -2,7 +2,7 @@ class_name LevelLaunch
 extends RefCounted
 ## The level the game scene should play, set by level select before loading the scene. With no
 ## request, the game scene keeps its own level (playing it straight from the editor).
-## Godot-first addition: `mission_id`, the mission the level is played as ("" = a chapter level; Missions & Guild —
+## Not in the C#: `mission_id`, the mission the level is played as ("" = a chapter level; Missions & Guild —
 ## Design): the level then spends a play, takes the first rested towers and gives the mission's drops.
 
 static var level: LevelAsset = null

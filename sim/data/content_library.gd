@@ -1,8 +1,7 @@
 class_name ContentLibrary
 extends RefCounted
-## The game's content loaded straight from the JSON files (res://data/content, copied from the Unity repo's
-## Content/), without Unity's asset database: every entry becomes an asset object named after its key, and
-## references between entries are linked. References to art (sprites, prefabs, sounds: keys under "Assets/")
+## The game's content loaded straight from the JSON files (res://data/content, the source of truth: docs/CONTENT.md):
+## every entry becomes an asset object named after its key, and references between entries are linked. References to art (sprites, prefabs, sounds: keys under "Assets/")
 ## stay strings; the rules never read them. Feed the objects to an AssetConverter and AssetValidator.
 
 var _by_key := {}  # key → asset
@@ -42,24 +41,16 @@ var rules: GameRulesAsset:
 		var list := all_of("GameRulesAsset")
 		return list[0] if not list.is_empty() else null
 
-## Loads every *.json file in the folder (res://data/content), in ordinal file-name order. With an overlay folder
-## (Godot-only content, ContentFiles.OverlayFolder), its files are merged over the folder's: a file of the same name
-## adds its entries to that file's (an entry with the same key replaces the folder's), other files are added, and
-## the overlay's Extras.json patches fields of assets already loaded (apply_extras: the catalog's guildUnlock and
-## missions, the rules' towerEnergyPerDay).
-## extra: a further overlay folder merged on top of the overlay the same way (same key → extra's entry wins; its
-## Extras.json patches after the overlay's). Used by the content check (tools/content_check.gd) to try candidate
-## entries without writing them into the game's folders.
-static func load(folder: String = ContentFiles.Folder, overlay: String = "", extra: String = "") -> ContentLibrary:
+## Loads every *.json file in the folder (res://data/content), in ordinal file-name order.
+## extra: a candidate folder whose files are merged over the folder's: a file of the same name adds its entries to
+## that file's (an entry with the same key replaces the folder's), other files are added. Used by the content check
+## (tools/content_check.gd, the wiki's Content Editor) to try candidate entries without writing them into the game's
+## folder.
+static func load(folder: String = ContentFiles.Folder, extra: String = "") -> ContentLibrary:
 	var library := ContentLibrary.new()
 	var texts := _texts_of(folder)
-	var extras := []
-	for layer in [overlay, extra]:
-		if layer == "" or not DirAccess.dir_exists_absolute(layer): continue
-		for pair in _texts_of(layer):
-			if pair[0] == ContentFiles.ExtrasFile:
-				extras.append(pair)
-				continue
+	if extra != "" and DirAccess.dir_exists_absolute(extra):
+		for pair in _texts_of(extra):
 			var merged := false
 			for i in texts.size():
 				if texts[i][0] == pair[0]:
@@ -69,16 +60,11 @@ static func load(folder: String = ContentFiles.Folder, overlay: String = "", ext
 			if not merged: texts.append(pair)
 		texts.sort_custom(func(a, b): return a[0] < b[0])
 	library.add(texts)
-	for pair in extras:
-		var json := JSON.new()
-		if json.parse(pair[1]) != OK: library.problems.append("%s: line %d: %s" % [pair[0], json.get_error_line(), json.get_error_message()])
-		else: library.apply_extras(json.data, pair[0])
 	return library
 
-## The game's content: res://data/content with the Godot-only overlay (res://data/content-godot) merged over it,
-## and an optional extra overlay folder (candidate entries) merged over both.
+## The game's content (res://data/content), with an optional candidate folder merged over it (see load()).
 static func load_game(extra: String = "") -> ContentLibrary:
-	return ContentLibrary.load(ContentFiles.Folder, ContentFiles.OverlayFolder, extra)
+	return ContentLibrary.load(ContentFiles.Folder, extra)
 
 static func _texts_of(folder: String) -> Array:
 	var names := []
@@ -90,32 +76,15 @@ static func _texts_of(folder: String) -> Array:
 		texts.append([f, FileAccess.get_file_as_string(folder.path_join(f))])
 	return texts
 
-## Two content files of the same type as one: overlay's entries over base's (texts that do not parse stay apart so
-## add() reports them).
-static func _merge(base_text: String, overlay_text: String) -> String:
+## Two content files of the same type as one: the candidate's entries over base's (texts that do not parse stay
+## apart so add() reports them).
+static func _merge(base_text: String, candidate_text: String) -> String:
 	var a = JSON.parse_string(base_text)
-	var b = JSON.parse_string(overlay_text)
+	var b = JSON.parse_string(candidate_text)
 	if not (a is Dictionary) or not (b is Dictionary) or not (a.get("assets") is Dictionary) or not (b.get("assets") is Dictionary):
-		return base_text if not (b is Dictionary) else overlay_text
+		return base_text if not (b is Dictionary) else candidate_text
 	for key in b["assets"]: a["assets"][key] = b["assets"][key]
 	return JSON.stringify(a)
-
-## Patches fields of loaded assets from the overlay's extras table ({ "<asset key>": { "<field>": value } }, field
-## names and values as in the content JSON; fields the table leaves out keep their value). Unknown keys, unknown
-## fields and bad values are reported in problems. Godot-only (Unity: the fields live in Catalog.json / Rules.json).
-func apply_extras(root, file: String = ContentFiles.ExtrasFile) -> void:
-	if not (root is Dictionary):
-		problems.append("%s: not a JSON object" % file)
-		return
-	var list: Array = problems
-	for key in root:
-		var asset = get_asset(key)
-		var o = root[key]
-		if asset == null or not (o is Dictionary):
-			problems.append("%s: %s: %s" % [file, key, "no such asset" if asset == null else "not an object"])
-			continue
-		ContentSerializer.load_into(asset, o, self, list, "%s: %s" % [file, key])
-	_link_forms()
 
 ## Loads files given as text: an Array of [file name, JSON text].
 func add(texts: Array) -> void:

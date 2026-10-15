@@ -10,7 +10,7 @@ var c: LevelController
 var g: GuidedTutorial
 
 func setup() -> void:
-	if _lib == null: _lib = ContentLibrary.load_game() # the overlay's short tutorial map (data/content-godot/Levels.json)
+	if _lib == null: _lib = ContentLibrary.load_game() # the short 7×5 tutorial map (data/content/Levels.json)
 	c = LevelController.new()
 	var level: LevelAsset = _lib.catalog.tutorial if _lib.catalog != null else null
 	if level == null:
@@ -269,7 +269,7 @@ func test_the_whole_tutorial_step_by_step() -> void:
 ## won in about 8 rounds (the sim is deterministic).
 func test_the_short_map_puts_the_slime_in_range_within_two_end_turns() -> void:
 	var grid: BattleGrid = c.session.state.grid
-	assert_eq(Vector2i(grid.width, grid.height), Vector2i(7, 5), "the overlay's 7×5 map")
+	assert_eq(Vector2i(grid.width, grid.height), Vector2i(7, 5), "the 7×5 tutorial map")
 	var ends := 0
 	c.continue_sequence()
 	c.continue_sequence()

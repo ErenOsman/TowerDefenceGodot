@@ -13,9 +13,9 @@ var progress: LevelProgress = LevelProgress.new()
 var profile: PlayerProfile = PlayerProfile.new()
 ## What the Codex shows as discovered and what is still new.
 var codex: CodexProgress = CodexProgress.new()
-## The Workshop tokens owned (and earned) per kind (Workshop — Design). Godot-first: saved under "tokens".
+## The Workshop tokens owned (and earned) per kind (Workshop — Design). Saved under "tokens".
 var tokens: TokenWallet = TokenWallet.new()
-## Mission records, plays spent per day and tired towers (Missions & Guild — Design). Godot-first: saved under
+## Mission records, plays spent per day and tired towers (Missions & Guild — Design). Saved under
 ## "missions"; a save without it has no mission history.
 var missions: MissionProgress = MissionProgress.new()
 

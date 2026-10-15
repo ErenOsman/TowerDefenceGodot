@@ -73,27 +73,27 @@ const SCHEMA := {
 		"facingEnabled": "bool", "relations": "list:obj:TeamRelation", "tiles": "list:ref:TileAsset",
 		"reactions": "list:ref:ReactionAsset", "replacements": "list:obj:ReplacementData", "modifiers": "list:obj:Modifier",
 		"maxDepth": "int",
-		# Missions & Guild (Godot-first: set by the overlay's Extras.json until Rules.json has it)
+		# Missions & Guild (no C# counterpart)
 		"towerEnergyPerDay": "int",
 	},
 	"GameCatalogAsset": {
 		"chapters": "list:obj:ChapterData", "towerTypes": "list:ref:TowerAsset", "startingTowers": "list:ref:TowerAsset",
 		"tutorial": "ref:LevelAsset", "tutorialReward": "ref:TowerAsset", "campUnlock": "ref:LevelAsset", "codex": "ref:CodexAsset",
-		# Missions & Guild (Godot-first: set by the overlay's Extras.json until Catalog.json has them)
+		# Missions & Guild (no C# counterpart)
 		"guildUnlock": "ref:LevelAsset", "missions": "list:ref:MissionAsset",
 	},
 	"CodexAsset": {
 		"towers": "list:ref:TowerAsset", "enemies": "list:ref:EntityAsset", "statuses": "list:ref:StatusAsset", "tips": "list:obj:CodexTip",
 	},
 	"SequenceAsset": {"number": "int", "lines": "list:obj:SequenceLine"},
-	# Workshop (Workshop — Design): Godot-first, from res://data/content-godot until the Unity repo has them
+	# Workshop (Workshop — Design): Forms.json, Tokens.json (no C# counterpart)
 	"FormAsset": {
 		"id": "string", "displayName": "string", "description": "string", "icon": "art", "badge": "art",
 		"tower": "ref:TowerAsset", "parent": "ref:FormAsset", "entity": "ref:EntityAsset", "cost": "int",
 		"unlock": "list:obj:TokenAmount", "order": "int",
 	},
 	"TokenAsset": {"id": "string", "displayName": "string", "description": "string", "icon": "art", "rarity": "enum:TokenRarity"},
-	# Missions & Guild — Design: Godot-first, from res://data/content-godot until the Unity repo has Missions.json
+	# Missions & Guild — Design: Missions.json (no C# counterpart)
 	"MissionAsset": {
 		"id": "string", "displayName": "string", "description": "string", "icon": "art", "level": "ref:LevelAsset",
 		"mode": "enum:MissionMode", "players": "obj:PlayerRange", "playsPerDay": "int", "requires": "list:ref:ContentAsset",

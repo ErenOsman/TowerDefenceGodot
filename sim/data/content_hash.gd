@@ -7,14 +7,10 @@ extends RefCounted
 
 const Protocol := "coop-1"
 
-## The hash of the content folder (every *.json in it, sorted by name) and of the Godot-only overlay folder
-## (ContentFiles.OverlayFolder: Workshop forms, tokens and drops), whose files sort as "content-godot/<name>" after
-## the content's, so both clients must have the same overlay too. A missing or empty overlay adds nothing.
-static func compute(folder: String = ContentFiles.Folder, overlay: String = ContentFiles.OverlayFolder) -> String:
-	var files := _files_of(folder, "")
-	if overlay != "" and DirAccess.dir_exists_absolute(overlay):
-		files.append_array(_files_of(overlay, overlay.get_file() + "/"))
-	return of_files(files)
+## The hash of the content folder (every *.json in it, sorted by name: ContentFiles.FILES plus the presentation
+## files).
+static func compute(folder: String = ContentFiles.Folder) -> String:
+	return of_files(_files_of(folder, ""))
 
 static func _files_of(folder: String, prefix: String) -> Array:
 	var names := []

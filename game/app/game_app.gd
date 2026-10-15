@@ -11,7 +11,7 @@ var _rules: GameRules = null
 var _tex_cache := {}    # res path → Texture2D or null
 var _scene_cache := {}  # res path → PackedScene or null
 
-## The content library (every asset in res://data/content, with res://data/content-godot merged over it).
+## The content library (every asset in res://data/content).
 var lib: ContentLibrary:
 	get:
 		ensure_loaded()
@@ -41,7 +41,7 @@ var loaded: bool:
 func ensure_loaded() -> void:
 	if _lib != null: return
 	var t := Time.get_ticks_msec()
-	_lib = ContentLibrary.load_game() # data/content + the Godot-only overlay data/content-godot (Workshop)
+	_lib = ContentLibrary.load_game() # data/content
 	_convert = AssetConverter.new()
 	_rules = _convert.rules(_lib.rules) if _lib.rules != null else null
 	MissionBoard.energy_per_day = maxi(1, _lib.rules.tower_energy_per_day) if _lib.rules != null else 1

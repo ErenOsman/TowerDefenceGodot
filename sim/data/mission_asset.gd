@@ -1,8 +1,7 @@
 class_name MissionAsset
 extends ContentAsset
 ## A mission (Missions & Guild — Design, Content/Missions.json): a level played from the Guild a limited number of
-## times a day, alone and/or in a co-op room, dropping Workshop tokens. Godot-first: res://data/content-godot until
-## the Unity repo has Missions.json (see docs/GODOT-NOTES.md).
+## times a day, alone and/or in a co-op room, dropping Workshop tokens (res://data/content/Missions.json).
 
 ## Stable mission ID, saved (MissionProgress records, plays), e.g. "night-watch". Empty falls back to the asset name.
 var id: String = ""

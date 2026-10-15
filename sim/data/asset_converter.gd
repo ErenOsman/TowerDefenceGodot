@@ -175,7 +175,7 @@ func tower_type(a: TowerAsset) -> TowerType:
 	d.forms = forms
 	return d
 
-## A tower form (Workshop — Design): its entity, cost, unlock cost and parent. Not in the C# yet (Godot-first).
+## A tower form (Workshop — Design): its entity, cost, unlock cost and parent. (No C# counterpart.)
 func form(a: FormAsset) -> FormDef:
 	if a == null: return null
 	if _cache.has(a): return _cache[a]
@@ -211,7 +211,7 @@ func token(a: TokenAsset) -> TokenDef:
 	d.rarity = a.rarity
 	return d
 
-## A mission (Missions & Guild — Design). Not in the C# yet (Godot-first). Token amounts of the same kind add up;
+## A mission (Missions & Guild — Design). (No C# counterpart.) Token amounts of the same kind add up;
 ## requires keep the ids of the levels / missions listed (empty entries skipped).
 func mission(a: MissionAsset) -> MissionDef:
 	if a == null: return null

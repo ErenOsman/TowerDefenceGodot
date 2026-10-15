@@ -45,7 +45,8 @@
         "Tiles/Spawn Burrow",
         "Tiles/Tree Pine",
         "Tiles/Tree Round"
-      ]
+      ],
+      "towerEnergyPerDay": 1
     }
   }
 }

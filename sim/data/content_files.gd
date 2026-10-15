@@ -1,19 +1,10 @@
 class_name ContentFiles
 extends RefCounted
-## Where content lives: the JSON file of each asset type (Content/<Type>.json; res://data/content here) and the
-## asset path an entry key names.
+## Where content lives: the JSON file of each asset type (res://data/content/<Type>.json, the source of truth; see
+## docs/CONTENT.md) and the asset path an entry key names.
 
-## The content JSON folder in this project (C# Folder = "Content", relative to the Unity project).
+## The content JSON folder (C# Folder = "Content", relative to the frozen Unity project).
 const Folder := "res://data/content"
-
-## Godot-only content overlay (Workshop forms/tokens and their entities, Missions, the catalog's guild fields and the
-## rules' tower energy) merged over Folder by ContentLibrary.load_game() and hashed by ContentHash.compute(); see
-## docs/GODOT-NOTES.md "Workshop & Missions content". Delete it when the Unity repo has Forms/Tokens/Missions.json.
-const OverlayFolder := "res://data/content-godot"
-
-## The overlay's field patches for assets the synced content already has:
-## { "<asset key>": { "<field>": value, … } } (the catalog's guildUnlock / missions, the rules' towerEnergyPerDay).
-const ExtrasFile := "Extras.json"
 
 ## Where content assets live in the Unity project; keys are paths under it without ".asset".
 const DataRoot := "Assets/Data"

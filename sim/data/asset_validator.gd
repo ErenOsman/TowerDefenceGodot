@@ -76,7 +76,6 @@ const MaxFormDepth := 2
 
 ## A tower form (Workshop — Design § Validation): its id, tower, entity (a Unit standing OffPath), parent (a form of
 ## the same tower, no cycles, depth ≤ MaxFormDepth) and unlock cost (at least one token; tokens exist; amounts > 0).
-## Godot-first (not in the C# yet).
 static func validate_form(f: FormAsset) -> Array[String]:
 	var errors: Array[String] = []
 	var error := func(message: String) -> void: errors.append("%s: %s" % [f.name, message])
@@ -119,7 +118,7 @@ const MaxPlayers := 6
 
 ## A mission (Missions & Guild — Design § Validation): its id, its level, playsPerDay ≥ 1, a co-op mission's player
 ## range within 1–MaxPlayers and coopHandCap ≥ 1, its requirements (levels or missions, no empty entries, no cycle
-## through other missions' requirements) and its drops (a token each, positive amounts). Godot-first.
+## through other missions' requirements) and its drops (a token each, positive amounts).
 static func validate_mission(m: MissionAsset) -> Array[String]:
 	var errors: Array[String] = []
 	var error := func(message: String) -> void: errors.append("%s: %s" % [m.name, message])
@@ -261,7 +260,7 @@ static func validate_catalog(c: GameCatalogAsset) -> Array[String]:
 		var data: CatalogLevelData = e[0]
 		if data.level != null and data.first_clear_reward != null and not type_ids.has(data.first_clear_reward.get_id()):
 			error.call("%s: its first-clear reward %s is not in towerTypes (saves could not find it)" % [data.level.get_id(), data.first_clear_reward.name])
-	# Missions & Guild (Godot-first): the guild unlock is a catalog level; the board's missions are listed once
+	# Missions & Guild: the guild unlock is a catalog level; the board's missions are listed once
 	if c.guild_unlock != null and c.find_level(c.guild_unlock.get_id()) == null:
 		error.call("guildUnlock %s is not a level of the chapters" % c.guild_unlock.get_id())
 	var mission_ids := {}

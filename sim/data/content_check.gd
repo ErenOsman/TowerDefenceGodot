@@ -43,7 +43,7 @@ static func run(assets: Array, vocab: Vocabulary) -> Array:
 		if ids.has(tower.get_id()): findings.append(Finding.new(tower, "%s: tower type ID '%s' is also used by %s" % [tower.name, tower.get_id(), ids[tower.get_id()].name], true))
 		else: ids[tower.get_id()] = tower
 
-	# Workshop & Missions (Godot-first): form, token and mission ids unique; every token kind drops from some mission
+	# Workshop & Missions: form, token and mission ids unique; every token kind drops from some mission
 	# (else a warning: missions are the only token source); a mission the catalog's board does not list is a warning
 	for type_name in ["FormAsset", "TokenAsset", "MissionAsset"]:
 		var seen := {}

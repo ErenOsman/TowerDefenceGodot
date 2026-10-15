@@ -1,5 +1,5 @@
 extends TestCase
-## Workshop — Design (Godot-first): the overlay content (data/content-godot) merged over data/content, the rules in
+## Workshop — Design: the content (Forms.json, Tokens.json and the form units in data/content), the rules in
 ## Workshop (unlock, set_form, resolve, drops, found_in), the TokenWallet, saves (old saves migrate), the hand a level
 ## builds from forms, co-op hand entries "<type>@<form>", the dev cheats and the HUD text helpers.
 
@@ -33,15 +33,13 @@ func _result(level_id: String, won := true, quit := false) -> LevelResult:
 
 # ------------------------------------------------------------------ content
 
-func test_workshop_overlay_loads_without_problems() -> void:
+func test_workshop_content_loads_without_problems() -> void:
 	assert_eq(lib().problems.size(), 0, "\n".join(lib().problems))
 	assert_eq(lib().all_of("FormAsset").size(), 9)
 	assert_eq(lib().all_of("TokenAsset").size(), 6)
-	var plain := ContentLibrary.load()
-	assert_eq(plain.all_of("FormAsset").size(), 0, "load() without an overlay stays the synced content")
-	assert_eq(lib().all_of("EntityAsset").size(), plain.all_of("EntityAsset").size() + 9, "the overlay adds the form units")
-	assert_eq(lib().file_of(lib().get_asset("Units/Towers/Forms/Fire Archer")), "Units.json", "merged into the file of its type")
-	assert_not_null(lib().get_asset("Units/Towers/Archer"), "the synced entries stay")
+	assert_eq(lib().file_of(lib().get_asset("Units/Towers/Forms/Fire Archer")), "Units.json", "form units live in the file of their type")
+	assert_eq(lib().file_of(lib().get_asset("Forms/Fire Archer")), "Forms.json")
+	assert_not_null(lib().get_asset("Units/Towers/Archer"))
 	var archer: TowerAsset = lib().get_asset("Towers/Archer Tower")
 	assert_seq(archer.forms.map(func(f): return f.get_id()), ["archer-fire", "archer-inferno", "archer-poison", "archer-longbow"])
 	assert_eq(lib().catalog.tokens.size(), 6)
@@ -123,16 +121,11 @@ func test_workshop_drops_come_from_missions() -> void:
 	assert_seq(Workshop.found_in("nothing", ms), [])
 	assert_seq(Workshop.found_in("ember-core", cat), ["chapter2-4"], "a LevelCatalog: the levels the missions play")
 
-func test_workshop_bad_extras_are_reported() -> void:
-	var l := ContentLibrary.load()
-	l.apply_extras({"nowhere": {}, "Assets/Resources/GameCatalog.asset": {"missions": ["Missions/Missing"], "odd": 1}})
-	assert_eq(l.problems.size(), 3, "\n".join(l.problems))
-
-func test_workshop_content_hash_includes_the_overlay() -> void:
-	var with := ContentHash.compute()
-	assert_eq(with, ContentHash.compute(ContentFiles.Folder, ContentFiles.OverlayFolder))
-	assert_ne(with, ContentHash.compute(ContentFiles.Folder, ""), "the overlay changes the hash")
-	assert_eq(ContentHash.compute(ContentFiles.Folder, "res://no/such/folder"), ContentHash.compute(ContentFiles.Folder, ""))
+func test_workshop_content_hash_covers_forms_and_tokens() -> void:
+	var names := ContentHash._files_of(ContentFiles.Folder, "").map(func(f): return f[0])
+	assert_contains(names, "Forms.json")
+	assert_contains(names, "Tokens.json")
+	assert_eq(ContentHash.compute(), ContentHash.compute(ContentFiles.Folder))
 
 # ------------------------------------------------------------------ rules
 

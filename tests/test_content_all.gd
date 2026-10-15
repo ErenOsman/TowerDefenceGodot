@@ -11,8 +11,11 @@ func lib() -> ContentLibrary:
 func test_loads_without_problems() -> void:
 	assert_eq(lib().problems.size(), 0, "\n".join(lib().problems))
 	assert_set(lib().skipped.map(func(s): return s.get_slice(":", 0)), ["PresentationTimings.json", "UITheme.json"])
-	assert_eq(lib().all_of("AbilityAsset").size(), 35)
-	assert_eq(lib().all_of("EntityAsset").size(), 28)
+	assert_eq(lib().all_of("AbilityAsset").size(), 43)
+	assert_eq(lib().all_of("EntityAsset").size(), 37)
+	assert_eq(lib().all_of("FormAsset").size(), 9)
+	assert_eq(lib().all_of("TokenAsset").size(), 6)
+	assert_eq(lib().all_of("MissionAsset").size(), 5)
 	assert_eq(lib().all_of("LevelAsset").size(), 11)
 	assert_eq(lib().all_of("TowerAsset").size(), 9)
 	assert_eq(lib().all_of("TileAsset").size(), 29)
@@ -145,9 +148,9 @@ func test_json_round_trips() -> void:
 			var diff := _diff(root["assets"][key], written, key)
 			assert_eq(diff, "", "%s: %s" % [f, diff])
 
-## Godot-first fields with a non-zero default that the synced content leaves out (Missions & Guild: the rules'
-## towerEnergyPerDay = 1, set by the overlay's Extras.json until Unity's Rules.json carries it).
-const GODOT_FIRST_DEFAULTS := {"towerEnergyPerDay": 1}
+## Fields with a non-zero default that a content file may leave out (Missions & Guild: the rules'
+## towerEnergyPerDay = 1; the oracle snapshot's Rules.json has no such field).
+const OPTIONAL_DEFAULTS := {"towerEnergyPerDay": 1}
 
 func _diff(a, b, path: String) -> String:
 	if a is Dictionary and b is Dictionary:
@@ -157,8 +160,8 @@ func _diff(a, b, path: String) -> String:
 			if d != "": return d
 		for k in b:
 			# a field the file leaves out (written before the field existed) must hold its default
-			# Godot-first fields the synced files do not have yet keep their own default (GODOT_FIRST_DEFAULTS)
-			if not a.has(k) and GODOT_FIRST_DEFAULTS.has(k) and b[k] == GODOT_FIRST_DEFAULTS[k]: continue
+			# fields a file leaves out keep their own default (OPTIONAL_DEFAULTS)
+			if not a.has(k) and OPTIONAL_DEFAULTS.has(k) and b[k] == OPTIONAL_DEFAULTS[k]: continue
 			if not a.has(k) and not (b[k] == null or b[k] is Array and b[k].is_empty() or b[k] is String and b[k] == "" or (b[k] is float or b[k] is int) and b[k] == 0):
 				return "%s.%s extra" % [path, k]
 		return ""

@@ -1,6 +1,6 @@
 extends TestCase
-## ContentLibrary.load_game(extra): a candidate folder merged on top of data/content + data/content-godot (the
-## content check job and the wiki's Content Editor use it), and the check job's verdict on a broken candidate.
+## ContentLibrary.load_game(extra): a candidate folder merged on top of data/content (the content check job and the
+## wiki's Content Editor use it), and the check job's verdict on a broken candidate and on an empty one.
 
 var _dir := ""
 
@@ -39,25 +39,23 @@ func test_a_candidate_entry_replaces_the_same_key_and_adds_new_ones() -> void:
 	assert_not_null(lib.get_asset("Statuses/Candidate Chill"), "a new key is added")
 	assert_not_null(lib.get_asset("Statuses/Acid"), "the other entries of the file stay")
 	assert_eq(lib.all_of("StatusAsset").size(), plain.all_of("StatusAsset").size() + 1)
-	assert_eq(lib.all_of("FormAsset").size(), plain.all_of("FormAsset").size(), "the Godot overlay is still merged under it")
+	assert_eq(lib.all_of("FormAsset").size(), plain.all_of("FormAsset").size(), "the other files stay")
 	assert_eq(ContentLibrary.load_game().get_asset("Statuses/Burn").max_stacks, burn_before.max_stacks, "nothing is written: load_game() alone is unchanged")
 
-func test_a_candidate_wins_over_the_godot_overlay_and_its_extras_patch_last() -> void:
+func test_a_candidate_replaces_a_workshop_entry() -> void:
 	var plain := ContentLibrary.load_game()
 	var form_key := ""
 	for f in plain.all_of("FormAsset"):
 		form_key = plain.key_of(f)
 		break
-	assert_ne(form_key, "", "the overlay has forms")
+	assert_ne(form_key, "", "the content has forms")
 	var entry: Dictionary = ContentSerializer.to_json(plain.get_asset(form_key), plain)
 	entry["order"] = 777
 	_write("Forms.json", {"type": "FormAsset", "assets": {form_key: entry}})
-	_write("Extras.json", {"Settings/GameRules": {"towerEnergyPerDay": 5}})
 	var lib := ContentLibrary.load_game(_dir)
 	assert_eq(lib.problems, [])
-	assert_eq(lib.get_asset(form_key).order, 777, "a key of the overlay is replaced by the candidate")
+	assert_eq(lib.get_asset(form_key).order, 777, "the key is replaced by the candidate")
 	assert_eq(lib.all_of("FormAsset").size(), plain.all_of("FormAsset").size())
-	assert_eq(lib.rules.tower_energy_per_day, 5, "the candidate's Extras.json patches after the overlay's")
 
 func test_a_missing_reference_is_reported() -> void:
 	_write("Statuses.json", {"type": "StatusAsset", "assets": {"Statuses/Candidate Chill": _status("candidate-chill", 3, ["Reactions/No Such"])}})
@@ -79,3 +77,9 @@ func test_the_check_job_refuses_a_broken_candidate_and_passes_a_good_one() -> vo
 	if good.json.probes.size() == 1:
 		assert_eq(good.json.probes[0].entry, "Statuses/Candidate Chill")
 		assert_true(good.json.probes[0].tables.size() >= 2, "per-turn tables for the plain and the shielded dummy")
+
+func test_the_check_job_passes_an_empty_candidate() -> void:
+	var r: Dictionary = load("res://tools/content_check_runner.gd").run([_dir])
+	assert_eq(r.code, 0, str(r.json.errors))
+	assert_true(r.json.ok)
+	assert_true(r.json.warnings.any(func(w): return str(w).contains("no candidate entries")), str(r.json.warnings))

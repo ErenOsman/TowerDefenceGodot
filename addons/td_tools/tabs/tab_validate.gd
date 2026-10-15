@@ -2,16 +2,10 @@
 extends "res://addons/td_tools/tabs/tab_base.gd"
 ## Validate All (ContentCheck, Tools > Combat > Validate All) on data/content: one row per finding. A click selects
 ## the JSON file in the FileSystem dock and copies the entry key (shown with its line); a double click opens the
-## file outside. "Sync from Unity" runs tools/sync_from_unity.sh with the Unity repo path when that folder exists,
-## then reloads the content and validates again.
-
-const SYNC_SCRIPT := "res://tools/sync_from_unity.sh"
+## file outside. data/content is the source of truth (docs/CONTENT.md); there is nothing to sync from.
 
 var tree: Tree
 var errors_only: CheckBox
-var unity_edit: LineEdit
-var sync_button: Button
-var output: TextEdit
 var rows: Array = []
 
 func build() -> void:
@@ -22,15 +16,6 @@ func build() -> void:
 	errors_only.text = "Errors only"
 	errors_only.toggled.connect(func(_on): show_rows())
 	top.add_child(errors_only)
-	top.add_child(D.label("", true))
-	top.add_child(D.label("Unity repo:"))
-	unity_edit = LineEdit.new()
-	unity_edit.text = default_unity_path()
-	unity_edit.custom_minimum_size = Vector2(260, 0)
-	unity_edit.text_changed.connect(func(_t): _update_sync())
-	top.add_child(unity_edit)
-	sync_button = D.button("Sync from Unity", sync, "tools/sync_from_unity.sh: copies Content/*.json and the design docs.")
-	top.add_child(sync_button)
 
 	var split := VSplitContainer.new()
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -47,25 +32,9 @@ func build() -> void:
 	tree.item_selected.connect(_on_selected)
 	tree.item_activated.connect(_on_activated)
 	split.add_child(tree)
-	output = TextEdit.new()
-	output.editable = false
-	output.custom_minimum_size = Vector2(0, 60)
-	output.visible = false
-	split.add_child(output)
-
-static func default_unity_path() -> String:
-	var home := OS.get_environment("HOME")
-	if home == "": home = OS.get_environment("USERPROFILE")
-	return home.path_join("game")
 
 func fill() -> void:
-	_update_sync()
 	run()
-
-func _update_sync() -> void:
-	var ok := DirAccess.dir_exists_absolute(unity_edit.text.path_join("Content"))
-	sync_button.disabled = not ok
-	sync_button.tooltip_text = "Runs tools/sync_from_unity.sh %s" % unity_edit.text if ok else "No Unity repo (Content/) at that path."
 
 ## Validates data/content (a tools job) and lists the findings.
 func run() -> void:
@@ -106,14 +75,3 @@ func _on_activated() -> void:
 	var r: Dictionary = item.get_metadata(0)
 	if r.path == "": return
 	if not dock.call_host("open_external", [r.path]): OS.shell_open(ProjectSettings.globalize_path(r.path))
-
-## Runs the sync script, shows its output, reloads the content and validates again.
-func sync() -> void:
-	var script := ProjectSettings.globalize_path(SYNC_SCRIPT)
-	var out := []
-	var code := OS.execute("bash", [script, unity_edit.text], out, true)
-	output.visible = true
-	output.text = "".join(out)
-	dock.call_host("rescan")
-	say("Sync from Unity finished (exit %d); validating again…" % code)
-	dock.reload_content()

@@ -3,7 +3,7 @@ extends SceneTree
 ##   godot --headless --path . -s tools/content_check.gd -- <candidate dir> [level id]
 ##   godot --headless --path . -s tools/content_check.gd -- --schema
 ## <candidate dir> holds one or more <Type>.json files in the content format ({"type": "StatusAsset", "assets": {key: entry}},
-## the same shape as data/content-godot). They are merged over data/content + data/content-godot (same key → the
+## the same shape as data/content). They are merged over data/content (same key → the
 ## candidate wins), validated and probed; see tools/content_check_runner.gd. Prints ONE JSON object between the lines
 ## CONTENT_CHECK_BEGIN / CONTENT_CHECK_END ({ok, errors[], warnings[], probes[{entry, kind, lines[], tables[], warnings[]}],
 ## candidates[], baseline{}, elapsed_ms}); --schema prints the content format between CONTENT_SCHEMA_BEGIN / _END.

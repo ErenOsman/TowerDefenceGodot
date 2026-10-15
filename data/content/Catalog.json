@@ -93,7 +93,15 @@
       "tutorial": "Levels/Tutorial/Tutorial",
       "tutorialReward": "Towers/Archer Tower",
       "campUnlock": "Levels/Chapter 1/4 The Slime King",
-      "codex": "Settings/Codex"
+      "codex": "Settings/Codex",
+      "guildUnlock": "Levels/Chapter 2/4 The Glutton",
+      "missions": [
+        "Missions/Patrol",
+        "Missions/Night Watch",
+        "Missions/Hold the Gate",
+        "Missions/Drum Line",
+        "Missions/The Glutton Returns"
+      ]
     }
   }
 }

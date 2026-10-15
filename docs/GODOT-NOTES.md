@@ -88,38 +88,34 @@ grammar of `data/tutorial.json`). This section only says how the Godot build doe
   by non-guided sequence lines that point at something.
 - Render proof: `tools/tutorial_shot.gd` (steps 1–11 with refusals; prints where the box is docked).
 
-## Workshop & Missions content — Godot-only overlay
-`data/content/*.json` is synced from the Unity repo and never edited here, so the Workshop's starter content
-(Workshop — Design § Starter content) and the missions (Missions & Guild — Design § Starter content; placeholder
-names and numbers) live in an **overlay**, `data/content-godot/`:
+## Workshop & Missions content
+The Workshop's starter content (Workshop — Design § Starter content) and the missions (Missions & Guild — Design §
+Starter content; placeholder names and numbers) are ordinary content in `data/content/` (they lived in an overlay,
+`data/content-godot/`, until 2026-10-15; merged when the Godot build became the game — see docs/CONTENT.md):
 
 | File | What |
 | --- | --- |
 | `Forms.json` (`FormAsset`) | the 9 starter forms: `archer-fire`, `archer-inferno` (child of Fire Archer), `archer-poison`, `archer-longbow`, `guardian-bastion`, `guardian-spiked`, `mage-pyro`, `mage-frost`, `mage-storm`. Fields: `id, displayName, description, icon, badge, tower, parent, entity, cost (-1 = base), unlock [{token, amount}], order`. Icons = the base tower's portrait; badges `Assets/Art/UI/KitB/forms/<form id>.png` (→ `res://art/ui/KitB/forms/`) |
 | `Tokens.json` (`TokenAsset`) | `fire-arrow, poison-gland, yew-bow, steel-plate, arcane-shard, ember-core` (`id, displayName, description, icon, rarity`); icons `Assets/Art/UI/KitB/tokens/<token id>.png` |
-| `Missions.json` (`MissionAsset`) | the 5 starter missions: `patrol` (Two Roads, Any 1–4), `night-watch` (Rock Garden, Any 1–4), `hold-the-gate` (Three at the Gate, Coop 2–6), `drum-line` (The Drummer, Any 1–4, 2 plays a day), `glutton-returns` (The Glutton, Coop 2–6); all separate energy pools (sharedPool false, as data/coop.json had for these levels), coopHandCap 3. Fields: `id, displayName, description, icon ("" until the kit has mission art), level, mode (Solo/Coop/Any), players {min, max}, playsPerDay, requires [level or mission keys], requireAll, sharedPool, coopHandCap, firstWinTokens, winTokens` |
-| `Extras.json` | field patches for assets the synced content already has: `{ "<asset key>": { "<field>": value } }`. Now: the catalog's `guildUnlock` (= `Levels/Chapter 2/4 The Glutton`) and `missions` (the board order), and the rules' `towerEnergyPerDay` = 1. Replaces the old `CatalogDrops.json`: **chapter levels drop no tokens any more**, missions are the only token source |
-| `Levels.json` (`LevelAsset`) | the **short tutorial level** under the synced key `Levels/Tutorial/Tutorial` (same key = replaces Unity's entry in `load_game`): 7 × 5, road (0,2)–(5,2), castle (6,2), build tiles columns 4–6 of rows 0/1/3/4, same waves/energy/hand (Guided Tutorial — Design § The level; Eren 2026-10-14). `data/tutorial.json`'s tiles match it. Golden (`tools/golden.gd`, `ContentLibrary.load` without the overlay) still plays Unity's 12 × 5 entry. **Delete this file once Unity's Levels.json has the same map** |
-| `Units.json`, `Abilities.json`, `Passives.json`, `Reactions.json` | the form entities (`Units/Towers/Forms/*`: copies of the base tower with the doc's stat changes, base model/icon/miniature) and their abilities (Fire Shot, Fire Volley, Venom Shot, Long Shot, Shield Bash, Fireball, Frost Bolt, Chain Spark), the Spiked Counter-attack passive and its 8-damage reaction. Same shape as the Unity files |
+| `Missions.json` (`MissionAsset`) | the 5 starter missions: `patrol` (Two Roads, Any 1–4), `night-watch` (Rock Garden, Any 1–4), `hold-the-gate` (Three at the Gate, Coop 2–6), `drum-line` (The Drummer, Any 1–4, 2 plays a day), `glutton-returns` (The Glutton, Coop 2–6); all separate energy pools (sharedPool false), coopHandCap 3. Fields: `id, displayName, description, icon ("" until the kit has mission art), level, mode (Solo/Coop/Any), players {min, max}, playsPerDay, requires [level or mission keys], requireAll, sharedPool, coopHandCap, firstWinTokens, winTokens` |
+| `Catalog.json`, `Rules.json` | the catalog's `guildUnlock` (= Chapter 2's last level) and `missions` (the board order); the rules' `towerEnergyPerDay` = 1. **Chapter levels drop no tokens**, missions are the only token source |
+| `Levels.json` | the **short tutorial level** `Levels/Tutorial/Tutorial`: 7 × 5, road (0,2)–(5,2), castle (6,2), build tiles columns 4–6 of rows 0/1/3/4, same waves/energy/hand (Guided Tutorial — Design § The level; Eren 2026-10-14). `data/tutorial.json`'s tiles match it. Golden plays the frozen Unity snapshot's 12 × 5 entry (see "Golden" below) |
+| `Units.json`, `Abilities.json`, `Passives.json`, `Reactions.json` | the form entities (`Units/Towers/Forms/*`: copies of the base tower with the doc's stat changes, base model/icon/miniature) and their abilities (Fire Shot, Fire Volley, Venom Shot, Long Shot, Shield Bash, Fireball, Frost Bolt, Chain Spark), the Spiked Counter-attack passive and its 8-damage reaction |
 
 How it is read:
-- `ContentLibrary.load_game()` (GameApp, the level's fallback, the save-action tool job) = `load(data/content, data/content-godot)`:
-  an overlay file with the name of a content file adds its entries to that file (same key → the overlay's wins), other
-  files are added, and `Extras.json` patches fields with `ContentLibrary.apply_extras` (unknown keys/fields reported in
-  `problems`). The new fields are in `ContentSerializer.SCHEMA` (`GameCatalogAsset.guildUnlock/missions`,
-  `GameRulesAsset.towerEnergyPerDay`, `MissionAsset`, `PlayerRange`), so Unity's JSON can carry them as they are.
-  `CatalogLevelData.firstWinTokens / winTokens` stay in the schema (empty everywhere). `ContentLibrary.load(folder)` alone
-  (tests of the synced content, golden, Validate All in the TD Tools dock) does not read the overlay.
-- `ContentHash.compute()` hashes the overlay files too (as `content-godot/<name>`, after the content's), so co-op clients
-  must have the same forms and missions.
+- `ContentLibrary.load_game()` (GameApp, the level's fallback) = `load(data/content)`; `load_game(extra)` merges a
+  candidate folder over it (the content check). The fields are in `ContentSerializer.SCHEMA`
+  (`GameCatalogAsset.guildUnlock/missions`, `GameRulesAsset.towerEnergyPerDay`, `MissionAsset`, `PlayerRange`).
+  `CatalogLevelData.firstWinTokens / winTokens` stay in the schema (empty everywhere).
+- `ContentHash.compute()` hashes every `data/content/*.json`, so co-op clients must have the same forms and missions.
 - Validate All (`ContentCheck` + `AssetValidator.validate_mission`): a mission's level exists, playsPerDay ≥ 1, a Coop/Any
   mission's players within 1–6 (min ≤ max; Coop max ≥ 2) and coopHandCap ≥ 1, requires are levels/missions without empty
   entries, self-reference or cycles, drop entries have a token and a positive amount; mission ids unique; the catalog's
   `guildUnlock` is a chapter level and its `missions` list has no empty/duplicate entry. Warnings: a token kind no mission
   drops, a mission not on the board.
 - Not serialized, linked by the library: `TowerAsset.forms` (its FormAssets in content order), `GameCatalogAsset.forms /
-  tokens`. The Unity build should derive them the same way (or add `forms` lists to the catalog).
-- Saves (Godot-first, also missing in Unity's GameData): `towers.towers[i].form` / `.forms`; `tokens: {"tokens": [{id,
+  tokens`.
+- Saves: `towers.towers[i].form` / `.forms`; `tokens: {"tokens": [{id,
   count}], "earned": [...]}`; `missions: {"records": [{missionId, attempts, wins, won, bestBaseHpPct, fewestRounds,
   fewestTowersLost, lastPlayed}], "plays": [{id, day, count}], "tired": [{tower, day, count}]}` (`count` is the doc's
   shape plus a count so `towerEnergyPerDay` > 1 works; a missing count reads 1); `profile.guildSeen`. Old saves load
@@ -128,11 +124,6 @@ How it is read:
 - **Duplication:** `data/coop.json` is no longer the co-op list (`CoopLevels.list()` = `CoopList.from_missions`, the
   Coop/Any missions) but stays for the relay, which reads `sharedPool` from it by level id. It is generated from the
   missions (`godot --headless --path . -s tools/coop_json.gd`); `test_missions` fails while they disagree.
-
-**When Unity adopts the Workshop and missions:** move `Forms.json`, `Tokens.json`, `Missions.json` and the form
-units/abilities into `Content/`, put `guildUnlock` / `missions` in `Catalog.json` and `towerEnergyPerDay` in
-`Rules.json`, sync, then delete `data/content-godot/` (`Extras.json` handling can stay harmlessly or go). Check that the
-Unity ids match the ones above or old Godot saves lose their forms/tokens/mission records.
 
 ## Missions & Guild rules — Godot-first
 - Engine-free in `sim/meta`: `MissionDef` (converter: `AssetConverter.mission`), `MissionProgress` (saved), `MissionBoard`
@@ -220,7 +211,7 @@ Unity ids match the ones above or old Godot saves lose their forms/tokens/missio
   coin in the tree (no grey shader); both Modify cards: stats, ⓘ trait lines (`WorkshopLogic.trait_lines`), "Abilities",
   passives last as square chips; pinned footer, hidden scrollbar with a bottom fade; Unlock button "Unlock · [coin] 1 Fire
   Arrow" (two tokens: coins and counts); disabled actions in a light paper fill; ability icons by id fall back to the
-  asset icon. Form descriptions in the overlay are standalone (no comparisons). Every scroll bar is ≥ 12 px
+  asset icon. Form descriptions in the content are standalone (no comparisons). Every scroll bar is ≥ 12 px
   (`TdTheme._widen_scrollbars`); the collection grid drag-scrolls on empty space while tiles keep their own drag
   (`TdDragScroll` skips controls with meta `drag_source`); `tools/hand_drag_check.gd` proves reorder / remove / add / scroll.
 
@@ -248,8 +239,9 @@ Offline check of candidate content entries, used by the wiki's Content Editor (/
   tables[{title, columns, rows}], warnings[]}], candidates[], baseline{}, elapsed_ms}`; exit 0 ok / 1 errors / 2 usage.
   `--schema` prints `ContentSerializer.SCHEMA` + enum names + stats + tags between `CONTENT_SCHEMA_BEGIN/_END`
   (key order kept: `JSON.stringify(…, "", false)`).
-- Loader: `ContentLibrary.load(folder, overlay, extra)` / `load_game(extra)` merge a further folder over the overlay
-  (same key → the candidate wins; its Extras.json patches last). Nothing is written. Test: `tests/test_content_candidate.gd`.
+- `--context <dir>` (more content-format files, not loaded): duplicate checks against them (the wiki passes Unity's live Content, its approved set and open entries). Errors also: a key not starting with its type's folder (Statuses/…), an id used by another entry of the type, keys differing only by case/spaces; warnings: duplicate display name or number.
+- Loader: `ContentLibrary.load(folder, extra)` / `load_game(extra)` merge the candidate folder over data/content
+  (same key → the candidate wins). Nothing is written. An empty candidate folder checks the content alone (ok + a warning). Test: `tests/test_content_candidate.gd`.
 - Logic: `tools/content_check_runner.gd` (no class_name, so the daemon needs no restart). Errors = load problems,
   ContentCheck (Validate All) findings and conversion failures that the content without the candidates does not have
   (those are only counted in `baseline`), unknown fields; warnings = new warnings, missing fields, probe warnings.

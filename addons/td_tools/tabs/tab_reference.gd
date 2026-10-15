@@ -55,7 +55,9 @@ func export_pages() -> void:
 		say("Wrote the pages to " + str(r.get("path", out))))
 
 func compare() -> void:
-	var unity := TabValidateRef.default_unity_path().path_join("Docs/Reference")
+	var home := OS.get_environment("HOME")
+	if home == "": home = OS.get_environment("USERPROFILE")
+	var unity := home.path_join("game/Docs/Reference") # the frozen Unity repo (read-only), when it is there
 	if not DirAccess.dir_exists_absolute(unity):
 		say("No Unity reference at " + unity)
 		return
@@ -67,4 +69,3 @@ func compare() -> void:
 		else: differ.append(p)
 	say("Same as Unity: %s%s" % [", ".join(same) if not same.is_empty() else "none", (" · differ: " + ", ".join(differ)) if not differ.is_empty() else ""])
 
-const TabValidateRef := preload("res://addons/td_tools/tabs/tab_validate.gd")

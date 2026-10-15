@@ -1,0 +1,7400 @@
+{
+  "name": "Style B \"Painted Diorama\" UI kit",
+  "date": "2026-10-08",
+  "reference": "1920x1080, Canvas Scaler match 0.5",
+  "scale": "PNGs are 2x the reference. Either Image Pixels Per Unit Multiplier = 2 (sprite PPU 100) or import at PPU 200 (multiplier 1). Borders are in PNG px either way.",
+  "outsetHelp": "outset {l,r,t,b} = reference px the sprite reaches past its RectTransform (rim, band, glow): Background stretches with offsetMin (-l,-b), offsetMax (r,t).",
+  "theme": {
+    "colors": {
+      "wood.900": "#17110D",
+      "wood.850": "#211913",
+      "wood.800": "#2A211B",
+      "wood.700": "#3A2D24",
+      "wood.600": "#4A3A2E",
+      "wood.500": "#5E4A3A",
+      "wood.top": "#43342A",
+      "wood.mid": "#33271F",
+      "wood.bottom": "#2A211B",
+      "wood.hover.top": "#6A5444",
+      "wood.hover.bottom": "#554334",
+      "wood.raised.top": "#5A4636",
+      "wood.raised.bottom": "#46372B",
+      "rim": "#120C09",
+      "side": "#1F1712",
+      "side.top": "#3A2D24",
+      "band": "#3F78C9",
+      "band.dark": "#2B5594",
+      "band.enemy": "#D94040",
+      "highlight.wood": "rgba(255,220,170,0.16)",
+      "shade.bottom": "rgba(0,0,0,0.25)",
+      "cream.100": "#F5EAD6",
+      "cream.200": "#DCCAAE",
+      "cream.300": "#BDA98C",
+      "cream.disabled": "#8E7B63",
+      "paper.top": "#F3E8CF",
+      "paper": "#EEE2C6",
+      "paper.2": "#E2D2B0",
+      "paper.edge": "#B89F78",
+      "paper.bottom": "#E6D7B6",
+      "ink": "#2E2117",
+      "ink.2": "#5F4936",
+      "accent": "#4D8FE6",
+      "accent.fill": "#3A6BB0",
+      "accent.light": "#8DBBFF",
+      "primary.top": "#5591E0",
+      "primary.mid": "#3A6BB0",
+      "primary.bottom": "#335F9E",
+      "primary.band": "#24477B",
+      "primary.hover.top": "#6AA3EE",
+      "primary.hover.mid": "#4A7DC4",
+      "primary.hover.bottom": "#3F6DAD",
+      "danger.top": "#C9504A",
+      "danger.mid": "#B83A3A",
+      "danger.bottom": "#A33232",
+      "danger.band": "#6E1F1F",
+      "danger.hover.top": "#D8625B",
+      "danger.hover.mid": "#C64646",
+      "danger.hover.bottom": "#B03B3B",
+      "disabled.top": "#4F4740",
+      "disabled.bottom": "#3E3732",
+      "disabled.band": "#3F434B",
+      "gold": "#FFD46B",
+      "gold.dark": "#C9952A",
+      "gold.light": "#FFE7A6",
+      "teal": "#5ED6C7",
+      "good": "#7EE08A",
+      "bad": "#FF7A6B",
+      "status": "#C59BFF",
+      "warn": "#FF991A",
+      "gold.ink": "#7A4E00",
+      "bad.ink": "#A3301F",
+      "good.ink": "#2D7238",
+      "status.ink": "#6B3FB0",
+      "accent.ink": "#2B5594",
+      "chip.status.bg": "#2A1F3A",
+      "chip.good.bg": "#1D3322",
+      "chip.bad.bg": "#3A1D1A",
+      "hp.high": "#33D94D",
+      "hp.mid": "#F2D926",
+      "hp.low": "#E62626",
+      "hp.ghost": "#FF4D40",
+      "fx.damage": "#FF4D40",
+      "fx.heal": "#66FF73",
+      "fx.status": "#D999FF",
+      "team.player": "#4080F2",
+      "team.enemy": "#D94040",
+      "scrim": "rgba(23,17,13,0.88)"
+    },
+    "fonts": {
+      "display": {
+        "file": "Plinth-Bold.ttf",
+        "weight": 700
+      },
+      "body": {
+        "file": "Nunito-Medium.ttf",
+        "weight": 500
+      },
+      "bodyBold": {
+        "file": "Nunito-Bold.ttf",
+        "weight": 700
+      },
+      "bodyExtraBold": {
+        "file": "Nunito-ExtraBold.ttf",
+        "weight": 800
+      }
+    },
+    "type": {
+      "display": {
+        "size": 64,
+        "font": "Plinth-Bold.ttf",
+        "weight": 700,
+        "use": "banners, big titles"
+      },
+      "plaqueTitle": {
+        "size": 56,
+        "font": "Plinth-Bold.ttf",
+        "weight": 700,
+        "use": "Welcome title"
+      },
+      "h1": {
+        "size": 44,
+        "font": "Plinth-Bold.ttf",
+        "weight": 700,
+        "use": "window titles (.k-title)"
+      },
+      "h2": {
+        "size": 32,
+        "font": "Plinth-Bold.ttf",
+        "weight": 700,
+        "use": "inspector name, pill numbers"
+      },
+      "h3": {
+        "size": 28,
+        "font": "Plinth-Bold.ttf",
+        "weight": 700,
+        "use": "tooltip / card titles, menu buttons"
+      },
+      "header": {
+        "size": 26,
+        "font": "Plinth-Bold.ttf",
+        "weight": 700,
+        "use": "tabs, chapter headers, section heads"
+      },
+      "button": {
+        "size": 26,
+        "font": "Plinth-Bold.ttf",
+        "weight": 700,
+        "use": "buttons (wide/big 30, small 22)"
+      },
+      "body": {
+        "size": 22,
+        "font": "Nunito-Medium.ttf",
+        "weight": 500,
+        "lineHeight": 1.25,
+        "use": "body text, rows"
+      },
+      "small": {
+        "size": 20,
+        "font": "Nunito-Bold.ttf",
+        "weight": 700,
+        "use": "labels, tags, help lines"
+      },
+      "micro": {
+        "size": 18,
+        "font": "Plinth-Bold.ttf",
+        "weight": 700,
+        "use": "numbers only: keys, costs, pips, stacks"
+      },
+      "plate": {
+        "size": 18,
+        "font": "Nunito-ExtraBold.ttf",
+        "weight": 800,
+        "use": "hand name plates, \"New\""
+      },
+      "minimum": 18
+    },
+    "spacing": [
+      4,
+      8,
+      12,
+      16,
+      20,
+      24,
+      32,
+      48
+    ],
+    "safeMargin": {
+      "x": 32,
+      "hudTop": 20,
+      "hudBottom": 20
+    },
+    "radii": {
+      "chip": 10,
+      "field": 12,
+      "control": 14,
+      "ability": 16,
+      "window": 22,
+      "pill": "height/2"
+    },
+    "paddings": {
+      "button": [
+        0,
+        28
+      ],
+      "buttonSmall": [
+        0,
+        18
+      ],
+      "window": 32,
+      "tooltip": [
+        16,
+        18,
+        14,
+        18
+      ],
+      "tab": [
+        0,
+        24
+      ],
+      "row": [
+        6,
+        16,
+        6,
+        8
+      ],
+      "select": [
+        0,
+        12,
+        0,
+        18
+      ],
+      "slot": [
+        0,
+        12
+      ],
+      "inspector": 20,
+      "dialogueBox": [
+        40,
+        40,
+        24,
+        56
+      ]
+    },
+    "sizes": {
+      "button": [
+        220,
+        60
+      ],
+      "buttonWide": [
+        300,
+        60
+      ],
+      "buttonBig": [
+        320,
+        72
+      ],
+      "iconButton": 52,
+      "iconButtonHud": 56,
+      "tab": 56,
+      "row": 60,
+      "slider": [
+        null,
+        16
+      ],
+      "sliderKnob": 36,
+      "toggle": [
+        76,
+        40
+      ],
+      "dropdown": [
+        300,
+        52
+      ],
+      "keySlot": [
+        200,
+        48
+      ],
+      "abilityButton": 84,
+      "handSlot": [
+        124,
+        150
+      ],
+      "tray": 168,
+      "endTurn": 168,
+      "tooltipWidth": 380,
+      "inspectorWidth": 340,
+      "dialogueBox": [
+        1100,
+        220
+      ]
+    },
+    "motion": {
+      "instant": 0.1,
+      "quick": 0.18,
+      "normal": 0.25,
+      "slow": 0.5,
+      "tooltipDelay": 0.4
+    },
+    "pixelsPerUnitMultiplier": 2
+  },
+  "sprites": {
+    "panel_wood": {
+      "file": "png/panels/panel_wood.png",
+      "group": "panels",
+      "sizePx": {
+        "w": 268,
+        "h": 204
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 128,
+        "h": 96
+      },
+      "imageType": "Sliced",
+      "role": "wood panel r14",
+      "css": ".k-wood / .insp / .actionbar",
+      "note": "Wood panel r14, cobalt band + rim baked. Pills, tracker, inspector, action bar, menu buttons (normal)."
+    },
+    "panel_wood_enemy": {
+      "file": "png/panels/panel_wood_enemy.png",
+      "group": "panels",
+      "sizePx": {
+        "w": 268,
+        "h": 204
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 128,
+        "h": 96
+      },
+      "imageType": "Sliced",
+      "role": "wood panel r14, enemy band",
+      "css": ".k-wood / .insp / .actionbar",
+      "note": "Same, band in team.enemy: the enemy inspector card."
+    },
+    "pill_wood": {
+      "file": "png/panels/pill_wood.png",
+      "group": "panels",
+      "sizePx": {
+        "w": 252,
+        "h": 124
+      },
+      "border": {
+        "l": 64,
+        "r": 64,
+        "t": 60,
+        "b": 62
+      },
+      "spriteBorderVector4": [
+        64,
+        62,
+        64,
+        60
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 120,
+        "h": 56
+      },
+      "imageType": "Sliced",
+      "role": "wood pill (HUD resources)",
+      "css": ".pill",
+      "note": "Fully round ends at 56 high (HP / energy pills, name plate). Height 48-64 keeps the ends round enough; for other heights scale the sprite."
+    },
+    "window_frame": {
+      "file": "png/panels/window_frame.png",
+      "group": "panels",
+      "sizePx": {
+        "w": 412,
+        "h": 332
+      },
+      "border": {
+        "l": 66,
+        "r": 66,
+        "t": 66,
+        "b": 66
+      },
+      "spriteBorderVector4": [
+        66,
+        66,
+        66,
+        66
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 200,
+        "h": 160
+      },
+      "imageType": "Sliced",
+      "role": "window / plaque r22",
+      "css": ".k-window / .plaque",
+      "note": "Large wood plaque r22 with the inner bevel line at 12 px: Welcome plaque, Settings / Codex / Pause windows."
+    },
+    "dialogue_box": {
+      "file": "png/panels/dialogue_box.png",
+      "group": "panels",
+      "sizePx": {
+        "w": 412,
+        "h": 292
+      },
+      "border": {
+        "l": 66,
+        "r": 66,
+        "t": 66,
+        "b": 66
+      },
+      "spriteBorderVector4": [
+        66,
+        66,
+        66,
+        66
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 200,
+        "h": 140
+      },
+      "imageType": "Sliced",
+      "role": "dialogue box (visual novel)",
+      "css": ".vn-box",
+      "note": "Visual-novel dialogue box (~1100x220), a shade darker than panels so the cream text reads over any scene. Name plate = pill_wood."
+    },
+    "paper_card": {
+      "file": "png/panels/paper_card.png",
+      "group": "panels",
+      "sizePx": {
+        "w": 252,
+        "h": 204
+      },
+      "border": {
+        "l": 34,
+        "r": 34,
+        "t": 34,
+        "b": 34
+      },
+      "spriteBorderVector4": [
+        34,
+        34,
+        34,
+        34
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 120,
+        "h": 96
+      },
+      "imageType": "Sliced",
+      "role": "paper card",
+      "css": ".k-paper",
+      "note": "Paper card r12 with a paper-edge band: generic readable card (rewards, codex entries)."
+    },
+    "tooltip_paper": {
+      "file": "png/panels/tooltip_paper.png",
+      "group": "panels",
+      "sizePx": {
+        "w": 332,
+        "h": 252
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 120
+      },
+      "imageType": "Sliced",
+      "role": "tooltip box",
+      "css": ".tip",
+      "note": "Tooltip box r14 (340-380 wide, pad 16-18). Add a tail sprite for the pointing version."
+    },
+    "paper_stat": {
+      "file": "png/panels/paper_stat.png",
+      "group": "panels",
+      "sizePx": {
+        "w": 200,
+        "h": 104
+      },
+      "border": {
+        "l": 28,
+        "r": 28,
+        "t": 28,
+        "b": 28
+      },
+      "spriteBorderVector4": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 96,
+        "h": 48
+      },
+      "imageType": "Sliced",
+      "role": "paper stat tile",
+      "css": ".k-paper-flat / .stat",
+      "note": "Small paper tile r10 (inspector stats 48 high, chips on paper)."
+    },
+    "tooltip_tail_down": {
+      "file": "png/panels/tooltip_tail_down.png",
+      "group": "panels",
+      "sizePx": {
+        "w": 80,
+        "h": 52
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "tooltip tail (down)",
+      "css": ".tip .tail",
+      "note": "Tail for a tooltip ABOVE its anchor. Pivot (0.5, 1) at the anchor; its top 12 px overlap the box bottom (covers the edge band)."
+    },
+    "tooltip_tail_up": {
+      "file": "png/panels/tooltip_tail_up.png",
+      "group": "panels",
+      "sizePx": {
+        "w": 80,
+        "h": 52
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "tooltip tail (up)",
+      "css": ".tip .tail",
+      "note": "Tail for a tooltip BELOW its anchor (rotate the same sprite or use this one). Top 4 px overlap the box."
+    },
+    "shadow_soft": {
+      "file": "png/panels/shadow_soft.png",
+      "group": "panels",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": {
+        "l": 104,
+        "r": 104,
+        "t": 104,
+        "b": 104
+      },
+      "spriteBorderVector4": [
+        104,
+        104,
+        104,
+        104
+      ],
+      "outset": {
+        "l": 32,
+        "r": 32,
+        "t": 32,
+        "b": 32
+      },
+      "logicalSize": null,
+      "imageType": "Sliced",
+      "role": "panels: shadow soft",
+      "css": null,
+      "note": "Soft drop shadow under any panel/button (the mockups' 0 18px 28px). Sibling before the Background, offset y -10, alpha 0.5-0.8."
+    },
+    "field_paper_normal": {
+      "file": "png/fields/field_paper_normal.png",
+      "group": "fields",
+      "sizePx": {
+        "w": 344,
+        "h": 168
+      },
+      "border": {
+        "l": 40,
+        "r": 40,
+        "t": 40,
+        "b": 40
+      },
+      "spriteBorderVector4": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "outset": {
+        "l": 6,
+        "r": 6,
+        "t": 6,
+        "b": 6
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 72
+      },
+      "imageType": "Sliced",
+      "role": "text field, normal",
+      "css": ".input",
+      "note": "Text field (Welcome name 632x72). Ring wood.500."
+    },
+    "field_paper_focus": {
+      "file": "png/fields/field_paper_focus.png",
+      "group": "fields",
+      "sizePx": {
+        "w": 344,
+        "h": 168
+      },
+      "border": {
+        "l": 40,
+        "r": 40,
+        "t": 40,
+        "b": 40
+      },
+      "spriteBorderVector4": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "outset": {
+        "l": 6,
+        "r": 6,
+        "t": 6,
+        "b": 6
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 72
+      },
+      "imageType": "Sliced",
+      "role": "text field, focus",
+      "css": ".input.is-focus",
+      "note": "Focused / typing: accent ring."
+    },
+    "field_paper_error": {
+      "file": "png/fields/field_paper_error.png",
+      "group": "fields",
+      "sizePx": {
+        "w": 344,
+        "h": 168
+      },
+      "border": {
+        "l": 40,
+        "r": 40,
+        "t": 40,
+        "b": 40
+      },
+      "spriteBorderVector4": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "outset": {
+        "l": 6,
+        "r": 6,
+        "t": 6,
+        "b": 6
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 72
+      },
+      "imageType": "Sliced",
+      "role": "text field, error",
+      "css": ".input.is-error",
+      "note": "Invalid (empty name): bad ring + help text in bad says why."
+    },
+    "btn_primary_normal": {
+      "file": "png/buttons/btn_primary_normal.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "primary button, normal",
+      "css": ".btn-primary.is-normal",
+      "note": ""
+    },
+    "btn_primary_hover": {
+      "file": "png/buttons/btn_primary_hover.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "primary button, hover",
+      "css": ".btn-primary:hover",
+      "note": ""
+    },
+    "btn_primary_pressed": {
+      "file": "png/buttons/btn_primary_pressed.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "primary button, pressed",
+      "css": ".btn-primary:active",
+      "note": "Face sits 4 px lower (band 6 -> 2): move Label/Icon down 4 px with it."
+    },
+    "btn_primary_disabled": {
+      "file": "png/buttons/btn_primary_disabled.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "primary button, disabled",
+      "css": ".btn-primary.is-disabled",
+      "note": ""
+    },
+    "btn_secondary_normal": {
+      "file": "png/buttons/btn_secondary_normal.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "secondary button, normal",
+      "css": ".btn-secondary (b-menu .mbtn).is-normal",
+      "note": ""
+    },
+    "btn_secondary_hover": {
+      "file": "png/buttons/btn_secondary_hover.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "secondary button, hover",
+      "css": ".btn-secondary (b-menu .mbtn):hover",
+      "note": ""
+    },
+    "btn_secondary_pressed": {
+      "file": "png/buttons/btn_secondary_pressed.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "secondary button, pressed",
+      "css": ".btn-secondary (b-menu .mbtn):active",
+      "note": "Face sits 4 px lower (band 6 -> 2): move Label/Icon down 4 px with it."
+    },
+    "btn_secondary_disabled": {
+      "file": "png/buttons/btn_secondary_disabled.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "secondary button, disabled",
+      "css": ".btn-secondary (b-menu .mbtn).is-disabled",
+      "note": ""
+    },
+    "btn_danger_normal": {
+      "file": "png/buttons/btn_danger_normal.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "danger button, normal",
+      "css": ".btn-danger.is-normal",
+      "note": ""
+    },
+    "btn_danger_hover": {
+      "file": "png/buttons/btn_danger_hover.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "danger button, hover",
+      "css": ".btn-danger:hover",
+      "note": ""
+    },
+    "btn_danger_pressed": {
+      "file": "png/buttons/btn_danger_pressed.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "danger button, pressed",
+      "css": ".btn-danger:active",
+      "note": "Face sits 4 px lower (band 6 -> 2): move Label/Icon down 4 px with it."
+    },
+    "btn_danger_disabled": {
+      "file": "png/buttons/btn_danger_disabled.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "danger button, disabled",
+      "css": ".btn-danger.is-disabled",
+      "note": ""
+    },
+    "menu_btn_primary_normal": {
+      "file": "png/menu/menu_btn_primary_normal.png",
+      "group": "menu",
+      "sizePx": {
+        "w": 332,
+        "h": 150
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 56
+      },
+      "spriteBorderVector4": [
+        38,
+        56,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 12
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "menu: menu btn primary normal",
+      "css": null,
+      "note": "Main menu Continue / Welcome Start (cobalt side). "
+    },
+    "menu_btn_primary_hover": {
+      "file": "png/menu/menu_btn_primary_hover.png",
+      "group": "menu",
+      "sizePx": {
+        "w": 332,
+        "h": 150
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 56
+      },
+      "spriteBorderVector4": [
+        38,
+        56,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 12
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "menu: menu btn primary hover",
+      "css": null,
+      "note": "Main menu Continue / Welcome Start (cobalt side). "
+    },
+    "menu_btn_primary_pressed": {
+      "file": "png/menu/menu_btn_primary_pressed.png",
+      "group": "menu",
+      "sizePx": {
+        "w": 332,
+        "h": 150
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 56
+      },
+      "spriteBorderVector4": [
+        38,
+        56,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 12
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "menu: menu btn primary pressed",
+      "css": null,
+      "note": "Main menu Continue / Welcome Start (cobalt side). Face 4 px lower: move Label/Icon with it."
+    },
+    "menu_btn_primary_disabled": {
+      "file": "png/menu/menu_btn_primary_disabled.png",
+      "group": "menu",
+      "sizePx": {
+        "w": 332,
+        "h": 150
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 56
+      },
+      "spriteBorderVector4": [
+        38,
+        56,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 12
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "menu: menu btn primary disabled",
+      "css": null,
+      "note": "Main menu Continue / Welcome Start (cobalt side). "
+    },
+    "menu_btn_wood_normal": {
+      "file": "png/menu/menu_btn_wood_normal.png",
+      "group": "menu",
+      "sizePx": {
+        "w": 332,
+        "h": 150
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 56
+      },
+      "spriteBorderVector4": [
+        38,
+        56,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 12
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "menu: menu btn wood normal",
+      "css": null,
+      "note": "Main menu list buttons (dark wood side). "
+    },
+    "menu_btn_wood_hover": {
+      "file": "png/menu/menu_btn_wood_hover.png",
+      "group": "menu",
+      "sizePx": {
+        "w": 332,
+        "h": 150
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 56
+      },
+      "spriteBorderVector4": [
+        38,
+        56,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 12
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "menu: menu btn wood hover",
+      "css": null,
+      "note": "Main menu list buttons (dark wood side). "
+    },
+    "menu_btn_wood_pressed": {
+      "file": "png/menu/menu_btn_wood_pressed.png",
+      "group": "menu",
+      "sizePx": {
+        "w": 332,
+        "h": 150
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 56
+      },
+      "spriteBorderVector4": [
+        38,
+        56,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 12
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "menu: menu btn wood pressed",
+      "css": null,
+      "note": "Main menu list buttons (dark wood side). Face 4 px lower: move Label/Icon with it."
+    },
+    "menu_btn_wood_disabled": {
+      "file": "png/menu/menu_btn_wood_disabled.png",
+      "group": "menu",
+      "sizePx": {
+        "w": 332,
+        "h": 150
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 56
+      },
+      "spriteBorderVector4": [
+        38,
+        56,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 12
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "menu: menu btn wood disabled",
+      "css": null,
+      "note": "Main menu list buttons (dark wood side). "
+    },
+    "menu_panel": {
+      "file": "png/menu/menu_panel.png",
+      "group": "menu",
+      "sizePx": {
+        "w": 412,
+        "h": 350
+      },
+      "border": {
+        "l": 66,
+        "r": 66,
+        "t": 66,
+        "b": 84
+      },
+      "spriteBorderVector4": [
+        66,
+        84,
+        66,
+        66
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 12
+      },
+      "logicalSize": {
+        "w": 200,
+        "h": 160
+      },
+      "imageType": "Sliced",
+      "role": "menu: menu panel",
+      "css": null,
+      "note": "Welcome plaque (deep, r22, inner line)."
+    },
+    "menu_panel_r14": {
+      "file": "png/menu/menu_panel_r14.png",
+      "group": "menu",
+      "sizePx": {
+        "w": 268,
+        "h": 222
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 56
+      },
+      "spriteBorderVector4": [
+        38,
+        56,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 12
+      },
+      "logicalSize": {
+        "w": 128,
+        "h": 96
+      },
+      "imageType": "Sliced",
+      "role": "menu: menu panel r14",
+      "css": null,
+      "note": "Small deep menu panel (optional, e.g. Victory / Defeat)."
+    },
+    "ibtn_normal": {
+      "file": "png/buttons/ibtn_normal.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 124,
+        "h": 124
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 56,
+        "h": 56
+      },
+      "imageType": "Sliced",
+      "role": "HUD icon button 56 (with band), normal",
+      "css": ".ibtn",
+      "note": "Icon button 56x56 (min 44): icon 24-28 centred, tooltip on hover."
+    },
+    "ibtn_hover": {
+      "file": "png/buttons/ibtn_hover.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 124,
+        "h": 124
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 56,
+        "h": 56
+      },
+      "imageType": "Sliced",
+      "role": "HUD icon button 56 (with band), hover",
+      "css": ".ibtn.is-hover",
+      "note": ""
+    },
+    "ibtn_pressed": {
+      "file": "png/buttons/ibtn_pressed.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 124,
+        "h": 124
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 56,
+        "h": 56
+      },
+      "imageType": "Sliced",
+      "role": "HUD icon button 56 (with band), pressed",
+      "css": ".ibtn.is-pressed",
+      "note": ""
+    },
+    "ibtn_disabled": {
+      "file": "png/buttons/ibtn_disabled.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 124,
+        "h": 124
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 56,
+        "h": 56
+      },
+      "imageType": "Sliced",
+      "role": "HUD icon button 56 (with band), disabled",
+      "css": ".ibtn.is-disabled",
+      "note": ""
+    },
+    "focus_ring_r14": {
+      "file": "png/buttons/focus_ring_r14.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 160,
+        "h": 160
+      },
+      "border": {
+        "l": 48,
+        "r": 48,
+        "t": 48,
+        "b": 48
+      },
+      "spriteBorderVector4": [
+        48,
+        48,
+        48,
+        48
+      ],
+      "outset": {
+        "l": 8,
+        "r": 8,
+        "t": 8,
+        "b": 8
+      },
+      "logicalSize": null,
+      "imageType": "Sliced",
+      "role": "buttons: focus ring r14",
+      "css": null,
+      "note": "White, tint accent: 2 px gap + 3 px ring around the face and rim (menu_* deep sprites: stretch it 9 px lower). On top of the Background, raycast off."
+    },
+    "focus_ring_pill": {
+      "file": "png/buttons/focus_ring_pill.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 224,
+        "h": 144
+      },
+      "border": {
+        "l": 72,
+        "r": 72,
+        "t": 70,
+        "b": 70
+      },
+      "spriteBorderVector4": [
+        72,
+        70,
+        72,
+        70
+      ],
+      "outset": {
+        "l": 8,
+        "r": 8,
+        "t": 8,
+        "b": 8
+      },
+      "logicalSize": null,
+      "imageType": "Sliced",
+      "role": "buttons: focus ring pill",
+      "css": null,
+      "note": "Same for pills and round buttons (logical 96x56 source; any width)."
+    },
+    "glow_r14": {
+      "file": "png/buttons/glow_r14.png",
+      "group": "buttons",
+      "sizePx": {
+        "w": 224,
+        "h": 224
+      },
+      "border": {
+        "l": 88,
+        "r": 88,
+        "t": 88,
+        "b": 88
+      },
+      "spriteBorderVector4": [
+        88,
+        88,
+        88,
+        88
+      ],
+      "outset": {
+        "l": 24,
+        "r": 24,
+        "t": 24,
+        "b": 24
+      },
+      "logicalSize": null,
+      "imageType": "Sliced",
+      "role": "buttons: glow r14",
+      "css": null,
+      "note": "Soft glow (white, tint gold / accent) behind a control: attention pulse, aiming, ability ready."
+    },
+    "endturn_normal": {
+      "file": "png/endturn/endturn_normal.png",
+      "group": "endturn",
+      "sizePx": {
+        "w": 480,
+        "h": 480
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 36,
+        "r": 36,
+        "t": 36,
+        "b": 36
+      },
+      "logicalSize": {
+        "w": 168,
+        "h": 168
+      },
+      "imageType": "Simple",
+      "role": "End turn plinth, normal",
+      "css": ".endturn",
+      "note": "Your turn, actions left. Label \"End turn\" + key badge \"Enter\"."
+    },
+    "endturn_hover": {
+      "file": "png/endturn/endturn_hover.png",
+      "group": "endturn",
+      "sizePx": {
+        "w": 480,
+        "h": 480
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 36,
+        "r": 36,
+        "t": 36,
+        "b": 36
+      },
+      "logicalSize": {
+        "w": 168,
+        "h": 168
+      },
+      "imageType": "Simple",
+      "role": "End turn plinth, hover",
+      "css": ".endturn.is-hover",
+      "note": "Hover: lighter face + accent.light ring. Also shows next-turn ghost pips on the board (see spec)."
+    },
+    "endturn_pressed": {
+      "file": "png/endturn/endturn_pressed.png",
+      "group": "endturn",
+      "sizePx": {
+        "w": 480,
+        "h": 480
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 36,
+        "r": 36,
+        "t": 36,
+        "b": 36
+      },
+      "logicalSize": {
+        "w": 168,
+        "h": 168
+      },
+      "imageType": "Simple",
+      "role": "End turn plinth, pressed",
+      "css": ".endturn.is-pressed",
+      "note": "Pressed: darker face; nothing moves."
+    },
+    "endturn_enemy": {
+      "file": "png/endturn/endturn_enemy.png",
+      "group": "endturn",
+      "sizePx": {
+        "w": 480,
+        "h": 480
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 36,
+        "r": 36,
+        "t": 36,
+        "b": 36
+      },
+      "logicalSize": {
+        "w": 168,
+        "h": 168
+      },
+      "imageType": "Simple",
+      "role": "End turn plinth, enemy",
+      "css": ".endturn.is-enemy",
+      "note": "Enemy turn: wood face, not interactable; label \"Enemy turn\" in cream.300."
+    },
+    "endturn_attention": {
+      "file": "png/endturn/endturn_attention.png",
+      "group": "endturn",
+      "sizePx": {
+        "w": 480,
+        "h": 480
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 36,
+        "r": 36,
+        "t": 36,
+        "b": 36
+      },
+      "logicalSize": {
+        "w": 168,
+        "h": 168
+      },
+      "imageType": "Simple",
+      "role": "End turn plinth, attention",
+      "css": ".endturn.is-attention",
+      "note": "Nothing left to do: gold ring + glow. Pulse endturn_glow alpha on top of this."
+    },
+    "endturn_glow": {
+      "file": "png/endturn/endturn_glow.png",
+      "group": "endturn",
+      "sizePx": {
+        "w": 480,
+        "h": 480
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 36,
+        "r": 36,
+        "t": 36,
+        "b": 36
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "End turn plinth, glow",
+      "css": ".endturn.is-glow",
+      "note": "White glow ring (tint gold) behind the face; animate alpha 0.35-0.9, 1.6 s ping-pong."
+    },
+    "badge_cost": {
+      "file": "png/badges/badge_cost.png",
+      "group": "badges",
+      "sizePx": {
+        "w": 124,
+        "h": 88
+      },
+      "border": {
+        "l": 44,
+        "r": 44,
+        "t": 42,
+        "b": 44
+      },
+      "spriteBorderVector4": [
+        44,
+        44,
+        44,
+        42
+      ],
+      "outset": {
+        "l": 7,
+        "r": 7,
+        "t": 7,
+        "b": 7
+      },
+      "logicalSize": {
+        "w": 48,
+        "h": 30
+      },
+      "imageType": "Sliced",
+      "role": "badges: badge cost",
+      "css": null,
+      "note": "Cost coin: dark wood pill, gold ring. Number Plinth 20 in gold. Min 48 wide; grows with digits."
+    },
+    "badge_cost_poor": {
+      "file": "png/badges/badge_cost_poor.png",
+      "group": "badges",
+      "sizePx": {
+        "w": 124,
+        "h": 88
+      },
+      "border": {
+        "l": 44,
+        "r": 44,
+        "t": 42,
+        "b": 44
+      },
+      "spriteBorderVector4": [
+        44,
+        44,
+        44,
+        42
+      ],
+      "outset": {
+        "l": 7,
+        "r": 7,
+        "t": 7,
+        "b": 7
+      },
+      "logicalSize": {
+        "w": 48,
+        "h": 30
+      },
+      "imageType": "Sliced",
+      "role": "badges: badge cost poor",
+      "css": null,
+      "note": "Can't afford: ring in bad, number in bad (not grey)."
+    },
+    "badge_key": {
+      "file": "png/badges/badge_key.png",
+      "group": "badges",
+      "sizePx": {
+        "w": 56,
+        "h": 56
+      },
+      "border": {
+        "l": 18,
+        "r": 18,
+        "t": 18,
+        "b": 18
+      },
+      "spriteBorderVector4": [
+        18,
+        18,
+        18,
+        18
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 24,
+        "h": 24
+      },
+      "imageType": "Sliced",
+      "role": "badges: badge key",
+      "css": null,
+      "note": "Key badge (paper, ink text Plinth 18). Grows for \"Enter\", \"Ctrl 1\"."
+    },
+    "badge_key_dark": {
+      "file": "png/badges/badge_key_dark.png",
+      "group": "badges",
+      "sizePx": {
+        "w": 56,
+        "h": 56
+      },
+      "border": {
+        "l": 18,
+        "r": 18,
+        "t": 18,
+        "b": 18
+      },
+      "spriteBorderVector4": [
+        18,
+        18,
+        18,
+        18
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 24,
+        "h": 24
+      },
+      "imageType": "Sliced",
+      "role": "badges: badge key dark",
+      "css": null,
+      "note": "Key badge on paper backgrounds / tooltips (cream text)."
+    },
+    "badge_stack": {
+      "file": "png/badges/badge_stack.png",
+      "group": "badges",
+      "sizePx": {
+        "w": 72,
+        "h": 56
+      },
+      "border": {
+        "l": 30,
+        "r": 30,
+        "t": 26,
+        "b": 28
+      },
+      "spriteBorderVector4": [
+        30,
+        28,
+        30,
+        26
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 32,
+        "h": 24
+      },
+      "imageType": "Sliced",
+      "role": "badges: badge stack",
+      "css": null,
+      "note": "Stack count on status icons (hidden at 1). cream.100 Plinth 18."
+    },
+    "badge_circle_dark": {
+      "file": "png/badges/badge_circle_dark.png",
+      "group": "badges",
+      "sizePx": {
+        "w": 92,
+        "h": 92
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 40,
+        "h": 40
+      },
+      "imageType": "Simple",
+      "role": "badges: badge circle dark",
+      "css": null,
+      "note": "Icon socket in pills (HP heart)."
+    },
+    "badge_circle_gold": {
+      "file": "png/badges/badge_circle_gold.png",
+      "group": "badges",
+      "sizePx": {
+        "w": 92,
+        "h": 92
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 40,
+        "h": 40
+      },
+      "imageType": "Simple",
+      "role": "badges: badge circle gold",
+      "css": null,
+      "note": "Energy coin socket (bolt icon tinted ink)."
+    },
+    "badge_placed": {
+      "file": "png/badges/badge_placed.png",
+      "group": "badges",
+      "sizePx": {
+        "w": 64,
+        "h": 64
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 28,
+        "h": 28
+      },
+      "imageType": "Simple",
+      "role": "badges: badge placed",
+      "css": null,
+      "note": "Placed check on a hand card (top-right, replaces the key badge)."
+    },
+    "hpbar_frame": {
+      "file": "png/bars/hpbar_frame.png",
+      "group": "bars",
+      "sizePx": {
+        "w": 248,
+        "h": 36
+      },
+      "border": {
+        "l": 20,
+        "r": 20,
+        "t": 16,
+        "b": 18
+      },
+      "spriteBorderVector4": [
+        20,
+        18,
+        20,
+        16
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 120,
+        "h": 14
+      },
+      "imageType": "Sliced",
+      "role": "bars: hpbar frame",
+      "css": null,
+      "note": "Inspector HP bar frame (300x14)."
+    },
+    "hpbar_fill": {
+      "file": "png/bars/hpbar_fill.png",
+      "group": "bars",
+      "sizePx": {
+        "w": 240,
+        "h": 28
+      },
+      "border": {
+        "l": 16,
+        "r": 16,
+        "t": 12,
+        "b": 14
+      },
+      "spriteBorderVector4": [
+        16,
+        14,
+        16,
+        12
+      ],
+      "outset": {
+        "l": 0,
+        "r": 0,
+        "t": 0,
+        "b": 0
+      },
+      "logicalSize": null,
+      "imageType": "Sliced",
+      "role": "bars: hpbar fill",
+      "css": null,
+      "note": "White with baked shading: tint hp.high / hp.mid / hp.low. Width = parent width x ratio (anchorMax.x); hide under 14 px."
+    },
+    "hpbar_ghost": {
+      "file": "png/bars/hpbar_ghost.png",
+      "group": "bars",
+      "sizePx": {
+        "w": 240,
+        "h": 28
+      },
+      "border": {
+        "l": 16,
+        "r": 16,
+        "t": 12,
+        "b": 14
+      },
+      "spriteBorderVector4": [
+        16,
+        14,
+        16,
+        12
+      ],
+      "outset": {
+        "l": 0,
+        "r": 0,
+        "t": 0,
+        "b": 0
+      },
+      "logicalSize": null,
+      "imageType": "Sliced",
+      "role": "bars: hpbar ghost",
+      "css": null,
+      "note": "Flat white: tint hp.ghost 55 %; shrinks to the fill after 0.4 s."
+    },
+    "hpbar_plate_frame": {
+      "file": "png/bars/hpbar_plate_frame.png",
+      "group": "bars",
+      "sizePx": {
+        "w": 136,
+        "h": 28
+      },
+      "border": {
+        "l": 12,
+        "r": 12,
+        "t": 12,
+        "b": 12
+      },
+      "spriteBorderVector4": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 64,
+        "h": 10
+      },
+      "imageType": "Sliced",
+      "role": "bars: hpbar plate frame",
+      "css": null,
+      "note": "World plate over units (64x10)."
+    },
+    "hpbar_plate_fill": {
+      "file": "png/bars/hpbar_plate_fill.png",
+      "group": "bars",
+      "sizePx": {
+        "w": 128,
+        "h": 20
+      },
+      "border": {
+        "l": 6,
+        "r": 6,
+        "t": 6,
+        "b": 6
+      },
+      "spriteBorderVector4": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "outset": {
+        "l": 0,
+        "r": 0,
+        "t": 0,
+        "b": 0
+      },
+      "logicalSize": null,
+      "imageType": "Sliced",
+      "role": "bars: hpbar plate fill",
+      "css": null,
+      "note": "Plate fill and ghost (tint)."
+    },
+    "pip_wave_on": {
+      "file": "png/bars/pip_wave_on.png",
+      "group": "bars",
+      "sizePx": {
+        "w": 52,
+        "h": 20
+      },
+      "border": {
+        "l": 10,
+        "r": 10,
+        "t": 8,
+        "b": 10
+      },
+      "spriteBorderVector4": [
+        10,
+        10,
+        10,
+        8
+      ],
+      "outset": {
+        "l": 0,
+        "r": 0,
+        "t": 0,
+        "b": 0
+      },
+      "logicalSize": null,
+      "imageType": "Sliced",
+      "role": "bars: pip wave on",
+      "css": null,
+      "note": "Tracker wave pip: done / current."
+    },
+    "pip_wave_off": {
+      "file": "png/bars/pip_wave_off.png",
+      "group": "bars",
+      "sizePx": {
+        "w": 52,
+        "h": 20
+      },
+      "border": {
+        "l": 10,
+        "r": 10,
+        "t": 8,
+        "b": 10
+      },
+      "spriteBorderVector4": [
+        10,
+        10,
+        10,
+        8
+      ],
+      "outset": {
+        "l": 0,
+        "r": 0,
+        "t": 0,
+        "b": 0
+      },
+      "logicalSize": null,
+      "imageType": "Sliced",
+      "role": "bars: pip wave off",
+      "css": null,
+      "note": "Tracker wave pip: to come."
+    },
+    "chip_status": {
+      "file": "png/chips/chip_status.png",
+      "group": "chips",
+      "sizePx": {
+        "w": 200,
+        "h": 80
+      },
+      "border": {
+        "l": 42,
+        "r": 42,
+        "t": 38,
+        "b": 40
+      },
+      "spriteBorderVector4": [
+        42,
+        40,
+        42,
+        38
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 96,
+        "h": 36
+      },
+      "imageType": "Sliced",
+      "role": "chips: chip status",
+      "css": null,
+      "note": "Status chip (neutral status): text status, Nunito Bold 20, number Plinth."
+    },
+    "chip_good": {
+      "file": "png/chips/chip_good.png",
+      "group": "chips",
+      "sizePx": {
+        "w": 200,
+        "h": 80
+      },
+      "border": {
+        "l": 42,
+        "r": 42,
+        "t": 38,
+        "b": 40
+      },
+      "spriteBorderVector4": [
+        42,
+        40,
+        42,
+        38
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 96,
+        "h": 36
+      },
+      "imageType": "Sliced",
+      "role": "chips: chip good",
+      "css": null,
+      "note": "Buff chip: text good."
+    },
+    "chip_bad": {
+      "file": "png/chips/chip_bad.png",
+      "group": "chips",
+      "sizePx": {
+        "w": 200,
+        "h": 80
+      },
+      "border": {
+        "l": 42,
+        "r": 42,
+        "t": 38,
+        "b": 40
+      },
+      "spriteBorderVector4": [
+        42,
+        40,
+        42,
+        38
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 96,
+        "h": 36
+      },
+      "imageType": "Sliced",
+      "role": "chips: chip bad",
+      "css": null,
+      "note": "Debuff chip: text bad."
+    },
+    "tag_phase_player": {
+      "file": "png/chips/tag_phase_player.png",
+      "group": "chips",
+      "sizePx": {
+        "w": 248,
+        "h": 96
+      },
+      "border": {
+        "l": 32,
+        "r": 32,
+        "t": 32,
+        "b": 32
+      },
+      "spriteBorderVector4": [
+        32,
+        32,
+        32,
+        32
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 120,
+        "h": 44
+      },
+      "imageType": "Sliced",
+      "role": "chips: tag phase player",
+      "css": null,
+      "note": "\"Your turn\" tag in the tracker. White Plinth 22."
+    },
+    "tag_phase_enemy": {
+      "file": "png/chips/tag_phase_enemy.png",
+      "group": "chips",
+      "sizePx": {
+        "w": 248,
+        "h": 96
+      },
+      "border": {
+        "l": 32,
+        "r": 32,
+        "t": 32,
+        "b": 32
+      },
+      "spriteBorderVector4": [
+        32,
+        32,
+        32,
+        32
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 120,
+        "h": 44
+      },
+      "imageType": "Sliced",
+      "role": "chips: tag phase enemy",
+      "css": null,
+      "note": "\"Enemy turn\" tag. White Plinth 22 (5.6:1)."
+    },
+    "portrait_ring": {
+      "file": "png/badges/portrait_ring.png",
+      "group": "badges",
+      "sizePx": {
+        "w": 232,
+        "h": 232
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 10,
+        "r": 10,
+        "t": 10,
+        "b": 10
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "badges: portrait ring",
+      "css": null,
+      "note": "Inspector portrait 96: paper disc + cobalt ring. Portrait render goes in a child masked by mask_circle."
+    },
+    "portrait_ring_enemy": {
+      "file": "png/badges/portrait_ring_enemy.png",
+      "group": "badges",
+      "sizePx": {
+        "w": 232,
+        "h": 232
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 10,
+        "r": 10,
+        "t": 10,
+        "b": 10
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "badges: portrait ring enemy",
+      "css": null,
+      "note": "Enemy portrait."
+    },
+    "mask_circle": {
+      "file": "png/badges/mask_circle.png",
+      "group": "badges",
+      "sizePx": {
+        "w": 192,
+        "h": 192
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 0,
+        "r": 0,
+        "t": 0,
+        "b": 0
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "badges: mask circle",
+      "css": null,
+      "note": "Mask sprite (Mask component, Show Mask Graphic off)."
+    },
+    "mask_r8": {
+      "file": "png/badges/mask_r8.png",
+      "group": "badges",
+      "sizePx": {
+        "w": 64,
+        "h": 64
+      },
+      "border": {
+        "l": 20,
+        "r": 20,
+        "t": 20,
+        "b": 20
+      },
+      "spriteBorderVector4": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "outset": {
+        "l": 0,
+        "r": 0,
+        "t": 0,
+        "b": 0
+      },
+      "logicalSize": null,
+      "imageType": "Sliced",
+      "role": "badges: mask r8",
+      "css": null,
+      "note": "Rounded mask for card art wells."
+    },
+    "hand_tray": {
+      "file": "png/hand/hand_tray.png",
+      "group": "hand",
+      "sizePx": {
+        "w": 812,
+        "h": 342
+      },
+      "border": {
+        "l": 62,
+        "r": 62,
+        "t": 54,
+        "b": 4
+      },
+      "spriteBorderVector4": [
+        62,
+        4,
+        62,
+        54
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 0
+      },
+      "logicalSize": {
+        "w": 400,
+        "h": 168
+      },
+      "imageType": "Sliced",
+      "role": "hand tray (band on top)",
+      "css": ".k-tray.is-bottom",
+      "note": "Tray 168 tall at the bottom edge (bottom corners off-screen), flat wood + thin rim. Padding 0 22 14, gap 6."
+    },
+    "nameplate_normal": {
+      "file": "png/hand/nameplate_normal.png",
+      "group": "hand",
+      "sizePx": {
+        "w": 232,
+        "h": 72
+      },
+      "border": {
+        "l": 28,
+        "r": 28,
+        "t": 26,
+        "b": 28
+      },
+      "spriteBorderVector4": [
+        28,
+        28,
+        28,
+        26
+      ],
+      "outset": {
+        "l": 4,
+        "r": 4,
+        "t": 4,
+        "b": 4
+      },
+      "logicalSize": {
+        "w": 108,
+        "h": 28
+      },
+      "imageType": "Sliced",
+      "role": "hand piece name plate, normal",
+      "css": ".k-piece .nm",
+      "note": "Name plate 108x28: Nunito ExtraBold 18 cream.100, centred."
+    },
+    "nameplate_hover": {
+      "file": "png/hand/nameplate_hover.png",
+      "group": "hand",
+      "sizePx": {
+        "w": 232,
+        "h": 72
+      },
+      "border": {
+        "l": 28,
+        "r": 28,
+        "t": 26,
+        "b": 28
+      },
+      "spriteBorderVector4": [
+        28,
+        28,
+        28,
+        26
+      ],
+      "outset": {
+        "l": 4,
+        "r": 4,
+        "t": 4,
+        "b": 4
+      },
+      "logicalSize": {
+        "w": 108,
+        "h": 28
+      },
+      "imageType": "Sliced",
+      "role": "hand piece name plate, hover",
+      "css": ".k-piece.is-hover .nm",
+      "note": "Hover: accent.light edge."
+    },
+    "nameplate_picked": {
+      "file": "png/hand/nameplate_picked.png",
+      "group": "hand",
+      "sizePx": {
+        "w": 232,
+        "h": 72
+      },
+      "border": {
+        "l": 28,
+        "r": 28,
+        "t": 26,
+        "b": 28
+      },
+      "spriteBorderVector4": [
+        28,
+        28,
+        28,
+        26
+      ],
+      "outset": {
+        "l": 4,
+        "r": 4,
+        "t": 4,
+        "b": 4
+      },
+      "logicalSize": {
+        "w": 108,
+        "h": 28
+      },
+      "imageType": "Sliced",
+      "role": "hand piece name plate, picked",
+      "css": ".k-piece.is-picked .nm",
+      "note": "Picked (placing): gold edge."
+    },
+    "nameplate_poor": {
+      "file": "png/hand/nameplate_poor.png",
+      "group": "hand",
+      "sizePx": {
+        "w": 232,
+        "h": 72
+      },
+      "border": {
+        "l": 28,
+        "r": 28,
+        "t": 26,
+        "b": 28
+      },
+      "spriteBorderVector4": [
+        28,
+        28,
+        28,
+        26
+      ],
+      "outset": {
+        "l": 4,
+        "r": 4,
+        "t": 4,
+        "b": 4
+      },
+      "logicalSize": {
+        "w": 108,
+        "h": 28
+      },
+      "imageType": "Sliced",
+      "role": "hand piece name plate, poor",
+      "css": ".k-piece.is-poor .nm",
+      "note": "Can't afford: darker plate, name cream.300 (cost coin in bad, render 40 % grey)."
+    },
+    "nameplate_placed": {
+      "file": "png/hand/nameplate_placed.png",
+      "group": "hand",
+      "sizePx": {
+        "w": 232,
+        "h": 72
+      },
+      "border": {
+        "l": 28,
+        "r": 28,
+        "t": 26,
+        "b": 28
+      },
+      "spriteBorderVector4": [
+        28,
+        28,
+        28,
+        26
+      ],
+      "outset": {
+        "l": 4,
+        "r": 4,
+        "t": 4,
+        "b": 4
+      },
+      "logicalSize": {
+        "w": 108,
+        "h": 28
+      },
+      "imageType": "Sliced",
+      "role": "hand piece name plate, placed",
+      "css": ".k-piece.is-placed .nm",
+      "note": "Placed (tower is on the board, not selected): WOOD plate, cream name + onboard tag. Cobalt is reserved for the selected piece."
+    },
+    "nameplate_selected": {
+      "file": "png/hand/nameplate_selected.png",
+      "group": "hand",
+      "sizePx": {
+        "w": 232,
+        "h": 72
+      },
+      "border": {
+        "l": 28,
+        "r": 28,
+        "t": 26,
+        "b": 28
+      },
+      "spriteBorderVector4": [
+        28,
+        28,
+        28,
+        26
+      ],
+      "outset": {
+        "l": 4,
+        "r": 4,
+        "t": 4,
+        "b": 4
+      },
+      "logicalSize": {
+        "w": 108,
+        "h": 28
+      },
+      "imageType": "Sliced",
+      "role": "hand piece name plate, selected",
+      "css": ".k-piece.is-selected .nm",
+      "note": "SELECTED piece (its tower is selected on the board): cobalt plate, white name."
+    },
+    "nameplate_placed_hover": {
+      "file": "png/hand/nameplate_placed_hover.png",
+      "group": "hand",
+      "sizePx": {
+        "w": 232,
+        "h": 72
+      },
+      "border": {
+        "l": 28,
+        "r": 28,
+        "t": 26,
+        "b": 28
+      },
+      "spriteBorderVector4": [
+        28,
+        28,
+        28,
+        26
+      ],
+      "outset": {
+        "l": 4,
+        "r": 4,
+        "t": 4,
+        "b": 4
+      },
+      "logicalSize": {
+        "w": 108,
+        "h": 28
+      },
+      "imageType": "Sliced",
+      "role": "hand piece name plate, placed_hover",
+      "css": ".k-piece.is-placed_hover .nm",
+      "note": "Placed + hover: wood + accent.light edge (its board ring lights up; click selects it)."
+    },
+    "piece_plinth_empty": {
+      "file": "png/hand/piece_plinth_empty.png",
+      "group": "hand",
+      "sizePx": {
+        "w": 216,
+        "h": 104
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "hand piece plinth empty",
+      "css": ".k-piece .plinth_empty",
+      "note": "Empty plinth of a placed tower (108x52 at the piece's bottom centre, 34 px above the slot bottom like the render's base). The colour portrait medallion (medallion_ring) stands on it."
+    },
+    "medallion_ring": {
+      "file": "png/hand/medallion_ring.png",
+      "group": "hand",
+      "sizePx": {
+        "w": 160,
+        "h": 160
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 8,
+        "r": 8,
+        "t": 8,
+        "b": 8
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "placed piece portrait medallion",
+      "css": ".k-piece .pmed",
+      "note": "Placed piece: colour portrait medallion 64 standing on the empty plinth (top 26 in the slot). Paper disc + cobalt ring; the portrait is a child Image under a Mask (mask_circle 64), drawn on top of the disc, ring sprite again not needed."
+    },
+    "medallion_ring_selected": {
+      "file": "png/hand/medallion_ring_selected.png",
+      "group": "hand",
+      "sizePx": {
+        "w": 160,
+        "h": 160
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 8,
+        "r": 8,
+        "t": 8,
+        "b": 8
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "hand: medallion ring selected",
+      "css": null,
+      "note": "Selected piece medallion: brighter cobalt ring + soft outer glow (same size as medallion_ring)."
+    },
+    "piece_selected_arrow": {
+      "file": "png/hand/piece_selected_arrow.png",
+      "group": "hand",
+      "sizePx": {
+        "w": 56,
+        "h": 44
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "hand piece selected arrow",
+      "css": ".k-piece .selected_arrow",
+      "note": "DEPRECATED (2026-10-09): selection is colour only (nameplate_selected + medallion_ring_selected). Kept for reference.",
+      "deprecated": true
+    },
+    "piece_shadow": {
+      "file": "png/hand/piece_shadow.png",
+      "group": "hand",
+      "sizePx": {
+        "w": 208,
+        "h": 60
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "hand piece shadow",
+      "css": ".k-piece .shadow",
+      "note": "Ground shadow under the render (centre 30 px above the slot bottom). Hover: scale 0.75, alpha 0.6; picked: scale 0.6, alpha 0.4."
+    },
+    "piece_glow": {
+      "file": "png/hand/piece_glow.png",
+      "group": "hand",
+      "sizePx": {
+        "w": 256,
+        "h": 280
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "hand piece glow",
+      "css": ".k-piece .glow",
+      "note": "Soft glow behind the render (tint gold, alpha 0.7) while picked; accent alpha 0.35 on hover is optional."
+    },
+    "ability_ready": {
+      "file": "png/ability/ability_ready.png",
+      "group": "ability",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": {
+        "l": 70,
+        "r": 70,
+        "t": 70,
+        "b": 70
+      },
+      "spriteBorderVector4": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": {
+        "w": 84,
+        "h": 84
+      },
+      "imageType": "Sliced",
+      "role": "ability button frame, ready",
+      "css": ".ab2btn.ready",
+      "note": "Wood-face frame (pre full-face). Full-face buttons use ability_overlay_* over abilities_face/<Name>.png. Ready: raised wood face. Icon 40 cream.100, key badge top-left (inside), cost badge bottom-right, clock ring around."
+    },
+    "ability_hover": {
+      "file": "png/ability/ability_hover.png",
+      "group": "ability",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": {
+        "l": 70,
+        "r": 70,
+        "t": 70,
+        "b": 70
+      },
+      "spriteBorderVector4": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": {
+        "w": 84,
+        "h": 84
+      },
+      "imageType": "Sliced",
+      "role": "ability button frame, hover",
+      "css": ".ab2btn.hover",
+      "note": "Wood-face frame (pre full-face). Full-face buttons use ability_overlay_* over abilities_face/<Name>.png. Hover: lifts 5 px (UIFeedback), accent.light edge; range preview on the board + tooltip above the bar."
+    },
+    "ability_pressed": {
+      "file": "png/ability/ability_pressed.png",
+      "group": "ability",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": {
+        "l": 70,
+        "r": 70,
+        "t": 70,
+        "b": 70
+      },
+      "spriteBorderVector4": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": {
+        "w": 84,
+        "h": 84
+      },
+      "imageType": "Sliced",
+      "role": "ability button frame, pressed",
+      "css": ".ab2btn.pressed",
+      "note": "Wood-face frame (pre full-face). Full-face buttons use ability_overlay_* over abilities_face/<Name>.png. Pressed: sinks 2 px."
+    },
+    "ability_aiming": {
+      "file": "png/ability/ability_aiming.png",
+      "group": "ability",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": {
+        "l": 70,
+        "r": 70,
+        "t": 70,
+        "b": 70
+      },
+      "spriteBorderVector4": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": {
+        "w": 84,
+        "h": 84
+      },
+      "imageType": "Sliced",
+      "role": "ability button frame, aiming",
+      "css": ".ab2btn.aiming",
+      "note": "Wood-face frame (pre full-face). Full-face buttons use ability_overlay_* over abilities_face/<Name>.png. Aiming (waiting for a target): gold edge + glow, stays lifted. Right click / Esc cancels."
+    },
+    "ability_cooldown": {
+      "file": "png/ability/ability_cooldown.png",
+      "group": "ability",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": {
+        "l": 70,
+        "r": 70,
+        "t": 70,
+        "b": 70
+      },
+      "spriteBorderVector4": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": {
+        "w": 84,
+        "h": 84
+      },
+      "imageType": "Sliced",
+      "role": "ability button frame, cooldown",
+      "css": ".ab2btn.cooldown",
+      "note": "Wood-face frame (pre full-face). Full-face buttons use ability_overlay_* over abilities_face/<Name>.png. On cooldown: dark face, icon alpha 0.45 + saturation 40 % (tint), clock ring shows recovered segments, corner badge = turns left."
+    },
+    "ability_held": {
+      "file": "png/ability/ability_held.png",
+      "group": "ability",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": {
+        "l": 70,
+        "r": 70,
+        "t": 70,
+        "b": 70
+      },
+      "spriteBorderVector4": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": {
+        "w": 84,
+        "h": 84
+      },
+      "imageType": "Sliced",
+      "role": "ability button frame, held",
+      "css": ".ab2btn.held",
+      "note": "Wood-face frame (pre full-face). Full-face buttons use ability_overlay_* over abilities_face/<Name>.png. Held cooldown (waits for a reset, e.g. a kill): gold-dark inner line, corner badge shows the lock, ring all dark; tooltip \"Ready after a kill\"."
+    },
+    "ability_blocked": {
+      "file": "png/ability/ability_blocked.png",
+      "group": "ability",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": {
+        "l": 70,
+        "r": 70,
+        "t": 70,
+        "b": 70
+      },
+      "spriteBorderVector4": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": {
+        "w": 84,
+        "h": 84
+      },
+      "imageType": "Sliced",
+      "role": "ability button frame, blocked",
+      "css": ".ab2btn.blocked",
+      "note": "Wood-face frame (pre full-face). Full-face buttons use ability_overlay_* over abilities_face/<Name>.png. Ready but cannot be used now (no target, energy, rooted): icon 40 %, faint bad line; click shakes + tooltip reason."
+    },
+    "ability_overlay_ready": {
+      "file": "png/ability/ability_overlay_ready.png",
+      "group": "ability",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": {
+        "l": 70,
+        "r": 70,
+        "t": 70,
+        "b": 70
+      },
+      "spriteBorderVector4": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": {
+        "w": 84,
+        "h": 84
+      },
+      "imageType": "Sliced",
+      "role": "ability button frame, overlay_ready",
+      "css": ".ab2btn.overlay_ready",
+      "note": "Full-face overlay, ready: thin rim + top highlight over the icon face."
+    },
+    "ability_overlay_hover": {
+      "file": "png/ability/ability_overlay_hover.png",
+      "group": "ability",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": {
+        "l": 70,
+        "r": 70,
+        "t": 70,
+        "b": 70
+      },
+      "spriteBorderVector4": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": {
+        "w": 84,
+        "h": 84
+      },
+      "imageType": "Sliced",
+      "role": "ability button frame, overlay_hover",
+      "css": ".ab2btn.overlay_hover",
+      "note": "Hover: face 10 % lighter + accent.light ring."
+    },
+    "ability_overlay_pressed": {
+      "file": "png/ability/ability_overlay_pressed.png",
+      "group": "ability",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": {
+        "l": 70,
+        "r": 70,
+        "t": 70,
+        "b": 70
+      },
+      "spriteBorderVector4": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": {
+        "w": 84,
+        "h": 84
+      },
+      "imageType": "Sliced",
+      "role": "ability button frame, overlay_pressed",
+      "css": ".ab2btn.overlay_pressed",
+      "note": "Pressed: 18 % darker, nothing moves."
+    },
+    "ability_overlay_aiming": {
+      "file": "png/ability/ability_overlay_aiming.png",
+      "group": "ability",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": {
+        "l": 70,
+        "r": 70,
+        "t": 70,
+        "b": 70
+      },
+      "spriteBorderVector4": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": {
+        "w": 84,
+        "h": 84
+      },
+      "imageType": "Sliced",
+      "role": "ability button frame, overlay_aiming",
+      "css": ".ab2btn.overlay_aiming",
+      "note": "Aiming: gold ring + glow."
+    },
+    "ability_overlay_cooldown": {
+      "file": "png/ability/ability_overlay_cooldown.png",
+      "group": "ability",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": {
+        "l": 70,
+        "r": 70,
+        "t": 70,
+        "b": 70
+      },
+      "spriteBorderVector4": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": {
+        "w": 84,
+        "h": 84
+      },
+      "imageType": "Sliced",
+      "role": "ability button frame, overlay_cooldown",
+      "css": ".ab2btn.overlay_cooldown",
+      "note": "Cooldown: 55 % dark veil (icon reads ~45 %); clock ring around + corner badge."
+    },
+    "ability_overlay_held": {
+      "file": "png/ability/ability_overlay_held.png",
+      "group": "ability",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": {
+        "l": 70,
+        "r": 70,
+        "t": 70,
+        "b": 70
+      },
+      "spriteBorderVector4": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": {
+        "w": 84,
+        "h": 84
+      },
+      "imageType": "Sliced",
+      "role": "ability button frame, overlay_held",
+      "css": ".ab2btn.overlay_held",
+      "note": "Held: dark veil + gold-dark inner line; corner badge shows the lock."
+    },
+    "ability_overlay_blocked": {
+      "file": "png/ability/ability_overlay_blocked.png",
+      "group": "ability",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": {
+        "l": 70,
+        "r": 70,
+        "t": 70,
+        "b": 70
+      },
+      "spriteBorderVector4": [
+        70,
+        70,
+        70,
+        70
+      ],
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": {
+        "w": 84,
+        "h": 84
+      },
+      "imageType": "Sliced",
+      "role": "ability button frame, overlay_blocked",
+      "css": ".ab2btn.overlay_blocked",
+      "note": "Blocked: veil + bad inner line; click shakes, tooltip says why."
+    },
+    "clock_ring_1_0": {
+      "file": "png/cooldown/clock_ring_1_0.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "ability cooldown clock ring 1_0",
+      "css": ".ab2btn .cring",
+      "note": "Cooldown 1, 0 of 1 turns recovered (accent.light), 1 dark."
+    },
+    "clock_ring_1_ready": {
+      "file": "png/cooldown/clock_ring_1_ready.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "ability cooldown clock ring 1_ready",
+      "css": ".ab2btn .cring",
+      "note": "Cooldown 1: ready = all segments cobalt + glow."
+    },
+    "clock_ring_2_0": {
+      "file": "png/cooldown/clock_ring_2_0.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "ability cooldown clock ring 2_0",
+      "css": ".ab2btn .cring",
+      "note": "Cooldown 2, 0 of 2 turns recovered (accent.light), 2 dark."
+    },
+    "clock_ring_2_1": {
+      "file": "png/cooldown/clock_ring_2_1.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "ability cooldown clock ring 2_1",
+      "css": ".ab2btn .cring",
+      "note": "Cooldown 2, 1 of 2 turns recovered (accent.light), 1 dark."
+    },
+    "clock_ring_2_ready": {
+      "file": "png/cooldown/clock_ring_2_ready.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "ability cooldown clock ring 2_ready",
+      "css": ".ab2btn .cring",
+      "note": "Cooldown 2: ready = all segments cobalt + glow."
+    },
+    "clock_ring_3_0": {
+      "file": "png/cooldown/clock_ring_3_0.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "ability cooldown clock ring 3_0",
+      "css": ".ab2btn .cring",
+      "note": "Cooldown 3, 0 of 3 turns recovered (accent.light), 3 dark."
+    },
+    "clock_ring_3_1": {
+      "file": "png/cooldown/clock_ring_3_1.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "ability cooldown clock ring 3_1",
+      "css": ".ab2btn .cring",
+      "note": "Cooldown 3, 1 of 3 turns recovered (accent.light), 2 dark."
+    },
+    "clock_ring_3_2": {
+      "file": "png/cooldown/clock_ring_3_2.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "ability cooldown clock ring 3_2",
+      "css": ".ab2btn .cring",
+      "note": "Cooldown 3, 2 of 3 turns recovered (accent.light), 1 dark."
+    },
+    "clock_ring_3_ready": {
+      "file": "png/cooldown/clock_ring_3_ready.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "ability cooldown clock ring 3_ready",
+      "css": ".ab2btn .cring",
+      "note": "Cooldown 3: ready = all segments cobalt + glow."
+    },
+    "clock_ring_fill": {
+      "file": "png/cooldown/clock_ring_fill.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "ability cooldown clock ring fill",
+      "css": ".ab2btn .cring",
+      "note": "Alternative to the frames: white ring for Image Filled Radial360 (origin Top, clockwise), tinted; put clock_ring_gaps_N on top."
+    },
+    "clock_ring_gaps_2": {
+      "file": "png/cooldown/clock_ring_gaps_2.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "ability cooldown clock ring gaps_2",
+      "css": ".ab2btn .cring",
+      "note": "Rim-coloured segment gaps for a 2-turn cooldown (over clock_ring_fill)."
+    },
+    "clock_ring_gaps_3": {
+      "file": "png/cooldown/clock_ring_gaps_3.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 236,
+        "h": 236
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 17,
+        "r": 17,
+        "t": 17,
+        "b": 17
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "ability cooldown clock ring gaps_3",
+      "css": ".ab2btn .cring",
+      "note": "Rim-coloured segment gaps for a 3-turn cooldown (over clock_ring_fill)."
+    },
+    "cd_badge": {
+      "file": "png/cooldown/cd_badge.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 120,
+        "h": 120
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 11,
+        "r": 11,
+        "t": 11,
+        "b": 11
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "cooldown corner badge",
+      "css": ".ab2btn .cdb",
+      "note": "Corner badge (38, centre on the button's top-right corner, 12 px out): turns left, Plinth 22 cream.100. Held: lock icon 20 gold instead."
+    },
+    "cd_badge_soon": {
+      "file": "png/cooldown/cd_badge_soon.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 120,
+        "h": 120
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 11,
+        "r": 11,
+        "t": 11,
+        "b": 11
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "cooldown corner badge, ready next turn",
+      "css": ".ab2btn.soon .cdb",
+      "note": "\"Ready next turn\" (1 left): glow baked; pulse alpha between cd_badge and this over 1.1 s."
+    },
+    "pip_ability_ready": {
+      "file": "png/cooldown/pip_ability_ready.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 80,
+        "h": 84
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 6,
+        "r": 6,
+        "t": 6,
+        "b": 8
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "cooldown: pip ability ready",
+      "css": null,
+      "note": "Board pip (28) per ability: ready. Flash on refill (scale 1.45, 0.6 s)."
+    },
+    "pip_ability_wait": {
+      "file": "png/cooldown/pip_ability_wait.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 80,
+        "h": 84
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 6,
+        "r": 6,
+        "t": 6,
+        "b": 8
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "cooldown: pip ability wait",
+      "css": null,
+      "note": "Waiting: turns left on it (Plinth 18 cream.100)."
+    },
+    "pip_ability_held": {
+      "file": "png/cooldown/pip_ability_held.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 80,
+        "h": 84
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 6,
+        "r": 6,
+        "t": 6,
+        "b": 8
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "cooldown: pip ability held",
+      "css": null,
+      "note": "Held: lock icon 16 gold on it."
+    },
+    "pip_ability_ghost": {
+      "file": "png/cooldown/pip_ability_ghost.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 80,
+        "h": 84
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 6,
+        "r": 6,
+        "t": 6,
+        "b": 8
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "cooldown: pip ability ghost",
+      "css": null,
+      "note": "Preview while End turn is hovered: will be ready next turn."
+    },
+    "pip_mini_ready": {
+      "file": "png/cooldown/pip_mini_ready.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 52,
+        "h": 54
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 4,
+        "r": 4,
+        "t": 4,
+        "b": 5
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "cooldown: pip mini ready",
+      "css": null,
+      "note": "Mini pip 18 for a placed hand piece (same meaning as the board pips)."
+    },
+    "pip_mini_wait": {
+      "file": "png/cooldown/pip_mini_wait.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 52,
+        "h": 54
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 4,
+        "r": 4,
+        "t": 4,
+        "b": 5
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "cooldown: pip mini wait",
+      "css": null,
+      "note": "Mini pip waiting: number Plinth 18 is too big for 18 px; show the number only on hover (tooltip), or no number."
+    },
+    "pip_mini_held": {
+      "file": "png/cooldown/pip_mini_held.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 52,
+        "h": 54
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 4,
+        "r": 4,
+        "t": 4,
+        "b": 5
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "cooldown: pip mini held",
+      "css": null,
+      "note": "Mini pip held (gold-dark line)."
+    },
+    "ready_glow": {
+      "file": "png/cooldown/ready_glow.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "cooldown: ready glow",
+      "css": null,
+      "note": "Ground glow under a tower that can still act (>= 1 ready ability): flat quad on the tile, tint accent alpha 0.45, breathe 1.6 s."
+    },
+    "cooldown_ring": {
+      "file": "png/cooldown/cooldown_ring.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 128,
+        "h": 128
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 0,
+        "r": 0,
+        "t": 0,
+        "b": 0
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "cooldown: cooldown ring",
+      "css": null,
+      "note": "Small radial clock (Filled Radial360) for round things: enemy intent chip \"long cooldown\", enemy card abilities."
+    },
+    "badge_ready_pop": {
+      "file": "png/cooldown/badge_ready_pop.png",
+      "group": "cooldown",
+      "sizePx": {
+        "w": 204,
+        "h": 84
+      },
+      "border": {
+        "l": 44,
+        "r": 44,
+        "t": 40,
+        "b": 40
+      },
+      "spriteBorderVector4": [
+        44,
+        40,
+        44,
+        40
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 96,
+        "h": 36
+      },
+      "imageType": "Sliced",
+      "role": "cooldown: badge ready pop",
+      "css": null,
+      "note": "\"Ready!\" pop over a tower when an ability comes off cooldown at turn start. Text ink, Plinth 22."
+    },
+    "decal_enemy_path": {
+      "file": "png/board/decal_enemy_path.png",
+      "group": "board",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: decal enemy path",
+      "css": null,
+      "note": "Tile decal (1 tile = 128 px texture): enemy path step. Quad on the tile top, unlit transparent."
+    },
+    "decal_enemy_stop": {
+      "file": "png/board/decal_enemy_stop.png",
+      "group": "board",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: decal enemy stop",
+      "css": null,
+      "note": "Tile where the enemy stops: solid + inner glow."
+    },
+    "decal_select_ring": {
+      "file": "png/board/decal_select_ring.png",
+      "group": "board",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: decal select ring",
+      "css": null,
+      "note": "Selected unit tile: cobalt ring decal (alternative to the yellow selection tile). Same blue as the selected hand piece."
+    },
+    "decal_range": {
+      "file": "png/board/decal_range.png",
+      "group": "board",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: decal range",
+      "css": null,
+      "note": "Ability range (the calmest decal): accent fill 30 % + ONE thin light-blue border (no dark outline: the double ring is reserved for selection), no pulse."
+    },
+    "decal_area": {
+      "file": "png/board/decal_area.png",
+      "group": "board",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: decal area",
+      "css": null,
+      "note": "Area / splash while aiming: diagonal hatch + strong accent.light border (pattern = area, not range)."
+    },
+    "decal_place": {
+      "file": "png/board/decal_place.png",
+      "group": "board",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: decal place",
+      "css": null,
+      "note": "Free build tile while placing a tower: gold-cream corner brackets + faint gold fill."
+    },
+    "decal_place_blocked": {
+      "file": "png/board/decal_place_blocked.png",
+      "group": "board",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: decal place blocked",
+      "css": null,
+      "note": "Build tile you cannot use (occupied, not affordable, blocked): red brackets + small x; tooltip says why."
+    },
+    "decal_move": {
+      "file": "png/board/decal_move.png",
+      "group": "board",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: decal move",
+      "css": null,
+      "note": "Tile a walk can reach: cream soft fill + dotted cream border (not blue = range, not green = heal)."
+    },
+    "decal_move_step": {
+      "file": "png/board/decal_move_step.png",
+      "group": "board",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: decal move step",
+      "css": null,
+      "note": "Route step marker (one per tile on the chosen path)."
+    },
+    "decal_move_dest": {
+      "file": "png/board/decal_move_dest.png",
+      "group": "board",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: decal move dest",
+      "css": null,
+      "note": "Destination: cream ring + chevron (points along the move; rotate the quad to the last step direction)."
+    },
+    "decal_target_valid": {
+      "file": "png/board/decal_target_valid.png",
+      "group": "board",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: decal target valid",
+      "css": null,
+      "note": "Valid target while aiming: pulse alpha 1 -> 0.55, 0.9 s."
+    },
+    "decal_heal_valid": {
+      "file": "png/board/decal_heal_valid.png",
+      "group": "board",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: decal heal valid",
+      "css": null,
+      "note": "Valid ally target for heals / buffs (green), same pulse."
+    },
+    "line_attack_dash": {
+      "file": "png/board/line_attack_dash.png",
+      "group": "board",
+      "sizePx": {
+        "w": 48,
+        "h": 20
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: line attack dash",
+      "css": null,
+      "note": "Dash 14 + gap 10 (one period, wrap Repeat). LineRenderer width 6-8 px equivalent, Texture Mode Tile, scroll offset -24 px / 0.6 s."
+    },
+    "line_attack_end": {
+      "file": "png/board/line_attack_end.png",
+      "group": "board",
+      "sizePx": {
+        "w": 48,
+        "h": 48
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: line attack end",
+      "css": null,
+      "note": "Arc end dot on the target."
+    },
+    "stripes_damage_preview": {
+      "file": "png/board/stripes_damage_preview.png",
+      "group": "board",
+      "sizePx": {
+        "w": 24,
+        "h": 24
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: stripes damage preview",
+      "css": null,
+      "note": "Predicted HP loss on a plate / HP bar: RawImage, uvRect.width = rect.width / 12, blink alpha 1 -> 0.45 over 0.7 s."
+    },
+    "stripes_heal_preview": {
+      "file": "png/board/stripes_heal_preview.png",
+      "group": "board",
+      "sizePx": {
+        "w": 24,
+        "h": 24
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "board: stripes heal preview",
+      "css": null,
+      "note": "Predicted heal (green)."
+    },
+    "tag_kills": {
+      "file": "png/board/tag_kills.png",
+      "group": "board",
+      "sizePx": {
+        "w": 152,
+        "h": 56
+      },
+      "border": {
+        "l": 26,
+        "r": 26,
+        "t": 24,
+        "b": 26
+      },
+      "spriteBorderVector4": [
+        26,
+        26,
+        26,
+        24
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 72,
+        "h": 24
+      },
+      "imageType": "Sliced",
+      "role": "board: tag kills",
+      "css": null,
+      "note": "\"Kills\" / \"Öldürür\" tag 30 px above a plate when the preview is lethal. White Plinth 18."
+    },
+    "intent_attack": {
+      "file": "png/board/intent_attack.png",
+      "group": "board",
+      "sizePx": {
+        "w": 140,
+        "h": 84
+      },
+      "border": {
+        "l": 44,
+        "r": 44,
+        "t": 40,
+        "b": 40
+      },
+      "spriteBorderVector4": [
+        44,
+        40,
+        44,
+        40
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 64,
+        "h": 36
+      },
+      "imageType": "Sliced",
+      "role": "board: intent attack",
+      "css": null,
+      "note": "Enemy intent: sword / castle icon 22 + damage (Plinth 20 cream.100). Castle (hits the base) pulses intent_glow."
+    },
+    "intent_move": {
+      "file": "png/board/intent_move.png",
+      "group": "board",
+      "sizePx": {
+        "w": 140,
+        "h": 84
+      },
+      "border": {
+        "l": 44,
+        "r": 44,
+        "t": 40,
+        "b": 40
+      },
+      "spriteBorderVector4": [
+        44,
+        40,
+        44,
+        40
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 64,
+        "h": 36
+      },
+      "imageType": "Sliced",
+      "role": "board: intent move",
+      "css": null,
+      "note": "Enemy intent: move, back-arrow icon + tiles (← 2)."
+    },
+    "intent_wait": {
+      "file": "png/board/intent_wait.png",
+      "group": "board",
+      "sizePx": {
+        "w": 140,
+        "h": 84
+      },
+      "border": {
+        "l": 44,
+        "r": 44,
+        "t": 40,
+        "b": 40
+      },
+      "spriteBorderVector4": [
+        44,
+        40,
+        44,
+        40
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 64,
+        "h": 36
+      },
+      "imageType": "Sliced",
+      "role": "board: intent wait",
+      "css": null,
+      "note": "Enemy intent: waits (clock icon only, or cooldown_ring + turns for a long cooldown)."
+    },
+    "intent_glow": {
+      "file": "png/board/intent_glow.png",
+      "group": "board",
+      "sizePx": {
+        "w": 256,
+        "h": 176
+      },
+      "border": {
+        "l": 92,
+        "r": 92,
+        "t": 80,
+        "b": 80
+      },
+      "spriteBorderVector4": [
+        92,
+        80,
+        92,
+        80
+      ],
+      "outset": {
+        "l": 24,
+        "r": 24,
+        "t": 24,
+        "b": 24
+      },
+      "logicalSize": null,
+      "imageType": "Sliced",
+      "role": "board: intent glow",
+      "css": null,
+      "note": "White glow behind an intent chip (tint fx.damage): \"hits the base\" threat pulse 1.2 s."
+    },
+    "ribbon_enemy": {
+      "file": "png/board/ribbon_enemy.png",
+      "group": "board",
+      "sizePx": {
+        "w": 400,
+        "h": 96
+      },
+      "border": {
+        "l": 88,
+        "r": 88,
+        "t": 20,
+        "b": 20
+      },
+      "spriteBorderVector4": [
+        88,
+        20,
+        88,
+        20
+      ],
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Sliced",
+      "role": "board: ribbon enemy",
+      "css": null,
+      "note": "Enemy action name (\"Smash!\") over the acting enemy: white Plinth 30 + 2 px black shadow; pop 1.1 s."
+    },
+    "chip_unit_status": {
+      "file": "png/board/chip_unit_status.png",
+      "group": "board",
+      "sizePx": {
+        "w": 92,
+        "h": 72
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 34,
+        "b": 32
+      },
+      "spriteBorderVector4": [
+        38,
+        32,
+        38,
+        34
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 40,
+        "h": 30
+      },
+      "imageType": "Sliced",
+      "role": "board: chip unit status",
+      "css": null,
+      "note": "Status over a unit (always visible): icon 18 + stacks Plinth 18 cream. Neutral / control status."
+    },
+    "chip_unit_debuff": {
+      "file": "png/board/chip_unit_debuff.png",
+      "group": "board",
+      "sizePx": {
+        "w": 92,
+        "h": 72
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 34,
+        "b": 32
+      },
+      "spriteBorderVector4": [
+        38,
+        32,
+        38,
+        34
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 40,
+        "h": 30
+      },
+      "imageType": "Sliced",
+      "role": "board: chip unit debuff",
+      "css": null,
+      "note": "Damage-over-time / debuff (burn, poison)."
+    },
+    "chip_unit_buff": {
+      "file": "png/board/chip_unit_buff.png",
+      "group": "board",
+      "sizePx": {
+        "w": 92,
+        "h": 72
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 34,
+        "b": 32
+      },
+      "spriteBorderVector4": [
+        38,
+        32,
+        38,
+        34
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 40,
+        "h": 30
+      },
+      "imageType": "Sliced",
+      "role": "board: chip unit buff",
+      "css": null,
+      "note": "Buff (shield, focus)."
+    },
+    "atk_melee_chevron_enemy": {
+      "file": "png/attack/atk_melee_chevron_enemy.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 80,
+        "h": 64
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk melee chevron enemy",
+      "css": null,
+      "note": "Melee: short solid chevron on the edge between attacker and target tile (world quad, rotated to the direction)."
+    },
+    "atk_line_dash_enemy": {
+      "file": "png/attack/atk_line_dash_enemy.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 48,
+        "h": 20
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk line dash enemy",
+      "css": null,
+      "note": "Projectile: straight dashed LOW line (2 points, ~0.3 m above the tiles), stops at the first blocker. Repeat wrap, scroll 1 period / 0.6 s."
+    },
+    "atk_lob_dots_enemy": {
+      "file": "png/attack/atk_lob_dots_enemy.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 32,
+        "h": 20
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk lob dots enemy",
+      "css": null,
+      "note": "Lobbed: dotted HIGH arc: LineRenderer with N = 16-24 points on a parabola (apex = 0.35 × distance), ignores blockers."
+    },
+    "atk_beam_enemy": {
+      "file": "png/attack/atk_beam_enemy.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 16,
+        "h": 28
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk beam enemy",
+      "css": null,
+      "note": "Beam: solid line (2 points, Stretch texture mode). Every unit on it gets its own damage preview."
+    },
+    "atk_spell_link_enemy": {
+      "file": "png/attack/atk_spell_link_enemy.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 32,
+        "h": 12
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk spell link enemy",
+      "css": null,
+      "note": "Spell: no attack line; only this faint link (caster → target, alpha 0.45) plus the rune under the target."
+    },
+    "atk_impact_ring_enemy": {
+      "file": "png/attack/atk_impact_ring_enemy.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk impact ring enemy",
+      "css": null,
+      "note": "Lobbed: impact ring decal on the landing tile."
+    },
+    "atk_splash_enemy": {
+      "file": "png/attack/atk_splash_enemy.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk splash enemy",
+      "css": null,
+      "note": "Splash area: one decal per tile in the area (dotted = area, not path)."
+    },
+    "atk_rune_enemy": {
+      "file": "png/attack/atk_rune_enemy.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk rune enemy",
+      "css": null,
+      "note": "Spell: rune decal under the target (slow spin 8 s / turn)."
+    },
+    "atk_melee_chevron_player": {
+      "file": "png/attack/atk_melee_chevron_player.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 80,
+        "h": 64
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk melee chevron player",
+      "css": null,
+      "note": "Melee: short solid chevron on the edge between attacker and target tile (world quad, rotated to the direction)."
+    },
+    "atk_line_dash_player": {
+      "file": "png/attack/atk_line_dash_player.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 48,
+        "h": 20
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk line dash player",
+      "css": null,
+      "note": "Projectile: straight dashed LOW line (2 points, ~0.3 m above the tiles), stops at the first blocker. Repeat wrap, scroll 1 period / 0.6 s."
+    },
+    "atk_lob_dots_player": {
+      "file": "png/attack/atk_lob_dots_player.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 32,
+        "h": 20
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk lob dots player",
+      "css": null,
+      "note": "Lobbed: dotted HIGH arc: LineRenderer with N = 16-24 points on a parabola (apex = 0.35 × distance), ignores blockers."
+    },
+    "atk_beam_player": {
+      "file": "png/attack/atk_beam_player.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 16,
+        "h": 28
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk beam player",
+      "css": null,
+      "note": "Beam: solid line (2 points, Stretch texture mode). Every unit on it gets its own damage preview."
+    },
+    "atk_spell_link_player": {
+      "file": "png/attack/atk_spell_link_player.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 32,
+        "h": 12
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk spell link player",
+      "css": null,
+      "note": "Spell: no attack line; only this faint link (caster → target, alpha 0.45) plus the rune under the target."
+    },
+    "atk_impact_ring_player": {
+      "file": "png/attack/atk_impact_ring_player.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk impact ring player",
+      "css": null,
+      "note": "Lobbed: impact ring decal on the landing tile."
+    },
+    "atk_splash_player": {
+      "file": "png/attack/atk_splash_player.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk splash player",
+      "css": null,
+      "note": "Splash area: one decal per tile in the area (dotted = area, not path)."
+    },
+    "atk_rune_player": {
+      "file": "png/attack/atk_rune_player.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 256,
+        "h": 256
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk rune player",
+      "css": null,
+      "note": "Spell: rune decal under the target (slow spin 8 s / turn)."
+    },
+    "atk_blocked_x": {
+      "file": "png/attack/atk_blocked_x.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 80,
+        "h": 80
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk blocked x",
+      "css": null,
+      "note": "Blocked: screen-space marker where the shot stops (on the blocker). The blocker gets the damage preview; the aimed target is greyed (plate alpha 0.4, no stripes) with a chip \"Blocked by Wall\" (paper_stat, ink.2)."
+    },
+    "atk_redirect": {
+      "file": "png/attack/atk_redirect.png",
+      "group": "attack",
+      "sizePx": {
+        "w": 80,
+        "h": 80
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "attack: atk redirect",
+      "css": null,
+      "note": "Redirected (Bodyguard, Taunt): marker at the bend; the line goes from the original target to the new one, tooltip names the cause."
+    },
+    "btn_wood_normal": {
+      "file": "png/screens/btn_wood_normal.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "wood button (screens secondary), normal",
+      "css": ".k-btn",
+      "note": ".k-btn: secondary button on screens (dark band)."
+    },
+    "btn_wood_hover": {
+      "file": "png/screens/btn_wood_hover.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "wood button (screens secondary), hover",
+      "css": ".k-btn.is-hover",
+      "note": ".k-btn.is-hover (+ scale 1.03)."
+    },
+    "btn_wood_pressed": {
+      "file": "png/screens/btn_wood_pressed.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "wood button (screens secondary), pressed",
+      "css": ".k-btn.is-pressed",
+      "note": ".k-btn.is-pressed: face 4 px lower; move the label with it."
+    },
+    "btn_wood_disabled": {
+      "file": "png/screens/btn_wood_disabled.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 332,
+        "h": 132
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "wood button (screens secondary), disabled",
+      "css": ".k-btn.is-disabled",
+      "note": ".k-btn.is-disabled (label cream.300, tooltip says why)."
+    },
+    "tab_normal": {
+      "file": "png/screens/tab_normal.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 292,
+        "h": 124
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 140,
+        "h": 56
+      },
+      "imageType": "Sliced",
+      "role": "tab, normal",
+      "css": ".k-tab",
+      "note": ".k-tab: Plinth 26 cream.200, icon 24, padding 0 24, height 56."
+    },
+    "tab_hover": {
+      "file": "png/screens/tab_hover.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 292,
+        "h": 124
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 140,
+        "h": 56
+      },
+      "imageType": "Sliced",
+      "role": "tab, hover",
+      "css": ".k-tab.is-hover",
+      "note": ".k-tab.is-hover: label cream.100."
+    },
+    "tab_selected": {
+      "file": "png/screens/tab_selected.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 292,
+        "h": 124
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 140,
+        "h": 56
+      },
+      "imageType": "Sliced",
+      "role": "tab, selected",
+      "css": ".k-tab.is-active",
+      "note": ".k-tab.is-active: white label, cobalt band below."
+    },
+    "row_normal": {
+      "file": "png/screens/row_normal.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 420,
+        "h": 140
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 5,
+        "r": 5,
+        "t": 5,
+        "b": 5
+      },
+      "logicalSize": {
+        "w": 200,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "list row, normal",
+      "css": ".k-row",
+      "note": ".k-row: min height 60, padding 6 16 6 8, gap 14, Nunito Bold 22 cream.100 (Codex list, level list)."
+    },
+    "row_hover": {
+      "file": "png/screens/row_hover.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 420,
+        "h": 140
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 5,
+        "r": 5,
+        "t": 5,
+        "b": 5
+      },
+      "logicalSize": {
+        "w": 200,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "list row, hover",
+      "css": ".k-row.is-hover",
+      "note": ".k-row.is-hover."
+    },
+    "row_selected": {
+      "file": "png/screens/row_selected.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 420,
+        "h": 140
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 5,
+        "r": 5,
+        "t": 5,
+        "b": 5
+      },
+      "logicalSize": {
+        "w": 200,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "list row, selected",
+      "css": ".k-row.is-selected",
+      "note": ".k-row.is-selected: white text, accent.light ring."
+    },
+    "row_locked": {
+      "file": "png/screens/row_locked.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 420,
+        "h": 140
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 5,
+        "r": 5,
+        "t": 5,
+        "b": 5
+      },
+      "logicalSize": {
+        "w": 200,
+        "h": 60
+      },
+      "imageType": "Sliced",
+      "role": "list row, locked",
+      "css": ".k-row.is-locked",
+      "note": ".k-row.is-locked: cream.300 text + lock_badge; tooltip / sub line says how to unlock."
+    },
+    "slider_track": {
+      "file": "png/screens/slider_track.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 256,
+        "h": 48
+      },
+      "border": {
+        "l": 26,
+        "r": 26,
+        "t": 22,
+        "b": 22
+      },
+      "spriteBorderVector4": [
+        26,
+        22,
+        26,
+        22
+      ],
+      "outset": {
+        "l": 4,
+        "r": 4,
+        "t": 4,
+        "b": 4
+      },
+      "logicalSize": {
+        "w": 120,
+        "h": 16
+      },
+      "imageType": "Sliced",
+      "role": "slider track",
+      "css": ".k-slider .track",
+      "note": ".k-slider .track: height 16, full width."
+    },
+    "slider_fill": {
+      "file": "png/screens/slider_fill.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 248,
+        "h": 40
+      },
+      "border": {
+        "l": 22,
+        "r": 22,
+        "t": 18,
+        "b": 18
+      },
+      "spriteBorderVector4": [
+        22,
+        18,
+        22,
+        18
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 120,
+        "h": 16
+      },
+      "imageType": "Sliced",
+      "role": "slider fill",
+      "css": ".k-slider .fill",
+      "note": ".k-slider .fill (Slider Fill Rect)."
+    },
+    "slider_knob_normal": {
+      "file": "png/screens/slider_knob_normal.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 104,
+        "h": 104
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 8,
+        "r": 8,
+        "t": 8,
+        "b": 8
+      },
+      "logicalSize": {
+        "w": 36,
+        "h": 36
+      },
+      "imageType": "Simple",
+      "role": "slider handle, normal",
+      "css": ".k-slider .knob",
+      "note": ".k-slider .knob 36 (Slider Handle)."
+    },
+    "slider_knob_hover": {
+      "file": "png/screens/slider_knob_hover.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 104,
+        "h": 104
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 8,
+        "r": 8,
+        "t": 8,
+        "b": 8
+      },
+      "logicalSize": {
+        "w": 36,
+        "h": 36
+      },
+      "imageType": "Simple",
+      "role": "slider handle, hover",
+      "css": ".k-slider.is-hover .knob",
+      "note": ".k-slider.is-hover .knob: accent.light ring (also keyboard focus)."
+    },
+    "slider_knob_pressed": {
+      "file": "png/screens/slider_knob_pressed.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 104,
+        "h": 104
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 8,
+        "r": 8,
+        "t": 8,
+        "b": 8
+      },
+      "logicalSize": {
+        "w": 36,
+        "h": 36
+      },
+      "imageType": "Simple",
+      "role": "slider handle, pressed",
+      "css": ".k-slider.is-pressed .knob",
+      "note": "Dragging: darker paper, sunk 3 px."
+    },
+    "value_box": {
+      "file": "png/screens/value_box.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 176,
+        "h": 96
+      },
+      "border": {
+        "l": 28,
+        "r": 28,
+        "t": 28,
+        "b": 28
+      },
+      "spriteBorderVector4": [
+        28,
+        28,
+        28,
+        28
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 84,
+        "h": 44
+      },
+      "imageType": "Sliced",
+      "role": "slider value read-out",
+      "css": ".k-value",
+      "note": ".k-value: slider read-out, Plinth 24 cream.100."
+    },
+    "toggle_off": {
+      "file": "png/screens/toggle_off.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 160,
+        "h": 88
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 76,
+        "h": 40
+      },
+      "imageType": "Simple",
+      "role": "toggle off (track + knob)",
+      "css": ".k-toggle .sw",
+      "note": ".k-toggle (off): 76x40 with the knob left. Always with the word \"Off\" (Nunito ExtraBold 20 cream.200) 14 px to the right."
+    },
+    "toggle_on": {
+      "file": "png/screens/toggle_on.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 160,
+        "h": 88
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 76,
+        "h": 40
+      },
+      "imageType": "Simple",
+      "role": "toggle on (track + knob)",
+      "css": ".k-toggle.is-on .sw",
+      "note": ".k-toggle.is-on: cobalt, knob right; word \"On\" cream.100."
+    },
+    "toggle_track_off": {
+      "file": "png/screens/toggle_track_off.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 160,
+        "h": 88
+      },
+      "border": {
+        "l": 44,
+        "r": 44,
+        "t": 42,
+        "b": 42
+      },
+      "spriteBorderVector4": [
+        44,
+        42,
+        44,
+        42
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 76,
+        "h": 40
+      },
+      "imageType": "Sliced",
+      "role": "toggle track off",
+      "css": ".k-toggle .sw",
+      "note": "Track only (if the knob animates as its own Image)."
+    },
+    "toggle_track_on": {
+      "file": "png/screens/toggle_track_on.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 160,
+        "h": 88
+      },
+      "border": {
+        "l": 44,
+        "r": 44,
+        "t": 42,
+        "b": 42
+      },
+      "spriteBorderVector4": [
+        44,
+        42,
+        44,
+        42
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 76,
+        "h": 40
+      },
+      "imageType": "Sliced",
+      "role": "toggle track on",
+      "css": ".k-toggle.is-on .sw",
+      "note": "Track only, on."
+    },
+    "toggle_knob": {
+      "file": "png/screens/toggle_knob.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 80,
+        "h": 84
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 4,
+        "r": 4,
+        "t": 4,
+        "b": 6
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "toggle knob",
+      "css": ".k-toggle .sw::after",
+      "note": "Knob 32; slides 36 px in 0.15 s ease.out."
+    },
+    "dropdown_normal": {
+      "file": "png/screens/dropdown_normal.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 344,
+        "h": 128
+      },
+      "border": {
+        "l": 40,
+        "r": 40,
+        "t": 40,
+        "b": 40
+      },
+      "spriteBorderVector4": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "outset": {
+        "l": 6,
+        "r": 6,
+        "t": 6,
+        "b": 6
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 52
+      },
+      "imageType": "Sliced",
+      "role": "dropdown field, normal",
+      "css": ".k-select",
+      "note": ".k-select: min 300x52, padding 0 12 0 18, Nunito Bold 22 ink, arrow = icon_next 24 tinted ink at the right."
+    },
+    "dropdown_hover": {
+      "file": "png/screens/dropdown_hover.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 344,
+        "h": 128
+      },
+      "border": {
+        "l": 40,
+        "r": 40,
+        "t": 40,
+        "b": 40
+      },
+      "spriteBorderVector4": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "outset": {
+        "l": 6,
+        "r": 6,
+        "t": 6,
+        "b": 6
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 52
+      },
+      "imageType": "Sliced",
+      "role": "dropdown field, hover",
+      "css": ".k-select.is-hover",
+      "note": "Hover / focus."
+    },
+    "dropdown_open": {
+      "file": "png/screens/dropdown_open.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 344,
+        "h": 128
+      },
+      "border": {
+        "l": 40,
+        "r": 40,
+        "t": 40,
+        "b": 40
+      },
+      "spriteBorderVector4": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "outset": {
+        "l": 6,
+        "r": 6,
+        "t": 6,
+        "b": 6
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 52
+      },
+      "imageType": "Sliced",
+      "role": "dropdown field, open",
+      "css": ".k-select.is-open",
+      "note": "Open (arrow flips 180)."
+    },
+    "dropdown_list": {
+      "file": "png/screens/dropdown_list.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 332,
+        "h": 252
+      },
+      "border": {
+        "l": 34,
+        "r": 34,
+        "t": 34,
+        "b": 34
+      },
+      "spriteBorderVector4": [
+        34,
+        34,
+        34,
+        34
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 120
+      },
+      "imageType": "Sliced",
+      "role": "dropdown list",
+      "css": ".k-select (list)",
+      "note": "Options panel under the field (padding 6)."
+    },
+    "dropdown_item_hover": {
+      "file": "png/screens/dropdown_item_hover.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 320,
+        "h": 88
+      },
+      "border": {
+        "l": 20,
+        "r": 20,
+        "t": 20,
+        "b": 20
+      },
+      "spriteBorderVector4": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "outset": {
+        "l": 0,
+        "r": 0,
+        "t": 0,
+        "b": 0
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 44
+      },
+      "imageType": "Sliced",
+      "role": "dropdown item hover",
+      "css": ".k-select (item_hover)",
+      "note": "Hovered / selected option (ink text stays)."
+    },
+    "dropdown_arrow": {
+      "file": "png/screens/dropdown_arrow.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 64,
+        "h": 64
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "dropdown arrow",
+      "css": ".k-select (arrow)",
+      "note": "White chevron (tint ink); same as icon_next."
+    },
+    "scrollbar_track": {
+      "file": "png/screens/scrollbar_track.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 32,
+        "h": 136
+      },
+      "border": {
+        "l": 16,
+        "r": 16,
+        "t": 18,
+        "b": 18
+      },
+      "spriteBorderVector4": [
+        16,
+        18,
+        16,
+        18
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 12,
+        "h": 64
+      },
+      "imageType": "Sliced",
+      "role": "scrollbar track",
+      "css": ".k-scrollbar",
+      "note": ".k-scrollbar: 12 wide, 6 from the right edge."
+    },
+    "scrollbar_handle_normal": {
+      "file": "png/screens/scrollbar_handle_normal.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 32,
+        "h": 136
+      },
+      "border": {
+        "l": 16,
+        "r": 16,
+        "t": 18,
+        "b": 18
+      },
+      "spriteBorderVector4": [
+        16,
+        18,
+        16,
+        18
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 12,
+        "h": 64
+      },
+      "imageType": "Sliced",
+      "role": "scrollbar handle, normal",
+      "css": ".k-scrollbar i",
+      "note": ".k-scrollbar i."
+    },
+    "scrollbar_handle_hover": {
+      "file": "png/screens/scrollbar_handle_hover.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 32,
+        "h": 136
+      },
+      "border": {
+        "l": 16,
+        "r": 16,
+        "t": 18,
+        "b": 18
+      },
+      "spriteBorderVector4": [
+        16,
+        18,
+        16,
+        18
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 12,
+        "h": 64
+      },
+      "imageType": "Sliced",
+      "role": "scrollbar handle, hover",
+      "css": ".k-scrollbar i",
+      "note": "Hover / drag."
+    },
+    "scrollbar_track_paper": {
+      "file": "png/screens/scrollbar_track_paper.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 32,
+        "h": 136
+      },
+      "border": {
+        "l": 16,
+        "r": 16,
+        "t": 18,
+        "b": 18
+      },
+      "spriteBorderVector4": [
+        16,
+        18,
+        16,
+        18
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 12,
+        "h": 64
+      },
+      "imageType": "Sliced",
+      "role": "scrollbar track on paper",
+      "css": ".cr-paper .k-scrollbar",
+      "note": "On paper (credits roll)."
+    },
+    "scrollbar_handle_paper": {
+      "file": "png/screens/scrollbar_handle_paper.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 32,
+        "h": 136
+      },
+      "border": {
+        "l": 16,
+        "r": 16,
+        "t": 18,
+        "b": 18
+      },
+      "spriteBorderVector4": [
+        16,
+        18,
+        16,
+        18
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 12,
+        "h": 64
+      },
+      "imageType": "Sliced",
+      "role": "scrollbar handle, paper",
+      "css": ".cr-paper .k-scrollbar i",
+      "note": "Handle on paper."
+    },
+    "keyslot_normal": {
+      "file": "png/screens/keyslot_normal.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 456,
+        "h": 152
+      },
+      "border": {
+        "l": 52,
+        "r": 52,
+        "t": 52,
+        "b": 52
+      },
+      "spriteBorderVector4": [
+        52,
+        52,
+        52,
+        52
+      ],
+      "outset": {
+        "l": 14,
+        "r": 14,
+        "t": 14,
+        "b": 14
+      },
+      "logicalSize": {
+        "w": 200,
+        "h": 48
+      },
+      "imageType": "Sliced",
+      "role": "key-binding slot, normal",
+      "css": ".k-slot",
+      "note": ".k-slot: 200x48, Plinth 22 ink (\"Enter\", \"Ctrl 1\")."
+    },
+    "keyslot_hover": {
+      "file": "png/screens/keyslot_hover.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 456,
+        "h": 152
+      },
+      "border": {
+        "l": 52,
+        "r": 52,
+        "t": 52,
+        "b": 52
+      },
+      "spriteBorderVector4": [
+        52,
+        52,
+        52,
+        52
+      ],
+      "outset": {
+        "l": 14,
+        "r": 14,
+        "t": 14,
+        "b": 14
+      },
+      "logicalSize": {
+        "w": 200,
+        "h": 48
+      },
+      "imageType": "Sliced",
+      "role": "key-binding slot, hover",
+      "css": ".k-slot.is-hover",
+      "note": ".k-slot.is-hover (also focus)."
+    },
+    "keyslot_listening": {
+      "file": "png/screens/keyslot_listening.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 456,
+        "h": 152
+      },
+      "border": {
+        "l": 52,
+        "r": 52,
+        "t": 52,
+        "b": 52
+      },
+      "spriteBorderVector4": [
+        52,
+        52,
+        52,
+        52
+      ],
+      "outset": {
+        "l": 14,
+        "r": 14,
+        "t": 14,
+        "b": 14
+      },
+      "logicalSize": {
+        "w": 200,
+        "h": 48
+      },
+      "imageType": "Sliced",
+      "role": "key-binding slot, listening",
+      "css": ".k-slot.is-listening",
+      "note": ".k-slot.is-listening: \"Press a key…\" Nunito ExtraBold 20 white; Esc cancels, Backspace clears."
+    },
+    "keyslot_conflict": {
+      "file": "png/screens/keyslot_conflict.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 456,
+        "h": 152
+      },
+      "border": {
+        "l": 52,
+        "r": 52,
+        "t": 52,
+        "b": 52
+      },
+      "spriteBorderVector4": [
+        52,
+        52,
+        52,
+        52
+      ],
+      "outset": {
+        "l": 14,
+        "r": 14,
+        "t": 14,
+        "b": 14
+      },
+      "logicalSize": {
+        "w": 200,
+        "h": 48
+      },
+      "imageType": "Sliced",
+      "role": "key-binding slot, conflict",
+      "css": ".k-slot.is-conflict",
+      "note": ".k-slot.is-conflict: bad.ink text + warning; the note row under it names the other action."
+    },
+    "keyslot_empty": {
+      "file": "png/screens/keyslot_empty.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 456,
+        "h": 152
+      },
+      "border": {
+        "l": 52,
+        "r": 52,
+        "t": 52,
+        "b": 52
+      },
+      "spriteBorderVector4": [
+        52,
+        52,
+        52,
+        52
+      ],
+      "outset": {
+        "l": 14,
+        "r": 14,
+        "t": 14,
+        "b": 14
+      },
+      "logicalSize": {
+        "w": 200,
+        "h": 48
+      },
+      "imageType": "Sliced",
+      "role": "key-binding slot, not set",
+      "css": ".k-slot.is-empty",
+      "note": ".k-slot.is-empty (\"Not set\"): Nunito Bold 20 cream.300."
+    },
+    "close_normal": {
+      "file": "png/screens/close_normal.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 116,
+        "h": 116
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 52,
+        "h": 52
+      },
+      "imageType": "Simple",
+      "role": "close button (x baked), normal",
+      "css": ".k-close",
+      "note": ".k-close 52x52 (x baked, cream + rim). Top-right of windows; Esc / right click do the same."
+    },
+    "close_hover": {
+      "file": "png/screens/close_hover.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 116,
+        "h": 116
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 52,
+        "h": 52
+      },
+      "imageType": "Simple",
+      "role": "close button (x baked), hover",
+      "css": ".k-close.is-hover",
+      "note": ".k-close hover."
+    },
+    "close_pressed": {
+      "file": "png/screens/close_pressed.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 116,
+        "h": 116
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 52,
+        "h": 52
+      },
+      "imageType": "Simple",
+      "role": "close button (x baked), pressed",
+      "css": ".k-close.is-pressed",
+      "note": ".k-close pressed (face 3 px lower)."
+    },
+    "ibtn_flat_normal": {
+      "file": "png/screens/ibtn_flat_normal.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 116,
+        "h": 116
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 52,
+        "h": 52
+      },
+      "imageType": "Sliced",
+      "role": "flat icon button 52, normal",
+      "css": ".k-ibtn",
+      "note": ".k-ibtn 52 (no band; put any icon on it)."
+    },
+    "ibtn_flat_hover": {
+      "file": "png/screens/ibtn_flat_hover.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 116,
+        "h": 116
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 52,
+        "h": 52
+      },
+      "imageType": "Sliced",
+      "role": "flat icon button 52, hover",
+      "css": ".k-ibtn.is-hover",
+      "note": ".k-ibtn hover."
+    },
+    "ibtn_flat_pressed": {
+      "file": "png/screens/ibtn_flat_pressed.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 116,
+        "h": 116
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 52,
+        "h": 52
+      },
+      "imageType": "Sliced",
+      "role": "flat icon button 52, pressed",
+      "css": ".k-ibtn.is-pressed",
+      "note": ".k-ibtn pressed."
+    },
+    "kbd_paper": {
+      "file": "png/screens/kbd_paper.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 68,
+        "h": 68
+      },
+      "border": {
+        "l": 20,
+        "r": 20,
+        "t": 20,
+        "b": 20
+      },
+      "spriteBorderVector4": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 30,
+        "h": 30
+      },
+      "imageType": "Sliced",
+      "role": "keycap (paper)",
+      "css": ".k-kbd",
+      "note": ".k-kbd keycap 30 high, Plinth 18 ink, padding 0 8."
+    },
+    "kbd_wood": {
+      "file": "png/screens/kbd_wood.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 68,
+        "h": 68
+      },
+      "border": {
+        "l": 20,
+        "r": 20,
+        "t": 20,
+        "b": 20
+      },
+      "spriteBorderVector4": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 30,
+        "h": 30
+      },
+      "imageType": "Sliced",
+      "role": "keycap (wood)",
+      "css": ".k-kbd-dark",
+      "note": ".k-kbd-dark (cream text)."
+    },
+    "dialogue_nameplate": {
+      "file": "png/screens/dialogue_nameplate.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 332,
+        "h": 124
+      },
+      "border": {
+        "l": 38,
+        "r": 38,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        38,
+        38,
+        38,
+        38
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 56
+      },
+      "imageType": "Sliced",
+      "role": "dialogue speaker name plate (cobalt)",
+      "css": ".vn-box .vn-name",
+      "note": ".vn-box .vn-name: wood plate (blue = active only) overlapping the dialogue box top-left (left 36, top -30), padding 0 26, speaker name Plinth 28 teal + role Nunito ExtraBold 18 cream.300."
+    },
+    "speaker_frame": {
+      "file": "png/screens/speaker_frame.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 372,
+        "h": 452
+      },
+      "border": {
+        "l": 80,
+        "r": 80,
+        "t": 80,
+        "b": 82
+      },
+      "spriteBorderVector4": [
+        80,
+        82,
+        80,
+        80
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 180,
+        "h": 220
+      },
+      "imageType": "Sliced",
+      "role": "speaker portrait frame",
+      "css": "(framed portrait)",
+      "note": "Framed speaker portrait (codex / small dialogue). The big VN bust (~440x560) stands free without a frame."
+    },
+    "loadbar_track": {
+      "file": "png/screens/loadbar_track.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 332,
+        "h": 56
+      },
+      "border": {
+        "l": 32,
+        "r": 32,
+        "t": 30,
+        "b": 30
+      },
+      "spriteBorderVector4": [
+        32,
+        30,
+        32,
+        30
+      ],
+      "outset": {
+        "l": 3,
+        "r": 3,
+        "t": 3,
+        "b": 3
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 22
+      },
+      "imageType": "Sliced",
+      "role": "boot / loading bar track",
+      "css": ".boot-bar",
+      "note": ".boot-bar: 760x22, cobalt band below."
+    },
+    "loadbar_fill": {
+      "file": "png/screens/loadbar_fill.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 120,
+        "h": 32
+      },
+      "border": {
+        "l": 18,
+        "r": 18,
+        "t": 14,
+        "b": 16
+      },
+      "spriteBorderVector4": [
+        18,
+        16,
+        18,
+        14
+      ],
+      "outset": {
+        "l": 0,
+        "r": 0,
+        "t": 0,
+        "b": 0
+      },
+      "logicalSize": null,
+      "imageType": "Sliced",
+      "role": "boot / loading bar fill",
+      "css": ".boot-bar i",
+      "note": ".boot-bar i: inset 3 px in the track; width = progress."
+    },
+    "loadbar_glow": {
+      "file": "png/screens/loadbar_glow.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 168,
+        "h": 80
+      },
+      "border": {
+        "l": 44,
+        "r": 44,
+        "t": 38,
+        "b": 38
+      },
+      "spriteBorderVector4": [
+        44,
+        38,
+        44,
+        38
+      ],
+      "outset": {
+        "l": 12,
+        "r": 12,
+        "t": 12,
+        "b": 12
+      },
+      "logicalSize": null,
+      "imageType": "Sliced",
+      "role": "boot / loading bar glow",
+      "css": ".boot-bar i",
+      "note": "Glow behind the fill (same rect)."
+    },
+    "codex_stage": {
+      "file": "png/screens/codex_stage.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 400,
+        "h": 400
+      },
+      "border": {
+        "l": 36,
+        "r": 36,
+        "t": 36,
+        "b": 36
+      },
+      "spriteBorderVector4": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "outset": {
+        "l": 0,
+        "r": 0,
+        "t": 0,
+        "b": 0
+      },
+      "logicalSize": {
+        "w": 200,
+        "h": 200
+      },
+      "imageType": "Sliced",
+      "role": "Codex model stage box",
+      "css": ".stage",
+      "note": ".stage: paper stage behind the 3D model (the RenderTexture / camera view sits on top)."
+    },
+    "codex_plinth": {
+      "file": "png/screens/codex_plinth.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 496,
+        "h": 180
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 4,
+        "r": 4,
+        "t": 4,
+        "b": 22
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "Codex model plinth",
+      "css": ".stage .plinth",
+      "note": ".stage .plinth 240x64 (if the model has no base of its own)."
+    },
+    "chapter_header": {
+      "file": "png/screens/chapter_header.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 400,
+        "h": 88
+      },
+      "border": {
+        "l": 140,
+        "r": 8,
+        "t": 4,
+        "b": 4
+      },
+      "spriteBorderVector4": [
+        140,
+        4,
+        8,
+        4
+      ],
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Sliced",
+      "role": "level list chapter header line",
+      "css": ".chap",
+      "note": ".chap: header line under \"Chapter 1\" (Plinth 26 cream.200; count Nunito ExtraBold 18 cream.300 at the right)."
+    },
+    "level_number": {
+      "file": "png/screens/level_number.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 88,
+        "h": 88
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "level number disc",
+      "css": ".chapters .num",
+      "note": ".chapters .num: level number disc, Plinth 22 ink."
+    },
+    "level_number_locked": {
+      "file": "png/screens/level_number_locked.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 88,
+        "h": 88
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "level number disc, locked",
+      "css": ".chapters .num",
+      "note": "Locked number disc (cream.300)."
+    },
+    "new_dot": {
+      "file": "png/screens/new_dot.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 60,
+        "h": 60
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 8,
+        "r": 8,
+        "t": 8,
+        "b": 8
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "\"New\" dot (always with the word)",
+      "css": ".k-new::before",
+      "note": ".k-new: dot 14 + the word \"New\" (Nunito ExtraBold 18 accent.light) - colour is never the only signal."
+    },
+    "lock_badge": {
+      "file": "png/screens/lock_badge.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 104,
+        "h": 104
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 4,
+        "r": 4,
+        "t": 4,
+        "b": 4
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "lock badge",
+      "css": ".k-medal.is-locked",
+      "note": ".k-medal.is-locked: 44 disc with the lock (cream.300 + rim)."
+    },
+    "medal_ring": {
+      "file": "png/screens/medal_ring.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 120,
+        "h": 120
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 6,
+        "r": 6,
+        "t": 6,
+        "b": 6
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "list portrait medal",
+      "css": ".k-medal",
+      "note": ".k-medal: 48 portrait medal in list rows (portrait under mask_circle)."
+    },
+    "medal_ring_enemy": {
+      "file": "png/screens/medal_ring_enemy.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 120,
+        "h": 120
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": {
+        "l": 6,
+        "r": 6,
+        "t": 6,
+        "b": 6
+      },
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "list portrait medal, enemy",
+      "css": ".k-medal.is-enemy",
+      "note": ".k-medal.is-enemy."
+    },
+    "well": {
+      "file": "png/screens/well.png",
+      "group": "screens",
+      "sizePx": {
+        "w": 328,
+        "h": 248
+      },
+      "border": {
+        "l": 36,
+        "r": 36,
+        "t": 36,
+        "b": 36
+      },
+      "spriteBorderVector4": [
+        36,
+        36,
+        36,
+        36
+      ],
+      "outset": {
+        "l": 2,
+        "r": 2,
+        "t": 2,
+        "b": 2
+      },
+      "logicalSize": {
+        "w": 160,
+        "h": 120
+      },
+      "imageType": "Sliced",
+      "role": "sunken well inside a window",
+      "css": ".k-well",
+      "note": ".k-well: sunken area inside a window (lists, pages)."
+    },
+    "wood_grain_tile": {
+      "file": "png/backgrounds/wood_grain_tile.png",
+      "group": "backgrounds",
+      "sizePx": {
+        "w": 128,
+        "h": 128
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "backgrounds: wood grain tile",
+      "css": null,
+      "note": "Tileable grain overlay (Image Type Tiled, alpha 0.6-1) for big wood panels."
+    },
+    "backdrop_wood": {
+      "file": "png/backgrounds/backdrop_wood.png",
+      "group": "backgrounds",
+      "sizePx": {
+        "w": 1920,
+        "h": 1080
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "backgrounds: backdrop wood",
+      "css": null,
+      "note": "Full-screen table backdrop for menus (1920x1080, PPU multiplier 1)."
+    },
+    "vignette": {
+      "file": "png/backgrounds/vignette.png",
+      "group": "backgrounds",
+      "sizePx": {
+        "w": 960,
+        "h": 540
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "backgrounds: vignette",
+      "css": null,
+      "note": "HUD vignette, stretch full screen, raycast off (multiplier 0.5)."
+    },
+    "scrim_menu": {
+      "file": "png/backgrounds/scrim_menu.png",
+      "group": "backgrounds",
+      "sizePx": {
+        "w": 960,
+        "h": 540
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "backgrounds: scrim menu",
+      "css": null,
+      "note": "Main menu: darkens the left column over the 3D backdrop (stretch full screen)."
+    },
+    "scrim_welcome": {
+      "file": "png/backgrounds/scrim_welcome.png",
+      "group": "backgrounds",
+      "sizePx": {
+        "w": 960,
+        "h": 540
+      },
+      "border": null,
+      "spriteBorderVector4": null,
+      "outset": null,
+      "logicalSize": null,
+      "imageType": "Simple",
+      "role": "backgrounds: scrim welcome",
+      "css": null,
+      "note": "Welcome: radial scrim over the blurred level backdrop."
+    }
+  },
+  "icons": {
+    "ui": {
+      "icon_armour": {
+        "px64": "png/icons_64/ui/icon_armour.png",
+        "px128": "png/icons_128/ui/icon_armour.png"
+      },
+      "icon_back": {
+        "px64": "png/icons_64/ui/icon_back.png",
+        "px128": "png/icons_128/ui/icon_back.png"
+      },
+      "icon_cards": {
+        "px64": "png/icons_64/ui/icon_cards.png",
+        "px128": "png/icons_128/ui/icon_cards.png"
+      },
+      "icon_castle": {
+        "px64": "png/icons_64/ui/icon_castle.png",
+        "px128": "png/icons_128/ui/icon_castle.png"
+      },
+      "icon_check": {
+        "px64": "png/icons_64/ui/icon_check.png",
+        "px128": "png/icons_128/ui/icon_check.png"
+      },
+      "icon_clock": {
+        "px64": "png/icons_64/ui/icon_clock.png",
+        "px128": "png/icons_128/ui/icon_clock.png"
+      },
+      "icon_close": {
+        "px64": "png/icons_64/ui/icon_close.png",
+        "px128": "png/icons_128/ui/icon_close.png"
+      },
+      "icon_codex": {
+        "px64": "png/icons_64/ui/icon_codex.png",
+        "px128": "png/icons_128/ui/icon_codex.png"
+      },
+      "icon_continue": {
+        "px64": "png/icons_64/ui/icon_continue.png",
+        "px128": "png/icons_128/ui/icon_continue.png"
+      },
+      "icon_cooldown": {
+        "px64": "png/icons_64/ui/icon_cooldown.png",
+        "px128": "png/icons_128/ui/icon_cooldown.png"
+      },
+      "icon_credits": {
+        "px64": "png/icons_64/ui/icon_credits.png",
+        "px128": "png/icons_128/ui/icon_credits.png"
+      },
+      "icon_del-arc": {
+        "px64": "png/icons_64/ui/icon_del-arc.png",
+        "px128": "png/icons_128/ui/icon_del-arc.png"
+      },
+      "icon_del-arrow": {
+        "px64": "png/icons_64/ui/icon_del-arrow.png",
+        "px128": "png/icons_128/ui/icon_del-arrow.png"
+      },
+      "icon_del-beam": {
+        "px64": "png/icons_64/ui/icon_del-beam.png",
+        "px128": "png/icons_128/ui/icon_del-beam.png"
+      },
+      "icon_del-melee": {
+        "px64": "png/icons_64/ui/icon_del-melee.png",
+        "px128": "png/icons_128/ui/icon_del-melee.png"
+      },
+      "icon_del-spark": {
+        "px64": "png/icons_64/ui/icon_del-spark.png",
+        "px128": "png/icons_128/ui/icon_del-spark.png"
+      },
+      "icon_edit": {
+        "px64": "png/icons_64/ui/icon_edit.png",
+        "px128": "png/icons_128/ui/icon_edit.png"
+      },
+      "icon_energy": {
+        "px64": "png/icons_64/ui/icon_energy.png",
+        "px128": "png/icons_128/ui/icon_energy.png"
+      },
+      "icon_eye": {
+        "px64": "png/icons_64/ui/icon_eye.png",
+        "px128": "png/icons_128/ui/icon_eye.png"
+      },
+      "icon_fast-forward": {
+        "px64": "png/icons_64/ui/icon_fast-forward.png",
+        "px128": "png/icons_128/ui/icon_fast-forward.png"
+      },
+      "icon_heart": {
+        "px64": "png/icons_64/ui/icon_heart.png",
+        "px128": "png/icons_128/ui/icon_heart.png"
+      },
+      "icon_info": {
+        "px64": "png/icons_64/ui/icon_info.png",
+        "px128": "png/icons_128/ui/icon_info.png"
+      },
+      "icon_keyboard": {
+        "px64": "png/icons_64/ui/icon_keyboard.png",
+        "px128": "png/icons_128/ui/icon_keyboard.png"
+      },
+      "icon_lock": {
+        "px64": "png/icons_64/ui/icon_lock.png",
+        "px128": "png/icons_128/ui/icon_lock.png"
+      },
+      "icon_misc": {
+        "px64": "png/icons_64/ui/icon_misc.png",
+        "px128": "png/icons_128/ui/icon_misc.png"
+      },
+      "icon_monitor": {
+        "px64": "png/icons_64/ui/icon_monitor.png",
+        "px128": "png/icons_128/ui/icon_monitor.png"
+      },
+      "icon_move": {
+        "px64": "png/icons_64/ui/icon_move.png",
+        "px128": "png/icons_128/ui/icon_move.png"
+      },
+      "icon_music": {
+        "px64": "png/icons_64/ui/icon_music.png",
+        "px128": "png/icons_128/ui/icon_music.png"
+      },
+      "icon_next": {
+        "px64": "png/icons_64/ui/icon_next.png",
+        "px128": "png/icons_128/ui/icon_next.png"
+      },
+      "icon_onboard": {
+        "px64": "png/icons_64/ui/icon_onboard.png",
+        "px128": "png/icons_128/ui/icon_onboard.png"
+      },
+      "icon_pause": {
+        "px64": "png/icons_64/ui/icon_pause.png",
+        "px128": "png/icons_128/ui/icon_pause.png"
+      },
+      "icon_play": {
+        "px64": "png/icons_64/ui/icon_play.png",
+        "px128": "png/icons_128/ui/icon_play.png"
+      },
+      "icon_plus": {
+        "px64": "png/icons_64/ui/icon_plus.png",
+        "px128": "png/icons_128/ui/icon_plus.png"
+      },
+      "icon_power": {
+        "px64": "png/icons_64/ui/icon_power.png",
+        "px128": "png/icons_128/ui/icon_power.png"
+      },
+      "icon_quit": {
+        "px64": "png/icons_64/ui/icon_quit.png",
+        "px128": "png/icons_128/ui/icon_quit.png"
+      },
+      "icon_range": {
+        "px64": "png/icons_64/ui/icon_range.png",
+        "px128": "png/icons_128/ui/icon_range.png"
+      },
+      "icon_sell": {
+        "px64": "png/icons_64/ui/icon_sell.png",
+        "px128": "png/icons_128/ui/icon_sell.png"
+      },
+      "icon_settings": {
+        "px64": "png/icons_64/ui/icon_settings.png",
+        "px128": "png/icons_128/ui/icon_settings.png"
+      },
+      "icon_shoot": {
+        "px64": "png/icons_64/ui/icon_shoot.png",
+        "px128": "png/icons_128/ui/icon_shoot.png"
+      },
+      "icon_skip": {
+        "px64": "png/icons_64/ui/icon_skip.png",
+        "px128": "png/icons_128/ui/icon_skip.png"
+      },
+      "icon_sliders": {
+        "px64": "png/icons_64/ui/icon_sliders.png",
+        "px128": "png/icons_128/ui/icon_sliders.png"
+      },
+      "icon_sound": {
+        "px64": "png/icons_64/ui/icon_sound.png",
+        "px128": "png/icons_128/ui/icon_sound.png"
+      },
+      "icon_speed": {
+        "px64": "png/icons_64/ui/icon_speed.png",
+        "px128": "png/icons_128/ui/icon_speed.png"
+      },
+      "icon_volley": {
+        "px64": "png/icons_64/ui/icon_volley.png",
+        "px128": "png/icons_128/ui/icon_volley.png"
+      },
+      "icon_walk": {
+        "px64": "png/icons_64/ui/icon_walk.png",
+        "px128": "png/icons_128/ui/icon_walk.png"
+      },
+      "icon_wave": {
+        "px64": "png/icons_64/ui/icon_wave.png",
+        "px128": "png/icons_128/ui/icon_wave.png"
+      }
+    },
+    "abilities": {
+      "AcidFlask": {
+        "px64": "png/icons_64/abilities/AcidFlask.png",
+        "px128": "png/icons_128/abilities/AcidFlask.png",
+        "px108": "png/abilities/AcidFlask.png",
+        "face168": "png/abilities_face/AcidFlask.png"
+      },
+      "Bash": {
+        "px64": "png/icons_64/abilities/Bash.png",
+        "px128": "png/icons_128/abilities/Bash.png",
+        "px108": "png/abilities/Bash.png",
+        "face168": "png/abilities_face/Bash.png"
+      },
+      "Bite": {
+        "px64": "png/icons_64/abilities/Bite.png",
+        "px128": "png/icons_128/abilities/Bite.png",
+        "px108": "png/abilities/Bite.png",
+        "face168": "png/abilities_face/Bite.png"
+      },
+      "Blink": {
+        "px64": "png/icons_64/abilities/Blink.png",
+        "px128": "png/icons_128/abilities/Blink.png",
+        "px108": "png/abilities/Blink.png",
+        "face168": "png/abilities_face/Blink.png"
+      },
+      "Bolt": {
+        "px64": "png/icons_64/abilities/Bolt.png",
+        "px128": "png/icons_128/abilities/Bolt.png",
+        "px108": "png/abilities/Bolt.png",
+        "face168": "png/abilities_face/Bolt.png"
+      },
+      "Bombard": {
+        "px64": "png/icons_64/abilities/Bombard.png",
+        "px128": "png/icons_128/abilities/Bombard.png",
+        "px108": "png/abilities/Bombard.png",
+        "face168": "png/abilities_face/Bombard.png"
+      },
+      "BruteWalk": {
+        "px64": "png/icons_64/abilities/BruteWalk.png",
+        "px128": "png/icons_128/abilities/BruteWalk.png",
+        "px108": "png/abilities/BruteWalk.png",
+        "face168": "png/abilities_face/BruteWalk.png"
+      },
+      "ChainLightning": {
+        "px64": "png/icons_64/abilities/ChainLightning.png",
+        "px128": "png/icons_128/abilities/ChainLightning.png",
+        "px108": "png/abilities/ChainLightning.png",
+        "face168": "png/abilities_face/ChainLightning.png"
+      },
+      "Crush": {
+        "px64": "png/icons_64/abilities/Crush.png",
+        "px128": "png/icons_128/abilities/Crush.png",
+        "px108": "png/abilities/Crush.png",
+        "face168": "png/abilities_face/Crush.png"
+      },
+      "Execute": {
+        "px64": "png/icons_64/abilities/Execute.png",
+        "px128": "png/icons_128/abilities/Execute.png",
+        "px108": "png/abilities/Execute.png",
+        "face168": "png/abilities_face/Execute.png"
+      },
+      "FireWall": {
+        "px64": "png/icons_64/abilities/FireWall.png",
+        "px128": "png/icons_128/abilities/FireWall.png",
+        "px108": "png/abilities/FireWall.png",
+        "face168": "png/abilities_face/FireWall.png"
+      },
+      "Fireball": {
+        "px64": "png/icons_64/abilities/Fireball.png",
+        "px128": "png/icons_128/abilities/Fireball.png",
+        "px108": "png/abilities/Fireball.png",
+        "face168": "png/abilities_face/Fireball.png"
+      },
+      "Firebolt": {
+        "px64": "png/icons_64/abilities/Firebolt.png",
+        "px128": "png/icons_128/abilities/Firebolt.png",
+        "px108": "png/abilities/Firebolt.png",
+        "face168": "png/abilities_face/Firebolt.png"
+      },
+      "Hop": {
+        "px64": "png/icons_64/abilities/Hop.png",
+        "px128": "png/icons_128/abilities/Hop.png",
+        "px108": "png/abilities/Hop.png",
+        "face168": "png/abilities_face/Hop.png"
+      },
+      "Mend": {
+        "px64": "png/icons_64/abilities/Mend.png",
+        "px128": "png/icons_128/abilities/Mend.png",
+        "px108": "png/abilities/Mend.png",
+        "face168": "png/abilities_face/Mend.png"
+      },
+      "Nibble": {
+        "px64": "png/icons_64/abilities/Nibble.png",
+        "px128": "png/icons_128/abilities/Nibble.png",
+        "px108": "png/abilities/Nibble.png",
+        "face168": "png/abilities_face/Nibble.png"
+      },
+      "PathWalk": {
+        "px64": "png/icons_64/abilities/PathWalk.png",
+        "px128": "png/icons_128/abilities/PathWalk.png",
+        "px108": "png/abilities/PathWalk.png",
+        "face168": "png/abilities_face/PathWalk.png"
+      },
+      "PinningShot": {
+        "px64": "png/icons_64/abilities/PinningShot.png",
+        "px128": "png/icons_128/abilities/PinningShot.png",
+        "px108": "png/abilities/PinningShot.png",
+        "face168": "png/abilities_face/PinningShot.png"
+      },
+      "Provoke": {
+        "px64": "png/icons_64/abilities/Provoke.png",
+        "px128": "png/icons_128/abilities/Provoke.png",
+        "px108": "png/abilities/Provoke.png",
+        "face168": "png/abilities_face/Provoke.png"
+      },
+      "Quicken": {
+        "px64": "png/icons_64/abilities/Quicken.png",
+        "px128": "png/icons_128/abilities/Quicken.png",
+        "px108": "png/abilities/Quicken.png",
+        "face168": "png/abilities_face/Quicken.png"
+      },
+      "RaiseSkeleton": {
+        "px64": "png/icons_64/abilities/RaiseSkeleton.png",
+        "px128": "png/icons_128/abilities/RaiseSkeleton.png",
+        "px108": "png/abilities/RaiseSkeleton.png",
+        "face168": "png/abilities_face/RaiseSkeleton.png"
+      },
+      "Rally": {
+        "px64": "png/icons_64/abilities/Rally.png",
+        "px128": "png/icons_128/abilities/Rally.png",
+        "px108": "png/abilities/Rally.png",
+        "face168": "png/abilities_face/Rally.png"
+      },
+      "Ram": {
+        "px64": "png/icons_64/abilities/Ram.png",
+        "px128": "png/icons_128/abilities/Ram.png",
+        "px108": "png/abilities/Ram.png",
+        "face168": "png/abilities_face/Ram.png"
+      },
+      "ShieldBash": {
+        "px64": "png/icons_64/abilities/ShieldBash.png",
+        "px128": "png/icons_128/abilities/ShieldBash.png",
+        "px108": "png/abilities/ShieldBash.png",
+        "face168": "png/abilities_face/ShieldBash.png"
+      },
+      "Shoot": {
+        "px64": "png/icons_64/abilities/Shoot.png",
+        "px128": "png/icons_128/abilities/Shoot.png",
+        "px108": "png/abilities/Shoot.png",
+        "face168": "png/abilities_face/Shoot.png"
+      },
+      "Slam": {
+        "px64": "png/icons_64/abilities/Slam.png",
+        "px128": "png/icons_128/abilities/Slam.png",
+        "px108": "png/abilities/Slam.png",
+        "face168": "png/abilities_face/Slam.png"
+      },
+      "SlimeMend": {
+        "px64": "png/icons_64/abilities/SlimeMend.png",
+        "px128": "png/icons_128/abilities/SlimeMend.png",
+        "px108": "png/abilities/SlimeMend.png",
+        "face168": "png/abilities_face/SlimeMend.png"
+      },
+      "Smash": {
+        "px64": "png/icons_64/abilities/Smash.png",
+        "px128": "png/icons_128/abilities/Smash.png",
+        "px108": "png/abilities/Smash.png",
+        "face168": "png/abilities_face/Smash.png"
+      },
+      "Smite": {
+        "px64": "png/icons_64/abilities/Smite.png",
+        "px128": "png/icons_128/abilities/Smite.png",
+        "px108": "png/abilities/Smite.png",
+        "face168": "png/abilities_face/Smite.png"
+      },
+      "Spark": {
+        "px64": "png/icons_64/abilities/Spark.png",
+        "px128": "png/icons_128/abilities/Spark.png",
+        "px108": "png/abilities/Spark.png",
+        "face168": "png/abilities_face/Spark.png"
+      },
+      "Spit": {
+        "px64": "png/icons_64/abilities/Spit.png",
+        "px128": "png/icons_128/abilities/Spit.png",
+        "px108": "png/abilities/Spit.png",
+        "face168": "png/abilities_face/Spit.png"
+      },
+      "Taunt": {
+        "px64": "png/icons_64/abilities/Taunt.png",
+        "px128": "png/icons_128/abilities/Taunt.png",
+        "px108": "png/abilities/Taunt.png",
+        "face168": "png/abilities_face/Taunt.png"
+      },
+      "TowerWalk": {
+        "px64": "png/icons_64/abilities/TowerWalk.png",
+        "px128": "png/icons_128/abilities/TowerWalk.png",
+        "px108": "png/abilities/TowerWalk.png",
+        "face168": "png/abilities_face/TowerWalk.png"
+      },
+      "Volley": {
+        "px64": "png/icons_64/abilities/Volley.png",
+        "px128": "png/icons_128/abilities/Volley.png",
+        "px108": "png/abilities/Volley.png",
+        "face168": "png/abilities_face/Volley.png"
+      },
+      "Walk": {
+        "px64": "png/icons_64/abilities/Walk.png",
+        "px128": "png/icons_128/abilities/Walk.png",
+        "px108": "png/abilities/Walk.png",
+        "face168": "png/abilities_face/Walk.png"
+      }
+    },
+    "statuses": {
+      "Acid": {
+        "px64": "png/icons_64/statuses/Acid.png",
+        "px128": "png/icons_128/statuses/Acid.png",
+        "px108": "png/statuses/Acid.png"
+      },
+      "Burn": {
+        "px64": "png/icons_64/statuses/Burn.png",
+        "px128": "png/icons_128/statuses/Burn.png",
+        "px108": "png/statuses/Burn.png"
+      },
+      "Burning": {
+        "px64": "png/icons_64/statuses/Burning.png",
+        "px128": "png/icons_128/statuses/Burning.png",
+        "px108": "png/statuses/Burning.png"
+      },
+      "Enraged": {
+        "px64": "png/icons_64/statuses/Enraged.png",
+        "px128": "png/icons_128/statuses/Enraged.png",
+        "px108": "png/statuses/Enraged.png"
+      },
+      "Gorged": {
+        "px64": "png/icons_64/statuses/Gorged.png",
+        "px128": "png/icons_128/statuses/Gorged.png",
+        "px108": "png/statuses/Gorged.png"
+      },
+      "Haste": {
+        "px64": "png/icons_64/statuses/Haste.png",
+        "px128": "png/icons_128/statuses/Haste.png",
+        "px108": "png/statuses/Haste.png"
+      },
+      "Poison": {
+        "px64": "png/icons_64/statuses/Poison.png",
+        "px128": "png/icons_128/statuses/Poison.png",
+        "px108": "png/statuses/Poison.png"
+      },
+      "Rallied": {
+        "px64": "png/icons_64/statuses/Rallied.png",
+        "px128": "png/icons_128/statuses/Rallied.png",
+        "px108": "png/statuses/Rallied.png"
+      },
+      "Rooted": {
+        "px64": "png/icons_64/statuses/Rooted.png",
+        "px128": "png/icons_128/statuses/Rooted.png",
+        "px108": "png/statuses/Rooted.png"
+      },
+      "Shield": {
+        "px64": "png/icons_64/statuses/Shield.png",
+        "px128": "png/icons_128/statuses/Shield.png",
+        "px108": "png/statuses/Shield.png"
+      },
+      "Taunted": {
+        "px64": "png/icons_64/statuses/Taunted.png",
+        "px128": "png/icons_128/statuses/Taunted.png",
+        "px108": "png/statuses/Taunted.png"
+      },
+      "Unknown": {
+        "px64": "png/icons_64/statuses/Unknown.png",
+        "px128": "png/icons_128/statuses/Unknown.png",
+        "px108": "png/statuses/Unknown.png"
+      }
+    },
+    "passives": {
+      "Bloodthirst": {
+        "px64": "png/icons_64/passives/Bloodthirst.png",
+        "px128": "png/icons_128/passives/Bloodthirst.png",
+        "px108": "png/passives/Bloodthirst.png"
+      },
+      "CounterAttack": {
+        "px64": "png/icons_64/passives/CounterAttack.png",
+        "px128": "png/icons_128/passives/CounterAttack.png",
+        "px108": "png/passives/CounterAttack.png"
+      },
+      "FireTile": {
+        "px64": "png/icons_64/passives/FireTile.png",
+        "px128": "png/icons_128/passives/FireTile.png",
+        "px108": "png/passives/FireTile.png"
+      },
+      "Glutton": {
+        "px64": "png/icons_64/passives/Glutton.png",
+        "px128": "png/icons_128/passives/Glutton.png",
+        "px108": "png/passives/Glutton.png"
+      },
+      "RockEater": {
+        "px64": "png/icons_64/passives/RockEater.png",
+        "px128": "png/icons_128/passives/RockEater.png",
+        "px108": "png/passives/RockEater.png"
+      },
+      "Shielded": {
+        "px64": "png/icons_64/passives/Shielded.png",
+        "px128": "png/icons_128/passives/Shielded.png",
+        "px108": "png/passives/Shielded.png"
+      },
+      "WarBeat": {
+        "px64": "png/icons_64/passives/WarBeat.png",
+        "px128": "png/icons_128/passives/WarBeat.png",
+        "px108": "png/passives/WarBeat.png"
+      }
+    }
+  },
+  "units": {
+    "units": [
+      {
+        "unit": "Alchemist",
+        "team": "tower",
+        "file": "Alchemist.png"
+      },
+      {
+        "unit": "Archer",
+        "team": "tower",
+        "file": "Archer.png"
+      },
+      {
+        "unit": "Ballista",
+        "team": "tower",
+        "file": "Ballista.png"
+      },
+      {
+        "unit": "Base",
+        "team": "building",
+        "file": "Base.png"
+      },
+      {
+        "unit": "Bat",
+        "team": "enemy",
+        "file": "Bat.png"
+      },
+      {
+        "unit": "Big Slime",
+        "team": "enemy",
+        "file": "BigSlime.png"
+      },
+      {
+        "unit": "Brute",
+        "team": "enemy",
+        "file": "Brute.png"
+      },
+      {
+        "unit": "Cannon",
+        "team": "tower",
+        "file": "Cannon.png"
+      },
+      {
+        "unit": "Drummer",
+        "team": "tower",
+        "file": "Drummer.png"
+      },
+      {
+        "unit": "Fortress",
+        "team": "building",
+        "file": "Fortress.png"
+      },
+      {
+        "unit": "Guardian",
+        "team": "tower",
+        "file": "Guardian.png"
+      },
+      {
+        "unit": "Ironhide",
+        "team": "enemy",
+        "file": "Ironhide.png"
+      },
+      {
+        "unit": "Jackalope",
+        "team": "enemy",
+        "file": "Jackalope.png"
+      },
+      {
+        "unit": "Mage",
+        "team": "tower",
+        "file": "Mage.png"
+      },
+      {
+        "unit": "Pikeman",
+        "team": "tower",
+        "file": "Pikeman.png"
+      },
+      {
+        "unit": "Priest",
+        "team": "tower",
+        "file": "Priest.png"
+      },
+      {
+        "unit": "Princess",
+        "team": "enemy",
+        "file": "Princess.png"
+      },
+      {
+        "unit": "Rabbit",
+        "team": "enemy",
+        "file": "Rabbit.png"
+      },
+      {
+        "unit": "Rock",
+        "team": "building",
+        "file": "Rock.png"
+      },
+      {
+        "unit": "Rockjaw",
+        "team": "enemy",
+        "file": "Rockjaw.png"
+      },
+      {
+        "unit": "Runner",
+        "team": "enemy",
+        "file": "Runner.png"
+      },
+      {
+        "unit": "Shield Slime",
+        "team": "enemy",
+        "file": "ShieldSlime.png"
+      },
+      {
+        "unit": "Skeleton",
+        "team": "enemy",
+        "file": "Skeleton.png"
+      },
+      {
+        "unit": "Slime",
+        "team": "enemy",
+        "file": "Slime.png"
+      },
+      {
+        "unit": "Slime Archer",
+        "team": "enemy",
+        "file": "SlimeArcher.png"
+      },
+      {
+        "unit": "Slime Glutton",
+        "team": "enemy",
+        "file": "SlimeGlutton.png"
+      },
+      {
+        "unit": "Slime King",
+        "team": "enemy",
+        "file": "SlimeKing.png"
+      },
+      {
+        "unit": "Slime Shaman",
+        "team": "enemy",
+        "file": "SlimeShaman.png"
+      },
+      {
+        "unit": "Strider",
+        "team": "enemy",
+        "file": "Strider.png"
+      },
+      {
+        "unit": "Tusker",
+        "team": "enemy",
+        "file": "Tusker.png"
+      },
+      {
+        "unit": "Wisp",
+        "team": "tower",
+        "file": "Wisp.png"
+      }
+    ],
+    "sizes": {
+      "medallion_256": "128 px at 1080p: inspector card, Codex page",
+      "medallion_128": "64 px: hand tray, Codex list, hand editor",
+      "medallion_64": "32 px: tooltips, small lists",
+      "portraits_512": "raw bust render, transparent: frame it in Unity with medallion_ring + mask_circle",
+      "locked_128": "Codex: not discovered yet"
+    },
+    "rings": {
+      "tower": "cobalt",
+      "enemy": "red",
+      "building": "wood"
+    }
+  }
+}

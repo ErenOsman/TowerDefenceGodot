@@ -52,9 +52,9 @@ func test_enemies_statuses_codex() -> void:
 func test_levels_page_maps_and_waves() -> void:
 	var l: String = pages()["Levels.md"]
 	assert_text(l, "## Tutorial\n\n### First Defence")
-	assert_text(l, "- Hand: its own: Archer · map 12×5 · 1 road · 2 waves")
+	assert_text(l, "- Hand: its own: Archer · map 7×5 · 1 road · 2 waves")
 	assert_text(l, "### 1. First Steps")
-	assert_text(l, " 2 S 1 1 1 1 1 1 1 1 1 1 B\n")
+	assert_text(l, " 2 S 1 1 1 1 1 B\n")
 	assert_text(l, "| Wave round | What comes | Road |")
 	var maps := l.count("```text")
 	assert_eq(maps, lib().catalog.entries().size() + 1, "a map per catalog level + the tutorial")
