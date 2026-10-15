@@ -5,3 +5,4 @@
 *.log
 out/
 godot.local.sh
+__pycache__/

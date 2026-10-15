@@ -1,9 +1,11 @@
-# Godot notes — where the Godot build differs from Unity
+# Godot notes — how the Godot build does things
 
-Godot-only notes. The design docs in `docs/design/` and `docs/Decisions.md` are read-only copies pulled from the
-Unity repo by `tools/sync_from_unity.sh` (the Unity repo is the single source of truth; edit there). Content
-(`data/content/*.json`) is pulled the same way; after a content change the script re-runs the golden comparison
-(`tools/golden.gd`) against the C# oracle logs when they are present.
+The Godot build is the game (since 2026-10-15; docs/Decisions.md "Project and tools"). This file says how it does
+things: engine notes, tools, data that lives outside the content files, and the places where it deliberately differs
+from the frozen Unity build (kept as the archive and the C# oracle). The design docs (`docs/design/`), the decision log
+and the glossary are the live copies (docs/README.md); content is `data/content/*.json` (docs/CONTENT.md). After a
+content change: `./test.sh`, `tools/soak.gd`, regenerate the reference (`tools/game_reference.gd`); golden
+(`tools/golden.gd`) plays a frozen snapshot and checks the simulation only (see "Golden").
 
 ## Deliberate differences
 - Camera picking corrects Godot's `project_ray_*`, which ignores a frustum camera's offset (GridSpace.ground_under).
@@ -11,10 +13,10 @@ Unity repo by `tools/sync_from_unity.sh` (the Unity repo is the single source of
 - The Princess is a 3D prop placed on the board while her line shows (not a portrait beside the box).
 - TdButton reserves "bleed" room for rims/rings so clipping containers never cut hovered/selected buttons (ability buttons: 143 px + 4 px gap on the action bar).
 - Camp: stations on a ring from `art/camp/layout.json` (Blender kit, free slots for later stations).
-- Descriptions and level intros come from the content JSON unchanged; wording fixes belong in the Unity content. The tutorial level is the exception: its guided lines live in `data/tutorial.json` (see "Tutorial lines" below).
+- Descriptions and level intros come from the content JSON unchanged; wording fixes belong in `data/content`. The tutorial level is the exception: its guided lines live in `data/tutorial.json` (see "Tutorial lines" below).
 
 ## Decisions taken while testing the Godot build
-See `docs/Decisions.md` (2026-10-13 rows) — they are logged in the Unity repo and synced here.
+See `docs/Decisions.md` (2026-10-13 rows onwards; the log lives in this repo since 2026-10-15).
 - HP bars (2026-10-14, now matching Unity's PlateLayer / EntityStatusBinder / UI_HealthBar / EntityStatus.prefab;
   checked by `tests/test_plate.gd` and the live `tools/plate_check.gd`): (1) the bar was told the HP every frame, which
   restarted its ease each frame — a hit crawled down, the ghost never trailed, a heal never filled; now only changes
@@ -37,36 +39,36 @@ See `docs/Decisions.md` (2026-10-13 rows) — they are logged in the Unity repo 
   limit = the fit for it, a zoom beyond it is pulled in; the focus clamped to the pan limits). The fit is measured
   with the board centred, whatever the pan (it was measured from the focus).
 - Camera zoom-out (QA 2026-10-14): zooming out with the wheel recentres the board, so a view dragged to the board's
-  edge cannot end half off screen at the zoom-out limit (Unity only clamps the focus; a Godot-only difference, the pan
+  edge cannot end half off screen at the zoom-out limit (Unity only clamped the focus; the pan
   rule of 2026-10-13 is unchanged).
 - Level select hides the enemy chips until the level has one attempt recorded; the heading stays over one muted line "You'll see them when you play it." (UI Design Rules "Level select", 2026-10-14). The enemies fact tile always shows the kit's `icon_enemy` (never the first enemy's portrait; UI review 2026-10-14). No extra save field: `MenuLogic.has_played` reads the LevelRecord's `attempts`, which every result (win, loss, quit through Pause) increments.
 
-## Co-op rules (sim) — Godot-only for now
+## Co-op rules (sim)
 - `CoopSession` (`sim/level/coop_session.gd`) wraps a `CoopLevelSession` (a LevelSession subclass that only changes the
   hand cap and, with separate pools, where energy changes are booked). Single player is untouched.
-- The Multiplayer station's level list lives in `data/coop.json` (`CoopList`): per level `sharedPool` and `coopHandCap`
-  (default 3). **These fields should move into the Unity content later** (the catalog's chapter-like Multiplayer list
-  and the level's `isSharedPool`), then `data/coop.json` goes away and `CoopList` reads the catalog.
+- The co-op level list (`CoopList`: per level `sharedPool` and `coopHandCap`, default 3) is built from the Coop/Any
+  missions (`data/content/Missions.json`); `data/coop.json` is generated from them for the relay (see "Workshop &
+  Missions content").
 - Separate pools write one EnergyChanged per pool with the extra fact `Pool` = the player's slot (the HUD should show
   only the local player's pool). GiveEnergy level events are split 1/N like income; a closed (leaver's) share is lost.
 - A leaver's towers can be cast with by anyone but not sold (a sold tower would go back to a hand nobody plays).
 - `pass` is a GDScript keyword: the method is `pass_turn(player)`; the protocol command stays `{"k": "pass"}`.
 
-## Hand layouts (save) — Godot-only for now
+## Hand layouts (save)
 - `GameData.hand_layouts` / `active_layout` (saved as `"handLayouts": {"active": n, "layouts": [{"name", "hand": [tower ids]}]}`):
-  the hand editor's 4 fixed, renamable layouts (UI Design Rules § Hand select). **The Unity GameData lacks this field**;
-  it should be added there (and to the save docs) when Unity gets the Hand select screen. The active layout always
+  the hand editor's 4 fixed, renamable layouts (UI Design Rules § Hand select; the Unity GameData never had it). The active layout always
   mirrors `towers.hand` (the hand levels use); a save without the key gets Layout 1 = the hand, 2–4 empty.
 - Tower roles / delivery in the hand editor's filters are derived from the abilities (`HandLogic.traits`), not authored:
   every tower has Tower Walk, so there is no "Movement" role chip and no "Can move" toggle (UI Design Rules, cd1b6a5).
 
-## Tutorial lines — Godot-only for now (guided tutorial)
+## Tutorial lines (guided tutorial)
 **Source of truth: `docs/design/Guided Tutorial — Design.md`** (decisions, the step table, the refusals, the data
 grammar of `data/tutorial.json`). This section only says how the Godot build does it.
 
 - The tutorial level plays the guided tutorial instead of `Sequence/Tutorial Steps` when `data/tutorial.json` exists
   (`game/level/guided_tutorial.gd`, owned by the LevelController; other levels' intros and entrances still use
-  SequenceRun). **Move these texts into the Unity content** once Unity gets the same gating.
+  SequenceRun). The lines stay in `data/tutorial.json` (they carry the `allow` / `advance` gating fields the content's
+  sequence lines do not have).
 - Presentation (2026-10-14, rebuilt from the bubble version): every step speaks through the **dialogue box**
   (`TdDialogueBox` in `HudSequence`, 1100×220, centred, bottom edge 212 px over the screen's, like the Unity build's
   `UI_DialogueBox`): name plate, letter-by-letter text, Skip (skip glyph, click only — Esc keeps pause) top-right.
@@ -125,7 +127,7 @@ How it is read:
   Coop/Any missions) but stays for the relay, which reads `sharedPool` from it by level id. It is generated from the
   missions (`godot --headless --path . -s tools/coop_json.gd`); `test_missions` fails while they disagree.
 
-## Missions & Guild rules — Godot-first
+## Missions & Guild rules
 - Engine-free in `sim/meta`: `MissionDef` (converter: `AssetConverter.mission`), `MissionProgress` (saved), `MissionBoard`
   (static rules, `last_reason`; `now` injectable: null = local system time, a datetime Dictionary or "YYYY-MM-DD[THH:MM:SS]").
   Days are local calendar dates; the reset is local midnight (daylight-saving shifts ignored in `resets_in`).
@@ -224,6 +226,12 @@ How it is read:
   The snapshot keeps Unity's plural keys; the loader assumes no key prefix. Never edit it; see `~/godot/oracle/README.md`.
 - Content changes are checked by `tests/test_content_all.gd`, `tools/soak.gd` and the content check instead.
 
+## Game reference (docs/reference)
+- `tools/game_reference.gd` writes `docs/reference/{README,Towers,Enemies,Statuses,Levels,Codex}.md` from
+  `data/content` (`GameReference`, game/dev/game_reference.gd: the Unity export's page layout; Source lines name
+  `data/content/<File>.json → key`). **Regenerate the reference after content changes** and commit it with them.
+  The TD Tools dock's Reference tab previews / exports the same pages.
+
 ## Godot daemons (server tooling, 2026-10-14)
 Two resident Godot processes keep this project loaded, so `check.sh`, `test.sh` and `~/godot/run.sh --daemon … -s tools/<x>_shot.gd`
 skip the start-up, the import and the lock. Full doc: `/home/ubuntu/godot/README-daemon.md`.
@@ -248,7 +256,7 @@ Offline check of candidate content entries, used by the wiki's Content Editor (/
   tables[{title, columns, rows}], warnings[]}], candidates[], baseline{}, elapsed_ms}`; exit 0 ok / 1 errors / 2 usage.
   `--schema` prints `ContentSerializer.SCHEMA` + enum names + stats + tags between `CONTENT_SCHEMA_BEGIN/_END`
   (key order kept: `JSON.stringify(…, "", false)`).
-- `--context <dir>` (more content-format files, not loaded): duplicate checks against them (the wiki passes Unity's live Content, its approved set and open entries). Errors also: a key not starting with its type's folder (Status/…), an id used by another entry of the type, keys differing only by case/spaces; warnings: duplicate display name or number.
+- `--context <dir>` (more content-format files, not loaded): duplicate checks against them (the wiki passes its approved set and open entries). Errors also: a key not starting with its type's folder (Status/…), an id used by another entry of the type, keys differing only by case/spaces; warnings: duplicate display name or number.
 - Loader: `ContentLibrary.load(folder, extra)` / `load_game(extra)` merge the candidate folder over data/content
   (same key → the candidate wins). Nothing is written. An empty candidate folder checks the content alone (ok + a warning). Test: `tests/test_content_candidate.gd`.
 - Logic: `tools/content_check_runner.gd` (no class_name, so the daemon needs no restart). Errors = load problems,

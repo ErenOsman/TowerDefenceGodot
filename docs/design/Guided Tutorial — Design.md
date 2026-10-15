@@ -31,7 +31,7 @@ the Unity repo.
 
 ## The level
 
-(Godot overlay until the Unity Levels.json changes; the Unity agent must make the same change.) The catalog's
+(In `data/content/Levels.json` since 2026-10-15; it was a Godot overlay before.) The catalog's
 tutorial level `Level/Tutorial/Tutorial` ("First Defence") is shortened (Eren 2026-10-14: the slime took too long):
 
 - **Map** 7 × 5 (was 12 × 5), all Ground. **Road** row 2, 6 tiles from the spawn at (0,2) to (5,2) (was 11);

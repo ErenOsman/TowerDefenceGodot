@@ -131,7 +131,7 @@ drop fields `firstWinTokens` / `winTokens` on chapter levels are dropped: tokens
    `MissionBoard` rules with tests, Validate All; the co-op list reads missions; the end screen grants mission drops.
 2. **Screens (Unity):** the Signpost entry, `UI_Guild` with its stations, the mission board and detail, the lobby's
    mission picker with "Done today", the auto-leave message.
-3. **Godot build:** the same, from the synced content (a Godot-only overlay until the Unity repo has Missions.json).
+3. **Godot build:** the same, from `data/content` (Missions.json; built. Since 2026-10-15 the Godot build is the game and steps 1–2 will not be done in the frozen Unity repo).
 4. **Art:** a Guild backdrop and station props (Blender agent) when the stations are final; a mission card look from
    the UI/UX agent.
 
