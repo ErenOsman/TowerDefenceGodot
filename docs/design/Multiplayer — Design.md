@@ -1,13 +1,13 @@
 # Multiplayer — Design
 
-Status: **co-op designed, not built** (2026-10-07; lobby and room rules updated 2026-10-13). The first mode is live co-op, reached from the Camp's Multiplayer station, with the relay on Eren's Oracle server. The rest of this doc keeps the other modes for later.
+Status: **co-op designed** (2026-10-07; lobby and room rules updated 2026-10-13) **and built in the Godot build** (Godot pass 2026-10-15): the rules in `sim/level/coop_session.gd` (`CoopSession`, `CoopLevelSession`), the relay client and protocol in `game/net/` (`RelayClient`, `NetProtocol`, `CoopLevels`; the protocol in docs/COOP-PROTOCOL.md), the lobby and room in `game/ui/screens/coop/`; how they differ from this doc is in docs/GODOT-NOTES.md ("Co-op rules"). The first mode is live co-op, reached from the Camp's Multiplayer station (since 2026-10-14 from the Guild), with the relay on Eren's Oracle server. The rest of this doc keeps the other modes for later.
 
 ## What the game already gives us
 
-- **The rules are deterministic and run on commands.** A level is a `LevelSession`: the same seed and the same commands (`Place`, `Sell`, `Cast`, `EndRound`) always give the same event log. Two players' games stay in step if both send only their commands, never the game state (*lockstep*). Little data travels, and there is nothing to keep in sync beyond the commands.
+- **The rules are deterministic and run on commands.** A level is a `LevelSession`: the same seed and the same commands (`place`, `sell`, `cast`, `end_round`) always give the same event log. Two players' games stay in step if both send only their commands, never the game state (*lockstep*). Little data travels, and there is nothing to keep in sync beyond the commands.
 - **Turns, not real time.** Latency barely matters: a command can take half a second to arrive without anyone noticing. Nobody needs to be fast.
 - **Presentation is separate.** Each player's screen only replays the shared event log (`Director`), so the rules don't change for multiplayer. Only "whose command is this" is new.
-- **Content is data.** Levels, towers and enemies are JSON (`Content/`), and the wiki's forum already exports player-made levels. Sharing and playing other people's levels needs no new format.
+- **Content is data.** Levels, towers and enemies are JSON (`data/content/`), and the wiki's forum already exports player-made levels. Sharing and playing other people's levels needs no new format.
 
 ## Possible modes
 
@@ -23,7 +23,7 @@ Status: **co-op designed, not built** (2026-10-07; lobby and room rules updated 
 1. **Lockstep on commands.** Each player sends their commands for the round. Both clients run the same session and compare a checksum of the state after each round, to catch desyncs early.
 2. **Host or relay.** For co-op and versus, one player can host, or a small relay server passes commands between them. Nothing runs the rules on the server unless cheating matters (ranked play).
 3. **Rounds.** The player phase ends when every player has pressed End round. The enemy and level phases need no input, so they run the same way on both clients.
-4. **Content match.** Both players need identical content. Before a match, compare a hash of the `Content/*.json` used. A mismatch blocks the match instead of desyncing later.
+4. **Content match.** Both players need identical content. Before a match, compare a hash of the `data/content/*.json` used (`ContentHash`). A mismatch blocks the match instead of desyncing later.
 5. **Reconnect.** A client that drops can rebuild the game from the seed plus the command list so far, because of determinism.
 
 ## Co-op (the first mode)
