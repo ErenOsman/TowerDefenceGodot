@@ -1,6 +1,6 @@
 # Entity System — Design
 
-Oct 2, 2026 · @Eren
+Oct 2, 2026 · @Eren · Godot pass 2026-10-15
 
 ## Summary
 
@@ -8,7 +8,7 @@ An entity is anything that has an identity in a battle: a unit, an object, a haz
 
 This design builds on Ability Pipeline — Effect Queue Architecture, Formula System — Design and Condition System — Design, referred to below as the Ability Pipeline, the Formula System and the Condition System.
 
-- **Plain data.** An entity's runtime state is a plain C# object; definitions are read-only assets.
+- **Plain data.** An entity's runtime state is a plain GDScript object (`RefCounted`); definitions are read-only content entries.
 - **Changed only by effects.** HP, position, statuses and team change only when an effect applies, so every change writes an event.
 - **Computed on read.** Final stats, tags, team and capabilities are derived from base values and active rules whenever they are read.
 - **One model for everything on the board.** Units, objects and hazards share one data shape and differ by kind and flags.
@@ -51,7 +51,9 @@ The Formula System reads an entity through its `IEntity` interface.
 
 ## Entity state
 
-An entity's runtime state is a plain C# object owned by `GameState`. It holds identity, placement, base values, resources and the instances that change during a battle.
+An entity's runtime state is a plain GDScript object owned by `GameState`. It holds identity, placement, base values, resources and the instances that change during a battle.
+
+Design sketch, written in C# before the build (built: `Entity` in `sim/combat/entity.gd`, names per PORT.md: `EntityId` → `int`, `Position` → `position: Vector2i` or null):
 
 ```csharp
 public sealed class Entity : IEntity
@@ -80,7 +82,7 @@ public sealed class Entity : IEntity
 ```
 
 - **Nothing derived is stored.** Final stats, tags, effective team and capabilities are computed on read from base values and active rules. A per-entity cache keyed by `GameState`'s version is allowed as an optimization, never as the source of truth.
-- **No engine references.** No Unity objects, delegates or event subscriptions. `GameState.Clone()` deep-copies every entity and shares definitions.
+- **No engine references.** No Nodes, Resources, signals or callables held across a battle (`sim/` is engine-free). `GameState.Clone()` deep-copies every entity and shares definitions.
 - **Only effects write.** Every field changes inside an effect's `Apply`, which writes the matching event, so presentation and logs never miss a change.
 
 ## Kinds and occupancy
@@ -255,42 +257,49 @@ The entity system registers the following stats and queries with the Formula Sys
 - **Relative queries.** `IsAlly`, `IsEnemy`, `Distance`, `IsBehind` and `IsFacing` compare the subject with `Self`. `Target.IsEnemy` in a target filter therefore means an enemy of the caster.
 - **Dead subjects.** Every query works on a Dead entity, so `OnDeath` responses and corpse abilities can read the dead entity's stats and tags.
 
-## Authoring in Unity
+## Authoring
 
-Entities are authored as `EntityDefinition` assets. Passives and items are separate assets, so many definitions can share them.
+Entities are content entries in `data/content/Units.json` (`EntityAsset`, keys `Unit/Tower/…`, `Unit/Enemy/…`, `Unit/Base/…`, `Unit/Other/…`). Passives are separate entries in `Passives.json` (`Passive/…`), referenced by key, so many entities can share them. `AssetConverter` builds the simulation's `EntityDef` and `PassiveDef` from them.
 
-```csharp
-[CreateAssetMenu(menuName = "Game/Entity")]
-public sealed class EntityDefinition : ScriptableObject, IEntityDef
-{
-    public EntityKind kind = EntityKind.Unit;
-    public Tag[] tags;                                       // Undead, Beast, Flying…
-    public StatBlock baseStats;                              // values per StatId
-    public bool blocksMovement = true, blocksProjectiles = true;
+A unit entry (abridged from `Unit/Tower/Archer`):
 
-    public List<AbilityDefinition> abilities = new();        // Ability Pipeline
-    public List<PassiveDefinition> passives = new();
-
-    public bool dieWithSummoner;
-    public EntityView view;                                  // prefab, bound by EntityId
-}
-
-[CreateAssetMenu(menuName = "Game/Passive")]
-public sealed class PassiveDefinition : ScriptableObject
-{
-    [ConditionSlot(EvalPoint.Passive)] public Condition condition;     // empty = always active
-    [ConditionSlot(EvalPoint.Passive)] public Condition offCondition;  // optional hysteresis
-    public ModifierDef[] modifiers;                                    // Formula System
-    public ReplacementRule[] replacements;                             // Ability Pipeline
-    public ReactionDefinition[] reactions;                             // Ability Pipeline
-    public AuraFilter aura;                                            // empty = owner only
+```json
+"Unit/Tower/Archer": {
+  "id": "Archer", "displayName": "Archer",
+  "view": "Assets/Art/Models/Archer/Archer Blender.prefab",
+  "kind": "Unit",
+  "tags": [],
+  "stats": [{ "stat": "MaxHp", "value": "20" }, { "stat": "Speed", "value": "2" }, { "stat": "Range", "value": "2" },
+            { "stat": "Power", "value": "10" }, { "stat": "Initiative", "value": "0" }],
+  "footing": "OffPath",
+  "blocksProjectiles": true,
+  "abilities": ["Ability/Shoot", "Ability/Tower Walk"],
+  "passives": [],
+  "dieWithSummoner": false
 }
 ```
 
-- **StatBlock.** A serialized list of stat and value pairs. The validator flags a missing value for any stat the entity system reads.
-- **Kind checks.** The entity validator rejects a Hazard with HP or abilities, and a Unit without `MaxHp` or `Initiative`. Abilities, passives and items go through the Formula System and Condition System validators.
-- **Views.** `EntityView` is a MonoBehaviour that the Director creates on `EntitySpawned` and binds by `EntityId`. It reads only the view model, never `GameState`, as the Ability Pipeline specifies.
-- **Assemblies.** `Entity`, `StatBlock` and the capability and relation functions live in `Game.Combat`. `EntityDefinition` and `PassiveDefinition` live in `Game.Combat.Unity`, and `EntityView` in `Game.Combat.Presentation`.
+A passive entry (`Passive/Counter-attack`):
+
+```json
+"Passive/Counter-attack": {
+  "condition": "Self.Hp * 2 >= Self.MaxHp",
+  "offCondition": "",
+  "modifiers": [],
+  "replacements": [],
+  "reactions": ["Reaction/Counter Strike"],
+  "aura": ""
+}
+```
+
+`condition` and `offCondition` are Passive-point condition slots (empty = always active; `offCondition` is the optional hysteresis), `modifiers` follow the Formula System, `replacements` and `reactions` the Ability Pipeline, and an empty `aura` means the owner only.
+
+- **Stats.** A list of stat and value pairs (`stats`; the design's StatBlock). The validator flags a stat that is not registered, listed twice or not a number.
+- **Kind checks.** The entity validator rejects a Unit without `MaxHp` (`AssetValidator.validate_entity`); the design's other kind checks (a Hazard with HP or abilities, a Unit without `Initiative`) are not built. Abilities, passives and items go through the Formula System and Condition System validators.
+- **Views.** `EntityView` (`game/board/entity_view.gd`, a Node3D) is created when the entity's spawn plays and kept by `EntityId` in `EntityViews`; the entry's `view` path maps to `res://art/models/<Unit>.fbx` (`ArtPaths`). It reads only the view model, never `GameState`, as the Ability Pipeline specifies.
+- **Folders.** `Entity` (stats, capabilities) and the relation functions (`GameState.relation`, `GameRules.relation_of`) live in `sim/combat/`; `EntityAsset` and `PassiveAsset` in `sim/data/`; `EntityView` in `game/board/`.
+
+History: in the Unity project entities and passives were ScriptableObject assets (`EntityDefinition`, `PassiveDefinition`) with the view as a prefab reference, `EntityView` a MonoBehaviour, and the classes split over the assemblies `Game.Combat`, `Game.Combat.Unity` and `Game.Combat.Presentation`.
 
 ## Examples
 
