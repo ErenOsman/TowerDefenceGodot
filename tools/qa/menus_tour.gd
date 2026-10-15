@@ -933,6 +933,7 @@ func _inspect(ctx: String, top: Node = null) -> int:
 			_check_fits_parent(c, ctx)
 		if c is TdPanel: _check_window(c, ctx)
 	_check_text_overlaps(texts, ctx)
+	_check_sibling_rims(items, ctx)
 	if top is Control: _check_click_overlaps(top, ctx)
 	_drain_log(ctx)
 	return order.size() - before
@@ -995,6 +996,12 @@ func _check_clip(c: Control, r: Rect2, k: Control, ctx: String) -> void:
 	if k is ScrollContainer:
 		var sc: ScrollContainer = k
 		var vbar := sc.get_v_scroll_bar()
+		# content drawn under the vertical scrollbar (missed in the first rounds: the hand editor's stat tiles)
+		if vbar.visible and not (c is ScrollBar) and not vbar.is_ancestor_of(c):
+			var br := vbar.get_global_rect()
+			var under := r.intersection(br)
+			if under.size.x > 1.5 and under.size.y > 1.5:
+				_find("clip", c, "drawn under %s's scrollbar by %d px" % [_desc(k), ceili(under.size.x)], ctx)
 		var at_top := sc.scroll_vertical <= 0
 		var at_end := not vbar.visible or sc.scroll_vertical >= int(vbar.max_value - vbar.page) - 1
 		var hbar := sc.get_h_scroll_bar()
@@ -1118,6 +1125,32 @@ func _ink_rich(r: RichTextLabel) -> Rect2:
 	var xf := r.get_global_transform()
 	var w := minf(float(r.get_content_width()), r.size.x) if r.autowrap_mode != TextServer.AUTOWRAP_OFF else float(r.get_content_width())
 	return Rect2(xf.get_origin(), Vector2(w, minf(float(r.get_content_height()), r.size.y + 2.0)) * xf.get_scale())
+
+## Children of a container whose drawn boxes (with their sprite outsets) overlap: rows / chips touching.
+func _check_sibling_rims(items: Array, ctx: String) -> void:
+	var by_parent := {}
+	for it in items:
+		var c: Control = it[0]
+		var p := c.get_parent()
+		if not (p is BoxContainer or p is FlowContainer or p is GridContainer): continue
+		var d := _sibling_box(c)
+		if d.size.x < 1.0: continue
+		if not by_parent.has(p): by_parent[p] = []
+		by_parent[p].append([c, d])
+	for p in by_parent:
+		var list: Array = by_parent[p]
+		for i in list.size():
+			for j in range(i + 1, list.size()):
+				var x: Rect2 = list[i][1].intersection(list[j][1])
+				if x.size.x > 1.5 and x.size.y > 1.5:
+					_find("overlap", list[i][0], "its box touches / overlaps sibling %s by %dx%d px" % [_desc(list[j][0]), x.size.x, x.size.y], ctx)
+
+## A container child's drawn box: its own style box (with outset), else its first drawn child's.
+func _sibling_box(c: Control) -> Rect2:
+	if c.size.x < 1.0 or c.size.y < 1.0: return Rect2()
+	if c is Label or c is RichTextLabel: return Rect2()
+	if _draws(c): return _draw_rect(c)
+	return Rect2()
 
 func _check_text_overlaps(texts: Array, ctx: String) -> void:
 	for i in texts.size():

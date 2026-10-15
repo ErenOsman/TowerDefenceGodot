@@ -363,7 +363,7 @@ func _refresh_detail() -> void:
 	var gutter := MarginContainer.new()
 	# no extra gutter: the ScrollContainer already counts its scrollbar in its width (a 14 px gutter on top made the
 	# 372 px card grow to 386 px)
-	gutter.add_theme_constant_override("margin_right", 0)
+	gutter.add_theme_constant_override("margin_right", 6) # the tiles' rims stay clear of the scrollbar
 	gutter.size_flags_horizontal = SIZE_EXPAND_FILL
 	scroll.add_child(gutter)
 	var body := TdMenu.vbox(10)
@@ -385,7 +385,7 @@ func _refresh_detail() -> void:
 	var def: EntityDef = e.def
 	var vocab: Vocabulary = GameApp.rules.vocabulary if GameApp.rules != null else null
 	var me: IEntity = DefStats.new(def) if def != null else null
-	if me != null and vocab != null: body.add_child(TdTowerCard.stat_grid(HandLogic.stat_tiles(me, vocab)))
+	if me != null and vocab != null: body.add_child(TdTowerCard.stat_grid(HandLogic.stat_tiles(me, vocab), 120)) # tiles fit beside the scrollbar (158 px pushed them under it)
 	var rows := TdMenu.vbox(0)
 	rows.size_flags_horizontal = SIZE_EXPAND_FILL
 	body.add_child(rows)

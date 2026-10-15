@@ -70,7 +70,7 @@ func _build_filters() -> Control:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = SIZE_EXPAND_FILL
 	well.add_child(scroll)
-	var v := TdMenu.vbox(4)
+	var v := TdMenu.vbox(8) # 8 px between the filter groups (they touched at 4)
 	v.size_flags_horizontal = SIZE_EXPAND_FILL
 	scroll.add_child(v)
 	# search
@@ -142,8 +142,9 @@ func _build_filters() -> Control:
 		refresh_filters()
 		refresh_grid())
 	var sm := MarginContainer.new()
-	sm.add_theme_constant_override("margin_left", 14)
-	sm.add_theme_constant_override("margin_right", 14)
+	# the knob overhangs the track by half its width at 0 and at the top: room so it never touches the well's rim
+	sm.add_theme_constant_override("margin_left", 22)
+	sm.add_theme_constant_override("margin_right", 22)
 	sm.add_child(_cost_slider)
 	v.add_child(sm)
 	if not extras: return well
@@ -182,7 +183,7 @@ func _build_filters() -> Control:
 func _build_grid() -> Control:
 	var well := TdMenu.panel(TdPanel.Kind.WELL, 12)
 	well.size_flags_horizontal = SIZE_EXPAND_FILL
-	var v := TdMenu.vbox(8)
+	var v := TdMenu.vbox(14) # the count / Sort row clear of the first row of tiles (and their hover lift)
 	well.add_child(v)
 	var gh := TdMenu.hbox(10)
 	gh.custom_minimum_size = Vector2(0, 44)
@@ -248,8 +249,8 @@ func _heading(text: String) -> Label:
 
 func _flow() -> HFlowContainer:
 	var f := HFlowContainer.new()
-	f.add_theme_constant_override("h_separation", 6)
-	f.add_theme_constant_override("v_separation", 6)
+	f.add_theme_constant_override("h_separation", 8)
+	f.add_theme_constant_override("v_separation", 8)
 	return f
 
 static var _dots := {}
