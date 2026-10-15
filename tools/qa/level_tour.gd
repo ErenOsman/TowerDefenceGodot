@@ -777,7 +777,7 @@ func s_end() -> void:
 		await process_frame
 	await wait(1.0)
 	await step("victory", true)
-	for b in [hud.end_screen.next_button, hud.end_screen.retry_button, hud.end_screen.leave_button]:
+	for b in [hud.end_screen.return_button, hud.end_screen.retry_button, hud.end_screen.leave_button]:
 		if b != null and b.is_visible_in_tree(): await hover(b, "victory " + b.text, false)
 	await key(KEY_ESCAPE)
 	await wait(0.5)
@@ -1040,7 +1040,7 @@ func s_mission() -> void:
 		await process_frame
 	await wait(1.0)
 	await step("mission_defeat", true)
-	for b in [hud.end_screen.retry_button, hud.end_screen.leave_button, hud.end_screen.next_button]:
+	for b in [hud.end_screen.retry_button, hud.end_screen.leave_button, hud.end_screen.return_button]:
 		if b != null and b.is_visible_in_tree(): await hover(b, "mission end " + b.text, false)
 
 # ------------------------------------------------------------------ scenario: a level intro in the dialogue box

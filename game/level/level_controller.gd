@@ -291,6 +291,51 @@ var leave_label: String:
 		var app = _auto("GameApp")
 		return app.home_label() if app != null else "Level select"
 
+## The end screen's list button (Eren 2026-10-15: no Next level; Retry · Level select · Return): "Level select"
+## (the level list, also once the Camp is open), "Guild" for a mission, "Lobby" in co-op, "Main menu" after the
+## tutorial. The pause menu keeps leave_label ("Quit to camp").
+var end_list_label: String:
+	get:
+		if coop != null: return "Lobby"
+		if mission != null: return "Guild"
+		if is_tutorial: return "Main menu"
+		return "Level select"
+
+## The end screen's Return: the Camp once it is unlocked, else the main menu.
+var return_label: String:
+	get:
+		var app = _auto("GameApp")
+		return "Camp" if app != null and app.camp_unlocked() else "Main menu"
+
+## Whether the end screen shows Return (not in co-op, and not after the tutorial, where the list button already
+## leads to the main menu).
+var can_return: bool:
+	get: return coop == null and not is_tutorial
+
+## The end screen's list button: the level list (LevelSelect, even once the Camp is open); a mission, co-op and
+## the tutorial go where level_select() takes them (Guild, lobby, main menu).
+func end_list() -> void:
+	if coop != null or mission != null or is_tutorial:
+		level_select()
+		return
+	_record(true)
+	var flow = _auto("SceneFlow")
+	if flow == null: return
+	_restore_speed()
+	flow.go(flow.LevelSelect)
+
+## The end screen's Return: the Camp once unlocked, else the main menu.
+func go_return() -> void:
+	if coop != null:
+		leave_coop()
+		return
+	_record(true)
+	var flow = _auto("SceneFlow")
+	var app = _auto("GameApp")
+	if flow == null: return
+	_restore_speed()
+	flow.go(flow.Camp if app != null and app.camp_unlocked() else flow.MainMenu)
+
 ## The level the end screen's Next level opens: the first unlocked level after this one not won yet, or null.
 var next_level_asset: LevelAsset:
 	get:
@@ -441,86 +486,8 @@ func _setup() -> void:
 		if audio != null and flow_game_id() >= 0: audio.play_scene_music(flow_game_id(), level)
 	version += 1
 
-## The Princess speaks the tutorial (SequenceSpeaker.Princess): like the Unity build, her model stands ON the board
-## while one of her lines shows — on a free ground tile in the board's left third, just in front of the road
-## (toward the camera), 1.6× a unit, facing the camera, Idle playing — popping in and out with her lines, and is
-## freed when the sequence ends. It is a board node (never attached to the camera). Off: princess_on_board = false.
-@export var princess_on_board: bool = true
-const PRINCESS_VIEW := "art/models/Princess.fbx"
-const PRINCESS_SCALE := 1.6
-var _princess: Node3D = null
-var _princess_rig: EntityRig = null
-var _princess_shown := 0.0     # 0..1 pop-in (unscaled)
-
-## The Princess's model stands on the board now.
-var princess_visible: bool:
-	get: return _princess != null and _princess.visible
-
-## Where the speaker prop stands (its feet, world), or null when it is not shown — for the HUD to point at her.
-func speaker_prop_world():
-	return _princess.global_position if princess_visible else null
-
-func _update_princess(dt: float) -> void:
-	var line: SequenceLine = sequence.current if sequence != null else null
-	var want := princess_on_board and line != null and line.speaker == SequenceSpeaker.Princess
-	if want and _princess == null:
-		var scene := _model_scene(PRINCESS_VIEW)
-		if scene == null:
-			princess_on_board = false
-			return
-		_princess = scene.instantiate()
-		_princess.name = "Princess"
-		add_child(_princess)
-		var player: AnimationPlayer = _princess.find_child("AnimationPlayer", true, false)
-		if player != null and player.get_animation_list().size() > 0: _princess_rig = EntityRig.new(player)
-		_princess.position = _princess_spot()
-		_princess.visible = false
-	if _princess == null: return
-	_princess_shown = clampf(_princess_shown + (dt if want else -dt) / 0.25, 0.0, 1.0)
-	if _princess_shown <= 0.0 and sequence == null: # the sequence is over: she goes
-		_princess.queue_free()
-		_princess = null
-		_princess_rig = null
-		return
-	_princess.visible = _princess_shown > 0.0
-	var k := 1.0 - pow(1.0 - _princess_shown, 3.0)
-	_princess.scale = Vector3.ONE * PRINCESS_SCALE * maxf(0.01, k)
-	var yaw = GridSpace.look_yaw(_princess.position, camera.global_position)
-	if yaw != null: _princess.rotation.y = yaw
-
-## Where she stands: a free ground tile in the board's left third, as close in front of (south of, toward the
-## camera) the road as possible, whose plinth stays above the dialogue box (the bottom DIALOGUE_BAND canvas pixels:
-## the box must not cover her); when no tile in front qualifies, behind the road. Never a path, wall, chasm or build
-## tile, nor one with a unit.
-const DIALOGUE_BAND := 470.0 # the box, its name plate and a little air
-
-func _princess_spot() -> Vector3:
-	var grid := session.state.grid
-	var want_x := roundi((grid.width - 1) * 0.3)
-	var road_y := grid.height / 2
-	var best := 999
-	for path in grid.paths:
-		for t in path.tiles:
-			if absi(t.x - want_x) < best:
-				best = absi(t.x - want_x)
-				road_y = t.y
-	var limit := get_viewport().get_visible_rect().size.y - DIALOGUE_BAND
-	var pick = null
-	var pick_score := 1 << 30
-	for x in range(0, maxi(1, ceili(grid.width / 3.0)) + 1):
-		for y in grid.height:
-			var p := Vector2i(x, y)
-			if y == road_y or grid.tile(p) != TileType.Ground or grid.buildable.has(p) or session.state.entity_at(p) != null: continue
-			# the plinth's front edge (toward the camera) must show above the dialogue box
-			var front := GridSpace.to_world(p) + Vector3(0.0, 0.0, 0.5 * PRINCESS_SCALE)
-			if camera != null and (camera.is_position_behind(front) or camera.unproject_position(front).y > limit): continue
-			var score := (road_y - 1 - y) * 10 if y < road_y else 1000 + (y - road_y - 1) * 10
-			score += absi(x - want_x)
-			if score < pick_score:
-				pick_score = score
-				pick = p
-	if pick == null: return GridSpace.to_world(Vector2i(want_x, road_y)) + Vector3(0.0, 0.0, -0.75)
-	return GridSpace.to_world(pick)
+## The Princess is never drawn on the board (Eren 2026-10-15): she speaks as a visual-novel bust on the dialogue
+## box (HudSequence + TdBust); the old on-board speaker prop is gone.
 
 ## The HUD over the level (game/ui/hud), when its scene exists.
 var hud: Node = null
@@ -612,7 +579,6 @@ func _process(delta: float) -> void:
 		level_ended.emit(session.outcome)
 	# after the camera moved this frame (it processes first): plates, markers and floaters follow it
 	overlay.refresh(director.shown, views.all, unscaled)
-	_update_princess(unscaled)
 	preview_rects.clear()
 	board.highlight_screen_rects(camera, preview_rects)
 	_update_sequence_marks()
@@ -1482,11 +1448,13 @@ func _ready_glow(p: Vector2i) -> void:
 	if glow != null: board.highlight(p, Color(1, 1, 1, 0.8), 1.3, 0.015, glow)
 	else: board.highlight(p, Color(0.45, 0.7, 1.0, 0.22), 0.96, 0.015)
 
-## The cobalt selection ring on a tile.
-func _selection_ring(p: Vector2i, strength: float) -> void:
-	var ring := _decal("board/decal_select_ring")
-	if ring != null: board.highlight(p, Color(1, 1, 1, strength), 1.15, 0.03, ring)
-	else: board.highlight(p, Color(SELECT_COLOR, SELECT_COLOR.a * strength))
+## The cobalt selection ring round a unit: a true circle on screen (Eren 2026-10-15), drawn by the overlay's
+## SelectRingLayer round the feet of its view (where it stands while an action plays), else of its tile.
+func _selection_ring(id: int, tile: Vector2i, strength: float) -> void:
+	if overlay == null or overlay.rings == null: return
+	var v := view_of(id)
+	var at := v.world_position if v != null and v.visible else GridSpace.to_world(tile)
+	overlay.rings.add_ring(Vector3(at.x, 0.0, at.z), strength)
 
 ## The units you command that can still cast something besides walking (cached per version).
 func _ready_units_now() -> Array:
@@ -1505,17 +1473,18 @@ func _ready_units_now() -> Array:
 
 func _draw_highlights() -> void:
 	board.clear_highlights()
+	if overlay != null and overlay.rings != null: overlay.rings.clear_rings()
 	var caster: Entity = session.state.get_entity(_selected)
 	# the cobalt selection ring stays on whatever is selected (a tower, a base or an enemy: blue = the player's
 	# selection), also while an action plays — then on the tile its view stands on
 	var sel_view := view_of(_selected)
 	if director.busy:
-		if sel_view != null and sel_view.visible and not sel_view.is_dead: _selection_ring(GridSpace.to_tile(sel_view.world_position), 1.0)
+		if sel_view != null and sel_view.visible and not sel_view.is_dead: _selection_ring(_selected, GridSpace.to_tile(sel_view.world_position), 1.0)
 		return
-	if caster != null and caster.on_board: _selection_ring(caster.pos, 1.0)
+	if caster != null and caster.on_board: _selection_ring(caster.id, caster.pos, 1.0)
 	if _tray_hover >= 0 and _tray_hover != _selected:
 		var lit: Entity = session.state.get_entity(_tray_hover)
-		if lit != null and lit.on_board: _selection_ring(lit.pos, 0.5)
+		if lit != null and lit.on_board: _selection_ring(lit.id, lit.pos, 0.5)
 
 	if _placing != null:
 		var grid := session.state.grid

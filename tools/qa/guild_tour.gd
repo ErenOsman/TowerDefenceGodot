@@ -136,32 +136,30 @@ func goto_guild(welcome := false) -> Node:
 # ------------------------------------------------------------------ Camp: the Signpost
 
 func tour_camp() -> void:
-	qa.screen = "Camp signpost"
+	qa.screen = "Camp Guild button"
 	# locked: Chapter 2 not cleared (results kept aside, put back after)
 	var camp = await goto_camp()
 	qa.step = "unlocked"
 	await qa.shot("camp")
 	qa.audit(camp, "camp", "")
-	var sp: Control = camp.signpost
-	if sp == null:
-		qa.find("bug", "Camp.signpost", "no signpost hotspot")
+	var sp: Control = camp.buttons.get("Guild") # the Guild station button by the Signpost (Eren 2026-10-15)
+	if sp == null or not sp.visible:
+		qa.find("bug", "Camp Guild button", "no Guild button after Chapter 2")
 		return
 	qa.move(qa.centre(sp))
 	await qa.wait(6, 0.7)
-	qa.check_tooltip("Signpost")
-	await qa.shot("camp_signpost_hover")
+	await qa.shot("camp_guild_hover")
 	qa.park_mouse()
 	await qa.wait(4, 0.4)
-	qa.check_unhovered(sp, "Signpost")
 	# the gold New tag while the guild was never seen
-	if camp.signpost_tag == null: qa.find("data", "Signpost New tag", "missing before the first Guild visit")
+	if camp.guild_tag == null: qa.find("data", "Guild New tag", "missing before the first Guild visit")
 	# click: the Guild (welcome card)
 	save.profile.guild_seen = false
 	await qa.click_at(qa.centre(sp))
 	await qa.until(func(): return flow.current == flow.Guild and not flow.is_loading, 60.0)
 	await qa.wait(30, 1.0)
 	qa.step = "after click"
-	if flow.current != flow.Guild: qa.find("bug", "Signpost click", "did not open the Guild")
+	if flow.current != flow.Guild: qa.find("bug", "Guild button click", "did not open the Guild")
 	await qa.shot("guild_from_signpost")
 
 # ------------------------------------------------------------------ the Guild
@@ -991,12 +989,12 @@ func tour_play() -> void:
 	var et := texts_under(es)
 	note("END: ", et)
 	# leave to the Guild with the end screen's button
-	var lb := find_text(es, level.leave_label)
+	var lb := find_text(es, level.end_list_label)
 	if lb == null:
 		for c in QA.visible_controls(es):
 			if c is TdButton and str(c.text).contains("Guild"): lb = c
 	if lb == null:
-		qa.find("bug", "end screen", "no '%s' button" % level.leave_label, s)
+		qa.find("bug", "end screen", "no '%s' button" % level.end_list_label, s)
 		return
 	await qa.click_at(qa.centre(lb))
 	await qa.until(func(): return flow.current == flow.Guild and not flow.is_loading and current_scene != null, 90.0)

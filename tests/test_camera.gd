@@ -74,12 +74,24 @@ func test_camera_fit_ignores_the_pan() -> void:
 	assert_num(snappedf(cam.fit_distance(), 0.0001), snappedf(fit, 0.0001), "the fit is the board centred, wherever the focus is")
 
 ## Where the 8 board corners (ground and model height) land on screen, in canvas pixels, at the camera's frame now.
+## Projected by hand from the camera's pose (focus, distance, pitch, yaw) and its off-centre frustum, as apply() sets
+## them: the direct test run (tests/run.gd) runs before the root window is in the tree, where unproject_position fails.
 func _corners_on_screen(cam: BoardCamera) -> Array[Vector2]:
 	var out: Array[Vector2] = []
+	var size := cam._view_size()
+	var aspect := size.x / size.y
+	var b := Basis.from_euler(Vector3(deg_to_rad(-cam.pitch), deg_to_rad(cam.yaw), 0.0))
+	var inv := Transform3D(b, cam.focus + b.z * cam.distance).affine_inverse()
+	var h := 2.0 * cam.near * tan(deg_to_rad(cam.fov) * 0.5)
+	var free := cam.free_area()
+	var off := Vector2((0.5 - free.get_center().x) * h * aspect, (0.5 - (1.0 - free.get_center().y)) * h)
 	for i in 8:
 		var cx := cam.bounds.position.x if (i & 1) == 0 else cam.bounds.end.x
 		var cz := -cam.bounds.position.y if (i & 2) == 0 else -cam.bounds.end.y
-		out.append(cam.unproject_position(Vector3(cx, 0.0 if (i & 4) == 0 else BoardCamera.MODEL_HEIGHT, cz)))
+		var v: Vector3 = inv * Vector3(cx, 0.0 if (i & 4) == 0 else BoardCamera.MODEL_HEIGHT, cz)
+		var n := Vector2(v.x, v.y) * cam.near / -v.z # on the near plane
+		var ndc := Vector2((n.x - off.x) / (h * aspect * 0.5), (n.y - off.y) / (h * 0.5))
+		out.append(Vector2((ndc.x + 1.0) * 0.5 * size.x, (1.0 - ndc.y) * 0.5 * size.y))
 	return out
 
 ## Settles the smoothing at once (the targets become the frame).
@@ -87,7 +99,6 @@ func _settle(cam: BoardCamera) -> void:
 	cam.yaw = cam.yaw_target
 	cam.distance = cam.distance_target
 	cam.focus = cam.focus_target
-	cam.apply()
 
 ## 2026-10-15: a tall board turned 90° — the zoom-out limit's frame keeps the whole board inside the free area
 ## (clear of the top bar, the tray and End turn), with no refit on the turn itself.
@@ -106,6 +117,14 @@ func test_camera_tall_board_turned_limit_keeps_board_clear_of_hud() -> void:
 	for p in _corners_on_screen(cam):
 		assert_true(box.has_point(p), "corner %s inside the free area %s" % [p, box])
 	# the end-turn button's rect and the tray stay clear of the board
+	if cam.is_inside_tree(): # the hand projection agrees with Godot's (in the resident runner, where the tree is up)
+		cam.apply()
+		var mine := _corners_on_screen(cam)
+		for i in 8:
+			var cx := cam.bounds.position.x if (i & 1) == 0 else cam.bounds.end.x
+			var cz := -cam.bounds.position.y if (i & 2) == 0 else -cam.bounds.end.y
+			var g := cam.unproject_position(Vector3(cx, 0.0 if (i & 4) == 0 else BoardCamera.MODEL_HEIGHT, cz))
+			assert_true(g.distance_to(mine[i]) < 1.0, "corner %d: %s by hand, %s by Godot" % [i, mine[i], g])
 	var end_turn := HudLayout.end_turn_rect(size)
 	for p in _corners_on_screen(cam):
 		assert_true(p.y < end_turn.position.y + 0.5 or p.x < end_turn.position.x, "corner %s clear of End turn" % p)

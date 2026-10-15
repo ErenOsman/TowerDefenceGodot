@@ -4,19 +4,20 @@ extends HudPopup
 ## top edge ("Victory" cobalt, "Defeat" red; the defeat window gets a red rim), "Chapter 1 · First Steps", the summary
 ## line, three paper stat tiles (victory: rounds, base health left, towers lost; defeat: waves cleared, rounds, towers
 ## lost), then the reward card (a first clear's tower) or, on a defeat, one Codex tip, and one centred row of
-## buttons, the primary always on the right: Level select (wood) · Retry (cobalt), or with a next level Retry · Level
-## select · Next level (cobalt). Retry is hidden after winning the tutorial. Esc and right click never
-## close it: one of its buttons decides.
+## buttons (Eren 2026-10-15: no Next level): Retry (wood) · Level select (cobalt, the primary: back to the level list;
+## "Guild" for a mission, "Lobby" in co-op, "Main menu" after the tutorial) · Return (wood: the main menu, or the
+## Camp once it is unlocked; not in co-op or the tutorial). Retry is hidden after winning the tutorial and when a
+## mission has no play left. Esc and right click never close it: one of its buttons decides.
 ## A mission (mockups end-screen-mission, -last): "Mission · Patrol", the rewards row "Rewards [coin ×1]  First win
 ## [gold-rimmed coin ×1]  Spend them in the Workshop." (first win only when this win took it), under it "⧗ 1 play left
 ## today" / "✓ Done today: no plays left · resets in 5 h"; Retry hidden when no play is left (can_retry); the leave
-## button says "Guild" (LevelController.leave_label).
+## button says "Guild" (LevelController.end_list_label).
 
 const WIDTH := 880.0
 
 var retry_button: TdButton
 var leave_button: TdButton
-var next_button: TdButton
+var return_button: TdButton
 var ribbon: PanelContainer
 var _ribbon_label: Label
 var _place: Label
@@ -56,13 +57,12 @@ func _ready() -> void:
 	retry_button.icon = HudArt.retry_icon()
 	retry_button.clicked.connect(func(): if controller != null: controller.retry())
 	leave_button = HudPopup.wide_button("Level select", TdButton.Style.SECONDARY, "icon_back", 240)
-	leave_button.clicked.connect(func(): if controller != null: controller.level_select())
-	next_button = HudPopup.wide_button("Next level", TdButton.Style.PRIMARY, "icon_continue", 280) # icon_next is a down chevron
-	next_button.icon_after = true
-	next_button.clicked.connect(func(): if controller != null: controller.next_level())
+	leave_button.clicked.connect(func(): if controller != null: controller.end_list())
+	return_button = HudPopup.wide_button("Main menu", TdButton.Style.SECONDARY, "icon_castle", 240)
+	return_button.clicked.connect(func(): if controller != null: controller.go_return())
 	row.add_child(retry_button)
 	row.add_child(leave_button)
-	row.add_child(next_button)
+	row.add_child(return_button)
 	_retry_line = HudArt.label("", "body", TdTheme.color("cream.200"), 20)
 	_retry_line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_retry_line.visible = false
@@ -193,28 +193,17 @@ func show_outcome(outcome: int) -> void:
 			if _extra.get_child_count() > 0: _extra.add_child(TdMenu.spacer(14))
 			_extra.add_child(_tip_card(tip))
 	_extra.visible = _extra.get_child_count() > 0
-	# buttons: defeat = Level select · Retry (primary); victory = Retry · Level select · Next level (primary)
-	var has_next: bool = _won and c.next_level_asset != null
-	next_button.visible = has_next
+	# buttons, won or lost alike: Retry · Level select / Guild (primary) · Return
 	retry_button.visible = c.can_retry
-	retry_button.style = TdButton.Style.SECONDARY if has_next else TdButton.Style.PRIMARY
-	leave_button.text = c.leave_label
-	# the primary always on the right: Level select · Retry, or Retry · Level select · Next level
+	retry_button.style = TdButton.Style.SECONDARY
+	leave_button.text = c.end_list_label
+	leave_button.style = TdButton.Style.PRIMARY
+	return_button.text = c.return_label
+	return_button.visible = c.can_return
 	var row: HBoxContainer = retry_button.get_parent()
-	leave_button.style = TdButton.Style.SECONDARY
-	if m != null:
-		# a mission (end-screen-mission): Retry (wood) · Guild (cobalt), Guild alone once no play is left
-		retry_button.style = TdButton.Style.SECONDARY
-		leave_button.style = TdButton.Style.PRIMARY
-		row.move_child(retry_button, 0)
-		row.move_child(leave_button, 1)
-	elif has_next:
-		row.move_child(retry_button, 0)
-		row.move_child(leave_button, 1)
-	else:
-		row.move_child(leave_button, 0)
-		row.move_child(retry_button, 1)
-	row.move_child(next_button, 2)
+	row.move_child(retry_button, 0)
+	row.move_child(leave_button, 1)
+	row.move_child(return_button, 2)
 	# under Retry: when only some of the towers it would take are rested, which ones ("Retry takes 1 rested tower (Mage)")
 	_retry_line.text = _retry_takes(c, m) if retry_button.visible and m != null else ""
 	_retry_line.visible = _retry_line.text != ""
