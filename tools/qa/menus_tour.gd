@@ -540,20 +540,21 @@ func _sec_camp_open() -> void:
 	await _shot("open")
 	_inspect("open")
 	var camp = current_scene
-	if camp.signpost != null:
-		await _hover(camp.signpost)
+	var gb = camp.buttons.get("Guild") # the Guild station button (Eren 2026-10-15; replaces the Signpost hotspot)
+	if gb != null and gb.visible:
+		await _hover(gb)
 		await _wait(0.8)
-		_check_tooltip(camp.signpost)
-		await _shot("signpost_hover")
+		await _shot("guild_button_hover")
 		await _move(NEUTRAL)
-	# the Signpost's "New" stays under a popup (Towers) and the stations' layer
+	# the Guild button's "New" stays under a popup (Towers): it is the button's child, in the stations' layer
 	camp = current_scene
-	if camp.signpost_tag != null:
+	if camp.guild_tag != null:
 		await _press(camp.buttons["Towers"])
 		await _wait(0.8)
-		print("signpost tag index ", camp.signpost_tag.get_index(), " popups index ", camp.popups.get_index())
-		if camp.signpost_tag.get_index() > camp.popups.get_index(): _find("layer", camp.signpost_tag, "the Signpost's New tag draws over the popups")
-		await _shot("towers_over_signpost_tag")
+		var tag_layer: int = camp.guild_tag.get_parent().get_index()
+		print("guild tag layer ", tag_layer, " popups index ", camp.popups.get_index())
+		if tag_layer > camp.popups.get_index(): _find("layer", camp.guild_tag, "the Guild button's New tag draws over the popups")
+		await _shot("towers_over_guild_tag")
 		await _close_popups()
 	await _sweep({"root": func(): return _camp_root_if_no_popup(),
 		"renav": func(): await _to_camp(true)})

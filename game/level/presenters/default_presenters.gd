@@ -87,7 +87,7 @@ func _present(e: GameEvent, beat: BeatPlayback, look: AbilityPresentationAsset) 
 		GameEventType.PhaseStarted:
 			return _banner("Enemy phase", _timings().enemy_phase_banner, "phase") if str(e.detail) == "Enemy" else null
 		GameEventType.WaveStarted:
-			return _banner("%s begins" % str(e.detail), _timings().wave_banner)
+			return _banner(str(e.detail), _timings().wave_banner) # only the wave's name (2026-10-15)
 		GameEventType.WaveFinished:
 			return _banner("%s cleared" % str(e.detail), _timings().wave_banner)
 		GameEventType.LevelMessage:

@@ -29,6 +29,25 @@ static func attach(s: ScrollContainer, paper := false) -> TdDragScroll:
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
+## A press whose release never came back (QA 2026-10-15, Eren: after picking from a dropdown the list followed the
+## mouse as if the button were held): a dropdown's PopupMenu is its own Window, so the release went there. The press
+## state is dropped as soon as the left button is no longer down, and when the pointer leaves the window or it loses
+## focus.
+func _process(_delta: float) -> void:
+	if (_down or _dragging) and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT): release()
+
+func _notification(what: int) -> void:
+	if what in [NOTIFICATION_WM_MOUSE_EXIT, NOTIFICATION_WM_WINDOW_FOCUS_OUT, NOTIFICATION_APPLICATION_FOCUS_OUT]: release()
+
+## Forgets the press (no drag until the next press).
+func release() -> void:
+	_down = false
+	_dragging = false
+
+## Whether it thinks the left button is held over its list (a press, or a drag in progress).
+func is_holding() -> bool:
+	return _down or _dragging
+
 func _input(event: InputEvent) -> void:
 	if scroll == null or not scroll.is_visible_in_tree() or _cancelling: return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
@@ -44,6 +63,9 @@ func _input(event: InputEvent) -> void:
 			_down = false
 			_dragging = false
 	elif event is InputEventMouseMotion and _down:
+		if not (event.button_mask & MOUSE_BUTTON_MASK_LEFT): # the release went elsewhere (a popup window)
+			release()
+			return
 		if not _dragging and event.position.distance_to(_start) > THRESHOLD:
 			if scroll.get_v_scroll_bar().max_value <= scroll.size.y: # nothing to scroll
 				_down = false

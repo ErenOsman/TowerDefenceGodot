@@ -89,6 +89,8 @@ func _build(owned: OwnedTower, type: TowerAsset, mini: Texture2D) -> void:
 	_x.position = Vector2(SIZE.x - 30, 0)
 	_x.visible = false
 	add_child(_x)
+	# the figure's 10 px hover lift is visual only: the slot's fixed rect (and the ×) take the pointer (QA 2026-10-15)
+	TdTowerTile.hit_rect_only(self, [_x])
 
 ## The gold cost coin (a round gold badge with the number in dark ink), `d` px across.
 static func coin(cost: int, d: float) -> Control:

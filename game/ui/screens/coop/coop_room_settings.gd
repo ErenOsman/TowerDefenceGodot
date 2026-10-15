@@ -63,7 +63,7 @@ func _build() -> void:
 	ar.add_child(_apply_note)
 	_apply = TdMenu.button(TdButton.Style.PRIMARY, "Apply", Vector2(222, 64), TdTheme.texture("icon_check"))
 	_apply.font_size = 28
-	_apply.clicked.connect(apply)
+	_apply.clicked.connect(ask_apply)
 	ar.add_child(_apply)
 
 func _on_open() -> void:
@@ -149,6 +149,16 @@ func _refresh() -> void:
 		_apply.text = "Apply"
 		_fit_apply()
 	_apply.set_interactable(changed, "No changes yet")
+
+## Apply: lowering the count below the players present asks first (it removes them); any other change applies.
+func ask_apply() -> TdConfirm:
+	var gone := removed_names()
+	if gone.is_empty():
+		apply()
+		return null
+	return TdConfirm.ask(self, "Remove %s?" % NetProtocol.join_names(gone),
+		"Fewer slots remove the last to join; everyone's Ready resets.", "Apply and remove %d" % gone.size(),
+		func(yes: bool): if yes: apply(), {"danger": true})
 
 func apply() -> void:
 	if net == null: return

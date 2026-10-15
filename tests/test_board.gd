@@ -131,7 +131,7 @@ func test_move_presenter_slides_and_holds_the_view() -> void:
 func test_banners_of_a_kind_replace_and_the_queue_stays_short() -> void:
 	var b := BannerLayer.new()
 	b.show_banner("Round 1", 0.8, false, "round")
-	b.show_banner("Wave 1 begins", 1.2)
+	b.show_banner("The first slimes", 1.2)
 	b.show_banner("Round 2", 0.8, false, "round")
 	assert_eq(b.text, "Round 2", "a newer round cuts the showing one short")
 	assert_eq(b.waiting, 1)

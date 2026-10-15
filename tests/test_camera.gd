@@ -72,3 +72,58 @@ func test_camera_fit_ignores_the_pan() -> void:
 	var fit := cam.fit_distance()
 	cam.focus = Vector3(9.0, 0.0, -6.0)
 	assert_num(snappedf(cam.fit_distance(), 0.0001), snappedf(fit, 0.0001), "the fit is the board centred, wherever the focus is")
+
+## Where the 8 board corners (ground and model height) land on screen, in canvas pixels, at the camera's frame now.
+func _corners_on_screen(cam: BoardCamera) -> Array[Vector2]:
+	var out: Array[Vector2] = []
+	for i in 8:
+		var cx := cam.bounds.position.x if (i & 1) == 0 else cam.bounds.end.x
+		var cz := -cam.bounds.position.y if (i & 2) == 0 else -cam.bounds.end.y
+		out.append(cam.unproject_position(Vector3(cx, 0.0 if (i & 4) == 0 else BoardCamera.MODEL_HEIGHT, cz)))
+	return out
+
+## Settles the smoothing at once (the targets become the frame).
+func _settle(cam: BoardCamera) -> void:
+	cam.yaw = cam.yaw_target
+	cam.distance = cam.distance_target
+	cam.focus = cam.focus_target
+	cam.apply()
+
+## 2026-10-15: a tall board turned 90° — the zoom-out limit's frame keeps the whole board inside the free area
+## (clear of the top bar, the tray and End turn), with no refit on the turn itself.
+func test_camera_tall_board_turned_limit_keeps_board_clear_of_hud() -> void:
+	var cam := _cam(5, 14)
+	cam.set_hud_insets(HudLayout.TOP_BAR, HudLayout.TRAY_H, 0.0) # what the HUD sends
+	var d0 := cam.distance_target
+	cam.rotate_step(1)
+	assert_num(cam.distance_target, minf(d0, cam.max_distance), "the turn does not refit (only clamps)")
+	cam.distance_target = cam.max_distance # zoomed all the way out at 90°
+	cam.focus_target = cam.clamp_focus(cam.focus_target)
+	_settle(cam)
+	var size := cam._view_size()
+	var free := cam.free_area()
+	var box := Rect2(free.position * size, free.size * size).grow(1.0)
+	for p in _corners_on_screen(cam):
+		assert_true(box.has_point(p), "corner %s inside the free area %s" % [p, box])
+	# the end-turn button's rect and the tray stay clear of the board
+	var end_turn := HudLayout.end_turn_rect(size)
+	for p in _corners_on_screen(cam):
+		assert_true(p.y < end_turn.position.y + 0.5 or p.x < end_turn.position.x, "corner %s clear of End turn" % p)
+
+## A free pan at the zoom-out limit: a turn that clamps the zoom to the new limit brings the board back to the centre
+## (the limit's frame), so nothing of it stays under the HUD.
+func test_camera_turn_clamped_to_limit_recentres_a_free_pan() -> void:
+	var cam := _cam(5, 14)
+	cam.distance_target = cam.max_distance
+	cam._free_pan = true
+	cam.focus_target = cam.clamp_focus(Vector3(4.5, 0.0, -13.5))
+	assert_true(cam.fit_distance(90.0) < cam.max_distance, "the tall board seen across needs less distance")
+	cam.rotate_step(1)
+	assert_num(cam.distance_target, cam.max_distance, "clamped to the new limit")
+	assert_eq(cam.focus_target, cam.board_centre(), "at the new limit: centred")
+	# zoomed in and panned, a turn keeps the pan
+	cam.distance_target = cam.max_distance * 0.5
+	cam._free_pan = true
+	cam.focus_target = Vector3(4.5, 0.0, -13.5)
+	cam.rotate_step(1)
+	assert_eq(cam.focus_target, Vector3(4.5, 0.0, -13.5), "inside the new limit: the pan is kept")

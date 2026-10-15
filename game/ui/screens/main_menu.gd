@@ -22,9 +22,9 @@ func _ready() -> void:
 	dio.build_board = false
 	add_child(dio)
 	# turned toward the viewer's lower left, like the Unity menu
-	dio.add_mini("Assets/Art/Models/Archer/Archer Blender.prefab", Vector2(-800, 975), 250.0, -35.0)
-	dio.add_mini("Assets/Art/Models/Mage/Mage Blender.prefab", Vector2(-250, 975), 250.0, -35.0)
-	dio.add_mini("Assets/Art/Models/Guardian/Guardian Blender.prefab", Vector2(-525, 1000), 270.0, -35.0)
+	dio.add_mini("art/models/Archer.fbx", Vector2(-800, 975), 250.0, -35.0)
+	dio.add_mini("art/models/Mage.fbx", Vector2(-250, 975), 250.0, -35.0)
+	dio.add_mini("art/models/Guardian.fbx", Vector2(-525, 1000), 270.0, -35.0)
 	_build()
 	popups = Control.new()
 	popups.set_anchors_and_offsets_preset(PRESET_FULL_RECT)

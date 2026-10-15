@@ -41,16 +41,15 @@ func _ready() -> void:
 	_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	body.add_child(_subtitle)
 	continue_button = _add(wide_button("Continue", TdButton.Style.PRIMARY, "icon_play"))
-	continue_button.set_key_hint("Esc")
 	continue_button.clicked.connect(close)
 	settings_button = _add(wide_button("Settings", TdButton.Style.SECONDARY, "icon_settings"))
 	settings_button.clicked.connect(_open_settings)
 	codex_button = _add(wide_button("Codex", TdButton.Style.SECONDARY, "icon_codex"))
 	codex_button.clicked.connect(func(): _open_sub(CODEX_SCENE))
 	leave_button = _add(wide_button("Quit to level select", TdButton.Style.SECONDARY, "icon_back"))
-	leave_button.clicked.connect(_leave)
+	leave_button.clicked.connect(ask_leave)
 	quit_button = _add(wide_button("Quit game", TdButton.Style.SECONDARY, "icon_quit"))
-	quit_button.clicked.connect(_quit)
+	quit_button.clicked.connect(ask_quit)
 	visible = false
 
 ## The list buttons read from the left (user, 2026-10-14): icon at a fixed inset, label after it, key chip after the label.
@@ -129,6 +128,22 @@ func _close_sub() -> void:
 	if is_instance_valid(_sub):
 		_sub.queue_free()
 	_sub = null
+
+## Quit to <home> / Quit game ask first through the shared TdConfirm (Eren 2026-10-15; UI Design Rules,
+## Confirmations: danger confirm on the right). The question is the pause's sub panel while open (Esc goes to it).
+func ask_leave() -> TdConfirm:
+	var c := TdConfirm.ask(self, "Leave the level?", LOST_TEXT, leave_button.text,
+		func(yes: bool): if yes: _leave(), {"danger": true, "cancel_text": "Keep playing"})
+	_sub = c
+	return c
+
+func ask_quit() -> TdConfirm:
+	var c := TdConfirm.ask(self, "Quit the game?", LOST_TEXT, "Quit game",
+		func(yes: bool): if yes: _quit(), {"danger": true, "cancel_text": "Keep playing"})
+	_sub = c
+	return c
+
+const LOST_TEXT := "This level's progress is lost."
 
 func _leave() -> void:
 	if controller == null: return

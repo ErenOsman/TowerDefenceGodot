@@ -5,7 +5,7 @@ extends Control
 ## (depth of field), and — sharp, in front — miniatures (unit models on their plinths) in a transparent layer.
 ## The last blurred board drawn is kept (snapshot) so the loading screen can show it without building a board.
 ##   var d := TdDiorama.new(); d.level = TdMenu.app().catalog.find_level("chapter1-1"); add_child(d)
-##   d.add_mini("Assets/Art/Models/Archer/Archer Blender.prefab", Vector2(1100, 980), 250.0, 20.0)
+##   d.add_mini("art/models/Archer.fbx", Vector2(1100, 980), 250.0, 20.0)
 
 const BLUR_SHADER := """
 shader_type canvas_item;

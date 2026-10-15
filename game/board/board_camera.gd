@@ -92,11 +92,16 @@ func init(width: int, height: int) -> void:
 ## must not change the zoom); only the limits follow the new angle: the zoom-out limit becomes the fit for it (a
 ## long board seen lengthwise needs a different distance), a zoom beyond it is pulled in to it, and the focus is
 ## clamped to the pan limits. The reference tile (board UI size) stays: plates keep their size across a turn.
+## The limit is the same fit the level starts with, against the free area the HUD leaves (top bar, tray, End turn:
+## the insets plus the gutter), so a tall board turned 90° zooms out until all of it shows above the tray. A view
+## that ends up AT that limit is the limit's frame (2026-10-15): a free pan is brought back to the board's centre
+## there, else the turned board would sit half under the HUD with no zoom-out left to bring it back.
 func rotate_step(dir: int) -> void:
 	yaw_target += 90.0 * signf(dir)
 	var fit := fit_distance()
 	max_distance = fit
 	distance_target = rotated_distance(distance_target, min_distance, fit)
+	if distance_target >= fit - 0.0001: _free_pan = false
 	focus_target = clamp_focus(focus_target)
 
 ## The zoom distance after a turn: untouched, unless it is beyond the new zoom-out limit (the fit for the new
@@ -322,6 +327,10 @@ func step(dt: float) -> void:
 			var k_out := clampf((distance_target - before) / maxf(0.0001, max_distance - before), 0.0, 1.0)
 			focus_target = focus_target.lerp(clamp_strict(focus_target), k_out)
 			if distance_target >= max_distance - 0.0001: _free_pan = false
+		# already at the limit (e.g. a turn clamped the zoom to it): zooming out still brings a panned board back
+		elif _free_pan and _wheel < 0.0 and distance_target >= max_distance - 0.0001:
+			_free_pan = false
+			focus_target = clamp_strict(focus_target)
 	_wheel = 0.0
 	if keys != null:
 		if keys.pressed("RotateLeft"): rotate_step(-1)

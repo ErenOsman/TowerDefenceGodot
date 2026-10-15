@@ -115,6 +115,9 @@ var _clock := 0.0
 var _built := false
 var _face_origin := Vector2.ZERO
 
+## The pressed state came from a mouse press (not force_state / a held key).
+var _mouse_press := false
+
 func _init() -> void:
 	mouse_filter = MOUSE_FILTER_STOP
 	focus_mode = FOCUS_NONE
@@ -414,10 +417,12 @@ func _gui_input(event: InputEvent) -> void:
 		if event.pressed:
 			if interactable:
 				_set_pressed(true)
+				_mouse_press = true
 			accept_event()
 		else:
 			var inside := face_rect().has_point(event.position)
 			var was := pressed
+			_mouse_press = false
 			_set_pressed(_held_key)
 			if inside:
 				if interactable and was:
@@ -438,6 +443,7 @@ func _on_mouse_entered() -> void:
 
 func _on_mouse_exited() -> void:
 	hovered = false
+	_mouse_press = false
 	_set_pressed(_held_key)
 	_hide_reason()
 	_pose()
@@ -489,6 +495,11 @@ func _hide_reason() -> void:
 
 func _process(delta: float) -> void:
 	if not _built: return
+	# a mouse press whose release went to another window (a dropdown's PopupMenu): un-press without clicking
+	# (QA 2026-10-15); a forced or key-held press (force_state, set_key_held) is left alone
+	if _mouse_press and not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		_mouse_press = false
+		_set_pressed(_held_key)
 	var dt := TdTheme.unscaled(delta)
 	_clock += dt
 	if _tap_until > 0.0 and _clock >= _tap_until:
@@ -739,3 +750,7 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_PARENTED or what == NOTIFICATION_UNPARENTED:
 		update_minimum_size()
 		if _built: _layout()
+	# the pointer left the window / it lost focus mid-press: the release will not come here (QA 2026-10-15)
+	if (what == NOTIFICATION_WM_MOUSE_EXIT or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT) and _mouse_press:
+		_mouse_press = false
+		_set_pressed(_held_key)

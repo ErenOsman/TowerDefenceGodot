@@ -174,6 +174,7 @@ func _run() -> void:
 	Engine.time_scale = 0.3
 	level.end_round()
 	await _frames(20)
+	await _shot("7d_enemy_turn") # the chip reads "Enemy turn" (never "Level phase"; 2026-10-15)
 	var et := hud.top_bar.end_turn.get_global_rect().grow(30)
 	for k in 3:
 		await _frames(1)
@@ -205,6 +206,11 @@ func _run() -> void:
 	hud.open_pause()
 	await _wait(0.5)
 	await _shot("9_pause")
+	var q: TdConfirm = hud.pause.ask_quit() # Quit game asks first (shared TdConfirm, 2026-10-15)
+	await _wait(0.5)
+	await _shot("9b_quit_confirm")
+	q.cancel()
+	await _wait(0.3)
 	print("time scale while paused: ", Engine.time_scale)
 	hud.pause.close()
 	await _wait(0.4)
@@ -246,6 +252,11 @@ func _tutorial() -> void:
 		return
 	await _wait(1.6) # the whole first line typed out
 	await _tut_shot("t1_road")
+	var q: TdConfirm = hud.sequence.ask_skip() # Skip asks first (2026-10-15); Keep going keeps the tutorial
+	await _wait(0.5)
+	await _shot("t1s_skip_confirm")
+	q.cancel()
+	await _wait(0.3)
 	level.toggle_placing(level.session.hand[0].id) # a talk line: refused, the note says so
 	await _frames(4)
 	await _tut_shot("t1r_refused")

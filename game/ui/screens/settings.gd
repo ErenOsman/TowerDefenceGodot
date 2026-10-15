@@ -99,23 +99,17 @@ func _build() -> void:
 	bottom.add_child(reset_button)
 	show_tab(0)
 
-var _reset_armed := false
 var _footer_hint: Label
 const FOOTER_HINTS := ["Drag a slider, or click it and use the arrow keys.", "The window size applies when not fullscreen.",
 	"Gameplay settings apply at once, also during a battle.", "The mouse is fixed: left click selects, right click cancels."]
 
-## Reset to defaults asks once ("Click again to reset"), then resets every key.
-func _on_reset() -> void:
-	if not _reset_armed:
-		_reset_armed = true
-		reset_button.text = "Click again to reset"
-		get_tree().create_timer(3.0, true, false, true).timeout.connect(func():
-			if is_instance_valid(reset_button):
-				_reset_armed = false
-				reset_button.text = "Reset to defaults")
-		return
-	_reset_armed = false
-	reset_button.text = "Reset to defaults"
+## Reset to defaults asks through the shared TdConfirm (was "Click again to reset"; Eren 2026-10-15), then resets
+## every key.
+func _on_reset() -> TdConfirm:
+	return TdConfirm.ask(self, "Reset the controls?", "Every key goes back to its default.", "Reset",
+		func(yes: bool): if yes: reset_controls(), {"danger": true})
+
+func reset_controls() -> void:
 	KeyBinds.reset_all()
 	_stop_listening()
 	refresh_controls()

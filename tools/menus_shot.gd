@@ -6,7 +6,7 @@ extends SceneTree
 ## settings_display, settings_gameplay, settings_controls (+ a capture and a conflict), codex_towers (a page),
 ## codex_statuses, level_select (an unplayed level: no enemy chips), level_select_played (a won one: chips),
 ## level_select_locked, hand_editor, camp (after GameApp.complete_chapter1()), camp_tour, chapter_select,
-## camp_level_select, loading. PNGs: <out dir>/menu_<n>_<step>.png.
+## camp_level_select, camp_open (after Chapter 2: camp_open_tour, camp_open, camp_layout_editor), loading, settings_reset (the Reset to defaults confirm). PNGs: <out dir>/menu_<n>_<step>.png.
 
 var out_dir := "user://menus"
 var only: PackedStringArray = []
@@ -92,6 +92,16 @@ func _run() -> void:
 		s._input(ev)
 		print("captured Pause slot 2: ", root.get_node("KeyBinds").describe("Pause"))
 		root.get_node("KeyBinds").reset_all()
+		s.close()
+		await _frames(15)
+	if _want("settings_reset"): # Reset to defaults asks through the shared TdConfirm (2026-10-15)
+		var s = menu.open_popup("settings")
+		await _frames(10)
+		s.show_tab(3)
+		var q: TdConfirm = s._on_reset()
+		await _frames(25)
+		await _shot("settings_reset_confirm")
+		q.cancel()
 		s.close()
 		await _frames(15)
 	# some discoveries, so the Codex has pages and new dots
@@ -190,6 +200,28 @@ func _run() -> void:
 			ch.open_chapter(1)
 			await _frames(40)
 			await _shot("camp_level_select")
+		# after Chapter 2: the Guild and Workshop buttons appear, the mini tour points at them once, the layout editor
+		if _want("camp_open"):
+			app.complete_chapter2()
+			save.save()
+			flow.go(flow.Camp)
+			await _until(func(): return flow.current == flow.Camp and not flow.is_loading, 20.0)
+			await _frames(40)
+			camp = current_scene
+			await _shot("camp_open_tour")
+			camp.end_tour()
+			await _frames(10)
+			await _shot("camp_open")
+			var ed := TdLayoutEditor.new()
+			root.add_child(ed)
+			ed.start(camp)
+			for e in camp.world.entries:
+				if e.node == camp.props.get("Guild"): ed.select(e)
+			ed.rotate_selected(15.0)
+			await _frames(10)
+			await _shot("camp_layout_editor")
+			ed.stop()
+			await _frames(4)
 	# loading
 	if _want("loading") and ResourceLoader.exists("res://game/ui/screens/loading.tscn"):
 		var lv = app.next_main_level()

@@ -19,8 +19,8 @@ func _ready() -> void:
 	var dio := TdDiorama.new() # only the sharp miniatures in front; the board is the shared background image
 	dio.build_board = false
 	add_child(dio)
-	dio.add_mini("Assets/Art/Models/Archer/Archer Blender.prefab", Vector2(340, 715), 270.0, 18.0)
-	dio.add_mini("Assets/Art/Models/Guardian/Guardian Blender.prefab", Vector2(-340, 720), 270.0, -18.0)
+	dio.add_mini("art/models/Archer.fbx", Vector2(340, 715), 270.0, 18.0)
+	dio.add_mini("art/models/Guardian.fbx", Vector2(-340, 720), 270.0, -18.0)
 	_build()
 	plaque.modulate.a = 0.0 # hidden until its transition starts (no full-size flash on the first frame)
 	await get_tree().process_frame

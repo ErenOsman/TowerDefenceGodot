@@ -41,8 +41,9 @@ var tower_id := ""
 var node_id := ""
 ## A node just unlocked (its toast shows until another node is picked or 4 s pass).
 var flash_id := ""
-var confirm_open := false
-var _confirm_at := -100000
+## The unlock confirm (a TdConfirm) is open.
+var confirm_open: bool:
+	get: return is_instance_valid(_confirm) and _confirm.is_open and _confirm.answer == null
 
 var collection: TdCollection
 var _entries: Array = []
@@ -60,8 +61,7 @@ var _tokens: HBoxContainer
 var _now: VBoxContainer
 var _tree: FormTree
 var _card: VBoxContainer
-var _confirm: Control
-var _confirm_box: VBoxContainer
+var _confirm: TdConfirm
 var _toast_serial := 0
 var _slide_tween: Tween
 
@@ -90,7 +90,6 @@ func _build() -> void:
 	_clip.resized.connect(_layout_panes)
 	_build_pick()
 	_build_mod()
-	_build_confirm()
 
 func _layout_panes() -> void:
 	var s := _clip.size
@@ -175,27 +174,6 @@ func _build_mod() -> void:
 	right.add_child(_card)
 	body.add_child(right)
 
-func _build_confirm() -> void:
-	_confirm = Control.new()
-	_confirm.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	_confirm.mouse_filter = MOUSE_FILTER_STOP
-	_confirm.visible = false
-	add_child(_confirm)
-	var sc := TdScrim.new()
-	# not the second click of a double click on Unlock (it landed on the scrim and cancelled at once; QA 2026-10-15)
-	sc.clicked.connect(func(_b: int): if Time.get_ticks_msec() - _confirm_at > TdPopup.SCRIM_GRACE_MS: cancel_confirm())
-	_confirm.add_child(sc)
-	var c := CenterContainer.new()
-	c.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
-	c.mouse_filter = MOUSE_FILTER_IGNORE
-	_confirm.add_child(c)
-	var p := TdMenu.panel(TdPanel.Kind.WINDOW, 30)
-	p.custom_minimum_size = Vector2(760, 0)
-	c.add_child(p)
-	_confirm_box = TdMenu.vbox(12)
-	_confirm_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	p.add_child(_confirm_box)
-
 # ------------------------------------------------------------------ open / data
 
 func _on_open() -> void:
@@ -203,8 +181,7 @@ func _on_open() -> void:
 	_found.clear()
 	for t in GameApp.catalog.tokens: _found[t.get_id()] = WorkshopLogic.found_in_text(t.get_id(), GameApp.missions())
 	view = "pick"
-	confirm_open = false
-	_confirm.visible = false
+	cancel_confirm()
 	_reload_entries()
 	if tower_id == "" or SaveData.towers.find(tower_id) == null:
 		tower_id = _entries[0].id if not _entries.is_empty() else ""
@@ -343,8 +320,7 @@ func open_modify(id: String) -> void:
 func back_to_picker() -> void:
 	if view != "modify": return
 	view = "pick"
-	confirm_open = false
-	_confirm.visible = false
+	cancel_confirm()
 	_refresh_pick()
 	_slide()
 
@@ -672,51 +648,29 @@ func card_action() -> void:
 		"unlock": open_confirm()
 		"use": use_form()
 
-## The confirm popup ("Unlock Fire Archer for this Archer?").
+## The confirm popup ("Unlock Fire Archer for this Archer?"): the shared TdConfirm with the form's medallion, the
+## cost line (the token amount in bold cream), Cancel / Unlock (gold ring); Enter = Unlock, Esc = Cancel.
 func open_confirm() -> void:
 	var f := WorkshopLogic.form_of(_type, node_id)
-	if f == null: return
-	TdCollection.clear_children(_confirm_box)
-	var mc := CenterContainer.new()
-	_confirm_box.add_child(mc)
-	var m := _medal(node_id, 84)
-	mc.add_child(m)
-	var t := TdMenu.label(WorkshopLogic.confirm_title(_type, f), "h2", TdTheme.color("cream.100"), 34)
-	t.add_theme_font_override("font", TdTheme.font("plinth"))
-	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_confirm_box.add_child(t)
+	if f == null or confirm_open: return
 	var body := WorkshopLogic.confirm_body(_type, f, SaveData.tokens)
 	var re := RegEx.create_from_string("(\\d+ [^(.]+?) \\(you have")
 	body = re.sub(body, "[color=%s][b]$1[/b][/color] (you have" % TdTheme.rich("cream.100"), true)
-	var b := TdMenu.rich(body, "body", TdTheme.color("cream.200"), 22)
-	b.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	b.custom_minimum_size = Vector2(690, 0)
-	_confirm_box.add_child(b)
-	var row := TdMenu.hbox(16)
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	_confirm_box.add_child(row)
-	var no := TdMenu.button(TdButton.Style.SECONDARY, "Cancel", Vector2(220, 60))
-	no.clicked.connect(cancel_confirm)
-	row.add_child(no)
-	var yes := TdMenu.button(TdButton.Style.PRIMARY, "Unlock", Vector2(220, 60), TdTheme.texture("icon_plus"))
-	TdTowerCard.gold_ring(yes)
-	yes.clicked.connect(confirm_unlock)
-	row.add_child(yes)
-	confirm_open = true
-	_confirm_at = Time.get_ticks_msec()
-	_confirm.visible = true
-	_confirm.modulate.a = 0.0
-	TdTheme.tween(_confirm).tween_property(_confirm, "modulate:a", 1.0, 0.15)
+	_confirm = TdConfirm.ask(self, WorkshopLogic.confirm_title(_type, f), body, "Unlock",
+		func(yes: bool): if yes: confirm_unlock(),
+		{"icon": _medal(node_id, 84), "confirm_icon": TdTheme.texture("icon_plus")})
+	TdTowerCard.gold_ring(_confirm.confirm_button)
 
 func cancel_confirm() -> void:
-	confirm_open = false
-	_confirm.visible = false
+	if confirm_open: _confirm.cancel()
 
 ## Confirmed: spends the tokens, unlocks the form on this tower, saves; the node fills, its ring flashes, the toast
 ## shows and the action becomes Use this form.
 func confirm_unlock() -> bool:
 	var f := WorkshopLogic.form_of(_type, node_id)
-	cancel_confirm()
+	if confirm_open: # called directly (tests, tools): close the question without answering it again
+		_confirm.answer = true
+		_confirm.close()
 	if f == null or not Workshop.unlock(_owned(), f, SaveData.tokens): return false
 	SaveData.save()
 	flash_id = node_id
@@ -751,11 +705,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	super(event)
 	if not is_open or not is_top() or not (event is InputEventKey) or not event.pressed or event.echo: return
 	var k: int = event.keycode
-	if confirm_open:
-		if k == KEY_ENTER or k == KEY_KP_ENTER:
-			confirm_unlock()
-			get_viewport().set_input_as_handled()
-		return
+	if confirm_open: return # the TdConfirm on top takes Enter / Esc
 	if view == "pick":
 		if (k == KEY_ENTER or k == KEY_KP_ENTER) and tower_id != "":
 			open_modify(tower_id)

@@ -60,7 +60,7 @@ func _build(e: Dictionary, key: int) -> void:
 	var coin := TdHandSlot.coin(e.cost, 32.0)
 	coin.position = Vector2(4, 4)
 	add_child(coin)
-	tooltip_text = e.name
+	# no plain tooltip: it only repeated the name the tile shows (Eren 2026-10-15; the hand editor and the Workshop picker)
 	if key >= 0:
 		var b := Panel.new()
 		var sb := StyleBoxFlat.new()
@@ -79,7 +79,18 @@ func _build(e: Dictionary, key: int) -> void:
 		l.position = Vector2(0, -1)
 		b.add_child(l)
 		add_child(b)
-		tooltip_text = "%s · in hand, key %d" % [e.name, key + 1]
+	hit_rect_only(self)
+
+## The hover lift is purely visual (QA 2026-10-15: the hand-select cards flickered on hover): only the card's own,
+## fixed rect takes the pointer. Every child (the medallion that lifts, its badges, the coin, the name) ignores the
+## mouse, so a lifted part never moves the hit area out from under the pointer. `keep`: children that stay clickable
+## (with their subtree), e.g. the hand slot's ×.
+static func hit_rect_only(root: Control, keep: Array = []) -> void:
+	for c in root.get_children():
+		if c in keep: continue
+		if c is Control:
+			(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+			hit_rect_only(c, keep)
 
 ## A tower that went on a mission today: the portrait at 50 % with the moon badge (Missions & Guild — Design).
 func set_tired(text: String) -> void:
@@ -87,7 +98,8 @@ func set_tired(text: String) -> void:
 	for c in _medal.get_children(): c.modulate.a = 0.5
 	TdTiredBadge.attach(self, tile.x, 0.22, Vector2(0.24, 0.48)) # top-left, under the coin
 	if _name != null: _name.modulate.a = 0.6
-	tooltip_text += "\n" + text
+	hit_rect_only(self)
+	tooltip_text = text # the one thing the tile cannot show: why it rests (when it is back)
 
 func set_selected(v: bool) -> void:
 	selected = v

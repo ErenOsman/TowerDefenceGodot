@@ -23,8 +23,9 @@ static func phase_name(phase: int, outcome: int) -> String:
 	if outcome == Outcome.Lost: return "Defeat"
 	match phase:
 		Phase.Player: return "Your turn"
-		Phase.Enemy: return "Enemy turn"
-		Phase.Level: return "Level phase"
+		# the level phase (spawns, wave starts) runs right after the enemies act: players read it as the enemy
+		# turn too (QA 2026-10-15: the chip said "Level phase" while the enemies moved)
+		Phase.Enemy, Phase.Level: return "Enemy turn"
 	return ""
 
 ## "1/3": the waves started so far (at least 1) of all; "-" without waves. waves = Array of WaveView.
@@ -98,9 +99,10 @@ static func icon_name(ref: String) -> String:
 
 ## The unit's model folder in a view path ("Assets/Art/Models/Archer/Archer Blender.prefab" → "Archer"), else "".
 static func model_name(view: String) -> String:
-	var parts := view.split("/")
-	var i := parts.find("Models")
-	return parts[i + 1] if i >= 0 and i + 1 < parts.size() else ""
+	# repo paths ("art/models/Archer.fbx") and the old Unity form ("Assets/Art/Models/Archer/Archer Blender.prefab")
+	# both resolve through ArtPaths.model to res://art/models/<Name>.fbx: the name is its file name
+	var path := ArtPaths.model(view)
+	return path.get_file().get_basename() if path != "" else ""
 
 # ------------------------------------------------------------------ inspector
 

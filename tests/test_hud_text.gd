@@ -23,6 +23,7 @@ func test_row_state() -> void:
 func test_top_bar_words() -> void:
 	assert_eq(HudText.phase_name(Phase.Player, Outcome.Running), "Your turn")
 	assert_eq(HudText.phase_name(Phase.Enemy, Outcome.Running), "Enemy turn")
+	assert_eq(HudText.phase_name(Phase.Level, Outcome.Running), "Enemy turn") # never "Level phase" (2026-10-15)
 	assert_eq(HudText.phase_name(Phase.Player, Outcome.Won), "Victory")
 	assert_eq(HudText.phase_name(Phase.Enemy, Outcome.Lost), "Defeat")
 	assert_eq(HudText.end_turn_label(Phase.Player, Outcome.Running), "End\nturn")
@@ -65,6 +66,8 @@ func test_numbers_and_names() -> void:
 	assert_eq(HudText.icon_name("Assets/Art/Icons/Abilities/Shoot.png#Shoot"), "Shoot")
 	assert_eq(HudText.icon_name("Assets/Art/Icons/Passives/Shielded.png"), "Shielded")
 	assert_eq(HudText.model_name("Assets/Art/Models/Archer/Archer Blender.prefab"), "Archer")
+	assert_eq(HudText.model_name("art/models/Archer.fbx"), "Archer") # repo paths (2026-10-15)
+	assert_eq(HudText.model_name("art/models/Fire Archer.fbx"), "Fire Archer")
 	assert_eq(HudText.model_name(""), "")
 	assert_eq(HudText.ability_key(0), "Ability1")
 	assert_eq(HudText.key_note("1", "Shift-click"), "Key 1 · Shift-click for quick cast")

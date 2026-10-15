@@ -227,6 +227,11 @@ func _on_chat(from: String, n: String, text: String) -> void:
 func _on_rtt(_ms: int) -> void:
 	refresh()
 
+## The host's × on a guest's slot: asks first (shared TdConfirm, danger), then removes them.
+func ask_kick(pid: String, who: String) -> TdConfirm:
+	return TdConfirm.ask(self, "Remove %s?" % (who if who != "" else "this player"), "They leave the room.",
+		"Remove", func(yes: bool): if yes and net != null: net.kick(pid), {"danger": true})
+
 func _on_kicked() -> void:
 	close()
 
@@ -427,7 +432,8 @@ func _slot_row(i: int, p, room: Dictionary, cap: int, h: float) -> Control:
 		x.size_flags_vertical = SIZE_SHRINK_CENTER
 		x.name = "Kick"
 		TdTooltipTrigger.attach(x, "", "Remove %s from the room" % p.get("name", ""))
-		x.clicked.connect(func(): net.kick(pid))
+		var who := str(p.get("name", ""))
+		x.clicked.connect(func(): ask_kick(pid, who))
 		holder.add_child(x)
 	return panel
 
