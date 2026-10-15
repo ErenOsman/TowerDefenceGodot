@@ -1,11 +1,12 @@
 class_name BattleOverlay
 extends CanvasLayer
-## The screen-space layer over the board (BattleOverlay.cs) and its parts: plates (HP and statuses following each
+## The screen-space layer over the board (BattleOverlay.cs) and its parts: selection rings (circles on screen), plates (HP and statuses following each
 ## entity), markers (forecast numbers, Kills tags), floaters (damage numbers and words), banners (round, phase,
 ## waves, messages) and the sequence marks (ring, dim, arrow). Values come from the Director's shown frame, never
 ## from GameState. Layer −1: under the HUD (layer 0 and up) and menus. Nothing here takes the pointer.
 
 var cam: Camera3D = null
+var rings: SelectRingLayer
 var plates: PlateLayer
 var markers: MarkerLayer
 var floaters: FloaterLayer
@@ -19,6 +20,9 @@ func _init() -> void:
 ## cam: the board camera; icon_of: StatusDef → Texture2D (or null).
 func setup(p_cam: Camera3D, icon_of: Callable = Callable()) -> void:
 	cam = p_cam
+	rings = SelectRingLayer.new() # the selection rings: true circles on screen, under the plates
+	rings.cam = cam
+	add_child(rings)
 	plates = PlateLayer.new()
 	plates.cam = cam
 	plates.icon_of = icon_of
@@ -55,6 +59,7 @@ func refresh(shown: ViewFrame, views: Dictionary, dt: float) -> void:
 	if plates == null: return
 	plates.timings = PresentationTimings.get_timings()
 	plates.refresh(shown, views, dt)
+	rings.tick()
 	markers.tick(views, plates.has_statuses)
 	floaters.tick(dt)
 	if cam is BoardCamera: banners.centre_x = (cam as BoardCamera).free_centre().x

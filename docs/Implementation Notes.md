@@ -10,7 +10,8 @@ content change: `./test.sh`, `tools/soak.gd`, regenerate the reference (`tools/g
 ## Deliberate differences
 - Camera picking corrects Godot's `project_ray_*`, which ignores a frustum camera's offset (GridSpace.ground_under).
 - VFX are CPUParticles3D approximations of the Shuriken kit (`game/level/vfx/`); no sound effect files exist yet (hooks only).
-- The Princess is a 3D prop placed on the board while her line shows (not a portrait beside the box).
+- The Princess is never drawn on the board (Eren 2026-10-15): she speaks as a visual-novel bust on the dialogue box's edge, her model rendered once per session into a transparent texture (`TdBust`, a SubViewport); the old on-board speaker prop is removed.
+- The selection ring (selected unit, and the tower lit from its tray piece at half strength) is a true circle on screen drawn by `SelectRingLayer` in the battle overlay, centred on the unit's projected feet, radius from the tile's size on screen (Eren 2026-10-15); aim / range / hover tile markers stay ground decals.
 - TdButton reserves "bleed" room for rims/rings so clipping containers never cut hovered/selected buttons (ability buttons: 143 px + 4 px gap on the action bar).
 - Camp: stations on a ring from `art/camp/layout.json` (Blender kit, free slots for later stations).
 - Descriptions and level intros come from the content JSON unchanged; wording fixes belong in `data/content`. The tutorial level is the exception: its guided lines live in `data/tutorial.json` (see "Tutorial lines" below).
@@ -75,7 +76,14 @@ grammar of `data/tutorial.json`). This section only says how the Godot build doe
   Notes: bottom-left "Click or press Space" on talk steps, the allowed action on action steps
   (`GuidedTutorial.action_note()`: "Click the Archer piece", "Place the Archer on a lit tile", "Click Tower Walk",
   "Shift-click Shoot"…), "Click to hide" on the free-play line; bottom-right "Tutorial · n/N" (+ the bobbing next
-  mark when it waits for a click). The Princess stands on the board as the 3D prop (no bust), a medallion on the plate.
+  mark when it waits for a click). The Princess is a **bust on the box** (Eren 2026-10-15), not a board prop: her
+  model (`res://art/models/Princess.fbx`) in its Idle, head and shoulders to the waist, turned 25° toward the text,
+  rendered once per session in a transparent SubViewport (`TdBust.bust()`: the whole figure at 1024×1280, the bust cut from its drawn pixels, ≤ 720 px tall) with a soft blurred drop shadow
+  (`TdBust.shadow_of`); without a renderer (headless) or the model, `art/portraits/Princess.png` stands in. It stands
+  on the box's bottom edge behind the box, 62 % past its left edge, 560 px tall, rising over the top edge, sliding in
+  when it first shows; docked at the top it stays upright and shortens so the head stays under the top bar
+  (`HudSequence._place_bust`); when the left edge would cover the ringed target it moves to the right edge, mirrored
+  (`HudSequence.bust_on_left`). No medallion on the name plate. Level intros use the same bust.
 - A refusal (`GuidedTutorial.refusal_text()`: "Not now: click the slime first.", "Finish this step first." on talk
   lines) replaces the bottom-left note for 2 s in the warning colour (`warn`); the box and the ringed target shake.
   The hint line under the bar stays hidden while the tutorial speaks.
@@ -155,13 +163,19 @@ How it is read:
   of: in front of the prop, beside it (the freer side first), above it — free = no prop's projected bounds (floors /
   halls excluded) and no other button (`TdStationWorld.place_buttons`). The Guild's Camp station is the bottom-left
   "← Camp" button plus the Guild Door as a hotspot (`TdStationWorld.hotspot`).
-- Camp: the Signpost prop itself opens the Guild; it has no station button (user decision 2026-10-14). It stands in
-  layout slot 4 (the "Missions" slot; prop `Signpost`, the map-kit piece: `GameApp.camp_scene` falls back to
-  `res://art/tiles/<name>.fbx`) and is a hotspot like the Guild Door (`TdStationWorld.hotspot`): hover glow and the
-  tooltip "Guild · missions and co-op", a click opens the Guild, a gold "New" floats by it until the first visit.
-  Before `GameApp.guild_unlocked()` it is dimmed, its tooltip says "Opens after Chapter 2" and a click shakes it.
-  The Camp's Multiplayer opens the lobby until the Guild opens, then becomes the shortcut "Multiplayer → Guild" (the
-  Guild with its lobby open, after the welcome card) and disappears once `profile.guildSeen` (UI review 2026-10-14).
+- Camp (Eren 2026-10-15, replaces the Signpost hotspot of 2026-10-14): a **Guild** station button ("Guild" /
+  "Missions and co-op", `camp.gd` STATIONS) at layout slot 5 (where Multiplayer stood; prop `Signpost`, the map-kit
+  piece: `GameApp.camp_scene` falls back to `res://art/tiles/<name>.fbx`); slot 4 is free. A small gold "New" sits on
+  the button's corner until the first Guild visit (`MissionUiLogic.signpost_tag(profile.guild_seen)`). No Multiplayer
+  in the Camp at all: it lives in the Guild. The Guild and Workshop buttons (gate `chapter2`) are **not shown** until
+  Chapter 2's last level is won (no locked look; the props stay); the first tour skips them, and after Chapter 2 the
+  next Camp visit runs a two-line mini tour (Guild, Workshop: `TOUR_OPEN`) once — `PlayerProfile.guild_tour_seen`
+  (saved `guildTourSeen`; set too when the first visit itself is after Chapter 2, skipped once the Guild was visited).
+- Camp ⇄ Guild is a slide (`SceneFlow.slide(id, dir)`): the new scene is built off-screen (one frame), then both move
+  together for `SLIDE_TIME` 0.45 s, ease-out cubic on unscaled time (the Camp out to the left, the Guild in from the
+  right; "← Camp" and the Guild Door slide back with dir -1); `SceneFlow._input` swallows every event while
+  `is_sliding`; the Guild's welcome card (and the Camp's tours) wait for `slide_finished`. Every other change stays
+  `go()` (a cut; the level through Loading). `slide_hold` poses a slide for renders (`tools/guild_shot.gd` slide_mid).
 - Mission board = `MissionBoardScreen` (`mission_board.gd`, a TdPopup over the Guild; `MissionBoard` is the rules
   class). Detail = `MissionDetail` (`mission_detail.gd`) **extends level_select.gd** (facts, enemies rule, preview,
   hand strip reused; the reward card becomes "Drops"; HandSlot gained `mark(tired_text, goes)`). Find a room → the
@@ -190,6 +204,25 @@ How it is read:
   `MissionBoard.found_in_text`); the old "Chapter 2 levels" / "(boss)" grouping is gone.
 - Renders: `tools/guild_shot.gd` (gives The Glutton Returns a "Win Hold the Gate first" requirement in memory only,
   to show a locked card).
+
+## Layout editor (dev, game/dev/layout_editor.gd, 2026-10-15)
+Eren moves the Camp and Guild props himself. F1 dev panel → Shortcuts → "Edit layout" (enabled while the Camp or
+the Guild is the current scene: any scene with `world: TdStationWorld` and a `LAYOUT` constant; same gate as the
+panel: debug builds or `-- --dev`). The panel closes and `TdLayoutEditor` (a CanvasLayer at 100, under the panel)
+takes every mouse event over the scene:
+- Left drag a prop (stations, the centre piece, decor; ground-sized pieces such as the Guild Floor / Hall are not
+  pickable): it moves on the board plane (camera ray → y = 0), snapped to 0.25 tiles, Shift = free. Q / E turn it
+  by 15° (`face_yaw` for stations, `yaw` for centre / decor), + / - or the wheel over a prop scale it by 0.1,
+  Delete removes a decor prop (stations and the centre cannot be removed), Esc stops. An overlay at the top shows the
+  selected prop's name, station and slot, tile, yaw and scale (`*` = unsaved); the selected prop glows.
+- The station buttons follow live (the scenes re-place them every frame from the props' projected boxes).
+- Ctrl+S writes `res://art/camp/layout.json` / `res://art/guild/layout.json` in the same schema: the file is
+  re-read at start and only `tile` / `face_yaw` / `yaw` / `scale` of the moved entries change; slot ids, stations,
+  rows, notes, ring, centre and board are kept; deleted decor entries are dropped; whole numbers are written as ints
+  (`JSON.stringify(…, " ")`, key order kept). Each prop knows its entry through `TdStationWorld.entries`
+  ({node, kind slot/centre/decor, index, prop}). Where res:// is read-only (an exported or web build) it writes
+  `user://layout_<place>.json` and copies the JSON to the clipboard: paste it into the repo's file.
+- Test: `tests/test_camp_flow.gd` (move / snap / turn / scale / delete, the saved schema, to a user:// path).
 
 ## Workshop screens (game/ui/screens/workshop.gd)
 - Opened from the Camp's Workshop station (`camp.gd` STATIONS: `open_workshop`, a TdPopup like Codex / Towers; the tour

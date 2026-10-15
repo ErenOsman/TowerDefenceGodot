@@ -307,7 +307,7 @@ func _statuses() -> void:
 func _tutorial() -> void:
 	await _open("tutorial", ["archer"])
 	await _frames(30)
-	print("intro line: %s | princess on board %s at %s" % [level.sequence.current.text if level.sequence != null else "-", level.princess_visible, level.speaker_prop_world()])
+	print("intro line: %s" % [level.sequence.current.text if level.sequence != null else "-"])
 	await _shot("tutorial_intro")
 	var s := level.session
 	for i in 20:

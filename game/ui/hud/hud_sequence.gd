@@ -102,8 +102,8 @@ func _ready() -> void:
 	_piece_ring.draw.connect(_draw_piece_ring)
 	dialogue = TdDialogueBox.new()
 	dialogue.size = Vector2(1100, 220)
-	# no bust beside the box: the Princess stands on the board (the board's speaker prop); only a small medallion
-	# on the name plate, as in the Unity build
+	# the Princess is a visual-novel bust on the box's left edge (Eren 2026-10-15: never on the board); the name
+	# plate has no medallion (the design doc's box has none) — the medallion stays only as a hidden node
 	_medal = HudArt.medallion(52, "medallion_ring", 5)
 	(_medal.get_node("Ring") as TextureRect).texture = HudSequence.teal_ring("medallion_ring")
 	_medal.position = Vector2(-4, -36)
@@ -114,7 +114,7 @@ func _ready() -> void:
 	dialogue.set_skip_key("")
 	dialogue.clicked.connect(_on_dialogue_clicked)
 	_wood_plate(dialogue)
-	dialogue.skip_clicked.connect(func(): if controller != null: controller.skip_sequence())
+	dialogue.skip_clicked.connect(ask_skip)
 	bubble = TdTextBubble.new()
 	bubble.set_anchors_preset(PRESET_FULL_RECT)
 	add_child(bubble)
@@ -240,9 +240,8 @@ func _process(delta: float) -> void:
 			_shown_text = ""
 			_layout()
 			dialogue.set_step_warning(false)
-			dialogue.show_line(_speaker(line), text, waits, null)
-			_medal.visible = portrait != null
-			HudArt.set_medallion(_medal, portrait)
+			dialogue.show_line(_speaker(line), text, waits, _bust_for(line))
+			_medal.visible = false
 			var step := ""
 			if run.count > 1: step = ("Tutorial · " if controller.is_tutorial else "") + "%d/%d" % [run.index + 1, run.count]
 			# the guided box's order: how it goes on bottom-left, "Tutorial · n/N" bottom-right (they were swapped
@@ -280,6 +279,7 @@ func _process(delta: float) -> void:
 		_dim.visible = false
 		_board_ring(null, false)
 		_place_piece_ring(null)
+		_place_bust(line, null)
 		dialogue.modulate.a = fade
 
 ## The guided tutorial's step in the dialogue box (never the bubble): the line (retyped only when its words change),
@@ -301,10 +301,8 @@ func _process_guided(guided: GuidedTutorial, run: SequenceRun, line: SequenceLin
 		var text := _color_tower_names(TooltipText.from_rich(line.text))
 		if text != _shown_text or not dialogue.is_shown():
 			if not dialogue.is_shown(): _mode_t = 0.0
-			dialogue.show_line(_speaker(line), text, waits, null)
-			var portrait: Texture2D = HudArt.portrait_named("Princess") if line.speaker == SequenceSpeaker.Princess else null
-			_medal.visible = portrait != null
-			HudArt.set_medallion(_medal, portrait)
+			dialogue.show_line(_speaker(line), text, waits, _bust_for(line))
+			_medal.visible = false
 		_shown_text = text
 		if waits: _note = HudText.how_it_goes_on(SequenceContinue.Click, line.wait_for, _skip_key())
 		elif not guided.hides_card: _note = "Click to hide" # the free-play line: the player may put it away
@@ -330,10 +328,50 @@ func _process_guided(guided: GuidedTutorial, run: SequenceRun, line: SequenceLin
 	var hole = ui_rect.get_center() if ui_rect != null else (_target(line, true) if _pointing else null)
 	var hole_r: float = (maxf(ui_rect.size.x, ui_rect.size.y) / 2.0 + 24.0) if ui_rect != null else 70.0
 	_set_dim(hole, hole_r, 0.3 * fade if guided.talking and hole != null and dialogue.is_shown() else 0.0)
-	var r := HudSequence.dialogue_rect(size, dialogue.size, _guided_target_rect(line), _dock_top)
+	var target = _guided_target_rect(line)
+	var r := HudSequence.dialogue_rect(size, dialogue.size, target, _dock_top)
 	_dock_top = r.position.y < size.y * 0.5
 	dialogue.position = r.position + Vector2(_shake_offset(), 0)
+	_place_bust(line, target)
 	dialogue.modulate.a = fade
+
+## The Princess's bust (Eren 2026-10-15: a visual-novel bust on the box, never a prop on the board): her model
+## rendered once (TdBust); while it renders, nothing; without a renderer or the model, her portrait image. null for
+## a line the Princess does not speak.
+func _bust_for(line: SequenceLine) -> Texture2D:
+	if line == null or line.speaker != SequenceSpeaker.Princess: return null
+	var t := TdBust.bust(TdBust.PRINCESS, self)
+	if t != null or TdBust.pending(TdBust.PRINCESS): return t
+	return HudArt.portrait_named("Princess")
+
+## The bust's full height (canvas px at 1080).
+const BUST_HEIGHT := 560.0
+
+## Keeps the bust on the box: its picture (it arrives a few frames after the first line), standing on the box's
+## bottom edge and rising over its top — always upright, shorter when the box is docked at the top so the head stays
+## under the top bar — on the left edge, or the right edge when the left one would cover the ringed `target`.
+func _place_bust(line: SequenceLine, target) -> void:
+	if not dialogue.is_shown(): return
+	var tex := _bust_for(line)
+	dialogue.set_portrait(tex)
+	if tex == null: return
+	var bottom := dialogue.position.y + dialogue.size.y
+	dialogue.portrait_height = clampf(bottom - HudLayout.TOP_BAR - 4.0, 120.0, BUST_HEIGHT)
+	var h := dialogue.portrait_height
+	var bust := Vector2(h * tex.get_size().x / maxf(1.0, tex.get_size().y), h)
+	dialogue.portrait_left = HudSequence.bust_on_left(Rect2(dialogue.position, dialogue.size), bust, target)
+
+## Which edge the bust stands on (true: left): the left unless it covers the target (a Rect2, or null) and the right
+## one covers less of it.
+static func bust_on_left(box: Rect2, bust: Vector2, target) -> bool:
+	if not (target is Rect2): return true
+	var t: Rect2 = (target as Rect2).grow(DOCK_MARGIN)
+	var left := Rect2(box.position.x - bust.x * 0.62, box.end.y - bust.y, bust.x, bust.y)
+	var right := Rect2(box.end.x - bust.x * 0.38, box.end.y - bust.y, bust.x, bust.y)
+	var hit_left := left.intersection(t).get_area() if left.intersects(t) else 0.0
+	if hit_left <= 0.0: return true
+	var hit_right := right.intersection(t).get_area() if right.intersects(t) else 0.0
+	return hit_right >= hit_left
 
 ## Exactly one light ring per line: the board's ring (sequence marks) goes round the world target the bubble
 ## points at, and is off while the bubble points at a HUD element (that ring is the HUD's). The HUD processes after
@@ -431,6 +469,21 @@ func _guided_marks(guided: GuidedTutorial, line: SequenceLine, dt: float) -> voi
 func _set_note(text: String, refusal: bool) -> void:
 	dialogue.set_step_warning(refusal)
 	dialogue.set_notes(text, _note_right)
+
+## The box's Skip: the guided tutorial asks first (Eren 2026-10-15: Skip ends the guidance into free play, a
+## misclick must not lose it); a plain sequence skips at once. Returns the question (null when none was asked).
+func ask_skip() -> TdConfirm:
+	if controller == null: return null
+	if controller.guided == null or controller.guided.finished:
+		controller.skip_sequence()
+		return null
+	var parent: Node = get_parent() if get_parent() != null else self
+	return TdConfirm.ask(parent, SKIP_TITLE, SKIP_TEXT, "Skip",
+		func(yes: bool): if yes and controller != null: controller.skip_sequence(),
+		{"cancel_text": "Keep going", "confirm_icon": TdTheme.texture("icon_skip")})
+
+const SKIP_TITLE := "Skip the tutorial?"
+const SKIP_TEXT := "You'll play the level without guidance."
 
 ## The Skip action's key (the continue key: Space by default).
 func _skip_key() -> String:
