@@ -1,6 +1,6 @@
 # Instinct — Design
 
-Written 2026-10-03 as a claude.ai doc; moved into the repo on 2026-10-05. This file is now the source of truth. Everything in the build plan is built; [Since the doc was written](#since-the-doc-was-written) lists what changed afterwards.
+Written 2026-10-03 as a claude.ai doc; moved into the repo on 2026-10-05. This file is now the source of truth. Godot pass 2026-10-15: code names are the Godot build's. Everything in the build plan is built (in the Godot build too); [Since the doc was written](#since-the-doc-was-written) lists what changed afterwards.
 
 **Instinct** is how an ability chooses its own aim when no player clicks a tile. Enemy turns, abilities that pick their own targets and shift-click quick cast all use the same rule: take the ability's valid aims, keep the ones it must take, sort them by its preferences, and break ties the same way every time.
 
@@ -130,12 +130,13 @@ Instinct lives in the engine-free simulation, next to targeting, because Bounce 
 
 | Layer | What it holds |
 | --- | --- |
-| `Game.Combat` | `InstinctDef` (Must condition, Prefer list, or a preset); `Instinct.Choose(state, chooser, ability, aims)` returns one aim or none; `Instinct.Rank` orders candidates for Pick; `Instinct.QuickCast`; `AbilityDef.instinct` (empty = the default from the table above); `Tags.Taunted`, `Tags.Redirected` |
-| Formulas | Queries `Target.PathProgress`, `Target.DamagedThisRound` (focus fire), `Target.AheadOnPath`; Area count and Area sum preferences with a filter; formulas sit in an `Instinct` slot, validated like every other formula |
-| `Game.Level` | `EnemyBrain` asks `Instinct.Choose` |
-| `Game.Data` | `AbilityAsset.instinct` (preset dropdown, or custom Must and Prefer); the converter and `AssetValidator` cover it; the Attack step's bounce and the Pick step have an instinct field |
-| Editor | `InstinctDrawer`: preset in one line, expanding to Must and Prefer when custom |
-| GameScene | `LevelController.QuickCast(ability)`, the Shift preview and hint texts |
+| `sim/combat/` | `InstinctDef` (Must condition, Prefer list, or a preset); `Instinct.choose(state, caster, ability, aims)` returns one aim or none; `Instinct.rank` orders candidates for Pick; `Instinct.quick_cast`; `AbilityDef.instinct` (empty = the default from the table above); `Tags.Taunted`, `Tags.Redirected` |
+| `sim/formulas/`, `sim/combat/combat_vocabulary.gd` | Queries `Target.PathProgress`, `Target.DamagedThisRound` (focus fire), `Target.AheadOnPath`; Area count and Area sum preferences with a filter; formulas sit in an `Instinct` slot, validated like every other formula |
+| `sim/level/` | `EnemyBrain` asks `Instinct.choose` (`EnemyBrain.choose_aim`) |
+| `sim/data/` | An ability entry's `instinct` (`{"preset": "Default", "must": "", "prefer": []}`: a preset, or custom Must and Prefer); the converter and `AssetValidator` cover it; the Attack step's bounce and the Pick step have an instinct field |
+| `game/level/`, `game/ui/hud/` | `LevelController.quick_cast(ability)`, the Shift preview and hint texts (`HudActionBar`) |
+
+The Unity build also had an Inspector drawer (`InstinctDrawer`: the preset in one line, expanding to Must and Prefer when custom); in the Godot build the instinct is edited in the content JSON or the wiki Content Editor.
 
 The tie-break after the last preference is fixed: the target's entity id, then the tile in canonical order. The same state therefore always gives the same choice, which keeps replays exact and makes previews honest.
 
