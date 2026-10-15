@@ -1,6 +1,6 @@
 # Tiles — Design
 
-Status: **steps 1–3 of the build plan are built** (terrain and the live map; the map as layers; changing tiles, 2026-10-05). The presentation (step 4) is not. How a level's map is described, stored and changed. The map is three text layers (terrain, build, road) instead of one mixed map text, and it is part of the battle state instead of a fixed backdrop. Units, waves and everything else in a level stay as they are.
+Status: **steps 1–3 and 5 of the build plan are built** (terrain and the live map; the map as layers; changing tiles, 2026-10-05; the visual and props layers, 2026-10-09), in the Godot build too (Godot pass 2026-10-15). The presentation of a changing tile (step 4) is not. How a level's map is described, stored and changed. The map is three text layers (terrain, build, road) instead of one mixed map text, and it is part of the battle state instead of a fixed backdrop. Units, waves and everything else in a level stay as they are.
 
 ## Why change it
 
@@ -25,7 +25,7 @@ Chapter 2 already pushed against this: "a road across a chasm" is a special case
 
 ### Terrain (a content type)
 
-A **Terrain** asset (`Create > Game > Terrain`, `Content/Terrains.json`) says what a tile does for the rules.
+A **Terrain** entry (`data/content/Terrains.json`, keys `Terrain/<Name>`) says what a tile does for the rules.
 
 | Field | Meaning | Ground | Wall | Chasm |
 | --- | --- | --- | --- | --- |
@@ -35,9 +35,9 @@ A **Terrain** asset (`Create > Game > Terrain`, `Content/Terrains.json`) says wh
 | `blocksSight` | Line of sight stops here (patterns that need it) | no | yes | no |
 | `tags` | For conditions and abilities (`Solid`, `Liquid`…) | Solid | Solid | — |
 | `whenUnstandable` | What happens to a unit standing here when the tile becomes this terrain and the unit cannot stand on it: **Die** (default) or **Push** (to the nearest tile it can stand on) | Die | Push | Die |
-| `view` | The tile's look (prefab or material); art only | | | |
+| `view` | The tile's look (a model or material path); art only | | | |
 
-The three above ship as the built-in terrains, so existing rules keep their meaning. New terrains are new assets; for example, a **Bridge** is Everyone + no projectile block, looking like planks over a chasm.
+The three above ship as the built-in terrains, so existing rules keep their meaning. New terrains are new entries; for example, a **Bridge** is Everyone + no projectile block, looking like planks over a chasm.
 
 ### Tile
 
@@ -118,12 +118,12 @@ The rules read only terrain, build and road. What a tile **looks like** is separ
 
 ### Tile (a content type)
 
-A **Tile** asset (`Create > Game > Tile`, `Data/Tiles/`, `Content/Tiles.json`) is one piece of the map kit.
+A **Tile** entry (`data/content/Tiles.json`, keys `Tile/<Name>`) is one piece of the map kit.
 
 | Field | Meaning |
 | --- | --- |
 | `id` | What the layers write: letters, digits and `_` only (`ground_a`, `road_corner`, `tree_pine`) |
-| `view` | The prefab (a map-kit model) |
+| `view` | The map-kit model (`art/tiles/<Piece>.fbx`, through `ArtPaths`) |
 | `layer` | Ground (a `visual` piece) or Prop (a `props` piece) |
 | `sides` | At its default facing, the sides that matter for fitting, as letters of `NESW`: the sides a road piece joins (`NS` straight, `NE` corner, `NES` T, `NESW` cross, `N` end, empty single), or the sides an edge piece borders another terrain (a chasm's rim). Empty for plain pieces |
 
@@ -213,9 +213,11 @@ Three text layers of the same size, one character per tile, top row first, then 
 - **Build:** `+` where towers may be placed, `.` elsewhere.
 - **Road:** box characters as above, `.` for no road.
 - **Paths:** tile lists, several positions to a line. The order cannot be drawn in a grid (loops, branches), so paths stay lists.
-- `bash Tools/Offline/offline.sh format` writes hand-edited files the way the editor writes them.
+- `python3 tools/content_format.py` writes hand-edited files in the content layout (docs/CONTENT.md "Layout").
 
 ## Level Editor
+
+The Level Editor was a Unity editor window; the Godot build has none yet, and levels are edited as JSON (by hand or in the wiki Content Editor, whose Check plays the level). The design stays for a future editor:
 
 - **Terrain tool:** pick any Terrain asset and paint it; a terrain the level has not used yet gets a character in `terrainKeys` (its first letter, or a free one). **Build tool:** click or drag to switch building on or off.
 - **Path tool:** click or drag tiles in walking order. A path may cross itself; dragging back or right-click removes the last tile; a click away from the end leaves a gap. The road layer follows the paths ("Road from paths" redraws it).
@@ -235,7 +237,7 @@ Three text layers of the same size, one character per tile, top row first, then 
 
 ## Migration
 
-Breaking changes are fine before 1.0. One-off converters rewrote `Content/Levels.json`. The first went from the old map text to a record per tile; the second went from that to the three layers. The road layer was drawn from the paths, and a path whose first tile is on the map's edge comes in from that edge. Validate All, the tests and the reference pages gave the same results as before.
+Breaking changes are fine before 1.0. One-off converters rewrote the levels file (then Unity's `Content/Levels.json`). The first went from the old map text to a record per tile; the second went from that to the three layers. The road layer was drawn from the paths, and a path whose first tile is on the map's edge comes in from that edge. Validate All, the tests and the reference pages gave the same results as before.
 
 ## What stays the same
 
@@ -252,10 +254,12 @@ Breaking changes are fine before 1.0. One-off converters rewrote `Content/Levels
 ## Build plan
 
 1. **Terrain assets and the live map** (built 2026-10-05). The Terrain type, and the map in `GameState`, with every rule reading it.
-2. **The map as layers** (built 2026-10-05). Levels keep terrain, build and road as text layers, and their paths as tile lists. Ground, Wall and Chasm became Terrain assets. Units keep their own `PathStep`, so paths can loop. The editor paints the layers and draws paths; the converter rewrote every level. Tested: a looping path (walking, blocking at its crossing), the layers and the road drawn from paths.
-3. **Changing tiles** (built 2026-10-05). The Change Terrain step and level event, the TileChanged event and the OnTileChanged trigger (facts X, Y), falling (Fell) and pushing, `OnTerrain` / `OnTerrainTag`, and tests. Differences from this doc are in the Implementation Notes: `onlyOn` terrain names instead of a condition, and no `Tile.` subject in formulas. The Level Editor does not show Change Terrain events on the map yet.
-4. **Presentation.** Terrain views, road pieces from the links, the change beat, and the fall death.
-5. **Visual and props layers** (data built 2026-10-09: the Tile type, the layers, `TileLook`, the checks, the kit's 29 pieces as Tile assets; the board and the editor tools built the same day; the kit pieces' default sides confirmed by the Blender agent the same day; the board's frame is automatic too, 2026-10-10: Border pieces on the map's outer tiles). The Tile type, the two layers, the automatic look (`roadTiles`, terrain `tiles` / `buildTiles` / `edgeTiles`), validation, the board built from map-kit pieces, the Level Editor tools. The kit's pieces become Tile assets.
+2. **The map as layers** (built 2026-10-05). Levels keep terrain, build and road as text layers, and their paths as tile lists. Ground, Wall and Chasm became Terrain entries. Units keep their own path step (`Entity.path_step`), so paths can loop. A converter rewrote every level. Tested: a looping path (walking, blocking at its crossing), the layers and the road drawn from paths.
+3. **Changing tiles** (built 2026-10-05). The Change Terrain step and level event, the TileChanged event and the OnTileChanged trigger (facts X, Y), falling (Fell) and pushing, `OnTerrain` / `OnTerrainTag`, and tests. Differences from this doc are in the Implementation Notes (docs/archive): `onlyOn` terrain names instead of a condition, and no `Tile.` subject in formulas.
+4. **Presentation.** Terrain views, road pieces from the links, the change beat, and the fall death. Not built: the board (`BoardView`) is built once from the map and does not redraw a changed tile.
+5. **Visual and props layers** (built 2026-10-09; the board's frame is automatic too, 2026-10-10: Border pieces on the map's outer tiles). The Tile type, the two layers, the automatic look (`roadTiles`, terrain `tiles` / `buildTiles` / `edgeTiles`, `TileLook`), validation, the kit's pieces as Tile entries, and the board built from map-kit pieces (`game/board/board_view.gd`; a tile without a piece gets a placeholder block).
+
+The sim parts (steps 1–3, the data of step 5) are the C# port in `sim/`; the board is `BoardView`. History: in the Unity project the Level Editor window painted the layers, drew paths and had the Visual and Props tools (step 5); it did not show Change Terrain events on the map yet.
 
 ## Decisions
 
