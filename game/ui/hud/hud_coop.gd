@@ -455,13 +455,15 @@ class PassDial extends Control:
 		draw_circle(p + Vector2(0, -R * 0.15), R * 0.8, Color(fill.lightened(0.08), 0.6) if on else Color(fill, 0.0))
 		var lc := TdTheme.color("cream.100") if on else Color(TdTheme.color("cream.100"), 0.45)
 		# ↻ above "Pass"
-		var ic := p + Vector2(0, -9)
+		# the face sits 5 px left of the coin's centre: End turn covers the coin's right edge, and "Pass" touched its
+		# rim (QA round 2)
+		var ic := p + Vector2(-5, -9)
 		draw_arc(ic, 7.0, deg_to_rad(-50), deg_to_rad(240), 20, lc, 2.4, true)
 		var tip := ic + Vector2.from_angle(deg_to_rad(-50)) * 7.0
 		draw_colored_polygon(PackedVector2Array([tip + Vector2(-4.5, -3.0), tip + Vector2(3.5, -2.0), tip + Vector2(-0.5, 4.0)]), lc)
 		var font: Font = TdTheme.font("plinth")
 		var tw := font.get_string_size("Pass", HORIZONTAL_ALIGNMENT_LEFT, -1, 18).x
-		draw_string(font, p + Vector2(-tw / 2.0, 16), "Pass", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, lc)
+		draw_string(font, p + Vector2(-tw / 2.0 - 5.0, 16), "Pass", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, lc)
 		# the key chip on the coin's lower-left edge
 		var keys = get_tree().root.get_node_or_null("KeyBinds")
 		var k: String = keys.first("Pass") if keys != null else "Tab"

@@ -69,6 +69,9 @@ func is_open() -> bool:
 
 ## Keys that close it (Esc), not on the frame it opened (the key that opened it is still "pressed").
 func _process(_delta: float) -> void:
+	# a window whose content got shorter (a wrapped line measured before its width was known) keeps its old height:
+	# `resized` only fires when it grows; the victory window had 30 px of empty frame under its buttons (QA round 2)
+	if visible and panel != null and not panel.size.is_equal_approx(panel.get_combined_minimum_size()): _centre()
 	if not is_open() or not closable or Engine.get_process_frames() == _opened_frame: return
 	if _sub_panel_open(): return
 	var keys = get_tree().root.get_node_or_null("KeyBinds")

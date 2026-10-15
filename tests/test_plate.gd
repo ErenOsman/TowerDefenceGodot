@@ -48,7 +48,7 @@ func test_plate_layout_round_the_bar_centre() -> void:
 	assert_eq(bar.size, Vector2(328, 20), "full: 164 × 10, × the scale (the width given is ignored)")
 	assert_num(r.row_bottom, -32.0, "full chips 11 over the bar, × the scale")
 	var b: Rect2 = r.backing
-	assert_eq(b.size, Vector2((164 + 16) * 2, 74 * 2), "backing: 8 / 6 padding round the bar, chips and pills")
+	assert_eq(b.size, Vector2((164 + 16) * 2, 78 * 2), "backing: 8 / 6 padding round the bar, chips and pills")
 	assert_num(b.end.y, bar.end.y + 12.0, "the backing 6 under the bar")
 	assert_num(b.get_center().x, 0.0)
 	r = KitPlate.plate_rects(true, 0.0, 1.0, false)

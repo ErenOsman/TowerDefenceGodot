@@ -456,6 +456,7 @@ func centre_of(c: Control) -> Vector2:
 
 func wheel(p: Vector2, up: bool, n := 1) -> void:
 	for i in n:
+		progress() # 50 notches at ~1 fps outlast the watchdog
 		move(p)
 		button(p, MOUSE_BUTTON_WHEEL_UP if up else MOUSE_BUTTON_WHEEL_DOWN, true)
 		await frames(1)
@@ -511,6 +512,7 @@ func wait(seconds: float) -> void:
 func settle() -> void:
 	for i in 900:
 		await process_frame
+		if i % 30 == 0: progress() # a slow-motion enemy phase at ~1 fps outlasts the 150 s watchdog
 		if level == null or level.director == null or not level.director.busy: break
 	await frames(2)
 	progress()

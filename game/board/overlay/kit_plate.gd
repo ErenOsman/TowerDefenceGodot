@@ -13,7 +13,8 @@ const FULL_WIDTH := 164.0
 const ROW_GAP := 11.0         # the bar's top → the chip row's bottom (the prefab's StatusBar anchoredPosition.y)
 const COMPACT_DROP := 6.0     # compact chips sit lower (no pills to clear; user, 2026-10-11)
 const FULL_CHIP := 32.0
-const PILL_ROOM := 9.0        # the time / stack pills reach this far over the chips
+const PILL_ROOM := 13.0       # the time / stack pills reach this far over the chips (9 let the stack pill sit on
+                              # the backing's rim: QA round 2)
 const BACKING_PAD := Vector2(8.0, 6.0)
 
 ## StatusDef → Texture2D (the status icon), or null.

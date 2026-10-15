@@ -23,7 +23,10 @@ var _subtitle: Label
 static func pause_subtitle(c: LevelController) -> String:
 	if c == null or c.session == null: return ""
 	var parts: Array[String] = []
-	if c.level != null and c.level.display_name != "": parts.append(c.level.display_name)
+	# a mission says its own name, like its end screen ("Patrol", not the map's "Two Roads": QA round 2)
+	var m: MissionDef = c.mission if "mission" in c else null
+	if m != null and m.name != "": parts.append(m.name)
+	elif c.level != null and c.level.display_name != "": parts.append(c.level.display_name)
 	var f: ViewFrame = c.shown
 	parts.append("Round %d" % (f.round if f != null else c.session.round))
 	if f != null and not f.waves.is_empty(): parts.append("Wave " + HudText.wave_text(f.waves))
@@ -62,7 +65,10 @@ func _add(b: TdButton) -> TdButton:
 
 func open() -> void:
 	var c := controller
-	leave_button.text = "Quit to " + (c.leave_label.to_lower() if c != null else "level select")
+	# "Quit to level select", "Quit to main menu", but the Guild keeps its capital (a place, as on the end screen's
+	# button: QA round 2)
+	var home: String = c.leave_label if c != null else "Level select"
+	leave_button.text = "Quit to " + (home if home == "Guild" else home.to_lower())
 	_subtitle.text = pause_subtitle(c)
 	codex_button.visible = ResourceLoader.exists(CODEX_SCENE) and not (c != null and c.is_tutorial)
 	_resume_scale = Engine.time_scale if Engine.time_scale > 0.0 else 1.0

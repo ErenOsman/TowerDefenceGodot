@@ -18,6 +18,8 @@ var _reasons: Array = []     # String per button ("" castable)
 var _passives: Array = []    # TdIconChip per passive
 var _owner_key := ""
 var _caster: Entity = null
+## The press of the click being handled was a double click's second press (that click is not a toggle).
+var _double_press := false
 var casting := false
 ## The aiming button's lift and how far the others dim.
 const AIM_LIFT := 5.0
@@ -160,6 +162,9 @@ func _rebuild(list: Array, passives: Array) -> void:
 		b.size = holder.custom_minimum_size
 		TdTooltipTrigger.attach(b)
 		b.clicked.connect(_on_click.bind(i))
+		# the gui_input signal comes before the button's own handling: remember whether this press is a double click's
+		b.gui_input.connect(func(ev: InputEvent):
+			if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and ev.pressed: _double_press = ev.double_click)
 		b.denied.connect(_on_denied.bind(i))
 		b.hover_changed.connect(_on_hover.bind(i))
 		_buttons.append(b)
@@ -180,6 +185,10 @@ func _rebuild(list: Array, passives: Array) -> void:
 
 func _on_click(i: int) -> void:
 	if _caster == null or i >= _abilities.size(): return
+	# a double click counts once: its second click would cancel the aim the first one started (QA round 2)
+	var repeat := _double_press
+	_double_press = false
+	if repeat: return
 	if controller.quick_cast_held: controller.quick_cast(_abilities[i])
 	else: controller.toggle_aim(_abilities[i])
 

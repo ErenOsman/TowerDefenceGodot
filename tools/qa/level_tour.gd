@@ -7,6 +7,9 @@ extends "res://tools/qa/qa_base.gd"
 ##   speed, Always Show Health) · end (a real win and a loss: end screens) · tutorial (every guided step the allowed
 ##   way plus a wrong action at each, Skip) · ch2 (The Drummer: enemy abilities, statuses) · mission (GameApp.play_mission
 ##   through SceneFlow, its end screen) · coop (stub relay: Pass, tracker, wait reasons) · intro (a level intro in the box)
+##   · edge (wrong inputs: keys 1–9 past the last ability, double clicks on a piece / tile / ability / End turn,
+##   Esc and right-click chains, Enter and P in the enemy phase, the wheel at its limits while placing and over the
+##   HUD, the window resized to 1280×720 and back mid-level)
 ## Uses its own save (user://qa_tour.json); the real save is untouched.
 
 var scenario := "hud"
@@ -73,6 +76,7 @@ func _run() -> void:
 		"mission": await s_mission()
 		"coop": await s_coop()
 		"intro": await s_intro()
+		"edge": await s_edge()
 		_: print("unknown scenario ", scenario)
 	_flush_log()
 	print("QA DONE %s: %d findings, %d shots" % [prefix, _found.size(), _shot_n])
@@ -1148,3 +1152,173 @@ func s_coop() -> void:
 	await frames(6)
 	await wait(0.4)
 	check_unhovered("coop")
+
+# ------------------------------------------------------------------ scenario: wrong inputs (keys, double clicks, chains, resize)
+
+func s_edge() -> void:
+	_save()
+	if not await _start_level(level_id): return
+	level.skip_sequence()
+	await settle()
+	park()
+	# keys 1–9 with nothing selected, then with a tower with fewer abilities
+	for k in 9: await key(KEY_1 + k)
+	await wait(0.3)
+	expect(level.aiming == null, "g-stuck", "keys 1-9 idle", "an ability key with nothing selected aimed something")
+	await step("keys_idle", true)
+	await back_to_idle("keys idle")
+	var arch := piece_for("archer")
+	var tiles := build_tiles(2, arch.tower_id)
+	# rapid double click on a piece: must not leave placing half-on
+	var ap := centre_of(arch)
+	move(ap)
+	await frames(2)
+	button(ap, MOUSE_BUTTON_LEFT, true); await frames(1)
+	button(ap, MOUSE_BUTTON_LEFT, false); await frames(1)
+	button(ap, MOUSE_BUTTON_LEFT, true, true); await frames(1)
+	button(ap, MOUSE_BUTTON_LEFT, false)
+	await wait(0.4)
+	note("double click on a piece: placing %s" % level.placing)
+	expect(level.placing != null, "g-stuck", "piece double click", "a double click on a piece left nothing picked")
+	await step("piece_double_click", true)
+	if level.placing == null: await click_control(arch)
+	await wait(0.2)
+	# double click on a lit tile: one placement, no Info opened over it, no error
+	var tp := tile_screen(tiles[0])
+	move(tp)
+	await frames(3)
+	button(tp, MOUSE_BUTTON_LEFT, true); await frames(1)
+	button(tp, MOUSE_BUTTON_LEFT, false); await frames(1)
+	button(tp, MOUSE_BUTTON_LEFT, true, true); await frames(1)
+	button(tp, MOUSE_BUTTON_LEFT, false)
+	park()
+	await settle()
+	await wait(0.6)
+	var archer: Entity = level.session.placed_tower(arch.tower_id)
+	expect(archer != null, "g-stuck", "tile double click", "a double click on a lit tile placed nothing")
+	await step("tile_double_click", true)
+	note("after double click on a tile: info open %s, selected %d" % [hud.info.is_open(), level.selected])
+	await back_to_idle("tile double click")
+	if archer == null: return
+	await click(tile_screen(archer.pos))
+	await wait(0.3)
+	var n_ab := archer.abilities.size()
+	for k in range(n_ab, 9):
+		await key(KEY_1 + k)
+	await wait(0.3)
+	expect(level.aiming == null, "g-stuck", "keys beyond", "a key past the last ability aimed something")
+	expect(level.selected == archer.id, "g-stuck", "keys beyond", "a key past the last ability dropped the selection")
+	await step("keys_beyond_abilities", true)
+	note("keys %d-9 with %d abilities: aiming %s, said %s" % [n_ab + 1, n_ab, level.aiming, said.slice(-1)])
+	# Shift+N and Ctrl+N with too-high N
+	await key(KEY_9, true)
+	await wait(0.3)
+	await step("shift9")
+	# a double click on an ability button: aims (once), does not toggle back off
+	var walk_b := ability_named(archer, false)
+	if walk_b != null:
+		var bp := centre_of(hud.action_bar.button(archer.abilities.find(walk_b)))
+		move(bp)
+		await frames(2)
+		button(bp, MOUSE_BUTTON_LEFT, true); await frames(1)
+		button(bp, MOUSE_BUTTON_LEFT, false); await frames(1)
+		button(bp, MOUSE_BUTTON_LEFT, true, true); await frames(1)
+		button(bp, MOUSE_BUTTON_LEFT, false)
+		await wait(0.3)
+		expect(level.aiming == walk_b, "g-stuck", "ability double click", "a double click on an ability button left it not aiming (%s)" % level.aiming)
+		await step("ability_double_click", true)
+		await key(KEY_ESCAPE)
+		await wait(0.3)
+	# Esc / right click chains: aiming → Esc → Esc (deselect? pause?) → Esc
+	var walk := ability_named(archer, false)
+	if walk != null:
+		await key(KEY_1 + archer.abilities.find(walk))
+		await wait(0.2)
+	var chain := []
+	for i in 4:
+		await key(KEY_ESCAPE)
+		await wait(0.4)
+		chain.append("aim %s sel %d pause %s" % [level.aiming != null, level.selected, hud.pause.is_open()])
+	note("Esc chain from aiming: %s" % str(chain))
+	await step("esc_chain", true)
+	await back_to_idle("esc chain")
+	await click(tile_screen(archer.pos))
+	await wait(0.3)
+	if walk != null:
+		await key(KEY_1 + archer.abilities.find(walk))
+		await wait(0.2)
+	chain = []
+	for i in 4:
+		await click(Vector2(1300, 650), MOUSE_BUTTON_RIGHT)
+		await wait(0.3)
+		chain.append("aim %s sel %d pause %s" % [level.aiming != null, level.selected, hud.pause.is_open()])
+	note("right click chain from aiming: %s" % str(chain))
+	await step("right_chain", true)
+	# pause open: right click chains and Esc
+	await key(KEY_ESCAPE)
+	await wait(0.5)
+	await key(KEY_ESCAPE)
+	await wait(0.5)
+	note("Esc twice from idle: pause %s" % hud.pause.is_open())
+	await back_to_idle("esc twice")
+	# rapid double click on End turn: one enemy phase only
+	var r0 := level.session.round
+	var ep := centre_of(hud.top_bar.end_turn)
+	move(ep)
+	await frames(2)
+	button(ep, MOUSE_BUTTON_LEFT, true); await frames(1)
+	button(ep, MOUSE_BUTTON_LEFT, false); await frames(1)
+	button(ep, MOUSE_BUTTON_LEFT, true, true); await frames(1)
+	button(ep, MOUSE_BUTTON_LEFT, false)
+	await frames(6)
+	await step("end_turn_double", true)
+	park()
+	await settle()
+	note("End turn double click: round %d → %d" % [r0, level.session.round])
+	expect(level.session.round <= r0 + 1, "g-stuck", "End turn double click", "a double click ended two rounds (%d → %d)" % [r0, level.session.round])
+	# Enter pressed during the enemy phase
+	Engine.time_scale = 0.4
+	var r1 := level.session.round
+	await key(KEY_ENTER)
+	await frames(4)
+	await key(KEY_ENTER)
+	await key(KEY_P)
+	await wait(0.4)
+	await step("enter_enemy_phase_pause", true)
+	note("Enter twice + P during the enemy phase: round %d → %d, pause %s" % [r1, level.session.round, hud.pause.is_open()])
+	await back_to_idle("enemy phase pause")
+	Engine.time_scale = 1.0
+	await settle()
+	# wheel at the limits while placing (zoom must not place / cancel)
+	var arch2 := piece_for("archer", 1)
+	if arch2 != null and level.session.energy >= 1:
+		await click_control(arch2)
+		await wait(0.2)
+		await wheel(Vector2(900, 500), true, 30)
+		await wheel(Vector2(900, 500), true, 6)
+		await wait(0.5)
+		await step("wheel_in_limit_placing", true)
+		await wheel(Vector2(900, 500), false, 50)
+		await wait(0.8)
+		await step("wheel_out_limit_placing", true)
+		note("wheel while placing: placing %s distance %.2f" % [level.placing != null, level.camera.distance_target])
+		await back_to_idle("wheel placing")
+	# wheel over the HUD (tray / card) must not zoom
+	var d0 := level.camera.distance_target
+	await click(tile_screen(archer.pos))
+	await wait(0.3)
+	await wheel(centre_of(hud.tray), true, 4)
+	if hud.inspector.visible: await wheel(centre_of(hud.inspector), true, 4)
+	await wait(0.3)
+	note("wheel over the HUD: distance %.2f → %.2f" % [d0, level.camera.distance_target])
+	expect(absf(level.camera.distance_target - d0) < 0.01, "camera", "wheel over HUD", "the wheel over the tray / card zoomed the board")
+	# resize mid-level: 1280×720 and back
+	var orig := DisplayServer.window_get_size()
+	for sz in [Vector2i(1280, 720), orig]:
+		DisplayServer.window_set_size(sz)
+		await frames(12)
+		await wait(1.0)
+		note("window %s → root %s visible %s" % [sz, root.size, root.get_visible_rect().size])
+		await step("resized_%dx%d" % [sz.x, sz.y], true)
+		await hover(hud.top_bar.end_turn, "resized end turn %d" % sz.x)
+	await back_to_idle("end of edge")

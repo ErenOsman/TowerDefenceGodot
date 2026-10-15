@@ -57,6 +57,7 @@ var _scale := 1.0
 var _shake_t := 1.0
 var _clock := 0.0
 var _deny_left := 0.0
+var _double_press := false
 
 func _init() -> void:
 	custom_minimum_size = SLOT
@@ -127,11 +128,13 @@ func _ready() -> void:
 	_hp.position = Vector2((SLOT.x - 100) / 2.0, SLOT.y - 12)
 	_hp.outlined_label = true
 	add_child(_hp)
-	_hp_label = HudArt.label("", "micro", TdTheme.color("cream.100"), 20)
+	# 18 px (the floor) between the medallion and the plate, 3 px clear of the plate (QA round 2: at 20 px it
+	# touched the plate once the fallback fonts stopped inflating line heights)
+	_hp_label = HudArt.label("", "micro", TdTheme.color("cream.100"), 18)
 	_hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_hp_label.position = Vector2(0, PLATE_Y - 23)
-	_hp_label.size = Vector2(SLOT.x, 22)
+	_hp_label.position = Vector2(0, PLATE_Y - 24)
+	_hp_label.size = Vector2(SLOT.x, 20)
 	TdTheme.outline(_hp_label, 4)
 	_hp_label.visible = false
 	add_child(_hp_label)
@@ -207,9 +210,13 @@ func deny(reason: String) -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
-		if Rect2(Vector2.ZERO, size).has_point(event.position): pressed.emit(self)
+		# a double click counts once: its second release would put the piece straight back (QA round 2: a double
+		# click on a piece left nothing picked)
+		if Rect2(Vector2.ZERO, size).has_point(event.position) and not _double_press: pressed.emit(self)
+		_double_press = false
 		accept_event()
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		_double_press = event.double_click
 		accept_event()
 
 func _restyle() -> void:
