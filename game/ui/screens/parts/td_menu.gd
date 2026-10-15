@@ -293,12 +293,14 @@ static func pill(bbcode: String, bg: Color, fg: Color, size := 20, border := Col
 	if border.a > 0.0:
 		sb.border_color = border
 		sb.set_border_width_all(2)
-	sb.content_margin_left = 10; sb.content_margin_right = 12
+	sb.content_margin_left = 11; sb.content_margin_right = 15 # room for the last glyph inside the rounded corner
 	sb.content_margin_top = 1; sb.content_margin_bottom = 2
 	p.add_theme_stylebox_override("panel", sb)
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var r := rich(bbcode, "body", fg, size)
 	r.autowrap_mode = TextServer.AUTOWRAP_OFF
+	r.fit_content = true
+	r.clip_contents = false # never clip the last glyph when the measured width is a pixel short
 	r.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	p.add_child(r)
 	return p
