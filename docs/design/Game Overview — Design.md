@@ -1,6 +1,6 @@
 # Game Overview — Design
 
-Oct 2, 2026 · @Eren
+Oct 2, 2026 · @Eren · Godot pass 2026-10-15
 
 ## Summary
 
@@ -167,7 +167,7 @@ Nothing from a level carries over to the next. Progress is meta: completing leve
 
 ## Changes the system docs need
 
-The answers above changed thirteen things in the system docs. The system docs themselves were not rewritten: the code implements the changes, and `Docs/Combat — Implementation Notes.md` records how.
+The answers above changed thirteen things in the system docs. The system docs themselves were not rewritten: the code implements the changes (the Unity C#, ported 1:1 to the Godot build's `sim/`), and [Combat — Implementation Notes (Unity C#)](../archive/Combat%20—%20Implementation%20Notes%20(Unity%20C%23).md) records how. The states below hold for the Godot build.
 
 | Change | State |
 | --- | --- |
