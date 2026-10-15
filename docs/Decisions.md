@@ -47,6 +47,7 @@ Format: date · decision · reason. The commit that made the change is in bracke
 
 | Date | Decision | Reason |
 | --- | --- | --- |
+| 2026-10-15 | No Esc key chip on Back, Continue or Cancel buttons (Esc still works); the main menu's Play is always the blue primary, Continue is a wood button; Settings rows alternate two browns (wood and a slightly darker wood) | Eren |
 | 2026-10-15 | End screen buttons: no "Next level". Three buttons: **Level select** (back to the list; for a mission: **Guild**), **Return** (the main menu, or the Camp once it is unlocked), **Retry** | Eren ("Next level tuşu çok gereksiz") |
 | 2026-10-15 | The Princess is NOT drawn on the board. She speaks as a visual-novel bust standing on the dialogue box's left edge, above the text (tutorial and level intros alike); the on-board speaker prop is removed. Supersedes the 2026-10-13 note that made her a board prop | Eren ("visual novellerdeki gibi konuşmanın üstünde olacak", repeated) |
 | 2026-10-15 | The selection ring around a selected unit is a true circle on screen (a screen-space overlay), not a ground decal squashed by the perspective | Eren ("çember basık") |
