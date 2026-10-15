@@ -1,5 +1,7 @@
 # AI usage
 
+Godot pass 2026-10-15: the inventory describes the Godot build (the game since 2026-10-15); the frozen Unity project's own rows are in the History paragraph at the end.
+
 What in the game was made by AI, by people, or both — kept as a guide for reducing AI use over time, and for store disclosures (Steam, for example, asks whether a game contains AI-generated content; check the store's current rules when publishing).
 
 Git can't answer this on its own: every commit so far carries a `Co-Authored-By: Claude` line, including commits that saved the user's own hand edits. So this inventory is kept by hand.
@@ -12,22 +14,21 @@ Git can't answer this on its own: every commit so far carries a `Co-Authored-By:
 
 | Area | What | Made by | Notes | Replace priority |
 | --- | --- | --- | --- | --- |
-| **Code** | Game simulation, presentation, HUD, editor tools (`Assets/Scripts/Game`, `Gameplay`, `UI/GameScene`, `UI/LevelSelectScene`, `UI/WelcomeScene`, `Editor/Game`…) | AI | Claude Code sessions, directed and reviewed by the user | Low — not player-facing |
-| **Code** | Framework from TemplateProject (managers, UI system, base editor tools) | Both | About half written by the user, half with AI help | Low |
+| **Code** | Game simulation (`sim/`, a 1:1 port of the Unity C# rules), game layer (`game/`: app shell, board, level, HUD, screens, co-op), editor dock (`addons/td_tools`), tests and tools (`tests/`, `tools/`) | AI | Claude Code sessions, directed and reviewed by the user. The C# rules it ports were AI-written too | Low — not player-facing |
 | **Design** | Game concept, core rules, the decisions in `Decisions.md` | Both | The user decides; AI proposes options and writes them down | — |
-| **Design docs** | `Docs/Design/*` | AI | Written by AI from the user's answers and decisions | Low |
-| **Content** | Chapter 1, Chapter 2 and the tutorial: levels, maps, waves, tower and enemy stats, abilities | Both | Built by AI-written tools (`Create Chapter 1`); numbers proposed by AI and tuned by the user (energy, HP, build area…) | Medium — review numbers by hand |
-| **Text players see** | Names, descriptions, tooltips, hints, banners, dialogue lines (tutorial, Slime King entrance; rewritten for the Princess on 2026-10-08), Codex tips | AI | Written by AI | **High** — player-facing writing |
-| **Art: models (Painted Miniatures)** | Every unit's model (`Art/Models/<Unit>/<Unit>.fbx` with "<Unit> Blender" prefab and controller), projectiles (`Art/VFX`), a map kit and Camp props, palette materials (`Art/Materials/Palette`) | AI | Made by the wiki's agent (Claude, on Eren's server) with headless Blender from code, in the style Eren approved (2026-10-07; slimes remade and Princess, Lich and four skeletons added 2026-10-10); imported with its `BlenderModelImporter` (Tools > Art > Import Blender Models). No image or 3D generative AI | Medium — first real style; to be reviewed in play |
-| **Art: UI kit, icons and fonts (style B "Painted Diorama")** | UI sprites (`Art/UI/KitB/`), status, ability and passive icons (`Art/Icons/Statuses|Abilities|Passives/`), unit portraits (`Art/Icons/Units/`, rendered from the Blender models) and tower miniatures (`Art/Icons/Units/Miniatures/`, transparent renders by the Blender agent), the menu board (`Art/UI/Backgrounds/Spitters.png`, a transparent render of the Spitters level by the Blender agent; `Spitters Blurred.png`, its blurred and dimmed copy for the Loading scene), TMP font assets (`Art/Fonts/`) | AI + fonts | Sprites and icons rendered from HTML/CSS by the server's UI/UX agent (Claude), no image generative AI. Fonts: Nunito (OFL, `Nunito-OFL.txt`; credit line due in Credits) and Plinth (made for the game by the agent) | Medium — the battle HUD, tooltips and content icons use them (2026-10-08); other screens follow |
-| **Art: models (old placeholders)** | Placeholder units and towers (`Art/Models/<Unit>/`), their clips and materials | AI | Built from primitives by AI-written code (`Create Example Model`); no image or 3D generative AI. The Archer's hood was hand-tweaked | High — placeholders, to be replaced by real art |
-| **Art: icons** | attack, move, shield, taunt, coin, heart, Wave | Third-party | From the internet; to be replaced | **High** — check licences or replace before release |
-| **Art: icons** | questionmark (the Codex's locked-entry icon) | Human | Provided by the user | — |
+| **Design docs** | `docs/design/*` and the other docs | AI | Written by AI from the user's answers and decisions | Low |
+| **Content** | Chapter 1, Chapter 2 and the tutorial: levels, maps, waves, tower and enemy stats, abilities; Workshop forms and tokens; Guild missions (`data/content/*.json`) | Both | First built by AI-written tools in the Unity project (`Create Chapter 1`…), now edited as JSON; numbers proposed by AI and tuned by the user (energy, HP, build area…); forms, tokens and missions are placeholders | Medium — review numbers by hand |
+| **Text players see** | Names, descriptions, tooltips, hints, banners, dialogue lines (the guided tutorial in `data/tutorial.json`, the Slime King entrance; rewritten for the Princess on 2026-10-08), Codex tips, mission and form texts | AI | Written by AI; the tutorial lines are placeholders Eren rewrites | **High** — player-facing writing |
+| **Art: models (Painted Miniatures)** | Every unit's model (`art/models/<Unit>.fbx` with its clips), projectiles, the map kit (`art/tiles/`), Camp and Guild props (`art/camp/`, `art/guild/`), palette materials inside each FBX | AI | Made by the wiki's agent (Claude, on Eren's server) with headless Blender from code, in the style Eren approved (2026-10-07; slimes remade and Princess, Lich and four skeletons added 2026-10-10); Godot imports the FBX files directly. No image or 3D generative AI | Medium — first real style; to be reviewed in play |
+| **Art: UI kit, icons and fonts (style B "Painted Diorama")** | UI sprites (`art/ui/KitB/`, `art/ui/icons-extra/`), status, ability and passive icons (`art/icons/Statuses|Abilities|Passives/`), unit portraits (`art/icons/Units/`, `art/portraits/`, rendered from the Blender models) and tower miniatures (`art/icons/Units/Miniatures/`, transparent renders by the Blender agent), the menu board (`art/ui/Backgrounds/Spitters.png`, a transparent render of the Spitters level by the Blender agent; `Spitters Blurred.png`, its blurred and dimmed copy for the Loading scene), fonts (`art/fonts/`) | AI + fonts | Sprites and icons rendered from HTML/CSS by the server's UI/UX agent (Claude), no image generative AI. Fonts: Nunito (OFL, `Nunito-OFL.txt`; credited in Credits) and Plinth (made for the game by the agent) | Medium — every screen uses them |
+| **Art: placeholders** | Placeholder shapes for entities without a model (capsule, box, disc in the team colour; `EntityView`), the placeholder block for a tile without a map-kit piece (`BoardView`) | AI | Built in code; no image or 3D generative AI | High — placeholders, to be replaced by real art |
+| **Art: icons** | attack, move, shield, taunt (`art/icons/`) | Third-party | From the internet; to be replaced | **High** — check licences or replace before release |
+| **Art: icons** | questionmark | Human | Provided by the user | — |
 | **Art: icons** | fire (the Burn status icon) | Human | Provided by the user | — |
-| **Art: UI** | `WhiteSquare` and the UI prefab layouts | Both | Layouts from the UntitledGame project and AI-built HUD builders | Medium |
-| **Art: VFX** | Particle kit: 43 effects for abilities, statuses, projectile trails, spawn / death / collision (`Art/VFX/Kit/`; sprites in, prefabs built by its editor tool); older placeholders Arrow, Hit Spark, Smash Dust | AI | Made by the Fable agent (Claude, on Eren's server): paper cut-out particle sprites and Unity Particle System prefabs from a spec, no image generative AI | Medium — first pass; to be tuned in play |
-| **Fonts** | LiberationSans (TextMesh Pro default) | Third-party | Unity's bundled font | Low |
-| **Music** | menu, battle, map1–3 | Human | Made by Emre Osman (credited in Credits) | — |
+| **Art: UI** | Screen layouts (`game/ui/`, built in code from the kit) | AI | From the UI/UX agent's specs and mockups (`docs/notes/ui/`) | Medium |
+| **Art: VFX** | Particle kit: 43 effects for abilities, statuses, projectile trails, spawn / death / collision, as CPUParticles3D (`game/level/vfx/`: `effects.json` and the paper cut-out sprites) | AI | Specs and sprites made by the Fable agent (Claude, on Eren's server, `~/vfx`), approximated in Godot by `VfxKit`; no image generative AI | Medium — first pass; to be tuned in play |
+| **Fonts** | DejaVu Sans Bold and Noto Sans Symbols glyph subsets (`art/fonts/`, fallbacks for arrows, check marks and symbols) | Third-party | Their licences are beside them (`DejaVuSans-TdSubset-LICENSE.txt`, `NotoSansSymbols-TdSubset-OFL.txt`) | Low |
+| **Music** | menu, battle, map1–3 (`art/music/`) | Human | Made by Emre Osman (credited in Credits) | — |
 | **Sound effects** | None yet | — | — | — |
 
 ## Reducing AI use
@@ -36,6 +37,10 @@ When it's time to cut down, work from what players see and hear, down to what th
 
 1. **Third-party icons:** replace them, or make sure their licences allow use.
 2. **Placeholder art:** real models and VFX, using the replacement rule in the Folder Structure doc.
-3. **Text players see:** rewrite names, descriptions and tooltips by hand. They're all in the assets' `displayName` and `description` fields, and the Game Reference export lists them in one place.
+3. **Text players see:** rewrite names, descriptions and tooltips by hand. They're all in the content entries' `displayName` and `description` fields (plus `data/tutorial.json`), and the game reference (`docs/reference/`) lists them in one place.
 4. **Content numbers:** review the AI-proposed values by hand.
 5. **Code and docs:** last; players never see them.
+
+## History
+
+The Unity project (frozen 2026-10-15) also had: its C# code under `Assets/Scripts` and `Assets/Editor` (AI), a framework from TemplateProject (managers, UI system, base editor tools; about half written by the user, half with AI help), UI prefab layouts and a `WhiteSquare` sprite from the UntitledGame project (Both), the models imported as prefabs with Animator controllers by its `BlenderModelImporter`, generated placeholder models (`Create Example Model`; the Archer's hood hand-tweaked), the VFX kit as Unity Particle System prefabs, TextMesh Pro font assets and the bundled LiberationSans font (Third-party), and the third-party coin, heart and Wave icons.
