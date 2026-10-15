@@ -13,7 +13,7 @@ extends TdPopup
 const SECTIONS := [CodexSection.Towers, CodexSection.Enemies, CodexSection.Statuses, CodexSection.Tips]
 const TAB_NAMES := ["Towers", "Enemies", "Statuses", "Tips"]
 const TAB_ICONS := ["icon_castle", "icon_enemy", "icon_eye", "icon_info"]
-const TAB_WIDTHS := [210.0, 262.0, 262.0, 180.0] # faces; TdButton adds its bleed room
+const TAB_WIDTHS := [236.0, 262.0, 262.0, 180.0] # faces; TdButton adds its bleed room (Towers: room for "N new")
 const WIDTH := 1700.0
 ## The header's progress block and its bar: one width whatever the count text says.
 const PROGRESS_W := 246.0
@@ -65,6 +65,7 @@ var _locked_title: Label
 var _locked_kind: Label
 var _cols: Control
 var _pending: Array = []
+var _abilities_gap: Control
 
 func _build() -> void:
 	var center := CenterContainer.new()
@@ -93,6 +94,7 @@ func _build() -> void:
 	for k in TAB_WIDTHS.size(): # wide enough for the label + its "N new" pill with 16 px padding
 		tab_buttons[k].custom_minimum_size.x = TAB_WIDTHS[k]
 		tab_buttons[k].size.x = TAB_WIDTHS[k]
+		tab_buttons[k].size_flags_vertical = SIZE_SHRINK_CENTER # 64 px faces, not stretched to the title's line height
 	var prog := TdMenu.vbox(6)
 	prog.custom_minimum_size = Vector2(PROGRESS_W, 0) # a fixed block: the bar has the same width on every tab
 	prog.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -116,6 +118,7 @@ func _build() -> void:
 	_bar_fill.size = Vector2(0, 10)
 	_bar.add_child(_bar_fill)
 	var x := TdMenu.close_button()
+	x.size_flags_vertical = SIZE_SHRINK_CENTER # its 52 px face, not stretched to the title row
 	x.clicked.connect(close)
 	head.add_child(x)
 	# body: list + page
@@ -282,7 +285,8 @@ func _build() -> void:
 	ls.thickness = 2
 	line.add_theme_stylebox_override("separator", ls)
 	_abilities_head.add_child(line)
-	right.add_child(TdMenu.spacer(6))
+	_abilities_gap = TdMenu.spacer(6)
+	right.add_child(_abilities_gap)
 	right.add_child(_abilities_head)
 	_abilities = TdMenu.vbox(0)
 	right.add_child(_abilities)
@@ -422,6 +426,12 @@ func _draw_row(b: TdButton, e: Dictionary) -> void:
 	var dot := known and SaveData.codex.is_new(e.section, e.id)
 	l.position = Vector2(66, 0)
 	l.size = Vector2(140 if dot else 194, 60)
+	# a long name ("Placing towers") steps down in size until it fits, instead of losing its end to the ellipsis
+	var lf: Font = l.get_theme_font("font")
+	var lfs: int = l.get_theme_font_size("font_size")
+	while lfs > 20 and lf.get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, lfs).x > l.size.x:
+		lfs -= 1
+	l.add_theme_font_size_override("font_size", lfs)
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.clip_text = true
 	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -476,6 +486,9 @@ func _show_page(e: Dictionary) -> void:
 	for c in _forms.get_children(): c.queue_free()
 	_description.text = ""
 	_body.text = ""
+	_body.visible = true
+	_stats.get_parent().visible = true
+	_abilities_gap.visible = true
 	_locked_overlay.visible = false
 	_cols.visible = true
 	_abilities_head.visible = false
@@ -678,6 +691,14 @@ func _apply_page() -> void:
 	_abilities.visible = page == "abilities"
 	_abilities_head.visible = false
 	_forms.visible = page == "forms"
+	_tidy_column()
+
+## Hidden blocks leave nothing behind in the text column: the stat tiles' bleed wrapper, an empty body, the gap
+## before the (hidden) abilities heading — else the Abilities and Forms pages start ~70 px down.
+func _tidy_column() -> void:
+	_stats.get_parent().visible = _stats.visible
+	_body.visible = _body.text != ""
+	_abilities_gap.visible = _abilities_head.visible
 
 ## The Forms page rows: "Archer · Base form" first (a row like the others), then the unlocked forms; a click shows
 ## that form on every page; only the base row: "Unlock more forms in the Workshop.". Read-only: no Workshop link.

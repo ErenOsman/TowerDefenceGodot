@@ -49,3 +49,12 @@ func test_shaped_text_has_no_missing_glyph_boxes() -> void:
 			if int(g.index) == 0 or (int(g.flags) & TextServer.GRAPHEME_IS_VALID) == 0 or not chain.has(g.font_rid):
 				bad.append(int(g.start))
 		assert_eq(bad, [], "%s draws boxes at %s" % [font.resource_path, str(bad)])
+
+## Godot takes the max ascent / descent over the fallback chain: the bundled fallbacks must not raise a theme font's
+## line height (their vertical metrics are kept under Nunito's / Plinth's; see TdTheme's font note).
+func test_fallbacks_keep_the_line_height() -> void:
+	for key in TdTokens.FONT_FILES:
+		var font: Font = load(TdTokens.FONT_FILES[key])
+		var own := FontFile.new()
+		own.data = (font as FontFile).data
+		assert_eq(font.get_height(22), own.get_height(22), "%s: line height at 22 px with its fallbacks" % font.resource_path)

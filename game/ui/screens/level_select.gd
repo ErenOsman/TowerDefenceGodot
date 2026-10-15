@@ -137,6 +137,9 @@ func _build_detail() -> void:
 	cols.add_child(holder)
 	_info = TdMenu.vbox(0)
 	_info.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	# room for the fact tiles' rims (paper_stat hangs 2 px past its rect): the clip must not cut them
+	_info.offset_left = 3.0
+	_info.offset_right = -3.0
 	holder.add_child(_info)
 	_kicker = TdMenu.hbox(12)
 	_info.add_child(_kicker)
@@ -171,7 +174,8 @@ func _build_detail() -> void:
 	_enemies.add_theme_constant_override("v_separation", 10)
 	_info.add_child(_enemies)
 	# the right column: preview, reward, Play
-	_map_col = TdMenu.vbox(16)
+	# 12 px gaps: preview 300 + reward + Play (with its bleed room) fit the window's 504 px inside (it never grows)
+	_map_col = TdMenu.vbox(12)
 	_map_col.custom_minimum_size = Vector2(MAP_SIZE.x, 0)
 	cols.add_child(_map_col)
 	# the preview: the picture in a rounded mask, a wood ring and a rim ring over it
@@ -423,7 +427,7 @@ func _row(item: Dictionary) -> TdButton:
 	nl.position = Vector2(0, -1)
 	num.add_child(nl)
 	# the name (and the requirement under it when locked)
-	var name_col := TdMenu.vbox(-4)
+	var name_col := TdMenu.vbox(0) # name 31 + requirement 26: fits the 60 px row without the lines touching
 	name_col.position = Vector2(64, 0)
 	name_col.size = Vector2(ROW_SIZE.x - 64 - 110, ROW_SIZE.y)
 	name_col.alignment = BoxContainer.ALIGNMENT_CENTER

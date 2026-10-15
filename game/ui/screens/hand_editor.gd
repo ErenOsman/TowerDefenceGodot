@@ -137,6 +137,7 @@ func _build_head() -> Control:
 	fill.size_flags_horizontal = SIZE_EXPAND_FILL
 	head.add_child(fill)
 	var x := TdMenu.close_button()
+	x.size_flags_vertical = SIZE_SHRINK_CENTER # its 52 px face, not stretched to the title row
 	x.tooltip_text = "Close (Esc)"
 	x.clicked.connect(close)
 	head.add_child(x)
@@ -259,7 +260,7 @@ func _layout_tab(i: int, l: Dictionary, active: bool) -> Control:
 	tab.active = active
 	tab.custom_minimum_size = Vector2(0, 46)
 	tab.size_flags_horizontal = SIZE_EXPAND_FILL
-	tab.tooltip_text = "Active: levels use this hand" if active else "Click to use this layout"
+	tab.tooltip_text = "%s · %s" % [l.name, "Active: levels use this hand" if active else "Click to use this layout"] # the full name (the tab trims a long one)
 	tab.clicked.connect(func(): switch_layout(i))
 	var m := MarginContainer.new()
 	m.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -301,6 +302,8 @@ func _layout_tab(i: int, l: Dictionary, active: bool) -> Control:
 		_rename_edit = e
 		e.size_flags_vertical = SIZE_SHRINK_CENTER
 		v.visible = false # the name field fills the tab while renaming
+		m.add_theme_constant_override("margin_top", 0) # the field's line height fits the 46 px tab
+		m.add_theme_constant_override("margin_bottom", 0)
 		m.add_child(e)
 		e.ready.connect(func(): e.grab_focus(); e.select_all(), CONNECT_ONE_SHOT)
 	else:
@@ -358,7 +361,9 @@ func _refresh_detail() -> void:
 	scroll.size_flags_vertical = SIZE_EXPAND_FILL
 	_detail.add_child(scroll)
 	var gutter := MarginContainer.new()
-	gutter.add_theme_constant_override("margin_right", 14) # room for the scrollbar
+	# no extra gutter: the ScrollContainer already counts its scrollbar in its width (a 14 px gutter on top made the
+	# 372 px card grow to 386 px)
+	gutter.add_theme_constant_override("margin_right", 0)
 	gutter.size_flags_horizontal = SIZE_EXPAND_FILL
 	scroll.add_child(gutter)
 	var body := TdMenu.vbox(10)
@@ -399,7 +404,7 @@ func _refresh_detail() -> void:
 		foot.add_child(tl)
 	if at >= 0:
 		foot.add_child(TdMenu.label("In your hand · key %d" % (at + 1), "plate", TdTheme.color("good.ink"), 18))
-		var b := TdMenu.button(TdButton.Style.SECONDARY, "Remove from hand", Vector2(340, 58), TdTheme.texture("icon_close"))
+		var b := TdMenu.button(TdButton.Style.SECONDARY, "Remove from hand", _action_size(TdButton.Style.SECONDARY), TdTheme.texture("icon_close"))
 		var id: String = e.id
 		b.clicked.connect(func(): remove(id))
 		foot.add_child(b)
@@ -414,11 +419,17 @@ func _refresh_detail() -> void:
 			wl.custom_minimum_size = Vector2(300, 0)
 			why.add_child(wl)
 			foot.add_child(why)
-		var b := TdMenu.button(TdButton.Style.PRIMARY, "Add to hand", Vector2(340, 58), TdTheme.texture("icon_plus"))
+		var b := TdMenu.button(TdButton.Style.PRIMARY, "Add to hand", _action_size(TdButton.Style.PRIMARY), TdTheme.texture("icon_plus"))
 		if reason != "": b.set_interactable(false, reason)
 		var id: String = e.id
 		b.clicked.connect(func(): add(id))
 		foot.add_child(b)
+
+## The detail card's action button: the card's 340 px inside, less the button's bleed room (its rim and hover
+## growth), so the 372 px card never grows wider (it did, to 390-402 px, squeezing the grid).
+static func _action_size(style: int) -> Vector2:
+	var b := TdButton.bleed_for(style, Vector2(340, 58))
+	return Vector2(340.0 - b.x - b.z, 58)
 
 # ------------------------------------------------------------------ actions
 

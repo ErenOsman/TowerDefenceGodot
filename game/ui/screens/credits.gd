@@ -30,6 +30,7 @@ func _build() -> void:
 	title_label.size_flags_horizontal = SIZE_EXPAND_FILL
 	head.add_child(title_label)
 	var x := TdMenu.close_button()
+	x.size_flags_vertical = SIZE_SHRINK_CENTER # its 52 px face, not stretched to the title row
 	x.clicked.connect(close)
 	head.add_child(x)
 	var card := TdMenu.panel(TdPanel.Kind.PAPER, 36)

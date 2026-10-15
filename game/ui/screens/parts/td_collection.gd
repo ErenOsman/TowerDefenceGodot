@@ -95,7 +95,13 @@ func _build_filters() -> Control:
 		filter.q = t
 		refresh_grid())
 	fh.add_child(search)
-	v.add_child(field)
+	# the field's paper rim hangs past its rect (sprite outset): room for it inside the scroll, which clips
+	var rim := MarginContainer.new()
+	var o: Array = TdTheme.sprite_outset("field_paper_normal")
+	var sides := ["left", "top", "right", "bottom"]
+	for i in 4: rim.add_theme_constant_override("margin_" + sides[i], int(ceil(float(o[i]) if o.size() > i else 0.0)))
+	rim.add_child(field)
+	v.add_child(rim)
 	v.add_child(_heading("Role"))
 	var roles := _flow()
 	for r in HandLogic.ROLES:

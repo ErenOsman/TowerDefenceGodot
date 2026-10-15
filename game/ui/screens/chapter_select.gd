@@ -53,6 +53,7 @@ func _build() -> void:
 	hint.size_flags_vertical = SIZE_SHRINK_CENTER
 	head.add_child(hint)
 	var x := TdMenu.close_button()
+	x.size_flags_vertical = SIZE_SHRINK_CENTER # its 52 px face, not stretched to the title row
 	x.tooltip_text = "Close (Esc)"
 	x.clicked.connect(close)
 	head.add_child(x)

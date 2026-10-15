@@ -15,6 +15,10 @@ extends RefCounted
 ## Fonts: Nunito/Plinth lack symbols (✓ → ● ▲ ⓘ ⧗ ✕ ⚠ …) and the web build has no system fallback, so every font's
 ## import settings (art/fonts/*.ttf.import `fallbacks`) chain DejaVuSans-Bold-TdSubset + NotoSansSymbols-TdSubset;
 ## anything loading those .ttf files gets them (tests/test_ui_theme_glyphs.gd). New fonts: add the same fallbacks.
+## Godot takes a font's ascent / descent as the MAX over its fallback chain, so the two subset fonts carry small
+## vertical metrics (hhea + OS/2: ascent 0.90 em, descent 0.20 em, under Nunito's and Plinth's): with their original
+## metrics (NotoSansSymbols 1.48 + 0.63 em) every 22 px label was 47 px tall instead of 31 (menus QA 2026-10-15).
+## A re-subset must set them again (fontTools: hhea.ascent/descent, OS/2 sTypo* and usWin*).
 
 const THEME_PATH := "res://game/ui/theme/td_theme.tres"
 const KIT_ROOT := "res://art/ui/KitB/"

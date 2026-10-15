@@ -372,6 +372,8 @@ func _build_signpost() -> void:
 		signpost_tag = TdMenu.pill("[b]%s[/b]" % MissionUiLogic.signpost_tag(false), Color(0.12, 0.09, 0.07, 0.9), TdTheme.color("gold"), 20, TdTheme.color("gold"))
 		signpost_tag.mouse_filter = MOUSE_FILTER_IGNORE
 		add_child(signpost_tag)
+		# in the station layer (with the buttons), under the popups, the tour bubble and the welcome card
+		move_child(signpost_tag, popups.get_index())
 
 ## A refused click on the locked Signpost: a short shake.
 func _shake_signpost() -> void:

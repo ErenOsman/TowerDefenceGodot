@@ -64,6 +64,7 @@ func _build() -> void:
 	subtitle.size_flags_vertical = SIZE_SHRINK_CENTER
 	head.add_child(subtitle)
 	var x := TdMenu.close_button()
+	x.size_flags_vertical = SIZE_SHRINK_CENTER # its 52 px face, not stretched to the title row
 	x.clicked.connect(close)
 	head.add_child(x)
 	var tabs_row := TdMenu.hbox(10)
@@ -80,6 +81,7 @@ func _build() -> void:
 	for page in [_audio_page(), _display_page(), _gameplay_page(), _controls_page()]:
 		stack.add_child(page)
 		pages.append(page)
+	_chain_sliders.call_deferred() # once the pages are in the tree (paths between the sliders)
 	# a footer row on every tab (same height everywhere, so nothing jumps): a hint line, and Reset on Controls
 	var bottom := TdMenu.hbox(16)
 	bottom.custom_minimum_size = Vector2(0, 56)
@@ -126,6 +128,9 @@ func show_tab(i: int) -> void:
 	if OS.has_feature("web") and i == 1: i = 0
 	_stop_listening()
 	current_tab = i
+	# a slider of the page being left gives its keyboard focus back
+	var fo := get_viewport().gui_get_focus_owner() if is_inside_tree() else null
+	if fo != null and is_ancestor_of(fo): fo.release_focus()
 	for k in pages.size():
 		pages[k].visible = k == i
 		tab_buttons[k].selected = k == i
@@ -169,7 +174,9 @@ func _row(page: Container, text: String, control: Control, sub := "") -> HBoxCon
 		labels.add_child(s)
 	row.add_child(labels)
 	var holder := HBoxContainer.new()
-	holder.custom_minimum_size = Vector2(CONTROL_W, 0)
+	# sliders (with their value) take the full control column; a toggle or a dropdown only its own width, so the
+	# label and its sub line get the rest of the row and stay on one line
+	holder.custom_minimum_size = Vector2(CONTROL_W if control is HBoxContainer else 0.0, 0)
 	holder.alignment = BoxContainer.ALIGNMENT_END
 	holder.add_child(control)
 	row.add_child(holder)
@@ -184,7 +191,7 @@ func _slider_row(page: Container, text: String, setting: String, setter: Callabl
 	sl.step = 1
 	sl.custom_minimum_size = Vector2(410, 40)
 	sl.size_flags_vertical = SIZE_SHRINK_CENTER
-	sl.focus_mode = FOCUS_NONE
+	_keyboard_slider(sl)
 	_full_track(sl)
 	h.add_child(sl)
 	var val := TdMenu.label("0", "header", TdTheme.color("cream.100"), 24)
@@ -250,7 +257,7 @@ func _gameplay_page() -> Control:
 	_speed.ticks_on_borders = true
 	_speed.custom_minimum_size = Vector2(410, 40)
 	_speed.size_flags_vertical = SIZE_SHRINK_CENTER
-	_speed.focus_mode = FOCUS_NONE
+	_keyboard_slider(_speed)
 	_full_track(_speed)
 	h.add_child(_speed)
 	_speed_value = TdMenu.label("1×", "header", TdTheme.color("cream.100"), 24)
@@ -268,6 +275,37 @@ func _gameplay_page() -> Control:
 	_toggle_row(p, "Instant playback", "instant_playback", func(v): SettingsMgr.set_instant_playback(v), "Skip every animation: results at once")
 	_toggle_row(p, "Always show health", "always_show_health", func(v): SettingsMgr.set_always_show_health(v), "Health bars over every unit, not only hurt ones")
 	return p
+
+## A slider takes the keyboard focus when clicked (FOCUS_CLICK: the footer's "click it and use the arrow keys"),
+## so Left / Right step it; it is never reached by Tab from outside the page (the window has no other focusable
+## control). Focused: a thin accent ring round the slider, the kit's focus ring (no engine default outline).
+func _keyboard_slider(sl: HSlider) -> void:
+	sl.focus_mode = FOCUS_CLICK
+	sl.add_theme_stylebox_override("focus", TdTheme.stylebox("focus_ring_r14", TdTheme.color("accent")))
+	_page_sliders.append(sl)
+
+## Tab / Shift+Tab and Up / Down move between the sliders of the page shown (wrapping), never out of the window
+## (to the main menu's buttons behind the scrim).
+func _chain_sliders() -> void:
+	var by_page := {}
+	for sl in _page_sliders:
+		var page: Node = sl
+		while page != null and not pages.has(page): page = page.get_parent()
+		if page == null: continue
+		if not by_page.has(page): by_page[page] = []
+		by_page[page].append(sl)
+	for page in by_page:
+		var list: Array = by_page[page]
+		for i in list.size():
+			var me: HSlider = list[i]
+			var nxt: HSlider = list[(i + 1) % list.size()]
+			var prv: HSlider = list[(i - 1 + list.size()) % list.size()]
+			me.focus_next = me.get_path_to(nxt)
+			me.focus_previous = me.get_path_to(prv)
+			me.focus_neighbor_bottom = me.get_path_to(nxt)
+			me.focus_neighbor_top = me.get_path_to(prv)
+
+var _page_sliders: Array = []
 
 ## The knob's centre reaches both ends of the track: the track spans the whole slider, the knob overhangs half its
 ## width at 0 and 100, and the fill runs to the knob's centre (no track showing past the knob, no gap at the end).
@@ -324,6 +362,8 @@ func _controls_page() -> Control:
 				note.visible = false
 				list.add_child(note)
 				_key_notes.append([r.id, note])
+	# room under the last row: scrolled to the end, its key slots' rims (and the listening ring) are not cut
+	list.add_child(TdMenu.spacer(12))
 	return outer
 
 func _control_row(text: String, control: Control) -> Control:
