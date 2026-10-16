@@ -1,12 +1,13 @@
 class_name MissionBoardScreen
 extends TdPopup
 ## The mission board (Missions & Guild — Design § The Guild "Missions"; mockup screens-b/mission-board.html): a wood
-## window over the Guild. Header "Missions · Earn tokens for the Workshop · plays reset at midnight (in 5 h)", the
-## token pills (every token kind and how many you have) and ×. One card per mission in board order (the catalog's
-## `missions`, unlocked or not): the board thumbnail, the name with its mode chip (Solo / Co-op 2–6 / Any · solo or
-## 1–4), the level (and "2 plays a day"), the drops in two rows "Each win" / "First win" (first-win coins gold-rimmed,
-## dimmed with "✓ claimed" once taken), and the state line: "⧗ 1 play left today" with a small Play (Solo / Any) or
-## Find a room (co-op) button, "✓ Done today · resets in 5 h" (greyed card) or "🔒 Win Hold the Gate first".
+## window over the Guild. Header "Missions · Resets in 5 h", the token pills (every token kind and how many you have)
+## and ×. One card per mission, sorted by tier then the catalog's `missions` order (MissionUiLogic.board_order;
+## unlocked or not): the board thumbnail, the name with its mode chip (Solo / Co-op 2–6 / Any · solo or 1–4), the
+## level (and "2 plays a day"), the tier diamonds with a secondary "Rewards" button (the mission's Rewards popup,
+## RewardsScreen; mockup mission-rewards.html: no drop rows on the card), and the state line: "⧗ 1 play left today"
+## with a small Play (Solo / Any) or Find a room (co-op) button, "✓ Done today · resets in 5 h" (greyed card) or
+## "🔒 Win Hold the Gate first".
 ## Clicking a card opens the mission's detail (MissionDetail) over the board. Texts: MissionUiLogic.
 ## Class name MissionBoardScreen: MissionBoard is the rules class (sim/meta).
 
@@ -83,17 +84,15 @@ func refresh() -> void:
 			var id: String = tok.get_id()
 			var have: int = SaveData.tokens.count(id)
 			var pill := TdDrops.coin(id, have, false, false, 40.0, str(have))
-			# "Found in" as the Workshop's token chips say it (QA 2026-10-14: the two tooltips of a token differed)
-			var where := WorkshopLogic.found_in_text(id, GameApp.missions())
 			TdTooltipTrigger.attach(pill, TooltipText.title(tok.get_display_name(), TooltipText.value_color(), "Token"),
-				tok.description + ("\nFound in: %s." % where if where != "" else ""), "You have", str(have))
+				tok.description, "You have", str(have))
 			_inv.add_child(pill)
 	for c in _grid.get_children():
 		_grid.remove_child(c)
 		c.queue_free()
 	cards.clear()
 	var made := []
-	for m in GameApp.missions():
+	for m in MissionUiLogic.board_order(GameApp.missions()):
 		var card := _card(m)
 		_grid.add_child(card)
 		cards[m.id] = card
@@ -138,8 +137,7 @@ func _card(m: MissionDef) -> Control:
 	top.add_child(TdDrops.mode_chip(m, 19))
 	var ll := TdMenu.label(MissionUiLogic.level_line(m, lv.get_display_name() if lv != null else m.level_id), "body", TdTheme.color("cream.300"), 19)
 	body.add_child(ll)
-	var drops := TdDrops.rows(m, MissionUiLogic.first_win_claimed(m, SaveData.missions), 34.0, 84.0, 19)
-	body.add_child(drops)
+	body.add_child(TdDrops.tier_row(m, _popups, 22.0, 46.0, 21))
 	var line := TdMenu.hbox(8)
 	line.mouse_filter = MOUSE_FILTER_IGNORE
 	body.add_child(line)
@@ -163,6 +161,10 @@ func _card(m: MissionDef) -> Control:
 		row.add_child(b)
 	TdTooltipTrigger.attach(card, "", "Click: see the mission")
 	return card
+
+## Opens a mission's Rewards popup over the board (a card's Rewards button does); returns it.
+func open_rewards(mission_id: String) -> RewardsScreen:
+	return RewardsScreen.show_over(_popups, mission_id)
 
 ## Opens a mission's detail over the board; returns it.
 func open_detail(mission_id: String) -> TdPopup:

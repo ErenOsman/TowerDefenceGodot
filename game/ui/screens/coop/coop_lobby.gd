@@ -34,7 +34,6 @@ var _card: Dictionary
 var _not_connected: Label
 var _join: TdButton
 var _join_note: HBoxContainer
-var _note: Label
 var _drops: VBoxContainer
 var _footer: Label
 var _popups: Control
@@ -154,8 +153,6 @@ func _build() -> void:
 	_detail.add_child(_card.panel)
 	_drops = TdMenu.vbox(0)
 	_card.extra.add_child(_drops)
-	_note = TdMenu.label("Co-op gives no rewards or records to your story.", "body", TdTheme.color("cream.200"), 20)
-	_detail.add_child(_note)
 	_not_connected = TdMenu.label("Not connected.", "body", TdTheme.color("cream.200"), 22)
 	_not_connected.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_not_connected.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -427,7 +424,6 @@ func _draw_detail(online: bool) -> void:
 	if m != null:
 		_card.title.text = m.name
 		_drops.add_child(_drops_card(m))
-	_note.visible = m == null
 	var full: bool = NetProtocol.int_of(r, "players") >= NetProtocol.int_of(r, "count")
 	var started := bool(r.get("started", false))
 	var done := room_done(r)
@@ -452,11 +448,10 @@ func _note_label(text: String) -> Label:
 	l.custom_minimum_size = Vector2(0, 0)
 	return l
 
-## The mission's drops on the level card (a dark box: Each win / First win).
-static func _drops_card(m: MissionDef) -> Control:
-	var box := CoopUi.flat_panel(Color("2b201a"), 10, Color(0, 0, 0, 0), Vector4(12, 8, 12, 8))
-	var sd = (Engine.get_main_loop() as SceneTree).root.get_node_or_null("SaveData")
-	box.add_child(TdDrops.rows(m, MissionUiLogic.first_win_claimed(m, sd.missions if sd != null else null), 34.0, 86.0, 19))
+## The mission's tier and its Rewards button on the level card (a dark box; the Rewards popup lists the drops).
+func _drops_card(m: MissionDef) -> Control:
+	var box := CoopUi.flat_panel(Color("2b201a"), 10, Color(0, 0, 0, 0), Vector4(12, 6, 12, 6))
+	box.add_child(TdDrops.tier_row(m, self, 20.0, 44.0, 20))
 	return box
 
 ## Join: a password room asks for it first; an open room joins at once.

@@ -2,15 +2,15 @@ class_name BackpackScreen
 extends TdPopup
 ## The Backpack (Backpack — Design; UI/UX mockup screens-b/backpack.html): what the player carries, as a centred
 ## popup over the place it opened from (nothing else changes). "Backpack" and × only (Esc, a right click or the scrim
-## close it). A big gold row ("[coin] 240 gold · From missions; spent on upgrades", always shown, "0 gold" too), then
-## "Tokens": one row per kind ever earned (coin, name, "×2", muted "Found in: …" as the Workshop derives it from the
-## mission drops); a spent-out kind stays at ×0, dimmed; never-earned kinds are not listed. Then a muted "Items ·
+## close it). A big gold row ("[coin] 240 gold", always shown, "0 gold" too), then "Tokens": one row per kind ever
+## earned (coin, name, "×2"); a spent-out kind stays at ×0, dimmed; never-earned kinds are not listed. No "found in" /
+## "from missions" texts (Eren 2026-10-16: where things are earned needs no explaining). Then a muted "Items ·
 ## Nothing here yet." (items and keys get sections later: the popup grows by sections, not tabs).
 ## Texts and rules: BackpackLogic. Data: GameData.gold and GameData.tokens (no new save data).
 ## Open it with BackpackScreen.show_over(parent) (TdBackpackButton does).
 
 const SCENE := "res://game/ui/screens/backpack.tscn"
-const WIN_W := 1140.0
+const WIN_W := 720.0
 const PAD := 30.0
 const ROW_BG := Color(0.09, 0.067, 0.05, 0.35)
 const GOLD_BG := Color(0.09, 0.067, 0.05, 0.55)
@@ -60,9 +60,7 @@ func refresh() -> void:
 	var gold: int = GameApp.gold()
 	_body.add_child(_gold_row(gold))
 	_body.add_child(TdMenu.spacer(4))
-	var missions := GameApp.missions()
-	rows = BackpackLogic.token_rows(GameApp.catalog.tokens if GameApp.catalog != null else [], SaveData.tokens,
-		func(id: String) -> String: return WorkshopLogic.found_in_text(id, missions))
+	rows = BackpackLogic.token_rows(GameApp.catalog.tokens if GameApp.catalog != null else [], SaveData.tokens)
 	_body.add_child(_heading(BackpackLogic.TokensHead, false))
 	if rows.is_empty():
 		_body.add_child(_muted(BackpackLogic.ItemsEmpty))
@@ -82,7 +80,7 @@ func _box(bg: Color, radius: int, pad_x: int, pad_y: int) -> PanelContainer:
 	p.mouse_filter = MOUSE_FILTER_IGNORE
 	return p
 
-## "[coin] 240 gold        From missions; spent on upgrades"
+## "[coin] 240 gold"
 func _gold_row(gold: int) -> Control:
 	var p := _box(GOLD_BG, 16, 22, 14)
 	var h := TdMenu.hbox(14)
@@ -99,12 +97,6 @@ func _gold_row(gold: int) -> Control:
 	w.add_theme_font_override("font", TdTheme.font("nunito_bold"))
 	w.size_flags_vertical = SIZE_SHRINK_CENTER
 	h.add_child(w)
-	var fill := TdMenu.spacer()
-	fill.size_flags_horizontal = SIZE_EXPAND_FILL
-	h.add_child(fill)
-	var sub := TdMenu.label(BackpackLogic.GoldSub, "body", TdTheme.color("cream.300"), 24)
-	sub.size_flags_vertical = SIZE_SHRINK_CENTER
-	h.add_child(sub)
 	return p
 
 func _heading(text: String, muted: bool) -> Label:
@@ -115,7 +107,7 @@ func _heading(text: String, muted: bool) -> Label:
 func _muted(text: String) -> Label:
 	return TdMenu.label(text, "body", TdTheme.color("cream.300"), 24)
 
-## One token: coin, name, "×2", "Found in: …" (dimmed at ×0). Tooltip: the token's description.
+## One token: coin, name, "×2" (dimmed at ×0). Tooltip: the token's description.
 func _token_row(r: Dictionary) -> Control:
 	var p := _box(ROW_BG, 14, 18, 8)
 	p.mouse_filter = MOUSE_FILTER_PASS
@@ -135,12 +127,6 @@ func _token_row(r: Dictionary) -> Control:
 	c.custom_minimum_size = Vector2(80, 0)
 	c.size_flags_vertical = SIZE_SHRINK_CENTER
 	h.add_child(c)
-	var f := TdMenu.label(r.found, "body", TdTheme.color("cream.300"), 24)
-	f.size_flags_horizontal = SIZE_EXPAND_FILL
-	f.size_flags_vertical = SIZE_SHRINK_CENTER
-	f.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	f.clip_text = true
-	h.add_child(f)
 	if r.dim: p.modulate = Color(1, 1, 1, 0.5)
 	var t: TokenAsset = GameApp.catalog.find_token(r.id) if GameApp.catalog != null else null
 	if t != null: TdTooltipTrigger.attach(p, TooltipText.title(t.get_display_name(), TooltipText.value_color(), "Token"),

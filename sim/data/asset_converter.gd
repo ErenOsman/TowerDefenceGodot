@@ -268,8 +268,12 @@ func mission(a: MissionAsset) -> MissionDef:
 	d.coop_hand_cap = a.coop_hand_cap
 	d.first_win_tokens = GameCatalogAsset._amounts(a.first_win_tokens)
 	d.win_tokens = GameCatalogAsset._amounts(a.win_tokens)
-	d.first_win_gold = maxi(0, a.first_win_gold)
+	d.tier = clampi(a.tier, 1, 3) if a.tier > 0 else 1
 	d.win_gold = maxi(0, a.win_gold)
+	var chances := []
+	for c in a.chance_drops:
+		if c != null and c.token != null and c.chance > 0.0: chances.append({"token": c.token.get_id(), "chance": minf(c.chance, 1.0)})
+	d.chance_drops = chances
 	return d
 
 ## One individual tower of a type, for a level's hand (tests and tools; the game builds it from the save).

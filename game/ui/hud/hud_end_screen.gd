@@ -9,7 +9,7 @@ extends HudPopup
 ## Camp once it is unlocked; not in co-op or the tutorial). Retry is hidden after winning the tutorial and when a
 ## mission has no play left. Esc and right click never close it: one of its buttons decides.
 ## A mission (mockups end-screen-mission, -last): "Mission · Patrol", the rewards row "Rewards [coin ×1]  First win
-## [gold-rimmed coin ×1]  Spend them in the Workshop." (first win only when this win took it), under it "⧗ 1 play left
+## [gold-rimmed coin ×1]" (first win only when this win took it; no "Spend them in the Workshop.": Eren 2026-10-16), under it "⧗ 1 play left
 ## today" / "✓ Done today: no plays left · resets in 5 h"; Retry hidden when no play is left (can_retry); the leave
 ## button says "Guild" (LevelController.end_list_label).
 
@@ -369,8 +369,7 @@ func _mission_progress() -> MissionProgress:
 
 ## A mission's rewards row: per group its label ("Rewards" gold, "First win" cream), the coins (first-win ones
 ## gold-rimmed), the gold this win gave right after "Rewards" (LevelController.gold_drop / gold_text as one gold
-## chip, "+40 gold", every-win and first-win gold together; Backpack — Design) and "Spend them in the Workshop." (when
-## tokens came).
+## chip, "+150 gold"; the first win gives no extra gold; Backpack — Design).
 func _mission_rewards(groups: Array, gold := 0, gold_text := "") -> Control:
 	var p := PanelContainer.new()
 	var box := StyleBoxFlat.new()
@@ -403,9 +402,6 @@ func _mission_rewards(groups: Array, gold := 0, gold_text := "") -> Control:
 		# the win's whole gold (every win + first win) right after "Rewards", not inside the first-win group
 		if gold_chip != null and gold_chip.get_parent() == null: row.add_child(gold_chip)
 		for c in TdDrops.coins(g[1], first, false, 42.0): row.add_child(c)
-	var sp := HudArt.label(MissionUiLogic.SpendInWorkshop, "body", TdTheme.color("cream.200"), 20)
-	sp.size_flags_vertical = SIZE_SHRINK_CENTER
-	row.add_child(sp)
 	return p
 
 ## The Workshop tokens a win gave (Workshop — Design § Rules "Tokens"): "Rewards:" then a chip per kind (its 32 px

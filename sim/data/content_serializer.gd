@@ -104,7 +104,7 @@ const SCHEMA := {
 		"id": "string", "displayName": "string", "description": "string", "icon": "art", "level": "ref:LevelAsset",
 		"mode": "enum:MissionMode", "players": "obj:PlayerRange", "playsPerDay": "int", "requires": "list:ref:ContentAsset",
 		"requireAll": "bool", "sharedPool": "bool", "coopHandCap": "int", "firstWinTokens": "list:obj:TokenAmount",
-		"winTokens": "list:obj:TokenAmount", "firstWinGold": "int", "winGold": "int",
+		"winTokens": "list:obj:TokenAmount", "tier": "int", "winGold": "int", "chanceDrops": "list:obj:ChanceDrop",
 	},
 	"AbilityPresentationAsset": {
 		"number": "int", "casterAnimation": "enum:CasterAnimation", "customTrigger": "string", "projectile": "art",
@@ -144,6 +144,7 @@ const SCHEMA := {
 		"winTokens": "list:obj:TokenAmount",
 	},
 	"TokenAmount": {"token": "ref:TokenAsset", "amount": "int"},
+	"ChanceDrop": {"token": "ref:TokenAsset", "chance": "float"},
 	"PlayerRange": {"min": "int", "max": "int"},
 	# Upgrades — Design: a level step, its tasks and bonuses (no C# counterpart)
 	"TowerLevelData": {"to": "int", "tasks": "list:obj:TowerTaskData", "bonuses": "list:obj:LevelBonusData"},
@@ -234,6 +235,7 @@ static func create(type_name: String) -> Object:
 		"FormAsset": return FormAsset.new()
 		"TokenAsset": return TokenAsset.new()
 		"TokenAmount": return TokenAmount.new()
+		"ChanceDrop": return ChanceDrop.new()
 		"MissionAsset": return MissionAsset.new()
 		"PlayerRange": return PlayerRange.new()
 		"TowerLevelData": return TowerLevelData.new()

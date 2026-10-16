@@ -50,7 +50,6 @@ var collection: TdCollection
 var backpack_button: TdBackpackButton
 var _entries: Array = []
 var _type: TowerType = null
-var _found := {}   # token id → "Found in" text
 var _vocab: Vocabulary
 
 var _clip: Control
@@ -181,8 +180,6 @@ func _build_mod() -> void:
 
 func _on_open() -> void:
 	_vocab = GameApp.rules.vocabulary if GameApp.rules != null else null
-	_found.clear()
-	for t in GameApp.catalog.tokens: _found[t.get_id()] = WorkshopLogic.found_in_text(t.get_id(), GameApp.missions())
 	view = "pick"
 	cancel_confirm()
 	_reload_entries()
@@ -377,9 +374,8 @@ func _refresh_tokens() -> void:
 		l.size_flags_vertical = SIZE_SHRINK_CENTER
 		h.add_child(l)
 		if have == 0: chip.modulate.a = 0.6
-		var where: String = _found.get(id, "")
 		TdTooltipTrigger.attach(chip, TooltipText.title(t.get_display_name(), TooltipText.value_color(), "Token"),
-			t.description + ("\nFound in: %s." % where if where != "" else ""), "You have", str(have))
+			t.description, "You have", str(have))
 		_tokens.add_child(chip)
 
 func _portrait(id: String) -> Texture2D:
@@ -497,22 +493,22 @@ func _refresh_card() -> void:
 		foot.add_child(ll)
 	var f := WorkshopLogic.form_of(_type, id)
 	if f != null and st in ["can", "need", "locked"]: foot.add_child(_cost_row(f))
-	var act := WorkshopLogic.action(owned, _type, id, SaveData.tokens, int(_entry(tower_id).get("index", 0)), _found)
+	var act := WorkshopLogic.action(owned, _type, id, SaveData.tokens, int(_entry(tower_id).get("index", 0)))
 	match act.kind:
 		"current":
 			foot.add_child(TdTowerCard.disabled_button(act.text, TdTheme.texture("icon_check")))
-			foot.add_child(_note(act.note))
+			if act.note != "": foot.add_child(_note(act.note))
 		"use":
 			var b := TdMenu.button(TdButton.Style.PRIMARY, act.text, Vector2(0, 58), TdTheme.texture("icon_check"))
 			b.size_flags_horizontal = SIZE_EXPAND_FILL
 			b.clicked.connect(card_action)
 			foot.add_child(b)
-			foot.add_child(_note(act.note))
+			if act.note != "": foot.add_child(_note(act.note))
 		"unlock":
 			var b := _unlock_button(f)
 			b.clicked.connect(card_action)
 			foot.add_child(b)
-			foot.add_child(_note(act.note))
+			if act.note != "": foot.add_child(_note(act.note))
 		_:
 			var why := TdMenu.hbox(6)
 			var w := TdMenu.picture(TdMenu.warn_icon(), Vector2(20, 20))
@@ -613,7 +609,7 @@ func _cost_row(f: FormDef) -> Control:
 		l.add_theme_font_override("normal_font", TdTheme.font("nunito_bold"))
 		h.add_child(l)
 		TdTooltipTrigger.attach(chip, TooltipText.title(t.get_display_name() if t != null else id, TooltipText.value_color(), "Token"),
-			"Found in: %s." % _found.get(id, "") if _found.get(id, "") != "" else "", "You have", str(have))
+			t.description if t != null else "", "You have", str(have))
 		row.add_child(chip)
 	return row
 
@@ -646,7 +642,7 @@ func _toast(text: String) -> Control:
 ## refused unlock.
 func card_action() -> void:
 	if view != "modify" or confirm_open: return
-	var act := WorkshopLogic.action(_owned(), _type, node_id, SaveData.tokens, int(_entry(tower_id).get("index", 0)), _found)
+	var act := WorkshopLogic.action(_owned(), _type, node_id, SaveData.tokens, int(_entry(tower_id).get("index", 0)))
 	match act.kind:
 		"unlock": open_confirm()
 		"use": use_form()

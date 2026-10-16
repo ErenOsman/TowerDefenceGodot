@@ -315,27 +315,85 @@ func test_drops_win_every_time_first_win_once() -> void:
 	assert_eq(lib().catalog.grant_drops(res2, mp2.record(res2, "patrol"), w2, m("patrol")), {"yew-bow": 1})
 	assert_eq(HudText.rewards_text({"ember-core": 1}, lib().catalog), "Rewards: Ember Core ×1")
 
-func test_gold_drops_win_every_time_first_win_once() -> void:
-	# Upgrades — Design § Gold: missions are the only gold source (winGold every win, firstWinGold once)
+func test_gold_by_tier_no_first_win_gold() -> void:
+	# Missions & Guild — Design § Gold / Tier (Eren 2026-10-16): winGold on every win, 100 / 150 / 200 by tier; the
+	# first win gives no more; firstWinGold is gone
+	var tiers := {"patrol": 1, "night-watch": 1, "hold-the-gate": 2, "drum-line": 2, "glutton-returns": 3}
 	for x in missions():
-		assert_true(x.win_gold >= 10 and x.win_gold <= 25, "%s: winGold %d" % [x.id, x.win_gold])
-		assert_true(x.first_win_gold >= 30 and x.first_win_gold <= 60, "%s: firstWinGold %d" % [x.id, x.first_win_gold])
+		assert_eq(x.tier, tiers[x.id], x.id + ": tier")
+		assert_eq(x.win_gold, MissionBoard.tier_gold(x.tier), "%s: winGold %d by tier %d" % [x.id, x.win_gold, x.tier])
+		assert_false("first_win_gold" in x, "MissionDef has no first_win_gold")
+	assert_eq([MissionBoard.tier_gold(1), MissionBoard.tier_gold(2), MissionBoard.tier_gold(3)], [100, 150, 200])
+	assert_eq(MissionBoard.tier_gold(0), 100, "out of range clamps")
+	assert_false("first_win_gold" in MissionAsset.new())
+	assert_false(ContentSerializer.fields_of("MissionAsset").has("firstWinGold"), "no firstWinGold in the schema")
+	assert_true(ContentSerializer.fields_of("MissionAsset").has("tier"))
+	assert_true(ContentSerializer.fields_of("MissionAsset").has("chanceDrops"))
 	var n := m("night-watch")
-	assert_eq([n.win_gold, n.first_win_gold], [15, 40])
 	var mp := MissionProgress.new()
 	var w := TokenWallet.new()
 	assert_eq(MissionBoard.finish_reward(_result(false), n, mp, w), {"tokens": {}, "gold": 0}, "a loss gives nothing")
 	assert_eq(MissionBoard.finish_reward(_result(true, true), n, mp, w).gold, 0, "a quit gives nothing")
 	var first := MissionBoard.finish_reward(_result(), n, mp, w)
-	assert_eq(first.gold, 55, "first win: 15 + 40")
-	assert_eq(first.tokens, {"arcane-shard": 1, "fire-arrow": 1, "poison-gland": 1})
-	assert_eq(MissionBoard.finish_reward(_result(), n, mp, w).gold, 15, "later wins: winGold only")
-	assert_eq(MissionBoard.gold_drop(_result(), null, n), 15)
+	assert_eq(first.gold, 100, "first win: winGold only, no extra")
+	assert_eq(first.tokens, {"arcane-shard": 1, "fire-arrow": 1, "poison-gland": 1}, "first-win tokens still come")
+	assert_eq(MissionBoard.finish_reward(_result(), n, mp, w).gold, 100, "later wins: the same")
+	assert_eq(MissionBoard.gold_drop(_result(), null, m("glutton-returns")), 200)
 	assert_eq(MissionBoard.gold_drop(_result(), null, null), 0)
 	assert_eq(w.total(), 5, "tokens still go to the token wallet; gold is the caller's (GameData.gold)")
 	var bad := MissionAsset.new()
 	bad.name = "Bad"; bad.id = "bad"; bad.win_gold = -1
 	assert_true(AssetValidator.validate_mission(bad).any(func(e): return e.contains("winGold must not be negative")))
+
+func test_tier_validation_and_old_content() -> void:
+	var lvl := lib().catalog.find_level("chapter1-1")
+	var a := MissionAsset.new()
+	a.name = "T"; a.id = "t"; a.level = lvl
+	# old content without a tier: tier 1, with a warning (never an error)
+	assert_eq(AssetValidator.validate_mission(a), [] as Array[String])
+	assert_true(AssetValidator.warnings(a).any(func(e): return e.contains("tier")), "a missing tier warns")
+	assert_eq(AssetConverter.new().mission(a).tier, 1, "a missing tier reads 1")
+	for t in [1, 2, 3]:
+		a.tier = t
+		assert_eq(AssetValidator.validate_mission(a), [] as Array[String], "tier %d is fine" % t)
+		assert_false(AssetValidator.warnings(a).any(func(e): return e.contains("tier")))
+		assert_eq(AssetConverter.new().mission(a).tier, t)
+	for t in [-1, 4]:
+		a.tier = t
+		assert_true(AssetValidator.validate_mission(a).any(func(e): return e.contains("tier %d must be 1–3" % t)), "tier %d" % t)
+	# a JSON mission without "tier" loads (tier 0 = not set)
+	var problems := []
+	var b := MissionAsset.new()
+	ContentSerializer.load_into(b, {"id": "old", "displayName": "Old", "winGold": 20}, lib(), problems, "Mission/Old")
+	assert_eq(problems, [])
+	assert_eq(b.tier, 0)
+	assert_eq(AssetConverter.new().mission(b).tier, 1)
+
+func test_chance_drops_listed_not_rolled() -> void:
+	var a := MissionAsset.new()
+	a.name = "C"; a.id = "c"; a.level = lib().catalog.find_level("chapter1-1"); a.tier = 1; a.win_gold = 100
+	var problems := []
+	ContentSerializer.load_into(a, {"chanceDrops": [{"token": "Token/Ember Core", "chance": 0.3}]}, lib(), problems, "Mission/C")
+	assert_eq(problems, [])
+	assert_eq(a.chance_drops.size(), 1)
+	assert_eq(AssetValidator.validate_mission(a), [] as Array[String])
+	var d := AssetConverter.new().mission(a)
+	assert_eq(d.chance_drops, [{"token": "ember-core", "chance": 0.3}])
+	assert_eq(ContentSerializer.to_json(a, lib())["chanceDrops"], [{"token": "Token/Ember Core", "chance": 0.3}], "it round-trips")
+	# not rolled: a win gives the listed drops only
+	var mp := MissionProgress.new()
+	var w := TokenWallet.new()
+	var got := MissionBoard.finish_reward(_result(true, false, "chapter1-1"), d, mp, w)
+	assert_eq(got.tokens, {})
+	assert_eq(got.gold, 100)
+	assert_eq(w.count("ember-core"), 0)
+	for bad in [0.0, -0.5, 1.5]:
+		a.chance_drops[0].chance = bad
+		assert_true(AssetValidator.validate_mission(a).any(func(e): return e.contains("chanceDrops[0]")), "chance %s" % bad)
+	a.chance_drops[0].chance = 1.0
+	assert_eq(AssetValidator.validate_mission(a), [] as Array[String], "chance 1 is fine")
+	a.chance_drops[0].token = null
+	assert_true(AssetValidator.validate_mission(a).any(func(e): return e.contains("chanceDrops[0] has no token")))
 
 func test_mission_records_never_touch_chapter_progress() -> void:
 	var g := GameData.new()

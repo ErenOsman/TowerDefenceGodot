@@ -27,11 +27,6 @@ func _wallet(amounts: Dictionary) -> TokenWallet:
 	w.add_all(amounts)
 	return w
 
-func _found() -> Dictionary:
-	var out := {}
-	for t in lib().catalog.tokens: out[t.get_id()] = WorkshopLogic.found_in_text(t.get_id(), lib().catalog)
-	return out
-
 # ------------------------------------------------------------------ the tree
 
 func test_tree_ids_paths_and_layout() -> void:
@@ -106,17 +101,6 @@ func test_lines() -> void:
 	assert_seq(WorkshopLogic.unlock_parts(t.find_form("archer-fire")), [["fire-arrow", "1 Fire Arrow"]])
 	assert_seq(WorkshopLogic.unlock_parts(t.find_form("archer-inferno")), [["ember-core", "1"], ["fire-arrow", "1"]], "two tokens: coins and counts")
 
-func test_found_in() -> void:
-	var c := lib().catalog
-	# Missions & Guild: missions are the only token source, so "Found in" names the missions (board order)
-	assert_eq(WorkshopLogic.found_in_text("poison-gland", c), "Night Watch and Drum Line")
-	assert_eq(WorkshopLogic.found_in_text("ember-core", c), "The Glutton Returns")
-	assert_eq(WorkshopLogic.found_in_text("fire-arrow", c), "Patrol, Night Watch and Drum Line")
-	assert_eq(WorkshopLogic.found_in_text("yew-bow", c), "Patrol")
-	assert_eq(WorkshopLogic.found_in_text("nothing", c), "")
-	assert_eq(WorkshopLogic.found_in_text("steel-plate", c.to_missions()), "Hold the Gate", "a mission list works too")
-	assert_eq(WorkshopLogic.found_in_text("steel-plate", null), "")
-
 func test_trait_lines() -> void:
 	lib()
 	var vocab := _conv.rules(lib().rules).vocabulary
@@ -151,28 +135,27 @@ func test_action_texts() -> void:
 	var t := _type()
 	var o := _owned()
 	var w := _wallet({"fire-arrow": 2})
-	var f := _found()
-	var a := WorkshopLogic.action(o, t, "archer-fire", w, 3, f)
+	var a := WorkshopLogic.action(o, t, "archer-fire", w, 3)
 	assert_eq(a.kind, "unlock")
 	assert_eq(a.text, "Unlock · 1 Fire Arrow")
-	assert_eq(a.note, "Unlocks for this Archer (tower 3).")
-	a = WorkshopLogic.action(o, t, "", w, 3, f)
+	assert_eq(a.note, "", "no sub-line under Unlock (UI/UX sweep 2026-10-16)")
+	a = WorkshopLogic.action(o, t, "", w, 3)
 	assert_eq(a.kind, "current")
-	assert_eq(a.note, "This is the tower's current form.")
-	a = WorkshopLogic.action(o, t, "archer-inferno", w, 3, f)
+	assert_eq(a.note, "")
+	a = WorkshopLogic.action(o, t, "archer-inferno", w, 3)
 	assert_eq(a.kind, "blocked")
 	assert_eq(a.reason, "Needs Fire Archer first.")
-	a = WorkshopLogic.action(o, t, "archer-poison", w, 3, f)
-	assert_eq(a.reason, "Needs 1 more Poison Gland. Found in: Night Watch and Drum Line.")
+	a = WorkshopLogic.action(o, t, "archer-poison", w, 3)
+	assert_eq(a.reason, "Needs 1 more Poison Gland.", "no Found in (Eren 2026-10-16)")
 	o.forms = ["archer-fire"]
 	o.form = "archer-fire"
 	w.spend({"fire-arrow": 1})
-	a = WorkshopLogic.action(o, t, "archer-inferno", w, 3, f)
-	assert_eq(a.reason, "Needs 1 more Ember Core. Found in: The Glutton Returns.")
-	a = WorkshopLogic.action(o, t, "", w, 3, f)
+	a = WorkshopLogic.action(o, t, "archer-inferno", w, 3)
+	assert_eq(a.reason, "Needs 1 more Ember Core.")
+	a = WorkshopLogic.action(o, t, "", w, 3)
 	assert_eq(a.kind, "use")
 	assert_eq(a.text, "Use this form")
-	assert_eq(a.note, "Free: switch back any time.")
+	assert_eq(a.note, "")
 	assert_eq(Workshop.last_reason, Workshop.last_reason, "action() leaves the rules alone")
 
 func test_confirm_texts() -> void:

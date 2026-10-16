@@ -12,7 +12,8 @@ const Room := "room"     # a play left, co-op only: Find a room
 const Done := "done"     # no play left today
 const Locked := "locked" # its requirement is not met
 
-const StartNote := "Starting uses a play, win or lose."
+## The detail's note when Play can start: none (Eren 2026-10-16 / UI/UX sub-line sweep: "Starting uses a play" removed).
+const StartNote := ""
 const BoardTitle := "Missions"
 const GuildTitle := "Guild"
 const GuildSub := "Missions and co-op"
@@ -33,7 +34,8 @@ const Stations := [
 	{"id": "Towers", "label": "Towers", "sub": "Your hand and layouts", "icon": "cards"},
 	{"id": "Camp", "label": "Camp", "sub": "Back to the Camp", "icon": "back"},
 ]
-const SpendInWorkshop := "Spend them in the Workshop."
+## The Rewards popup (Missions & Guild — Design § Rewards popup): the secondary button on the cards and the detail.
+const RewardsButton := "Rewards"
 const TiredDetail := "Tired: went on a mission today. Rests in %s."
 
 # ------------------------------------------------------------------ chips and lines
@@ -52,9 +54,10 @@ static func mode_short(m: MissionDef) -> String:
 	if m.mode == MissionMode.Any: return "Any %d–%d" % [m.min_players, m.max_players]
 	return mode_chip(m)
 
-## The board header's line: "Earn tokens for the Workshop · plays reset at midnight (in 5 h)".
+## The board header's line, the daily reset countdown: "Resets in 5 h" (no "Earn tokens for the Workshop": Eren
+## 2026-10-16; UI/UX mockup mission-rewards.html).
 static func board_subtitle(now = null) -> String:
-	return "Earn tokens for the Workshop · plays reset at midnight (in %s)" % MissionBoard.duration_text(MissionBoard.resets_in(now))
+	return "Resets in %s" % MissionBoard.duration_text(MissionBoard.resets_in(now))
 
 ## Under a card's name: the level ("Two Roads"), with the plays a day when more than one ("The Drummer · 2 plays a day").
 static func level_line(m: MissionDef, level_name: String) -> String:
@@ -104,13 +107,63 @@ static func drop_rows(m: MissionDef) -> Array:
 	if not m.first_win_tokens.is_empty(): out.append(["First win", m.first_win_tokens])
 	return out
 
-## The "Each win / First win" rows with their gold (Backpack — Design; missions are the only gold source):
-## [[label, {token id: amount}, gold], …]; a row shows when it drops tokens or gold.
-static func reward_rows(m: MissionDef) -> Array:
+## The board's order (Missions & Guild — Design § Tier: the board sorts by it): tier 1 first, then 2, then 3; within a
+## tier the catalog's order (missions as GameApp.missions() lists them). A new Array; the input is untouched.
+static func board_order(missions: Array) -> Array:
+	var keyed := []
+	for i in missions.size():
+		var m = missions[i]
+		if m != null: keyed.append([clampi(m.tier, 1, 3), i, m])
+	keyed.sort_custom(func(a, b): return a[0] < b[0] or (a[0] == b[0] and a[1] < b[1]))
+	return keyed.map(func(k): return k[2])
+
+## The tier pips: [filled, 3] (a missing tier reads 1).
+static func tier_pips(m: MissionDef) -> Array:
+	return [clampi(m.tier, 1, 3) if m != null else 1, 3]
+
+## The tier's tooltip / name: "Tier 2".
+static func tier_text(m: MissionDef) -> String:
+	return "Tier %d" % tier_pips(m)[0]
+
+## The compact one-line reward summary of a card / the detail / a room card (no labels): the gold per win, then the
+## every-win token coins, then the first-win coins (gold-rimmed, dimmed once claimed).
+## {gold: n, every: {token id: amount}, first: {token id: amount}, claimed: bool}.
+static func reward_summary(m: MissionDef, claimed := false) -> Dictionary:
+	if m == null: return {"gold": 0, "every": {}, "first": {}, "claimed": false}
+	return {"gold": maxi(0, m.win_gold), "every": m.win_tokens, "first": m.first_win_tokens,
+		"claimed": claimed and not m.first_win_tokens.is_empty()}
+
+## "150 gold" (the Rewards popup's gold row, mockup mission-rewards.html: the amount big, "gold" after it).
+static func gold_per_win_text(gold: int) -> String:
+	return "%d gold" % maxi(0, gold)
+
+## The popup's title: "Rewards · Night Watch".
+static func rewards_title(m: MissionDef) -> String:
+	return "Rewards · %s" % (m.name if m != null else "")
+
+## "30%: Ember Core" (a chance drop's text; whole percents, at least 1 %). The popup shows "30%" and the coin.
+static func chance_text(chance: float, token_name: String) -> String:
+	return "%d%%: %s" % [clampi(roundi(chance * 100.0), 1, 100), token_name]
+
+## The Rewards popup's rows, in order (Missions & Guild — Design § Rewards popup; nothing else, no sentences):
+##   {kind "gold", text "150 gold", gold}             every mission with gold
+##   {kind "every", label "Every win", tokens}          with every-win tokens
+##   {kind "first", label "First win", tokens, claimed} with first-win tokens (claimed: dimmed + "claimed")
+##   {kind "chance", label "Chance", drops: [{token, chance, text "30%: Ember Core"}]} with chanceDrops
+## name_of: Callable(token id) -> String for the chance texts (the token's display name); invalid = the id.
+static func rewards_rows(m: MissionDef, claimed := false, name_of := Callable()) -> Array:
 	var out := []
 	if m == null: return out
-	if not m.win_tokens.is_empty() or m.win_gold > 0: out.append(["Each win", m.win_tokens, maxi(0, m.win_gold)])
-	if not m.first_win_tokens.is_empty() or m.first_win_gold > 0: out.append(["First win", m.first_win_tokens, maxi(0, m.first_win_gold)])
+	if m.win_gold > 0: out.append({"kind": "gold", "text": gold_per_win_text(m.win_gold), "gold": m.win_gold})
+	if not m.win_tokens.is_empty(): out.append({"kind": "every", "label": "Every win", "tokens": m.win_tokens})
+	if not m.first_win_tokens.is_empty(): out.append({"kind": "first", "label": "First win", "tokens": m.first_win_tokens, "claimed": claimed})
+	if not m.chance_drops.is_empty():
+		var drops := []
+		for c in m.chance_drops:
+			var id := str(c.token)
+			var nm: String = str(name_of.call(id)) if name_of.is_valid() else id
+			drops.append({"token": id, "chance": float(c.chance), "text": chance_text(float(c.chance), nm)})
+		out.append({"kind": "chance", "label": "Chance", "drops": drops})
 	return out
 
 ## The first-win drop was taken already (the mission was won once): shown dimmed with "claimed".
@@ -137,7 +190,7 @@ static func detail_note(m: MissionDef, state: String, lock_reason: String, bring
 			var plays := "today's plays" if m != null and m.plays_per_day > 1 else "today's play"
 			return {"kind": "done", "text": "Done today: you used %s. Resets in %s." % [plays, MissionBoard.duration_text(MissionBoard.resets_in(now))]}
 		Room:
-			return {"kind": "coop", "text": "Co-op only (%d–%d players). Starting the match uses your play." % [m.min_players, m.max_players]}
+			return {"kind": "coop", "text": ""} # the mode chip and "Find a room" say it (no explainer: UI/UX sweep 2026-10-16)
 	if bring_reason != "": return {"kind": "warn", "text": bring_reason + ("" if bring_reason.ends_with(".") else ".")}
 	return {"kind": "info", "text": StartNote}
 
@@ -178,15 +231,11 @@ static func any_tired(hand: Array, mp: MissionProgress, now = null) -> bool:
 		if MissionBoard.is_tired(MissionBoard._id_of(t), mp, now): return true
 	return false
 
-## The detail's "Your hand" note: with tired towers "Patrol takes the first 4 rested towers; tired ones stay home.";
-## co-op only "Three at the Gate takes the first 3 towers (co-op: per player); the rest wait on the bench."; else the
-## level select's note ("Two Roads takes the first 4 towers; the rest wait on the bench.").
-static func hand_note(m: MissionDef, level_name: String, hand_count: int, cap: int, tired: bool) -> String:
+## The detail's "Your hand" note (UI/UX sweep 2026-10-16, mockup mission-rewards: one short line): "Patrol takes the
+## first 4 rested"; an empty hand keeps the level select's what-to-do line.
+static func hand_note(m: MissionDef, level_name: String, hand_count: int, cap: int, _tired := false) -> String:
 	if hand_count == 0: return MenuLogic.hand_strip_note(level_name, 0, cap)
-	if tired: return "%s takes the first %d rested %s; tired ones stay home." % [m.name if m != null else level_name, cap, MenuLogic.plural(cap, "tower")]
-	if m != null and not m.is_solo:
-		return "%s takes the first %d %s (co-op: per player); the rest wait on the bench." % [level_name, cap, MenuLogic.plural(cap, "tower")]
-	return MenuLogic.hand_strip_note(level_name, hand_count, cap)
+	return editor_cap_note(m.name if m != null else level_name, cap)
 
 ## The hand editor's divider note when opened for a mission: "Night Watch takes the first 4 rested".
 static func editor_cap_note(mission_name: String, cap: int) -> String:

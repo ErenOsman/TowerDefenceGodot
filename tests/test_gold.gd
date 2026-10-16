@@ -1,6 +1,6 @@
 extends TestCase
-## Upgrades — Design § Gold (Eren 2026-10-16): every level step has one gold task "Pay N gold" (TowerTaskKind.Pay with
-## a currency), filled only by deposits (TowerTasks.deposit / GameApp.pay_into, never by play); gold is saved in
+## Upgrades — Design § Gold (Eren 2026-10-16): every base-tower level step has one gold task "Pay N gold"
+## (TowerTaskKind.Pay with a currency; 100 / 200 / 300 / 500), form steps none, filled only by deposits (TowerTasks.deposit / GameApp.pay_into, never by play); gold is saved in
 ## GameData.gold (missions are its source: test_missions); the validator's gold rule; the dev action "Grant 500 gold".
 ## The GameApp part uses its own save path (restored after).
 
@@ -58,18 +58,36 @@ func _has(errors: Array, part: String) -> bool:
 
 # ------------------------------------------------------------------ content and validation
 
-func test_every_step_has_one_gold_task() -> void:
-	for a in lib().all_of("TowerAsset") + lib().all_of("FormAsset"):
+func test_gold_tasks_on_base_towers_only() -> void:
+	var conv := AssetConverter.new()
+	for a in lib().all_of("TowerAsset"):
+		assert_eq(a.levels.size(), 4, a.name)
+		var counts := []
 		for s in a.levels:
 			var gold: Array = s.tasks.filter(func(t): return t.kind == TowerTaskKind.Pay and t.currency == "gold")
 			assert_eq(gold.size(), 1, "%s step to %d" % [a.name, s.to])
-	# rising placeholders: towers 20/40/70/100, forms 15/30/50
+			counts.append(gold[0].count if not gold.is_empty() else 0)
+		# Eren 2026-10-16: 100 / 200 / 300 / 500 for levels 2–5, every tower (1100 gold to level 5)
+		assert_seq(counts, [100, 200, 300, 500], a.name)
+	for a in lib().all_of("FormAsset"):
+		for s in a.levels:
+			assert_false(s.tasks.any(func(t): return t.kind == TowerTaskKind.Pay), "%s step to %d: forms need no gold" % [a.name, s.to])
+		assert_true(TowerTasks.gold_task_index(conv.tower_levels(a.levels)[0]) < 0, a.name + ": no gold task index")
 	var archer := _type()
-	assert_seq(archer.levels.map(func(s): return s.tasks[TowerTasks.gold_task_index(s)].count), [20, 40, 70, 100])
-	var fire := archer.find_form("archer-fire")
-	assert_seq(fire.levels.map(func(s): return s.tasks[TowerTasks.gold_task_index(s)].count), [15, 30, 50])
+	assert_seq(archer.levels.map(func(s): return s.tasks[TowerTasks.gold_task_index(s)].count), [100, 200, 300, 500])
 	var j := ContentSerializer.to_json(lib().get_asset("Tower/Archer Tower"), lib())
-	assert_eq(j["levels"][0]["tasks"][1], {"kind": "Pay", "currency": "gold", "count": 20, "mission": null, "text": ""})
+	assert_eq(j["levels"][0]["tasks"][1], {"kind": "Pay", "currency": "gold", "count": 100, "mission": null, "text": ""})
+
+func test_validator_form_has_no_gold() -> void:
+	var form_step := _data_step(2, [_data_task(TowerTaskKind.WinMission)])
+	assert_eq(AssetValidator.validate_ladder([form_step], null, null, false), [] as Array[String], "a form step without gold is fine")
+	var paid := _data_step(2, [_data_task(TowerTaskKind.WinMission), _data_task(TowerTaskKind.Pay, 20, "gold")])
+	assert_true(_has(AssetValidator.validate_ladder([paid], null, null, false), "a form's step has no gold Pay task"))
+	assert_true(_has(AssetValidator.validate_ladder([form_step]), "needs exactly one gold Pay task"), "a base step without gold is an error")
+	# through validate_form / validate_tower with the real content
+	var fire: FormAsset = lib().get_asset("Form/Fire Archer") if lib().get_asset("Form/Fire Archer") != null else lib().all_of("FormAsset")[0]
+	assert_false(_has(AssetValidator.validate_form(fire), "gold"), "the starter forms pass")
+	assert_false(_has(AssetValidator.validate_tower(lib().get_asset("Tower/Archer Tower")), "gold"), "the starter towers pass")
 
 func test_validator_gold_rule() -> void:
 	var none := AssetValidator.validate_ladder([_data_step(2, [_data_task(TowerTaskKind.WinMission)])])
@@ -127,13 +145,13 @@ func test_deposit_partial_and_full() -> void:
 	var o := _owned()
 	var step := TowerLevels.step_for(o, type)
 	var gi := TowerTasks.gold_task_index(step)
-	assert_eq(gi, 1, "step 2: Win a mission, Pay 20 gold")
+	assert_eq(gi, 1, "step 2: Win a mission, Pay 100 gold")
 	assert_eq(TowerTasks.deposit(o, type, "", gi, 8), 8, "partial: all of a small amount")
 	assert_eq(TowerLevels.task_counts(o, type), [0, 8])
-	assert_eq(TowerTasks.pay_missing(o, type, "", gi), 12)
-	assert_eq(TowerTasks.progress_text(step.tasks[gi], 8), "8 / 20 gold")
-	assert_eq(TowerTasks.deposit(o, type, "", gi, 500), 12, "only what is missing")
-	assert_eq(TowerLevels.task_counts(o, type), [0, 20])
+	assert_eq(TowerTasks.pay_missing(o, type, "", gi), 92)
+	assert_eq(TowerTasks.progress_text(step.tasks[gi], 8), "8 / 100 gold")
+	assert_eq(TowerTasks.deposit(o, type, "", gi, 500), 92, "only what is missing")
+	assert_eq(TowerLevels.task_counts(o, type), [0, 100])
 	assert_eq(TowerTasks.deposit(o, type, "", gi, 500), 0, "full: nothing more taken")
 	assert_eq(TowerTasks.deposit(o, type, "", 0, 500), 0, "not a Pay task")
 	assert_eq(TowerTasks.deposit(o, type, "", 9, 500), 0, "no such task")
@@ -145,11 +163,11 @@ func test_deposit_partial_and_full() -> void:
 	assert_eq(TowerTasks.deposit(o, type, "", 2, 0), 0, "no gold: nothing")
 	assert_eq(TowerTasks.deposit(o, type, "", 2, 15), 15, "step 3's gold task (index 2)")
 	assert_eq(TowerLevels.task_counts(o, type), [0, 0, 15])
-	# forms: only an unlocked form takes gold
+	# forms need no gold: nothing to deposit into, unlocked or not
 	assert_eq(TowerTasks.deposit(o, type, "archer-fire", 1, 50), 0, "not unlocked")
 	o.forms = ["archer-fire"]
-	assert_eq(TowerTasks.deposit(o, type, "archer-fire", 1, 50), 15)
-	assert_eq(o.task_progress["archer-fire:2"], [0, 15])
+	assert_eq(TowerTasks.deposit(o, type, "archer-fire", 1, 50), 0, "a form step has no Pay task")
+	assert_false(o.task_progress.has("archer-fire:2"))
 	o.level = 5
 	assert_eq(TowerTasks.deposit(o, type, "", 2, 50), 0, "max level: no step")
 
@@ -209,22 +227,22 @@ func test_grant_gold_action() -> void:
 func test_game_app_pay_into() -> void:
 	var app = _tree().root.get_node("GameApp")
 	var o: OwnedTower = _sd.towers.add("archer")
-	_sd.data.gold = 30
-	assert_eq(app.gold(), 30)
+	_sd.data.gold = 130
+	assert_eq(app.gold(), 130)
 	assert_eq(app.pay_into(o, "", 1), 0, "the Blacksmith is closed: no levels yet")
 	DevShortcuts.complete_main_chapters(_sd.data, app.catalog, 2)
 	assert_true(app.blacksmith_unlocked())
 	assert_eq(app.pay_into(o, "", 0), 0, "not the gold task")
-	assert_eq(app.pay_into(o, "", 1), 20, "Pay 20 gold: 20 of 30 taken")
-	assert_eq(app.gold(), 10)
-	assert_eq(o.task_progress["2"], [0, 20])
+	assert_eq(app.pay_into(o, "", 1), 100, "Pay 100 gold: 100 of 130 taken")
+	assert_eq(app.gold(), 30)
+	assert_eq(o.task_progress["2"], [0, 100])
 	assert_eq(app.pay_into(o, "", 1), 0, "already paid")
-	assert_eq(app.gold(), 10)
+	assert_eq(app.gold(), 30)
 	var saved := GameData.from_json(FileAccess.get_file_as_string(_sd.path))
-	assert_eq(saved.gold, 10, "saved")
+	assert_eq(saved.gold, 30, "saved")
 	o.task_progress["2"][0] = 1
 	assert_true(app.upgrade_tower(o))
-	assert_eq(app.pay_into(o, "", 2), 10, "partial: all the 10 left into Pay 40 gold")
+	assert_eq(app.pay_into(o, "", 2), 30, "partial: all the 30 left into Pay 200 gold")
 	assert_eq(app.gold(), 0)
 	assert_eq(app.pay_into(o, "", 2), 0, "no gold left")
-	assert_eq(TowerLevels.task_counts(o, app.tower_type("archer")), [0, 0, 10])
+	assert_eq(TowerLevels.task_counts(o, app.tower_type("archer")), [0, 0, 30])

@@ -19,8 +19,7 @@
         {
           "to": 2,
           "tasks": [
-            { "kind": "WinMission", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 15 }
+            { "kind": "WinMission", "count": 1 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "1" }
@@ -30,8 +29,7 @@
           "to": 3,
           "tasks": [
             { "kind": "WinMission", "count": 1 },
-            { "kind": "Kills", "count": 8 },
-            { "kind": "Pay", "currency": "gold", "count": 30 }
+            { "kind": "Kills", "count": 8 }
           ],
           "bonuses": [
             { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
@@ -41,8 +39,7 @@
           "to": 4,
           "tasks": [
             { "kind": "WinMission", "count": 2 },
-            { "kind": "WinNoLoss", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 50 }
+            { "kind": "WinNoLoss", "count": 1 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "2" }
@@ -69,8 +66,7 @@
         {
           "to": 2,
           "tasks": [
-            { "kind": "WinMission", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 15 }
+            { "kind": "WinMission", "count": 1 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "1" }
@@ -80,8 +76,7 @@
           "to": 3,
           "tasks": [
             { "kind": "WinMission", "count": 1 },
-            { "kind": "Kills", "count": 8 },
-            { "kind": "Pay", "currency": "gold", "count": 30 }
+            { "kind": "Kills", "count": 8 }
           ],
           "bonuses": [
             { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
@@ -91,8 +86,7 @@
           "to": 4,
           "tasks": [
             { "kind": "WinMission", "count": 2 },
-            { "kind": "WinNoLoss", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 50 }
+            { "kind": "WinNoLoss", "count": 1 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "2" }
@@ -118,8 +112,7 @@
         {
           "to": 2,
           "tasks": [
-            { "kind": "WinMission", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 15 }
+            { "kind": "WinMission", "count": 1 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "1" }
@@ -129,8 +122,7 @@
           "to": 3,
           "tasks": [
             { "kind": "WinMission", "count": 1 },
-            { "kind": "Kills", "count": 8 },
-            { "kind": "Pay", "currency": "gold", "count": 30 }
+            { "kind": "Kills", "count": 8 }
           ],
           "bonuses": [
             { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
@@ -140,8 +132,7 @@
           "to": 4,
           "tasks": [
             { "kind": "WinMission", "count": 2 },
-            { "kind": "WinNoLoss", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 50 }
+            { "kind": "WinNoLoss", "count": 1 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "2" }
@@ -167,8 +158,7 @@
         {
           "to": 2,
           "tasks": [
-            { "kind": "WinMission", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 15 }
+            { "kind": "WinMission", "count": 1 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "1" }
@@ -178,8 +168,7 @@
           "to": 3,
           "tasks": [
             { "kind": "WinMission", "count": 1 },
-            { "kind": "Kills", "count": 8 },
-            { "kind": "Pay", "currency": "gold", "count": 30 }
+            { "kind": "Kills", "count": 8 }
           ],
           "bonuses": [
             { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
@@ -189,8 +178,7 @@
           "to": 4,
           "tasks": [
             { "kind": "WinMission", "count": 2 },
-            { "kind": "WinNoLoss", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 50 }
+            { "kind": "WinNoLoss", "count": 1 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "2" }
@@ -216,8 +204,7 @@
         {
           "to": 2,
           "tasks": [
-            { "kind": "WinMission", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 15 }
+            { "kind": "WinMission", "count": 1 }
           ],
           "bonuses": [
             { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
@@ -227,8 +214,7 @@
           "to": 3,
           "tasks": [
             { "kind": "WinMission", "count": 1 },
-            { "kind": "HitsTaken", "count": 30 },
-            { "kind": "Pay", "currency": "gold", "count": 30 }
+            { "kind": "HitsTaken", "count": 30 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "1" }
@@ -238,8 +224,7 @@
           "to": 4,
           "tasks": [
             { "kind": "WinMission", "count": 2 },
-            { "kind": "WinNoLoss", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 50 }
+            { "kind": "WinNoLoss", "count": 1 }
           ],
           "bonuses": [
             { "stat": "MaxHp", "kind": "Flat", "amount": "10" }
@@ -266,8 +251,7 @@
         {
           "to": 2,
           "tasks": [
-            { "kind": "WinMission", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 15 }
+            { "kind": "WinMission", "count": 1 }
           ],
           "bonuses": [
             { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
@@ -277,8 +261,7 @@
           "to": 3,
           "tasks": [
             { "kind": "WinMission", "count": 1 },
-            { "kind": "HitsTaken", "count": 30 },
-            { "kind": "Pay", "currency": "gold", "count": 30 }
+            { "kind": "HitsTaken", "count": 30 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "1" }
@@ -288,8 +271,7 @@
           "to": 4,
           "tasks": [
             { "kind": "WinMission", "count": 2 },
-            { "kind": "WinNoLoss", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 50 }
+            { "kind": "WinNoLoss", "count": 1 }
           ],
           "bonuses": [
             { "stat": "MaxHp", "kind": "Flat", "amount": "10" }
@@ -316,8 +298,7 @@
         {
           "to": 2,
           "tasks": [
-            { "kind": "WinMission", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 15 }
+            { "kind": "WinMission", "count": 1 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "1" }
@@ -327,8 +308,7 @@
           "to": 3,
           "tasks": [
             { "kind": "WinMission", "count": 1 },
-            { "kind": "Damage", "count": 80 },
-            { "kind": "Pay", "currency": "gold", "count": 30 }
+            { "kind": "Damage", "count": 80 }
           ],
           "bonuses": [
             { "stat": "MaxHp", "kind": "Flat", "amount": "3" }
@@ -338,8 +318,7 @@
           "to": 4,
           "tasks": [
             { "kind": "WinMission", "count": 2 },
-            { "kind": "WinNoLoss", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 50 }
+            { "kind": "WinNoLoss", "count": 1 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "2" }
@@ -365,8 +344,7 @@
         {
           "to": 2,
           "tasks": [
-            { "kind": "WinMission", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 15 }
+            { "kind": "WinMission", "count": 1 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "1" }
@@ -376,8 +354,7 @@
           "to": 3,
           "tasks": [
             { "kind": "WinMission", "count": 1 },
-            { "kind": "Damage", "count": 80 },
-            { "kind": "Pay", "currency": "gold", "count": 30 }
+            { "kind": "Damage", "count": 80 }
           ],
           "bonuses": [
             { "stat": "MaxHp", "kind": "Flat", "amount": "3" }
@@ -387,8 +364,7 @@
           "to": 4,
           "tasks": [
             { "kind": "WinMission", "count": 2 },
-            { "kind": "WinNoLoss", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 50 }
+            { "kind": "WinNoLoss", "count": 1 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "2" }
@@ -414,8 +390,7 @@
         {
           "to": 2,
           "tasks": [
-            { "kind": "WinMission", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 15 }
+            { "kind": "WinMission", "count": 1 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "1" }
@@ -425,8 +400,7 @@
           "to": 3,
           "tasks": [
             { "kind": "WinMission", "count": 1 },
-            { "kind": "Damage", "count": 80 },
-            { "kind": "Pay", "currency": "gold", "count": 30 }
+            { "kind": "Damage", "count": 80 }
           ],
           "bonuses": [
             { "stat": "MaxHp", "kind": "Flat", "amount": "3" }
@@ -436,8 +410,7 @@
           "to": 4,
           "tasks": [
             { "kind": "WinMission", "count": 2 },
-            { "kind": "WinNoLoss", "count": 1 },
-            { "kind": "Pay", "currency": "gold", "count": 50 }
+            { "kind": "WinNoLoss", "count": 1 }
           ],
           "bonuses": [
             { "stat": "Power", "kind": "Flat", "amount": "2" }

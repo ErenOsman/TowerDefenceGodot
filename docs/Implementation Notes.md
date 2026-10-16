@@ -107,7 +107,7 @@ Starter content; placeholder names and numbers) are ordinary content in `data/co
 | --- | --- |
 | `Forms.json` (`FormAsset`) | the 9 starter forms: `archer-fire`, `archer-inferno` (child of Fire Archer), `archer-poison`, `archer-longbow`, `guardian-bastion`, `guardian-spiked`, `mage-pyro`, `mage-frost`, `mage-storm`. Fields: `id, displayName, description, icon, badge, tower, parent, entity, cost (-1 = base), unlock [{token, amount}], order`. Icons = the base tower's portrait; badges `art/ui/KitB/forms/<form id>.png` |
 | `Tokens.json` (`TokenAsset`) | `fire-arrow, poison-gland, yew-bow, steel-plate, arcane-shard, ember-core` (`id, displayName, description, icon, rarity`); icons `art/ui/KitB/tokens/<token id>.png` |
-| `Missions.json` (`MissionAsset`) | the 5 starter missions: `patrol` (Two Roads, Any 1–4), `night-watch` (Rock Garden, Any 1–4), `hold-the-gate` (Three at the Gate, Coop 2–6), `drum-line` (The Drummer, Any 1–4, 2 plays a day), `glutton-returns` (The Glutton, Coop 2–6); all separate energy pools (sharedPool false), coopHandCap 3. Fields: `id, displayName, description, icon ("" until the kit has mission art), level, mode (Solo/Coop/Any), players {min, max}, playsPerDay, requires [level or mission keys], requireAll, sharedPool, coopHandCap, firstWinTokens, winTokens, firstWinGold, winGold` |
+| `Missions.json` (`MissionAsset`) | the 5 starter missions: `patrol` (Two Roads, Any 1–4), `night-watch` (Rock Garden, Any 1–4), `hold-the-gate` (Three at the Gate, Coop 2–6), `drum-line` (The Drummer, Any 1–4, 2 plays a day), `glutton-returns` (The Glutton, Coop 2–6); all separate energy pools (sharedPool false), coopHandCap 3. Fields: `id, displayName, description, icon ("" until the kit has mission art), level, mode (Solo/Coop/Any), players {min, max}, playsPerDay, requires [level or mission keys], requireAll, sharedPool, coopHandCap, firstWinTokens, winTokens, tier, winGold, chanceDrops` (tiers: Patrol 1, Night Watch 1, Hold the Gate 2, Drum Line 2, The Glutton Returns 3; placeholders) |
 | `Catalog.json`, `Rules.json` | the catalog's `guildUnlock` (= Chapter 2's last level) and `missions` (the board order); the rules' `towerEnergyPerDay` = 1. **Chapter levels drop no tokens**, missions are the only token source |
 | `Levels.json` | the **short tutorial level** `Level/Tutorial/Tutorial`: 7 × 5, road (0,2)–(5,2), castle (6,2), build tiles columns 4–6 of rows 0/1/3/4, same waves/energy/hand (Guided Tutorial — Design § The level; Eren 2026-10-14). `data/tutorial.json`'s tiles match it. Golden plays the frozen Unity snapshot's 12 × 5 entry (see "Golden" below) |
 | `Units.json`, `Abilities.json`, `Passives.json`, `Reactions.json` | the form entities (`Unit/Tower/Form/*`: copies of the base tower with the doc's stat changes, base model/icon/miniature) and their abilities (Fire Shot, Fire Volley, Venom Shot, Long Shot, Shield Bash, Fireball, Frost Bolt, Chain Spark), the Spiked Counter-attack passive and its 8-damage reaction |
@@ -145,10 +145,14 @@ How it is read:
   The result goes to `MissionProgress` under the mission id with the mission's drops (`MissionBoard.finish_reward` →
   `{tokens, gold}`; `finish` = its tokens), never to the chapter progress (no first-clear tower). Chapter levels never
   tire towers or drop tokens or gold.
-- **Gold** (2026-10-16): `MissionAsset` / `MissionDef` `winGold` (every win) and `firstWinGold` (with the first win),
-  ints ≥ 0 (validated; starter missions 10–25 / 30–60). `MissionBoard.gold_drop(result, record, mission)`; a loss or
-  quit gives none. `LevelController._record` adds it to `GameData.gold` and keeps it in `gold_drop` (int) /
-  `gold_text` ("+25 gold") for the end screen, apart from `drops` (token ids only, so the token row is unchanged).
+- **Gold and tier** (2026-10-16, second pass): `MissionAsset` / `MissionDef` `tier` (1–3; the asset's 0 = not set →
+  tier 1 with a Validate All **warning**, outside 1–3 an error) and `winGold` (every win, ≥ 0; 100 / 150 / 200 by tier =
+  `MissionBoard.tier_gold`, the starter content follows it). **No first-win gold**: `firstWinGold` is gone (schema,
+  asset, def, converter, validator, reward rule, tests); an old content file that still has it fails to load the
+  field ("no such field"). `chanceDrops` (`[ChanceDrop {token, chance}]`, 0 < chance ≤ 1, validated; def: `[{token
+  id, chance}]`) is read and listed in the Rewards popup but **never rolled** yet. `MissionBoard.gold_drop` = winGold
+  on a win, 0 on a loss or quit. `LevelController._record` adds it to `GameData.gold` and keeps it in `gold_drop` /
+  `gold_text` ("+150 gold") for the end screen.
   Co-op: every client records its own player's result, so every player in a won mission match gets it.
 - Co-op: rooms still carry level ids; `CoopLevels.mission_for_level` maps them to the Coop/Any mission. `create` adds
   the extra field `mission` (the relay ignores unknown fields; it does not store or echo it). `CoopLaunch.start_match`
@@ -184,12 +188,14 @@ How it is read:
   `complete_tasks` ("Complete current tasks", gold tasks included), in the F1 panel and the TD Tools Save tab.
 - **Gold task** (Eren 2026-10-16; Upgrades — Design § Gold): kind `Pay` (`TowerTaskKind.Pay`) with `currency`
   (`TowerTaskData.currency` / `TaskDef.currency`, a string: `"gold"` = `TowerTasks.Gold`, a token id later). Content:
-  every step of every ladder ends with `{ "kind": "Pay", "currency": "gold", "count": N }` (towers 20/40/70/100 for
-  levels 2–5, forms 15/30/50; placeholders). Validation (`validate_ladder(levels, vocab, tokens = null)`): exactly one
-  gold Pay task per step, Pay needs a currency, counts > 0, a currency only on Pay tasks; a token currency must be a
+  every step of every **base tower's** ladder ends with `{ "kind": "Pay", "currency": "gold", "count": N }` (100 / 200 /
+  300 / 500 for levels 2–5, every tower: 1100 gold to level 5; Eren 2026-10-16); **form ladders have no Pay task**.
+  Validation (`validate_ladder(levels, vocab, tokens = null, base = true)`; `validate_form` passes base = false):
+  exactly one gold Pay task per base step and none per form step, Pay needs a currency, counts > 0, a currency only on Pay tasks; a token currency must be a
   token id (checked when `tokens` is given; Validate All / `ContentCheck.run` checks it against the content's tokens).
-  The content check's tower / form probes add a "gold" column and "gold tasks: 20 + 40 + 70 + 100 = 230 gold to level
-  5"; mission probes say their gold.
+  The content check's tower probes add a "gold" column and "gold tasks: 100 + 200 + 300 + 500 = 1100 gold to level
+  5", form probes "gold tasks: none (forms need no gold)"; mission probes say "tier 2, gold: 150 every win" and list
+  chance drops.
 - Pay tasks never count from play (`TowerTasks._gain` → 0). The Pay button deposits: `TowerTasks.deposit(tower, type,
   form_id, task_index, have) -> int` puts min(have, missing) into the same `task_progress` count and returns it
   (0: no step / not a Pay task / form not unlocked / full); `GameApp.pay_into(owned, form_id, task_index) -> int`
@@ -204,8 +210,8 @@ How it is read:
 **Source of truth: `docs/design/Backpack — Design.md`**; UI/UX mockups `screens-b/backpack.html`, `backpack-button.html`,
 `upgrade-pay.html`, `upgrade-pay-nogold.html`. No new save data (`GameData.gold`, `GameData.tokens`).
 - `BackpackScreen` (`game/ui/screens/backpack.gd/.tscn`, a centred TdPopup, × only, Esc / right click / scrim close):
-  gold row ("[coin] 240 gold · From missions; spent on upgrades", always, "0" too), "Tokens" (catalog order: coin,
-  name, "×2", muted "Found in: …" = `WorkshopLogic.found_in_text`), muted "Items · Nothing here yet.". A kind shows
+  gold row ("[coin] 240 gold", always, "0" too), "Tokens" (catalog order: coin, name, "×2"), muted "Items · Nothing
+  here yet."; 720 px wide. No "found in" / "from missions" texts (Eren 2026-10-16). A kind shows
   when it is owned or was ever earned (`TokenWallet.earned`); spent out = ×0 at 50 %; never earned = hidden.
   `BackpackScreen.show_over(parent)`.
 - `TdBackpackButton` (`parts/td_backpack_button.gd`, a TdButton SECONDARY with bag glyph + gold coin + the count in
@@ -220,18 +226,44 @@ How it is read:
 - Upgrade view Pay (`UpgradeScreen._pay_column` / `pay(task_index)`): the gold task row (`UpgradeLogic.task_rows`
   gained `index`, `gold`, `missing`; a Pay task's unit is its currency: "25 / 40 gold") gets a secondary "Pay 15"
   (`BackpackLogic.pay_text` = min(gold, missing)) → `GameApp.pay_into(owned, ladder, i)` → view, both headers and
-  the place's button refresh. Under it: "You have 10: pays what you can." (muted) when gold < missing; with no gold
-  the button is disabled and the red 18 px "You have no gold. / Missions give gold." (as the mockup, inside the row
-  under the button).
-- Guild: `MissionUiLogic.reward_rows(m)` = [[label, tokens, gold]] (a row shows with tokens or gold); `TdDrops.rows`
-  (board cards, detail Drops, lobby / create popup) and the room card add `TdDrops.gold_coin(amount, first, dim)`
-  after the token coins. `drop_rows` (tokens only) is unchanged for its old callers.
-- End screen: `_mission_rewards(groups, gold, gold_text)` puts one gold chip ("+40 gold" = `controller.gold_text`,
-  every-win and first-win gold together) right after "Rewards"; a gold-only win shows "Rewards [+25 gold]".
+  the place's button refresh. No line under it (Eren 2026-10-16): with no gold it is simply disabled (tooltip "You
+  have no gold."). The "After upgrade" card marks a changed stat with a green "+5" chip **inside** its tile after the
+  value (no outline: the outline looked bad and the chip hung over the tile's top edge, cut and covered by the next tile);
+  the Now / After columns are 380 px (were 340) so "25 [+5] Max HP" fits without clipping.
+- Guild: no inline drop rows any more; see "Rewards popup" below.
+- End screen: `_mission_rewards(groups, gold, gold_text)` puts one gold chip ("+150 gold" = `controller.gold_text`)
+  right after "Rewards"; a gold-only win shows "Rewards [+150 gold]"; no "Spend them in the Workshop." any more.
 - Texts / rules: `BackpackLogic` (`parts/backpack_logic.gd`), tests `tests/test_backpack_ui.gd`. Renders:
   `tools/backpack_shot.gd` → `/srv/wiki-art/godot/renders/backpack/` (13 frames, own save).
-- Not done: no QA tour step; the board subtitle still says "Earn tokens for the Workshop"; the Backpack has no scroll
-  (fine for the 6 starter kinds).
+- Not done: no QA tour step; the Backpack has no scroll (fine for the 6 starter kinds).
+
+## Rewards popup, tiers, no explanations (2026-10-16)
+**Source: Missions & Guild — Design § Tier / Rewards popup; UI/UX mockup `screens-b/mission-rewards.html`.**
+- `RewardsScreen` (`game/ui/screens/rewards.gd/.tscn`, centred TdPopup, × / Esc / scrim): "Rewards · Night Watch", a
+  dark band with the tier diamonds and "[coin] 150 gold", then "Every win" coins, "First win" coins (gold rim; dimmed
+  with "✓ claimed" once the mission was won), "Chance" ("30%" + coin) when chanceDrops exist. Rows:
+  `MissionUiLogic.rewards_rows(m, claimed, name_of)` (pure, tested). `RewardsScreen.show_over(parent, mission_id)`.
+- Opened by a secondary "Rewards" button (`TdDrops.rewards_button` / `tier_row` = tier diamonds + the button) on the
+  board cards, the mission detail (the right column's box replaces the old "Drops"), the lobby's level card, the
+  Create-room popup and the room's side card. The inline "Each win / First win" rows are gone everywhere (the
+  mockup has none; a one-line coin summary did not fit the detail's 580 px column beside the button).
+- Tier diamonds: `TdDrops.tier_diamonds(m)` (drawn rhombi, gold up to the tier, tooltip "Tier 2"). The board and the
+  detail's list sort by `MissionUiLogic.board_order` (tier, then catalog order).
+- Removed sub-lines (Eren 2026-10-16 "açıklamaya gerek yok" + the UI/UX sweep): Backpack "Found in: …" and "From
+  missions; spent on upgrades"; Workshop "Found in" (tooltips and the "Needs 1 more Ember Core." reason), "Unlocks
+  for this Archer (tower 3).", "Free: switch back any time.", "This is the tower's current form."; the Pay row's
+  "You have no gold. / Missions give gold." and "You have 10: pays what you can."; the board subtitle "Earn tokens
+  for the Workshop · plays reset at midnight (in 5 h)" → "Resets in 5 h"; the token pills' "Found in"; the detail's
+  "Starting uses a play, win or lose." and "Co-op only (2–6 players). Starting the match uses your play."; the
+  detail's hand note → "Patrol takes the first 4 rested"; the lobby's "Co-op gives no rewards or records to your
+  story."; the end screen's "Spend them in the Workshop."; the gold coin tooltip's "Spent on tower upgrades at the
+  Blacksmith.". `WorkshopLogic.found_in_text`, `BackpackLogic.found_line / pay_note / GoldSub / PartialPay`,
+  `MissionUiLogic.reward_rows / SpendInWorkshop`, `TdDrops.rows` were deleted (`MissionBoard.found_in(_text)` stays
+  for tools).
+- Kept on purpose: the Camp tour lines ("… tokens from missions", "Missions there earn tokens") and the Guild's
+  welcome card (the doc wants it to say what missions and tokens are).
+- Renders: `tools/gold2_shot.gd` → `/srv/wiki-art/godot/renders/gold2/` (gives Night Watch a 30 % Ember Core chance
+  drop in memory only, to show the Chance row).
 
 ## Missions & Guild screens
 - `SceneFlow.Guild` → `game/ui/screens/guild.tscn`: the Blender agent's 3D guild hall (`art/guild/`, layout.json in
@@ -281,8 +313,7 @@ How it is read:
   today: you played … Resets in 5 h."; the auto-leave runs in the lobby (deferred `leave_room` + "Done today" popup);
   the room shows your saved hand's first cap towers with the tired ones badged and `CoopLevels.tired_note`; Ready is
   refused by `CoopLevels.can_ready` (also with an empty saved hand).
-- Workshop "Found in" names missions (`WorkshopLogic.found_in_text(token, GameApp.missions())` →
-  `MissionBoard.found_in_text`); the old "Chapter 2 levels" / "(boss)" grouping is gone.
+- Workshop: no "Found in" any more (2026-10-16; the mission's Rewards popup lists drops).
 - Renders: `tools/guild_shot.gd` (gives The Glutton Returns a "Win Hold the Gate first" requirement in memory only,
   to show a locked card).
 
@@ -334,13 +365,12 @@ takes every mouse event over the scene:
 - Opened from the Camp's Workshop station (`camp.gd` STATIONS: `open_workshop`, a TdPopup like Codex / Towers; the tour
   line is unchanged). Picker = `TdCollection` (the hand editor's filters + grid, shared; no hand row, no quick cost chips
   or toggles) + a detail card; Modify view slides in (0.35 s) in the same popup, not a separate scene.
-- Texts, states, tree layout, compare tiles, tag lines, the action and "Found in" are `WorkshopLogic` (pure, tested in
+- Texts, states, tree layout, compare tiles, tag lines and the action are `WorkshopLogic` (pure, tested in
   `tests/test_workshop_ui.gd`); the card parts are `TdTowerCard` (shared with the hand editor), the badge `TdFormBadge`
   (a colour dot under 20 px). Renders: `tools/workshop_shot.gd`.
 - Tree: root children by `FormDef.order` on the mockup's slots (left, right, below; more than 3 evenly round the root),
   grandchildren 200 px beyond their parent (up from a side node). The right card shows the selected form as it is
   (stat tiles, abilities, passives): no comparison with the current form (user decision 2026-10-14).
-- "Found in" names the missions that drop the token (see Missions & Guild screens).
 - Elsewhere: `MenuLogic.tower_name` returns the form's name for a formed tower without a custom name (hand cards,
   slots, level-select strip, the picker); `HandLogic.entries` builds a formed tower from its form (entity, cost,
   traits, description, badge); Default sort keeps the collection order within a type. HUD tray pieces, the placed

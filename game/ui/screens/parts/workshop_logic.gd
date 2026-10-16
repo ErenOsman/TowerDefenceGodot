@@ -3,7 +3,7 @@ extends RefCounted
 ## The Workshop screen's pure helpers (Workshop — Design; mockup ~/uiux/mockups/screens-b/js/workshop.js), no nodes
 ## and no autoloads, so they can be tested: the tree's node ids, states and layout, what the right card compares
 ## (stat tiles, "+ Burn on hit" tag lines, abilities Changed / Same / New / Gone), the one action and its texts, the
-## confirm popup's texts and "Found in: …". The rules themselves are Workshop's (sim/meta/workshop.gd).
+## confirm popup's texts. The rules themselves are Workshop's (sim/meta/workshop.gd).
 ## A node id is a form id; ROOT ("") is the type's default form.
 
 const ROOT := ""
@@ -232,28 +232,22 @@ static func unlock_parts(form: FormDef) -> Array:
 	return out
 
 ## The card's one action for a node: {kind, text, note, reason}.
-##  kind "unlock": text "Unlock · 1 Fire Arrow", note "Unlocks for this Archer (tower 3)."
-##  kind "use": text "Use this form", note "Free: switch back any time."
-##  kind "current": a disabled "✓ Current form" button, note "This is the tower's current form."
-##  kind "blocked": a disabled "Unlock", reason = Workshop.last_reason + "." and, for missing tokens,
-##  " Found in: …." (found: {token id: text}, from found_in_text).
-static func action(owned: OwnedTower, type: TowerType, id: String, wallet: TokenWallet, index: int, found := {}) -> Dictionary:
+##  kind "unlock": text "Unlock · 1 Fire Arrow", no note
+##  kind "use": text "Use this form", no note (UI/UX sub-line sweep 2026-10-16: "Unlocks for this …" and "Free: switch
+##  back any time" removed)
+##  kind "current": a disabled "✓ Current form" button, no note
+##  kind "blocked": a disabled "Unlock", reason = Workshop.last_reason + "." ("Needs 1 more Ember Core."; no "Found
+##  in": Eren 2026-10-16, the mission's Rewards popup is the one place that lists drops).
+static func action(owned: OwnedTower, type: TowerType, id: String, wallet: TokenWallet, _index := 0) -> Dictionary:
 	var st := node_state(owned, type, id, wallet)
-	var base := name_of(type, ROOT)
 	match st:
-		"current": return {"kind": "current", "text": "Current form", "note": "This is the tower's current form.", "reason": ""}
-		"unlocked": return {"kind": "use", "text": "Use this form", "note": "Free: switch back any time.", "reason": ""}
+		"current": return {"kind": "current", "text": "Current form", "note": "", "reason": ""}
+		"unlocked": return {"kind": "use", "text": "Use this form", "note": "", "reason": ""}
 		"can": return {"kind": "unlock", "text": "Unlock · " + spend_text(form_of(type, id)),
-			"note": "Unlocks for this %s (tower %d)." % [base, index], "reason": ""}
+			"note": "", "reason": ""}
 	var f := form_of(type, id)
 	Workshop.can_unlock(owned, f, wallet)
 	var reason := Workshop.last_reason + "."
-	if st == "need" and f != null and wallet != null:
-		var where := []
-		for t in wallet.missing(f.unlock):
-			var w: String = found.get(t, "")
-			if w != "" and not where.has(w): where.append(w)
-		if not where.is_empty(): reason += " Found in: %s." % "; ".join(where)
 	return {"kind": "blocked", "text": "Unlock", "note": "", "reason": reason}
 
 ## The confirm popup's title: "Unlock Fire Archer for this Archer?".
@@ -270,15 +264,6 @@ static func confirm_body(type: TowerType, form: FormDef, wallet: TokenWallet) ->
 			var n := int(form.unlock[id])
 			parts.append("%d %s (you have %d → %d)" % [n, form.token_name(id), have, have - n])
 	return "Spends %s. You can switch back to %s any time." % [" and ".join(parts), name_of(type, ROOT)]
-
-## Where a token drops, for "Found in: …" and the token tooltips: the missions that drop it, by name in board order
-## ("Night Watch and Drum Line"; Missions & Guild — Design: missions are the only token source), via
-## MissionBoard.found_in_text. "" when no mission drops it. missions: the board's MissionDefs (GameApp.missions()),
-## or a GameCatalogAsset (its missions are converted).
-static func found_in_text(token_id: String, missions) -> String:
-	if missions is GameCatalogAsset: missions = missions.to_missions()
-	if not (missions is Array): return ""
-	return MissionBoard.found_in_text(token_id, missions)
 
 # ------------------------------------------------------------------ the Codex's Forms page (mockup codex2.html)
 

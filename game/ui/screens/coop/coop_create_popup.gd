@@ -201,7 +201,7 @@ func _refresh() -> void:
 		var rich: RichTextLabel = _plays_note.get_child(0).get_child(_plays_note.get_child(0).get_child_count() - 1)
 		rich.text = MissionUiLogic.create_plays_note(cm, mp)
 		var box := CoopUi.flat_panel(Color("2b201a"), 10, Color(0, 0, 0, 0), Vector4(12, 8, 12, 8))
-		box.add_child(TdDrops.rows(cm, MissionUiLogic.first_win_claimed(cm, mp), 34.0, 86.0, 19))
+		box.add_child(TdDrops.tier_row(cm, self, 20.0, 44.0, 20))
 		_drops.add_child(box)
 	var ok: bool = room_name.strip_edges() != "" and level_id != "" and net != null and net.is_online
 	_create.set_interactable(ok, "Name the room" if room_name.strip_edges() == "" else "Not connected")

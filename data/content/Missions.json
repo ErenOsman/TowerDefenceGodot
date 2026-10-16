@@ -20,8 +20,8 @@
       "winTokens": [
         { "token": "Token/Yew Bow", "amount": 1 }
       ],
-      "firstWinGold": 30,
-      "winGold": 10
+      "tier": 1,
+      "winGold": 100
     },
     "Mission/Night Watch": {
       "id": "night-watch",
@@ -43,8 +43,8 @@
         { "token": "Token/Fire Arrow", "amount": 1 },
         { "token": "Token/Poison Gland", "amount": 1 }
       ],
-      "firstWinGold": 40,
-      "winGold": 15
+      "tier": 1,
+      "winGold": 100
     },
     "Mission/Hold the Gate": {
       "id": "hold-the-gate",
@@ -65,8 +65,8 @@
       "winTokens": [
         { "token": "Token/Steel Plate", "amount": 1 }
       ],
-      "firstWinGold": 50,
-      "winGold": 20
+      "tier": 2,
+      "winGold": 150
     },
     "Mission/Drum Line": {
       "id": "drum-line",
@@ -88,8 +88,8 @@
         { "token": "Token/Arcane Shard", "amount": 1 },
         { "token": "Token/Poison Gland", "amount": 1 }
       ],
-      "firstWinGold": 40,
-      "winGold": 10
+      "tier": 2,
+      "winGold": 150
     },
     "Mission/The Glutton Returns": {
       "id": "glutton-returns",
@@ -110,8 +110,8 @@
       "winTokens": [
         { "token": "Token/Ember Core", "amount": 1 }
       ],
-      "firstWinGold": 60,
-      "winGold": 25
+      "tier": 3,
+      "winGold": 200
     }
   }
 }

@@ -7,10 +7,11 @@ extends "res://game/ui/screens/level_select.gd"
 ##   room", "2 left today", the lock reason); the selected row is cobalt.
 ## - Centre: the mode chip and "plays Two Roads", the title, the description, the level's four fact tiles (co-op
 ##   only: "3 towers each"), the enemies (the level select's rule: chips once the level or the mission was played).
-## - Right: the board picture, "Drops" (Each win / First win, first-win coins gold-rimmed, "✓ claimed"), the pips
-##   "● 1 of 1 play left today", the note over the button ("ⓘ Starting uses a play, win or lose.", "Co-op only (2–6
-##   players). Starting the match uses your play.", "✓ Done today: …", "⚠ All your towers are tired: …") and the
-##   primary Play (GameApp.play_mission) or Find a room (find_room: the lobby with the mission picked).
+## - Right: the board picture, a dark box with the tier diamonds and a secondary "Rewards" button (the mission's
+##   Rewards popup, RewardsScreen; no drop rows: mockup mission-rewards.html), the pips "● 1 of 1 play left today",
+##   the note over the button only when there is something to say ("✓ Done today: …", "⚠ All your towers are tired:
+##   …", the lock reason; no "Starting uses a play" / co-op explainer) and the primary Play (GameApp.play_mission) or
+##   Find a room (find_room: the lobby with the mission picked). The left list follows the board's tier order.
 ## - Bottom: "Your hand" with the mission's note, the 8 slots with tired towers at 50 % (moon badge, "Tired · rests
 ##   in 5 h") and "▲ goes" under the towers it takes, the divider after the last of them; Change hand opens the hand
 ##   editor for the mission. Texts and states: MissionUiLogic.
@@ -75,7 +76,7 @@ func _build() -> void:
 	_popups.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(_popups)
 
-## The level select's reward card becomes the "Drops" box; the pips and the note line go between it and Play.
+## The level select's reward card becomes the tier + Rewards box; the pips and the note line go between it and Play.
 func _reshape_right_column() -> void:
 	# a lower board picture: the drops, the pips and the note fit above Play
 	_map_col.add_theme_constant_override("separation", 10)
@@ -96,7 +97,6 @@ func _reshape_right_column() -> void:
 	var v := TdMenu.vbox(8)
 	v.mouse_filter = MOUSE_FILTER_IGNORE
 	_reward.add_child(v)
-	v.add_child(TdMenu.label("Drops", "h3", TdTheme.color("cream.100"), 22))
 	_drops_box = TdMenu.vbox(0)
 	_drops_box.mouse_filter = MOUSE_FILTER_PASS
 	v.add_child(_drops_box)
@@ -119,7 +119,7 @@ func _on_open() -> void:
 		return
 	_catalog = _asset.to_catalog()
 	if _asset.grant_starting_towers(SaveData.towers): SaveData.save()
-	missions = GameApp.missions()
+	missions = MissionUiLogic.board_order(GameApp.missions())
 	if mission_id == "" and not missions.is_empty(): mission_id = missions[0].id
 	refresh(true)
 
@@ -260,8 +260,8 @@ func _draw_mission(m: MissionDef, level: LevelAsset) -> void:
 		chip.modulate.a = dim
 		_enemies.add_child(chip)
 		_chips.append(chip)
-	_reward.visible = not MissionUiLogic.reward_rows(m).is_empty()
-	_drops_box.add_child(TdDrops.rows(m, MissionUiLogic.first_win_claimed(m, SaveData.missions), 38.0, 96.0, 20))
+	_reward.visible = true
+	_drops_box.add_child(TdDrops.tier_row(m, _popups, 24.0, 50.0, 22))
 	_preview.show_level(level)
 	_preview.modulate = Color(1, 1, 1, 1) if dim >= 1.0 else Color(0.75, 0.75, 0.75, 0.6)
 	_preview.set_grey(_state == MissionUiLogic.Locked)
@@ -305,11 +305,14 @@ func _draw_action(m: MissionDef, level: LevelAsset) -> void:
 	# left-aligned at 18 px (never smaller), up to two lines: the icon sits on the first line and the second line
 	# wraps under the text, not under the icon (the label is its own column beside the icon)
 	for ic in _note_row.get_children(): ic.size_flags_vertical = SIZE_SHRINK_BEGIN
-	var nl := TdMenu.wrap_label(note.text, "plate", col, 18)
-	nl.custom_minimum_size = Vector2(MAP_SIZE.x - 34.0, 0)
-	nl.size_flags_horizontal = SIZE_EXPAND_FILL
-	nl.max_lines_visible = 2
-	_note_row.add_child(nl)
+	if note.text == "": # nothing to say (Play can start / co-op: the chip and the button say it): no line
+		for c in _note_row.get_children(): c.queue_free()
+	else:
+		var nl := TdMenu.wrap_label(note.text, "plate", col, 18)
+		nl.custom_minimum_size = Vector2(MAP_SIZE.x - 34.0, 0)
+		nl.size_flags_horizontal = SIZE_EXPAND_FILL
+		nl.max_lines_visible = 2
+		_note_row.add_child(nl)
 	_play.text = MissionUiLogic.primary_label(m)
 	_play.icon = TdTheme.texture("icon_play") if m.is_solo else TdDrops.icon_texture("users")
 	_play.custom_minimum_size = Vector2(300 if m.is_solo else 330, 76)

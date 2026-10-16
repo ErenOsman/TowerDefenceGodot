@@ -211,12 +211,15 @@ static func drops(result: LevelResult, record: LevelRecord, mission: MissionDef)
 	return Workshop.drops(result, record, mission)
 
 ## The gold a mission result gives (Upgrades — Design § Gold: missions are the only gold source): winGold on every
-## win plus firstWinGold with the first win (record.wins == 1); 0 on a loss or a quit.
-static func gold_drop(result: LevelResult, record: LevelRecord, mission: MissionDef) -> int:
+## win, the first win no more (Eren 2026-10-16); 0 on a loss or a quit. `record` is kept for the callers' shape.
+static func gold_drop(result: LevelResult, _record: LevelRecord, mission: MissionDef) -> int:
 	if result == null or not result.won or result.quit or mission == null: return 0
-	var n := maxi(0, mission.win_gold)
-	if record != null and record.wins == 1: n += maxi(0, mission.first_win_gold)
-	return n
+	return maxi(0, mission.win_gold)
+
+## The gold a mission's tier gives per win (Missions & Guild — Design § Gold, placeholders): 100 / 150 / 200 for tiers
+## 1 / 2 / 3. The content's winGold is what the game gives; this is the table the starter content follows.
+static func tier_gold(tier: int) -> int:
+	return [100, 150, 200][clampi(tier, 1, 3) - 1]
 
 ## Records a mission's result (under the mission id, never in the chapter progress), gives its token drops to the
 ## wallet and returns {"tokens": {token id: amount}, "gold": n} ({} / 0 on a loss or quit). The gold is NOT added

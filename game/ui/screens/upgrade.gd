@@ -12,11 +12,11 @@ extends TdPopup
 ##  abilities); centre "Level 3", the tasks with progress bars ("42 / 60 damage", a green ✓ when done) and ONE
 ##  primary "Upgrade to level 3" (simply disabled while tasks are missing, the bars say it; only the form cap gets
 ##  a line under it, "Raise Archer to level 3 first" with a lock); right "After upgrade": the same card at level + 1 (TowerLevels.apply on a
-##  copy) with every changed stat marked by a green "+5" badge. No max level shown; at max level the centre says
+##  copy) with every changed stat marked by a green "+5" chip inside its tile (no outline). No max level shown; at max level the centre says
 ##  "Archer is at its highest level." and the right card is empty.
 ##  Upgrade → the shared TdConfirm ("Upgrade Archer to level 3?", "It gives +5 Max HP. …") → GameApp.upgrade_tower
 ##  (saves) → the gold beat "Archer reached level 3!" over the next level. The gold task's row has a Pay button
-##  ("Pay 15" = min(gold, missing); GameApp.pay_into; disabled with the red "You have no gold. Missions give gold."),
+##  ("Pay 15" = min(gold, missing); GameApp.pay_into; simply disabled with no gold, no line under it),
 ##  and both headers carry the Backpack button (TdBackpackButton; Backpack — Design).
 ## Keys: Esc / right click = Back one step (confirm → cancel; view → picker; picker → close); Enter = the picker's
 ## Upgrade / the view's Upgrade (confirm: Enter = Upgrade). Texts and rules: UpgradeLogic, TowerLevels, TowerTasks.
@@ -30,8 +30,8 @@ const WIN := Vector2(1460, 864)
 const PAD := 22.0
 const SLIDE_TIME := 0.35
 ## The view's columns: now · tasks · after (the two cards the same width).
-const NOW_W := 340.0
-const RIGHT_W := 340.0
+const NOW_W := 380.0
+const RIGHT_W := 380.0
 const TITLE_INK := Color("#2B5594")
 const GOOD := Color("#2F8A45")
 const GOLD_BAR := Color("#C9952A")
@@ -373,7 +373,6 @@ func _tiles(t: TowerType) -> Array:
 func _card(col: VBoxContainer, caption: String, t: TowerType, lv: int, diffs: Dictionary) -> void:
 	TdCollection.clear_children(col)
 	var body := _scroll_body(col, 8)
-	body.add_theme_constant_override("separation", 10) # the "+5" badges hang 10 px above their tiles
 	body.add_child(_caption(caption))
 	var head := TdMenu.hbox(12)
 	body.add_child(head)
@@ -399,47 +398,34 @@ func _card(col: VBoxContainer, caption: String, t: TowerType, lv: int, diffs: Di
 		v.add_child(sub)
 	if t == null or t.entity == null: return
 	var grid := TdTowerCard.stat_grid(_tiles(t), 120)
-	grid.get_child(0).add_theme_constant_override("v_separation", 12 if not diffs.is_empty() else 6)
+	grid.get_child(0).add_theme_constant_override("v_separation", 6)
+	grid.get_child(0).add_theme_constant_override("h_separation", 8)
 	for tile in grid.get_child(0).get_children():
 		var stat: String = tile.get_meta("stat", "")
 		if diffs.has(stat): _mark(tile, diffs[stat])
 	body.add_child(grid)
 	for r in TdTowerCard.def_rows(t.entity, _vocab): body.add_child(r)
 
-## Marks a changed stat tile: a good-coloured outline and a small "+5" badge hanging on its top-right corner (an
-## overlay: the tile's value and name keep their room, "Max HP" is never squeezed).
+## Marks a changed stat tile with a small green "+5" chip inside the tile, right after the value (Eren 2026-10-16: no
+## outline; the chip hung over the tile's top edge was cut and covered by the next tile). The label after it clips.
 func _mark(tile: Control, text: String) -> void:
-	var ring := Panel.new()
-	var rs := StyleBoxFlat.new()
-	rs.draw_center = false
-	rs.border_color = GOOD
-	rs.set_border_width_all(2)
-	rs.set_corner_radius_all(8)
-	ring.add_theme_stylebox_override("panel", rs)
-	ring.mouse_filter = MOUSE_FILTER_IGNORE
-	tile.add_child(ring) # a PanelContainer child: fitted to the tile
-	var holder := Control.new() # fitted too; the badge inside it keeps its own size
-	holder.mouse_filter = MOUSE_FILTER_IGNORE
-	tile.add_child(holder)
+	var h: HBoxContainer = tile.get_child(0) if tile.get_child_count() > 0 and tile.get_child(0) is HBoxContainer else null
+	if h == null: return
 	var b := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = GOOD
-	sb.border_color = Color("#1E5A2C")
-	sb.set_border_width_all(1)
 	sb.set_corner_radius_all(9)
-	sb.content_margin_left = 6; sb.content_margin_right = 6; sb.content_margin_top = 0; sb.content_margin_bottom = 1
+	sb.content_margin_left = 3; sb.content_margin_right = 3; sb.content_margin_top = 0; sb.content_margin_bottom = 1
 	b.add_theme_stylebox_override("panel", sb)
 	b.mouse_filter = MOUSE_FILTER_IGNORE
-	var l := TdMenu.label(text, "micro", Color.WHITE, 16)
+	b.size_flags_vertical = SIZE_SHRINK_CENTER
+	b.name = "Diff"
+	var l := TdMenu.label(text, "micro", Color.WHITE, 14)
 	l.add_theme_font_override("font", TdTheme.font("plinth"))
 	b.add_child(l)
-	holder.add_child(b)
-	b.set_anchors_preset(PRESET_TOP_RIGHT)
-	var bs := b.get_combined_minimum_size()
-	b.offset_left = -bs.x + 4
-	b.offset_right = 4
-	b.offset_top = -10
-	b.offset_bottom = -10 + bs.y
+	h.add_theme_constant_override("separation", 4) # room for the chip: "25 [+5] Max HP" fits the 380 px card
+	h.add_child(b)
+	h.move_child(b, mini(2, h.get_child_count() - 1)) # icon, value, chip, label
 
 func _refresh_mid() -> void:
 	TdCollection.clear_children(_mid)
@@ -569,8 +555,8 @@ func _task_row(row: Dictionary) -> Control:
 	return p
 
 ## The gold task's Pay (mockups upgrade-pay / upgrade-pay-nogold): a secondary "Pay 15" naming what it deposits
-## (min(gold, missing): BackpackLogic.pay_text), and under it the muted "You have 15: pays what you can." when the
-## gold is short, or with no gold the button disabled and the red 18 px "You have no gold. Missions give gold.".
+## (min(gold, missing): BackpackLogic.pay_text); with no gold it is simply disabled. No line under it (Eren
+## 2026-10-16: the label says what it pays; where gold comes from needs no explaining).
 func _pay_column(row: Dictionary) -> Control:
 	var gold: int = GameApp.gold()
 	var missing: int = int(row.get("missing", 0))
@@ -583,14 +569,6 @@ func _pay_column(row: Dictionary) -> Control:
 	else: b.set_interactable(false, BackpackLogic.NoGold)
 	pay_button = b
 	col.add_child(b)
-	var note := BackpackLogic.pay_note(gold, missing)
-	if note.text != "":
-		# the red line breaks after its first sentence, as the mockup ("You have no gold." / "Missions give gold.")
-		var l := TdMenu.wrap_label(note.text.replace(". ", ".\n") if note.bad else note.text, "body", Color("#A3301F") if note.bad else TdTheme.color("ink.2"), 18)
-		l.add_theme_font_override("font", TdTheme.font("nunito_extrabold" if note.bad else "nunito_bold"))
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		l.custom_minimum_size = Vector2(290, 0)
-		col.add_child(l)
 	return col
 
 ## Pay: deposits min(gold, missing) into the gold task (GameApp.pay_into saves), then redraws the view and every

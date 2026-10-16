@@ -2,7 +2,7 @@ extends TestCase
 ## The Missions & Guild screens' texts and states (game/ui/screens/parts/mission_ui_logic.gd): mode chips, the
 ## board's card states and lines, the detail's notes and pips, the hand strip marks ("▲ goes", tired) and the cap
 ## divider, the Guild's station line, the Camp's Signpost, the end screen's lines and reward groups, the co-op rows,
-## Join refusal and the auto-leave popup; plus the Workshop's "Found in" reading missions and SceneFlow's Guild.
+## Join refusal and the auto-leave popup; SceneFlow's Guild; the tier, the board's tier order and the Rewards popup's rows.
 
 static var _lib: ContentLibrary
 
@@ -14,6 +14,9 @@ func lib() -> ContentLibrary:
 
 func setup() -> void:
 	MissionBoard.energy_per_day = 1
+
+func missions() -> Array:
+	return lib().catalog.to_missions()
 
 func m(id: String) -> MissionDef:
 	return MissionBoard.find(lib().catalog.to_missions(), id)
@@ -28,7 +31,7 @@ func test_mode_chips() -> void:
 	assert_eq(MissionUiLogic.mode_chip(null), "")
 
 func test_board_lines() -> void:
-	assert_eq(MissionUiLogic.board_subtitle(DAY), "Earn tokens for the Workshop · plays reset at midnight (in 5 h)")
+	assert_eq(MissionUiLogic.board_subtitle(DAY), "Resets in 5 h", "the daily reset countdown only (no 'Earn tokens for the Workshop')")
 	assert_eq(MissionUiLogic.level_line(m("patrol"), "Two Roads"), "Two Roads")
 	assert_eq(MissionUiLogic.level_line(m("drum-line"), "The Drummer"), "The Drummer · 2 plays a day")
 	assert_eq(MissionUiLogic.plays_level("Two Roads"), "plays Two Roads")
@@ -68,10 +71,10 @@ func test_detail_notes_and_pips() -> void:
 	var p := m("patrol")
 	assert_eq(MissionUiLogic.pips(p, mp, DAY), [1, 1])
 	assert_eq(MissionUiLogic.pips_text(p, mp, DAY), "1 of 1 play left today")
-	assert_eq(MissionUiLogic.detail_note(p, "play", "", "", DAY), {"kind": "info", "text": "Starting uses a play, win or lose."})
+	assert_eq(MissionUiLogic.detail_note(p, "play", "", "", DAY), {"kind": "info", "text": ""}, "no 'Starting uses a play' line")
 	assert_eq(MissionUiLogic.detail_note(p, "play", "", MissionBoard.AllTired, DAY),
 		{"kind": "warn", "text": "All your towers are tired: change your hand or come back tomorrow."})
-	assert_eq(MissionUiLogic.detail_note(m("hold-the-gate"), "room", "", "", DAY).text, "Co-op only (2–6 players). Starting the match uses your play.")
+	assert_eq(MissionUiLogic.detail_note(m("hold-the-gate"), "room", "", "", DAY).text, "", "no co-op explainer")
 	assert_eq(MissionUiLogic.detail_note(p, "locked", "Win X first", "", DAY), {"kind": "lock", "text": "Win X first"})
 	MissionBoard.record_play(p, mp, [], DAY)
 	assert_eq(MissionUiLogic.pips_text(p, mp, DAY), "0 of 1 play left today · resets in 5 h")
@@ -108,10 +111,9 @@ func test_hand_marks_and_divider() -> void:
 
 func test_hand_notes() -> void:
 	var p := m("patrol")
-	assert_eq(MissionUiLogic.hand_note(p, "Two Roads", 5, 4, false), "Two Roads takes the first 4 towers; the rest wait on the bench.")
-	assert_eq(MissionUiLogic.hand_note(p, "Two Roads", 5, 4, true), "Patrol takes the first 4 rested towers; tired ones stay home.")
-	assert_eq(MissionUiLogic.hand_note(m("hold-the-gate"), "Three at the Gate", 5, 3, false),
-		"Three at the Gate takes the first 3 towers (co-op: per player); the rest wait on the bench.")
+	assert_eq(MissionUiLogic.hand_note(p, "Two Roads", 5, 4, false), "Patrol takes the first 4 rested")
+	assert_eq(MissionUiLogic.hand_note(p, "Two Roads", 5, 4, true), "Patrol takes the first 4 rested")
+	assert_eq(MissionUiLogic.hand_note(m("hold-the-gate"), "Three at the Gate", 5, 3, false), "Hold the Gate takes the first 3 rested")
 	assert_eq(MissionUiLogic.hand_note(p, "Two Roads", 0, 4, false), "Your hand is empty: add towers with Change hand.")
 	assert_eq(MissionUiLogic.editor_cap_note("Night Watch", 4), "Night Watch takes the first 4 rested")
 	assert_eq(MissionUiLogic.editor_cap_note("", 4), "")
@@ -174,3 +176,53 @@ func test_coop_texts() -> void:
 	assert_eq(a.title, "Done today")
 	assert_eq(a.body, "The room switched to [b]Night Watch[/b], which you already played today. You left the room.")
 	assert_eq(a.resets, "Resets in [b]5 h[/b].")
+
+# ------------------------------------------------------------------ tier, board order, the Rewards popup
+
+func test_tier_and_board_order() -> void:
+	var ms := missions()
+	assert_seq(ms.map(func(x): return x.id), ["patrol", "night-watch", "hold-the-gate", "drum-line", "glutton-returns"], "catalog order")
+	var order := MissionUiLogic.board_order(ms)
+	assert_seq(order.map(func(x): return x.id), ["patrol", "night-watch", "hold-the-gate", "drum-line", "glutton-returns"])
+	# tier first, then catalog order (stable within a tier)
+	var a := MissionDef.new(); a.id = "a"; a.tier = 3
+	var b := MissionDef.new(); b.id = "b"; b.tier = 1
+	var c := MissionDef.new(); c.id = "c"; c.tier = 2
+	var d := MissionDef.new(); d.id = "d"; d.tier = 1
+	assert_seq(MissionUiLogic.board_order([a, b, c, d]).map(func(x): return x.id), ["b", "d", "c", "a"])
+	assert_seq(MissionUiLogic.board_order([a, null, b]).map(func(x): return x.id), ["b", "a"], "empty entries skipped")
+	assert_eq(MissionUiLogic.tier_pips(m("hold-the-gate")), [2, 3])
+	assert_eq(MissionUiLogic.tier_pips(m("glutton-returns")), [3, 3])
+	assert_eq(MissionUiLogic.tier_pips(null), [1, 3])
+	assert_eq(MissionUiLogic.tier_text(m("drum-line")), "Tier 2")
+
+func test_rewards_rows() -> void:
+	var n := m("night-watch")
+	var rows := MissionUiLogic.rewards_rows(n, false, func(id): return id.to_upper())
+	assert_seq(rows.map(func(r): return r.kind), ["gold", "every", "first"], "no chance row without chanceDrops")
+	assert_eq(rows[0].text, "100 gold")
+	assert_eq(rows[0].gold, 100)
+	assert_eq(rows[1].label, "Every win")
+	assert_eq(rows[1].tokens, {"fire-arrow": 1, "poison-gland": 1})
+	assert_eq(rows[2].label, "First win")
+	assert_eq(rows[2].tokens, {"arcane-shard": 1})
+	assert_false(rows[2].claimed)
+	assert_true(MissionUiLogic.rewards_rows(n, true)[2].claimed, "claimed once taken")
+	var x := MissionDef.new()
+	x.name = "X"
+	x.win_gold = 150
+	x.chance_drops = [{"token": "ember-core", "chance": 0.3}, {"token": "yew-bow", "chance": 0.004}]
+	rows = MissionUiLogic.rewards_rows(x, false, func(id): return {"ember-core": "Ember Core"}.get(id, id))
+	assert_seq(rows.map(func(r): return r.kind), ["gold", "chance"], "no token rows without tokens")
+	assert_eq(rows[0].text, "150 gold")
+	assert_eq(rows[1].label, "Chance")
+	assert_seq(rows[1].drops.map(func(dd): return dd.text), ["30%: Ember Core", "1%: yew-bow"], "at least 1 %")
+	assert_eq(MissionUiLogic.rewards_rows(MissionDef.new()), [], "nothing: no rows")
+	assert_eq(MissionUiLogic.rewards_rows(null), [])
+	assert_eq(MissionUiLogic.rewards_title(n), "Rewards · Night Watch")
+	assert_eq(MissionUiLogic.chance_text(1.0, "Yew Bow"), "100%: Yew Bow")
+	# no explanatory sentences anywhere in the rows
+	for r in MissionUiLogic.rewards_rows(n, true):
+		for k in r:
+			if r[k] is String: assert_false(r[k].ends_with("."), "no sentences: " + r[k])
+

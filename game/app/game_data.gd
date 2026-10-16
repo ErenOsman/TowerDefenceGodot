@@ -18,7 +18,7 @@ var tokens: TokenWallet = TokenWallet.new()
 ## Mission records, plays spent per day and tired towers (Missions & Guild — Design). Saved under
 ## "missions"; a save without it has no mission history.
 var missions: MissionProgress = MissionProgress.new()
-## The gold wallet (Upgrades — Design § Gold): earned from missions only (winGold / firstWinGold), spent by
+## The gold wallet (Upgrades — Design § Gold): earned from missions only (winGold), spent by
 ## depositing into tower level steps' Pay tasks (GameApp.pay_into). Saved under "gold"; a save without it has 0.
 var gold: int = 0
 

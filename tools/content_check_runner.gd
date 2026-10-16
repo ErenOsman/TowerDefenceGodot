@@ -865,7 +865,8 @@ func _probe_ladder(levels: Array, def: EntityDef, probe: Dictionary) -> void:
 			_stats_text(TowerLevels.stats_with(def.base_stats, TowerLevels.bonuses_at(lad, s.to)))])
 		if s.bonuses.is_empty(): probe.warnings.append("level %d gives nothing" % s.to)
 	# Upgrades — Design § Gold: every step's gold task, and what the whole ladder costs
-	probe.lines.append("gold tasks: %s = %d gold to level %d" % [" + ".join(golds), gold_total, TowerLevels.max_level(lad)])
+	if gold_total > 0: probe.lines.append("gold tasks: %s = %d gold to level %d" % [" + ".join(golds), gold_total, TowerLevels.max_level(lad)])
+	else: probe.lines.append("gold tasks: none (forms need no gold)")
 	probe.tables.append({"title": "levels", "columns": ["level", "tasks", "gold", "gives", "stats at that level"], "rows": rows})
 
 # ------------------------------------------------------------------ Level
@@ -1103,8 +1104,12 @@ func _probe_mission(m: MissionAsset, probe: Dictionary) -> void:
 	probe.lines.append("level %s, mode %s, players %s, %d play(s) a day, drops: %s" % [lib.key_of(m.level) if m.level != null else "none",
 		MissionMode.name_of(m.mode), "%d–%d" % [m.players.min, m.players.max] if m.players != null else "?", m.plays_per_day,
 		", ".join(drops) if not drops.is_empty() else "nothing"])
-	probe.lines.append("gold: %d every win, +%d with the first win" % [m.win_gold, m.first_win_gold])
-	if m.win_gold <= 0 and m.first_win_gold <= 0: probe.warnings.append("gives no gold (missions are the only gold source)")
+	probe.lines.append("tier %s, gold: %d every win (the first win gives the same)" % [str(m.tier) if m.tier > 0 else "1 (not set)", m.win_gold])
+	if m.win_gold <= 0: probe.warnings.append("gives no gold (missions are the only gold source)")
+	var chances := PackedStringArray()
+	for c in m.chance_drops:
+		if c != null: chances.append("%d%% %s" % [roundi(c.chance * 100.0), lib.key_of(c.token) if c.token != null else "?"])
+	if not chances.is_empty(): probe.lines.append("chance drops (listed, not rolled yet): %s" % ", ".join(chances))
 	var cat := lib.catalog
 	if cat != null and not cat.missions.has(m): probe.lines.append("not on the mission board (catalog missions)")
 	if m.level != null:

@@ -65,6 +65,7 @@ static func warnings(asset) -> Array[String]:
 	elif asset is MissionAsset:
 		check.call(asset.display_name.is_empty(), "display name")
 		check.call(asset.description.is_empty(), "description")
+		check.call(asset.tier == 0, "tier (read as tier 1)")
 	elif asset is FormAsset or asset is TokenAsset:
 		check.call(asset.display_name.is_empty(), "display name")
 		check.call(asset.description.is_empty(), "description")
@@ -79,7 +80,7 @@ const MaxFormDepth := 2
 static func validate_form(f: FormAsset, vocab: Vocabulary = null) -> Array[String]:
 	var errors: Array[String] = []
 	var error := func(message: String) -> void: errors.append("%s: %s" % [f.name, message])
-	for e in validate_ladder(f.levels, vocab): error.call(e)
+	for e in validate_ladder(f.levels, vocab, null, false): error.call(e)
 	if f.tower != null and f.levels.size() > f.tower.levels.size():
 		error.call("its levels go to %d, past its tower's %d (a form never passes its tower's level)" % [f.levels.size() + 1, f.tower.levels.size() + 1])
 	if f.id.is_empty(): error.call("has no form ID (saves would refer to the asset name, which breaks on rename)")
@@ -158,8 +159,12 @@ static func validate_mission(m: MissionAsset) -> Array[String]:
 			var u = list[i]
 			if u == null or u.token == null: error.call("%s[%d] has no token" % [list_name, i])
 			elif u.amount <= 0: error.call("%s[%d] needs a positive amount" % [list_name, i])
-	if m.first_win_gold < 0: error.call("firstWinGold must not be negative")
+	if m.tier != 0 and (m.tier < 1 or m.tier > 3): error.call("tier %d must be 1–3" % m.tier)
 	if m.win_gold < 0: error.call("winGold must not be negative")
+	for i in m.chance_drops.size():
+		var c = m.chance_drops[i]
+		if c == null or c.token == null: error.call("chanceDrops[%d] has no token" % i)
+		elif not (c.chance > 0.0 and c.chance <= 1.0): error.call("chanceDrops[%d]: chance %s must be above 0 and at most 1" % [i, c.chance])
 	return errors
 
 static func validate_ability(a: AbilityAsset, vocab: Vocabulary) -> Array[String]:
@@ -237,11 +242,12 @@ static func validate_tower(t: TowerAsset, vocab: Vocabulary = null) -> Array[Str
 	return errors
 
 ## A level ladder (Upgrades — Design § Validation): steps reach 2, 3, 4 … in order; every task kind is known, counts
-## > 0, a WinMissionId task names a mission; every step has exactly one gold Pay task (Eren 2026-10-16), a Pay task
+## > 0, a WinMissionId task names a mission; every step of a base tower's ladder (`base` on) has exactly one gold Pay
+## task and a form's step (`base` off) none (Eren 2026-10-16: forms need no gold), a Pay task
 ## names a currency ("gold", or a token id: checked against `tokens` (token ids, Array or Dictionary) when given;
 ## ContentCheck passes the content's), only Pay tasks carry a currency; every bonus names a real stat (when vocab is
 ## given), is Flat or PctAdd and has a numeric amount. Messages without the asset name.
-static func validate_ladder(levels: Array, vocab: Vocabulary = null, tokens = null) -> Array[String]:
+static func validate_ladder(levels: Array, vocab: Vocabulary = null, tokens = null, base: bool = true) -> Array[String]:
 	var errors: Array[String] = []
 	for i in levels.size():
 		var l = levels[i]
@@ -266,7 +272,8 @@ static func validate_ladder(levels: Array, vocab: Vocabulary = null, tokens = nu
 				elif t.currency == TowerTasks.Gold: gold_tasks += 1
 				elif tokens != null and not tokens.has(t.currency): errors.append("%s: Pay currency '%s' is neither gold nor a token id" % [tp, t.currency])
 			elif t.currency != "": errors.append("%s: currency is only for Pay tasks" % tp)
-		if gold_tasks != 1: errors.append("%s: needs exactly one gold Pay task ({ \"kind\": \"Pay\", \"currency\": \"gold\", \"count\": N }), has %d" % [p, gold_tasks])
+		if base and gold_tasks != 1: errors.append("%s: needs exactly one gold Pay task ({ \"kind\": \"Pay\", \"currency\": \"gold\", \"count\": N }), has %d" % [p, gold_tasks])
+		elif not base and gold_tasks > 0: errors.append("%s: a form's step has no gold Pay task (forms need no gold), has %d" % [p, gold_tasks])
 		for j in l.bonuses.size():
 			var b = l.bonuses[j]
 			var bp := "%s.bonuses[%d]" % [p, j]

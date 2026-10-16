@@ -2,7 +2,7 @@ class_name TdDrops
 extends RefCounted
 ## The token coins of the Missions & Guild screens (mockup .mcoin / .inv): a dark pill with the token's sprite
 ## (res://art/ui/KitB/tokens/<id>.png) and "×1"; first-win coins have a gold rim; a claimed first-win drop is dimmed
-## with a green "✓ claimed" after it. Also the "Each win / First win" rows, and the inventory pills of the board
+## with a green "✓ claimed" after it. Also the tier diamonds, the Rewards button, and the inventory pills of the board
 ## header ("[coin] 2"). Tooltips name the token.
 
 ## A token's sprite (null when the kit has none).
@@ -77,8 +77,8 @@ static func _kit_icon(sprite: String, rel: String, fallback: String) -> Texture2
 	return t
 
 ## A gold coin in the token coins' style: the gold chip and the amount in gold text ("25"); first = gold rim, dim =
-## claimed; text overrides the label (the end screen's "+25 gold"). Tooltip: "Gold", every win / first win only, what
-## it is for.
+## claimed; text overrides the label (the end screen's "+25 gold"). Tooltip: "Gold", every win / first win only
+## (no "spent on …" line: Eren 2026-10-16).
 static func gold_coin(amount: int, first := false, dim := false, size := 40.0, text := "") -> PanelContainer:
 	var p := PanelContainer.new()
 	var sb := StyleBoxFlat.new()
@@ -103,7 +103,7 @@ static func gold_coin(amount: int, first := false, dim := false, size := 40.0, t
 	h.add_child(l)
 	if dim: p.modulate = Color(1, 1, 1, 0.5)
 	TdTooltipTrigger.attach(p, TooltipText.title("%d gold" % amount, TooltipText.value_color(), "Gold"),
-		("First win only." if first else "Every win.") + "\nSpent on tower upgrades at the Blacksmith.")
+		"First win only." if first else "Every win.")
 	return p
 
 ## The coins of a {token: amount} list, in order.
@@ -126,24 +126,60 @@ static func claimed_tag(size := 20) -> HBoxContainer:
 	h.add_child(l)
 	return h
 
-## The "Each win / First win" rows of a mission (MissionUiLogic.reward_rows: token coins, then the gold coin) as a
-## VBox; claimed dims the first-win row. label_w: the width of the row labels (so the coins line up).
-static func rows(m: MissionDef, claimed: bool, size := 40.0, label_w := 96.0, font := 20) -> VBoxContainer:
-	var v := TdMenu.vbox(8)
-	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for r in MissionUiLogic.reward_rows(m):
-		var first: bool = r[0] == "First win"
-		var h := TdMenu.hbox(6)
-		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		v.add_child(h)
-		var l := TdMenu.label(r[0], "plate", TdTheme.color("cream.200"), font)
-		l.custom_minimum_size = Vector2(label_w, 0)
-		l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		h.add_child(l)
-		for c in coins(r[1], first, first and claimed, size): h.add_child(c)
-		if int(r[2]) > 0: h.add_child(gold_coin(int(r[2]), first, first and claimed, size))
-		if first and claimed: h.add_child(claimed_tag(font))
-	return v
+## A mission's tier as 1–3 diamonds (UI/UX mockup mission-rewards.html `.tier`): filled gold up to the tier, the rest
+## dark with a rim. Tooltip "Tier 2".
+static func tier_diamonds(m: MissionDef, size := 20.0) -> Control:
+	var d := TierDiamonds.new()
+	var pp := MissionUiLogic.tier_pips(m)
+	d.filled = pp[0]
+	d.total = pp[1]
+	d.size_px = size
+	d.custom_minimum_size = Vector2(size * 0.78 * pp[1] + size * 0.22, size)
+	d.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	d.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	d.mouse_filter = Control.MOUSE_FILTER_PASS
+	d.tooltip_text = MissionUiLogic.tier_text(m)
+	return d
+
+## The secondary "Rewards" button (the gold coin + "Rewards") that opens the mission's Rewards popup over `host`
+## (RewardsScreen.show_over). height: the button's height; the width follows the label.
+static func rewards_button(mission_id: String, host: Node, height := 46.0, font := 22) -> TdButton:
+	var b := TdMenu.button(TdButton.Style.SECONDARY, MissionUiLogic.RewardsButton, Vector2(150 if height < 50.0 else 176, height), gold_icon())
+	b.font_size = font
+	b.name = "Rewards"
+	b.clicked.connect(func(): if is_instance_valid(host): RewardsScreen.show_over(host, mission_id))
+	return b
+
+## The tier diamonds and the Rewards button on one line (the cards' `.mtier` row).
+static func tier_row(m: MissionDef, host: Node, size := 20.0, height := 46.0, font := 22) -> HBoxContainer:
+	var h := TdMenu.hbox(14)
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	h.add_child(tier_diamonds(m, size))
+	var fill := TdMenu.spacer()
+	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	h.add_child(fill)
+	if m != null: h.add_child(rewards_button(m.id, host, height, font))
+	return h
+
+## The diamonds of tier_diamonds: touching rhombi, the filled ones gold.
+class TierDiamonds extends Control:
+	var filled := 1
+	var total := 3
+	var size_px := 20.0
+
+	func _draw() -> void:
+		var h := size_px
+		var w := h * 0.78
+		var y0 := (size.y - h) / 2.0
+		for i in total:
+			var cx := w / 2.0 + i * w + h * 0.11
+			var pts := PackedVector2Array([Vector2(cx, y0), Vector2(cx + w / 2.0, y0 + h / 2.0), Vector2(cx, y0 + h), Vector2(cx - w / 2.0, y0 + h / 2.0)])
+			var on := i < filled
+			draw_colored_polygon(pts, TdTheme.color("gold") if on else Color("#2A1E17"))
+			var rim := pts.duplicate()
+			rim.append(pts[0])
+			draw_polyline(rim, Color("#7A5A1E") if on else Color(0.85, 0.74, 0.58, 0.5), 1.5, true)
 
 ## A small icon from the extra icon set (flag, hourglass, users: res://art/ui/icons-extra/icon_<name>.png) or the kit
 ## ("cards", "back", "lock", "check", "info"…), tinted.

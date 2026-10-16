@@ -130,8 +130,8 @@ var reward: TowerAsset = null
 ## The Workshop tokens this result just gave ({token id: amount}; first-win drops first; {} on a loss/quit and on
 ## chapter levels: only missions drop tokens).
 var drops: Dictionary = {}
-## The gold this result just gave (Upgrades — Design § Gold: a mission win's winGold, plus firstWinGold with the first
-## win; 0 on a loss/quit and on chapter levels). Kept apart from `drops` (token ids only) so the token row stays as it
+## The gold this result just gave (Upgrades — Design § Gold: a mission win's winGold, the first win no more; 0 on a
+## loss/quit and on chapter levels). Kept apart from `drops` (token ids only) so the token row stays as it
 ## is; the end screen shows it as its own reward chip ("+25 gold").
 var gold_drop: int = 0
 ## The mission this level is played as (Missions & Guild — Design): from LevelLaunch.mission_id (solo) or the co-op

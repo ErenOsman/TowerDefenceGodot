@@ -27,10 +27,12 @@ var coop_hand_cap: int = 3
 var first_win_tokens: Dictionary = {}
 ## {token id: amount} given on every win.
 var win_tokens: Dictionary = {}
-## Gold given once, with the first win (the only gold source with win_gold; Upgrades — Design § Gold).
-var first_win_gold: int = 0
-## Gold given on every win.
+## The difficulty, 1–3 (a missing tier in the content reads 1).
+var tier: int = 1
+## Gold given on every win (the only gold source; the first win gives no more; Upgrades — Design § Gold).
 var win_gold: int = 0
+## Chance drops in content order: Array of {"token": token id, "chance": 0 < c ≤ 1}. Listed only, not rolled yet.
+var chance_drops: Array = []
 
 ## Playable in a co-op room (Coop or Any).
 var is_coop: bool:

@@ -27,12 +27,12 @@ func _entry(id: String) -> Dictionary:
 func test_ready_mark_is_the_current_form() -> void:
 	var t := _type()
 	var a := _owned("archer", "a")          # base step 2: Win a mission (not done)
-	var b := _owned("archer", "b")          # base ready (won, 20 gold paid)
-	b.task_progress["2"] = [1, 20]
+	var b := _owned("archer", "b")          # base ready (won, 100 gold paid)
+	b.task_progress["2"] = [1, 100]
 	var c := _owned("archer", "c")          # base not ready; its Fire Archer is (level 2 base > form level 1)
 	c.level = 2
 	c.forms.append("archer-fire")
-	c.task_progress["archer-fire:2"] = [1, 15]
+	c.task_progress["archer-fire:2"] = [1]  # forms need no gold: the win is the whole step
 	assert_false(UpgradeLogic.is_ready(a, t))
 	assert_true(UpgradeLogic.is_ready(b, t))
 	assert_false(UpgradeLogic.is_ready(c, t), "a ready form it does not wear: no mark (Eren 2026-10-16)")
@@ -57,13 +57,13 @@ func test_card_lines() -> void:
 	assert_eq(UpgradeLogic.tasks_done_line(o, t), "Level 3: 1 of 3 tasks done", "win, damage and the gold task")
 	assert_eq(UpgradeLogic.ready_line(o, t), "")
 	o.forms.append("archer-fire")
-	o.task_progress["archer-fire:2"] = [1, 15]
+	o.task_progress["archer-fire:2"] = [1]
 	assert_eq(UpgradeLogic.ready_line(o, t), "", "the form is ready but not worn")
 	o.form = "archer-fire"
 	assert_eq(UpgradeLogic.ready_line(o, t), "Fire Archer is ready to upgrade")
-	assert_eq(UpgradeLogic.tasks_done_line(o, t, "archer-fire"), "Level 2: 2 of 2 tasks done")
+	assert_eq(UpgradeLogic.tasks_done_line(o, t, "archer-fire"), "Level 2: 1 of 1 task done", "no gold task on a form")
 	o.form = ""
-	o.task_progress["3"] = [1, 60, 40]
+	o.task_progress["3"] = [1, 60, 200]
 	assert_eq(UpgradeLogic.ready_line(o, t), "Archer is ready to upgrade")
 	o.level = 5
 	assert_eq(UpgradeLogic.tasks_done_line(o, t), "Max level")
@@ -158,8 +158,8 @@ func test_action_reasons() -> void:
 	o.task_progress["3"] = [0, 0]
 	assert_eq(UpgradeLogic.action(o, t).reason, "Win a mission with this tower", "nothing counted: the task itself")
 	o.task_progress["3"] = [1, 60]
-	assert_eq(UpgradeLogic.action(o, t).reason, "Pay 40 gold", "the gold task is still open")
-	o.task_progress["3"] = [1, 60, 40]
+	assert_eq(UpgradeLogic.action(o, t).reason, "Pay 200 gold", "the gold task is still open")
+	o.task_progress["3"] = [1, 60, 200]
 	a = UpgradeLogic.action(o, t)
 	assert_eq(a.kind, "upgrade")
 	assert_eq(a.reason, "")

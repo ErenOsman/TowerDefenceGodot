@@ -29,10 +29,14 @@ var coop_hand_cap: int = 3
 var first_win_tokens: Array = []
 ## Tokens given on every win: Array of TokenAmount.
 var win_tokens: Array = []
-## Gold given once, with the first win (Upgrades — Design § Gold: missions are the only gold source).
-var first_win_gold: int = 0
-## Gold given on every win.
+## The mission's difficulty, 1–3 (pips on its card; its gold scales with it). 0 = not set (older content): read as
+## tier 1, with a Validate All warning.
+var tier: int = 0
+## Gold given on every win (Upgrades — Design § Gold: missions are the only gold source; 100 / 150 / 200 by tier).
+## The first win gives no extra gold.
 var win_gold: int = 0
+## Tokens a win may drop with a chance: Array of ChanceDrop. Listed in the Rewards popup, not rolled yet.
+var chance_drops: Array = []
 
 ## The id, else the asset name.
 func get_id() -> String:

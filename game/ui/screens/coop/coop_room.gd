@@ -437,8 +437,8 @@ func _slot_row(i: int, p, room: Dictionary, cap: int, h: float) -> Control:
 		holder.add_child(x)
 	return panel
 
-## The side card for a mission room: the mission's name and ONE compact row of drops under a shorter picture
-## ("Each win [coin]  First win [coin]"); the mission line and plays left are in the header.
+## The side card for a mission room: the mission's name and ONE compact row under a shorter picture: the tier
+## diamonds and the Rewards button (the Rewards popup lists the drops); the mission line and plays left are in the header.
 func _fill_mission(mission: MissionDef) -> void:
 	for c in _mission_box.get_children(): c.queue_free()
 	_mission_box.visible = mission != null
@@ -446,21 +446,8 @@ func _fill_mission(mission: MissionDef) -> void:
 	map_frame.custom_minimum_size.y = MISSION_MAP_H if mission != null else MAP_H
 	if mission == null: return
 	_card.title.text = mission.name
-	var sd = get_node_or_null("/root/SaveData")
-	var mp: MissionProgress = sd.missions if sd != null else null
 	var box := CoopUi.flat_panel(Color("2b201a"), 10, Color(0, 0, 0, 0), Vector4(12, 4, 12, 4))
-	var row := TdMenu.hbox(8)
-	box.add_child(row)
-	var claimed := MissionUiLogic.first_win_claimed(mission, mp)
-	for r in MissionUiLogic.reward_rows(mission):
-		var first: bool = r[0] == "First win"
-		if row.get_child_count() > 0: row.add_child(TdMenu.spacer(0, 6))
-		var l := TdMenu.label(r[0], "plate", TdTheme.color("cream.200"), 18)
-		l.size_flags_vertical = SIZE_SHRINK_CENTER
-		row.add_child(l)
-		for c in TdDrops.coins(r[1], first, first and claimed, 34.0): row.add_child(c)
-		if int(r[2]) > 0: row.add_child(TdDrops.gold_coin(int(r[2]), first, first and claimed, 34.0))
-		if first and claimed: row.add_child(TdDrops.claimed_tag(18))
+	box.add_child(TdDrops.tier_row(mission, self, 20.0, 42.0, 20))
 	_mission_box.add_child(box)
 
 ## Your strip in your row: the saved hand's first `cap` towers (tired ones dimmed with the moon badge: the match
