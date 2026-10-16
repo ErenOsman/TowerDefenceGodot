@@ -32,7 +32,7 @@ const FALLBACK_LAYOUT := {
 ## Prop folders when the layout names none.
 const DEFAULT_KITS := ["blacksmith", "camp", "guild"]
 ## The forge's warm light (placeholder: by the anvil table).
-const EMBERS := Vector3(5.2, 0.8, -7.4)
+const EMBERS := Vector3(6.5, 1.4, -8.2) # the smithy kit's coal bed (Blender agent, 2026-10-16)
 
 const Title := "Blacksmith"
 const Sub := "Modify and upgrade towers"
@@ -91,7 +91,7 @@ func _ready() -> void:
 	var embers := OmniLight3D.new()
 	embers.light_color = Color("FF9A3C")
 	embers.light_energy = 0.9
-	embers.omni_range = 3.5
+	embers.omni_range = 4.5
 	embers.position = EMBERS
 	world.add_light(embers)
 	_build_title()
