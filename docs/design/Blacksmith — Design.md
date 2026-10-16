@@ -2,8 +2,8 @@
 
 Written 2026-10-16 by the Godot agent from Eren's decisions of the same day; the points he left open are decided
 here and marked **(agents)**. This doc is the source of truth for the **Blacksmith** place. What happens inside it
-is specified elsewhere: Modify in Workshop — Design (forms and tokens), Upgrade in Upgrades — Design (levels,
-tasks and gold).
+is specified elsewhere: Modify in Workshop — Design (forms and tokens), Upgrade in Upgrades — Design (levels
+and tasks).
 
 The **Blacksmith** is a place like the Guild: reached from the Camp by its own station button, which slides the
 screen to the Blacksmith (Camp out to the left, Blacksmith in from the right; back the reverse). It opens when
