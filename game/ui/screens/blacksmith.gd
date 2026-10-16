@@ -45,7 +45,7 @@ const STATIONS := [
 ]
 ## The Upgrade station is live (the Upgrade screens' agent sets this true when open_upgrade() opens them); false:
 ## a disabled button with UPGRADE_SOON as its line and reason.
-const UPGRADE_READY := false
+const UPGRADE_READY := true
 const UPGRADE_SOON := "Coming soon"
 
 const WelcomeTitle := "The Blacksmith"
@@ -359,7 +359,7 @@ func open_workshop() -> TdPopup:
 ## open the picker popup in `popups` and return it.
 func open_upgrade() -> TdPopup:
 	end_tour()
-	return null
+	return open_popup("upgrade")
 
 ## Towers: the hand editor (tired towers dimmed), the same hands and layouts as the Camp's.
 func open_towers() -> TdPopup:

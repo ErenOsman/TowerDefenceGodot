@@ -16,13 +16,9 @@ const BASE := ""
 # ------------------------------------------------------------------ the picker
 
 ## The picker's ready mark and the "Ready to upgrade" filter: the tower can be upgraded now in its CURRENT form
-## (Eren 2026-10-16; the Blacksmith's "N ready" still counts every ready form: ready_count).
+## (Eren 2026-10-16; the Blacksmith's "N ready" counts the same way: ready_count). TowerLevels.is_ready.
 static func is_ready(owned: OwnedTower, type: TowerType) -> bool:
-	if owned == null or type == null: return false
-	var keep := TowerLevels.last_reason
-	var ok := TowerLevels.can_upgrade(owned, type, start_ladder(owned, type))
-	TowerLevels.last_reason = keep
-	return ok
+	return TowerLevels.is_ready(owned, type)
 
 ## The entries (HandLogic.entries) that pass the "Ready to upgrade" toggle; ready_of: Callable(tower id) -> bool.
 static func ready_filter(entries: Array, ready_of: Callable) -> Array:
@@ -32,7 +28,7 @@ static func ready_filter(entries: Array, ready_of: Callable) -> Array:
 static func count_text(shown: int, total: int, ready_on: bool) -> String:
 	return "%d ready" % shown if ready_on else HandLogic.count_text(shown, total)
 
-## How many ladders (base + forms) of the collection are ready (the Blacksmith's "N ready"; TowerLevels.ready_count).
+## How many towers are ready in their current form (the Blacksmith's "N ready"; TowerLevels.ready_count).
 static func ready_count(towers: Array, type_by_id: Callable) -> int:
 	return TowerLevels.ready_count(towers, type_by_id)
 
@@ -65,8 +61,7 @@ static func ladder_name(type: TowerType, form_id := BASE) -> String:
 
 ## The ladder the view shows: the tower's current form when it is unlocked, else the base.
 static func start_ladder(owned: OwnedTower, type: TowerType) -> String:
-	var f := Workshop.current_form(owned, type)
-	return f.id if f != null and Workshop.is_unlocked(owned, f.id) else BASE
+	return TowerLevels.current_ladder(owned, type)
 
 ## The highest level of a ladder (5 for a base, 3 for a form with the starter content).
 static func max_of(type: TowerType, form_id := BASE) -> int:
@@ -155,17 +150,21 @@ static func task_icon(kind: int) -> String:
 
 ## The view's one action for a ladder: {kind "upgrade" | "blocked" | "max", text "Upgrade to level 3", to,
 ## reason ("" when it can; TowerLevels.last_reason: the first missing task, "Raise Archer to level 3 first", …),
-## lock (the reason is the form cap: a lock icon instead of ⓘ)}. unlocked false (before the Blacksmith):
-## "The Blacksmith is not open yet".
+## lock (the reason is the form cap), note (the line under the disabled button: ONLY the form cap, "Raise Archer to
+## level 3 first", with a lock; a missing task has no line, its bar shows it: Eren 2026-10-16)}. unlocked false
+## (before the Blacksmith): "The Blacksmith is not open yet" (a note too).
 static func action(owned: OwnedTower, type: TowerType, form_id := BASE, unlocked := true) -> Dictionary:
 	var step := TowerLevels.step_for(owned, type, form_id)
-	if step == null: return {"kind": "max", "text": TowerLevels.MaxLevelText, "to": 0, "reason": TowerLevels.MaxLevelText, "lock": false}
+	if step == null: return {"kind": "max", "text": TowerLevels.MaxLevelText, "to": 0, "reason": TowerLevels.MaxLevelText, "lock": false, "note": ""}
 	var text := "Upgrade to level %d" % step.to
-	if not unlocked: return {"kind": "blocked", "text": text, "to": step.to, "reason": "The Blacksmith is not open yet", "lock": true}
+	if not unlocked:
+		var no := "The Blacksmith is not open yet"
+		return {"kind": "blocked", "text": text, "to": step.to, "reason": no, "lock": true, "note": no}
 	var ok := TowerLevels.can_upgrade(owned, type, form_id)
 	var reason := TowerLevels.last_reason
+	var lock := reason.begins_with("Raise ")
 	return {"kind": "upgrade" if ok else "blocked", "text": text, "to": step.to, "reason": reason,
-		"lock": reason.begins_with("Raise ")}
+		"lock": lock, "note": reason if lock else ""}
 
 # ------------------------------------------------------------------ what a level gives
 

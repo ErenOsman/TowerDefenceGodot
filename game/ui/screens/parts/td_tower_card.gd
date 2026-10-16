@@ -16,6 +16,7 @@ static func stat_tile(stat: String, label: String, value: String, width := 158.0
 	p.add_theme_stylebox_override("panel", TdTheme.stylebox("paper_stat", Color.WHITE, [8, 2, 8, 2]))
 	p.custom_minimum_size = Vector2(width, 44)
 	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	p.set_meta("stat", stat) # the Upgrade view marks changed tiles by stat
 	var h := TdMenu.hbox(6)
 	p.add_child(h)
 	var ic := TdMenu.picture(TdTheme.texture(STAT_ICONS.get(stat, "icon_power")), Vector2(18, 18))

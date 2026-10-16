@@ -65,8 +65,8 @@ func resolved_type(owned: OwnedTower) -> TowerType:
 func blacksmith_unlocked() -> bool:
 	return catalog != null and catalog.blacksmith_unlocked(SaveData.progress)
 
-## How many upgrades are ready now — towers (default form) and unlocked forms (tasks done, base level above the
-## form's) — the Upgrade station's "N ready".
+## How many towers can be upgraded now in their CURRENT form (Eren 2026-10-16: other forms never count) — the
+## Upgrade station's "N ready".
 ## 0 before the Blacksmith unlock.
 func upgrade_ready_count() -> int:
 	if not blacksmith_unlocked(): return 0

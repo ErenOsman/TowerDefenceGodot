@@ -117,29 +117,28 @@ static func upgrade(tower: OwnedTower, type: TowerType, form_id: String = "") ->
 	else: tower.form_levels[form_id] = step.to
 	return true
 
-## Whether the tower can be upgraded now in its default form or any unlocked form (the picker's "ready" mark).
+## The ladder a tower works on now: its current form's id when that form is unlocked and in the content, else ""
+## (the base). Eren 2026-10-16: the Upgrade view, the ready mark and "N ready" follow the CURRENT form only.
+static func current_ladder(tower: OwnedTower, type: TowerType) -> String:
+	var f := Workshop.current_form(tower, type)
+	return f.id if f != null and Workshop.is_unlocked(tower, f.id) else ""
+
+## Whether the tower can be upgraded now in its CURRENT form (the picker's "ready" mark; another form's ladder never
+## counts, Eren 2026-10-16).
 static func is_ready(tower: OwnedTower, type: TowerType) -> bool:
+	if tower == null or type == null: return false
 	var reason := last_reason
-	var ready := false
-	for form_id in [""] + (tower.forms if tower != null else []):
-		if can_upgrade(tower, type, form_id):
-			ready = true
-			break
+	var ready := can_upgrade(tower, type, current_ladder(tower, type))
 	last_reason = reason
 	return ready
 
-## How many upgrades are ready now (the Blacksmith's Upgrade station "N ready"): every tower whose default form can be
-## upgraded plus every unlocked form that can (its tasks done and its tower's level above its own). type_by_id:
-## Callable(String) -> TowerType (the base type).
+## How many towers are ready now (the Blacksmith's Upgrade station "N ready"): each tower counted once, in its
+## current form only (is_ready). type_by_id: Callable(String) -> TowerType (the base type).
 static func ready_count(towers: Array, type_by_id: Callable) -> int:
-	var reason := last_reason
 	var n := 0
 	for t in towers:
 		if t == null: continue
-		var type: TowerType = type_by_id.call(t.type)
-		for form_id in [""] + t.forms:
-			if can_upgrade(t, type, form_id): n += 1
-	last_reason = reason
+		if is_ready(t, type_by_id.call(t.type)): n += 1
 	return n
 
 ## Dev cheat (F1 "Level up all towers"): raises every tower and every unlocked form one level where the ladder allows

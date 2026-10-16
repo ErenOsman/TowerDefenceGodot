@@ -902,6 +902,10 @@ class FormNode extends Control:
 		_flash_ring.modulate.a = 0.0
 		_medal.add_child(_flash_ring)
 		TdFormBadge.attach(_medal, screen._badge(id), NODE_MEDAL, 0.34)
+		# Upgrades — Design (Eren 2026-10-16): each unlocked node (and the base) shows that ladder's level, so form
+		# levels stay visible where forms live; only once the Blacksmith is open
+		var lv_chip := state in ["current", "unlocked"] and TdLvChip.shown()
+		if lv_chip: TdLvChip.attach(_medal, TowerLevels.level_of(screen._owned(), id), NODE_MEDAL, 18)
 		# Current tag over the top
 		_tag = TdMenu.pill("[b]Current[/b]", TdTheme.color("accent.fill"), Color.WHITE, 18, TdTheme.color("rim"))
 		add_child(_tag)
@@ -915,7 +919,8 @@ class FormNode extends Control:
 		sb.set_corner_radius_all(13)
 		_ok.add_theme_stylebox_override("panel", sb)
 		_ok.size = Vector2(26, 26)
-		_ok.position = Vector2(W / 2.0 - 52, TOP + NODE_MEDAL - 30)
+		# the Lv chip holds the medallion's bottom-left: the ✓ moves up to its left side then
+		_ok.position = Vector2(W / 2.0 - 60, TOP + NODE_MEDAL * 0.36) if lv_chip else Vector2(W / 2.0 - 52, TOP + NODE_MEDAL - 30)
 		_ok.mouse_filter = MOUSE_FILTER_IGNORE
 		var ck := TdMenu.picture(TdTheme.texture("icon_check"), Vector2(16, 16))
 		ck.position = Vector2(5, 5)

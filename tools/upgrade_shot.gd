@@ -5,18 +5,22 @@ extends SceneTree
 ## Uses its own save (user://upgrade_shot.json, deleted first): Chapters 1–2 won (the Blacksmith is open) and the
 ## mockup's ten towers (4 Archers, 2 Guardians, 2 Mages, 2 Priests) at mixed levels, five of them ready.
 ## PNGs <out dir>/upgrade_<n>_<frame>.png: picker, picker_ready (the "Ready to upgrade" toggle), view (Archer Lv 2,
-## 42 / 60 damage: disabled with the reason), view_ready, confirm, beat (after the upgrade: level 4, the gold line),
-## max (an Archer at level 5, no forms), form (Fire Archer's ladder, ready), form_blocked ("Raise Archer to level 3
-## first"), codex (Archer's Overview: Levels and the header chip), lv_hand (the hand editor's tiles),
+## 42 / 60 damage: disabled), view_ready, confirm, beat (after the upgrade: level 4, the gold line), form (wearing
+## Fire Archer: its ladder, ready), form_blocked (wearing Fire Archer Lv 2: "Raise Archer to level 3 first"), max (an
+## Archer at level 5), codex (Archer's Overview: Levels and the header chip), lv_hand (the hand editor's tiles),
 ## lv_hud (tray, the placed medallion, the inspector and the selected tower's full plate), end_tasks (a won level's
 ## end screen with task rows and a ready line; the advances are posed in memory).
 
 var out_dir := "user://upgrade"
 var _n := 0
+## Only these frames are saved (2nd arg, comma separated, e.g. "view,view_ready,form_blocked,max"); [] = all. The
+## numbering stays the full run's; the level part is skipped when none of its frames is asked for.
+var only: Array = []
 
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	if args.size() > 0: out_dir = args[0]
+	if args.size() > 1: only = Array(args[1].split(","))
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
 	_run.call_deferred()
 
@@ -96,13 +100,16 @@ func _run() -> void:
 	print("upgrade: ", up.confirm_upgrade(), " level ", a1.level, " saved progress ", a1.task_progress)
 	await _frames(25)
 	await _shot("beat")
-	up.select_ladder("archer-fire")
+	# the view works on the CURRENT form (Eren 2026-10-16): wearing Fire Archer shows its ladder
+	a1.form = "archer-fire"
+	save.save()
+	up.refresh_view()
 	await _frames(12)
 	await _shot("form")
 	up.back_to_picker()
 	await _frames(20)
+	a3.form = "archer-fire"
 	up.open_view(a3.id)
-	up.select_ladder("archer-fire")
 	await _frames(30)
 	await _shot("form_blocked")
 	up.back_to_picker()
@@ -110,6 +117,10 @@ func _run() -> void:
 	up.open_view(a4.id)
 	await _frames(30)
 	await _shot("max")
+	if not only.is_empty() and not (only.has("codex") or only.has("lv_hand") or only.has("lv_hud") or only.has("end_tasks")):
+		print("UPGRADE SHOT DONE")
+		quit()
+		return
 	# Esc steps back one step: view → picker → closed
 	up.back()
 	await _frames(6)
@@ -213,6 +224,7 @@ func _frames(n: int) -> void:
 func _shot(label: String) -> void:
 	await RenderingServer.frame_post_draw
 	_n += 1
+	if not only.is_empty() and not only.has(label): return
 	var p := "%s/upgrade_%02d_%s.png" % [out_dir, _n, label]
 	root.get_viewport().get_texture().get_image().save_png(p)
 	print("saved ", ProjectSettings.globalize_path(p))

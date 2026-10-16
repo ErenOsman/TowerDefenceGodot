@@ -318,11 +318,14 @@ func test_a_tower_in_a_form_counts_toward_both_ladders() -> void:
 	assert_seq(adv.map(func(a): return "%s|%s" % [a.name, a.form]), ["Archer|", "Fire Archer|archer-fire"])
 	assert_eq(adv[0].ready, true, "the base step is ready")
 	assert_eq(adv[1].ready, false, "the form waits for its tower (base level 1 = form level 1)")
-	assert_eq(TowerLevels.ready_count([o], func(_id): return type), 1)
+	assert_eq(TowerLevels.ready_count([o], func(_id): return type), 0, "the base is ready, but the tower wears the waiting form")
 	assert_true(TowerLevels.upgrade(o, type))
-	assert_eq(TowerLevels.ready_count([o], func(_id): return type), 1, "now the form is the ready one")
+	assert_eq(TowerLevels.ready_count([o], func(_id): return type), 1, "now the worn form is the ready one")
 	o.task_progress["3"] = [1, 60]
-	assert_eq(TowerLevels.ready_count([o], func(_id): return type), 2, "towers and forms both count")
+	assert_eq(TowerLevels.ready_count([o], func(_id): return type), 1, "the base is ready too, but only the current form counts")
+	o.form = ""
+	assert_eq(TowerLevels.ready_count([o], func(_id): return type), 1, "back in the base form: the base counts, the form not")
+	assert_eq(TowerLevels.current_ladder(o, type), "")
 	# the base form: only the base ladder
 	var p := _owned("archer", "own-2")
 	p.forms = ["archer-fire"]

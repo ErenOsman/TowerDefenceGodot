@@ -3,16 +3,17 @@ extends TdPopup
 ## The Upgrade screens (Upgrades — Design § Player flow / The Upgrade view; UI/UX mockups screens-b/upgrade*.html):
 ## the Blacksmith's Upgrade station. Modelled on the Workshop (workshop.gd): one window, two panes that slide.
 ##  Step 1, the picker: "Upgrade · Pick a tower", the collection (TdCollection, filter set "upgrade": search and a
-##  "Ready to upgrade" toggle that keeps the towers whose base OR an unlocked form can be upgraded now, "5 ready"),
+##  "Ready to upgrade" toggle that keeps the towers that can be upgraded now in their current form, "5 ready"),
 ##  tiles with their Lv chip and a green ↑ when ready (no cost coin), and a paper card: name, "tower 3", Lv chip,
-##  "Level 3: 1 of 2 tasks done", "✓ Fire Archer is ready to upgrade", stat tiles, Upgrade (opens the view).
-##  Step 2, the Upgrade view: "← Back", the ladder's name, "tower 3", Lv chip; left "This tower now" (medallion with
-##  badge and Lv chip, name, "Base form" / "Form of Archer", "Level 2 of 5", stats at its level, abilities); centre
-##  "Level 3", the tasks with progress bars ("42 / 60 damage", a green ✓ when done) and ONE primary "Upgrade to
-##  level 3" (disabled with TowerLevels.last_reason under it: the first missing task, or "Raise Archer to level 3
-##  first" with a lock); right "What level 3 gives" (green chips) and the muted "Then: level 4" preview; at the
-##  bottom the forms row (base + unlocked forms, "Lv 2 of 5"; picking one shows that form's ladder).
-##  Max level: "Max level", "Archer is at its highest level." and what each level gave.
+##  "Level 3: 1 of 2 tasks done" and "✓ Archer is ready to upgrade" (current form), stat tiles, Upgrade.
+##  Step 2, the Upgrade view (Eren 2026-10-16: now vs after, nothing else): "← Back", the name, "tower 3", Lv chip;
+##  it works on the tower's CURRENT form (wearing Fire Archer: the Fire Archer ladder; no forms row). Left "Now":
+##  the card as it is (medallion with badge and Lv chip, name, "Form of Archer" for a form only, stats,
+##  abilities); centre "Level 3", the tasks with progress bars ("42 / 60 damage", a green ✓ when done) and ONE
+##  primary "Upgrade to level 3" (simply disabled while tasks are missing, the bars say it; only the form cap gets
+##  a line under it, "Raise Archer to level 3 first" with a lock); right "After upgrade": the same card at level + 1 (TowerLevels.apply on a
+##  copy) with every changed stat marked by a green "+5" badge. No max level shown; at max level the centre says
+##  "Archer is at its highest level." and the right card is empty.
 ##  Upgrade → the shared TdConfirm ("Upgrade Archer to level 3?", "It gives +5 Max HP. …") → GameApp.upgrade_tower
 ##  (saves) → the gold beat "Archer reached level 3!" over the next level. No currency, no comparison.
 ## Keys: Esc / right click = Back one step (confirm → cancel; view → picker; picker → close); Enter = the picker's
@@ -26,8 +27,8 @@ const SCENE := "res://game/ui/screens/upgrade.tscn"
 const WIN := Vector2(1460, 864)
 const PAD := 22.0
 const SLIDE_TIME := 0.35
-## The view's columns (mockup grid: 330 · 1fr · 340).
-const NOW_W := 330.0
+## The view's columns: now · tasks · after (the two cards the same width).
+const NOW_W := 340.0
 const RIGHT_W := 340.0
 const TITLE_INK := Color("#2B5594")
 const GOOD := Color("#2F8A45")
@@ -38,7 +39,7 @@ const BEAT_TIME := 4.0
 var view := "pick"
 ## The owned tower picked / shown.
 var tower_id := ""
-## The ladder shown in the view: "" = the base, else a form id.
+## The ladder shown in the view: the tower's current form ("" = the base, else a form id).
 var ladder := ""
 ## The beat line over the centre column ("Archer reached level 3!") until another ladder is picked or 4 s pass.
 var beat := ""
@@ -61,7 +62,6 @@ var _vname: HBoxContainer
 var _now: VBoxContainer
 var _mid: VBoxContainer
 var _right: VBoxContainer
-var _forms: HBoxContainer
 var _confirm: TdConfirm
 var _slide_tween: Tween
 var _beat_serial := 0
@@ -177,14 +177,10 @@ func _build_view() -> void:
 	body.add_child(mid)
 	var right := TdMenu.panel(TdPanel.Kind.PAPER, 16)
 	right.custom_minimum_size = Vector2(RIGHT_W, 0)
+	right.padding = 14
 	_right = TdMenu.vbox(8)
 	right.add_child(_right)
 	body.add_child(right)
-	var well := TdMenu.panel(TdPanel.Kind.WELL, 10)
-	well.custom_minimum_size = Vector2(0, 76)
-	_forms = TdMenu.hbox(10)
-	well.add_child(_forms)
-	_view.add_child(well)
 
 # ------------------------------------------------------------------ open / data
 
@@ -251,11 +247,11 @@ func _refresh_pdetail() -> void:
 	num.add_theme_font_override("font", TdTheme.font("plinth"))
 	num.size_flags_vertical = SIZE_SHRINK_CENTER
 	head.add_child(num)
-	var chip := TdLvChip.make(TowerLevels.level_of(owned), 18)
+	var chip := TdLvChip.make(TowerLevels.current_level(owned, type), 18)
 	chip.size_flags_vertical = SIZE_SHRINK_CENTER
 	head.add_child(chip)
 	_pdetail.add_child(head)
-	var tl := TdMenu.label(UpgradeLogic.tasks_done_line(owned, type), "body", TdTheme.color("ink.2"), 20)
+	var tl := TdMenu.label(UpgradeLogic.tasks_done_line(owned, type, UpgradeLogic.start_ladder(owned, type)), "body", TdTheme.color("ink.2"), 20)
 	tl.add_theme_font_override("font", TdTheme.font("nunito_bold"))
 	_pdetail.add_child(tl)
 	var rl := UpgradeLogic.ready_line(owned, type)
@@ -313,17 +309,11 @@ func _slide() -> void:
 	_slide_tween = TdTheme.tween(_slider)
 	_slide_tween.tween_property(_slider, "position:x", _slide_x(), SLIDE_TIME).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
-## Shows another ladder of the tower ("" = the base, else an unlocked form).
-func select_ladder(id: String) -> void:
-	if not UpgradeLogic.ladder_ids(_owned(), _type).has(id): return
-	ladder = id
-	beat = ""
-	refresh_view()
-
 ## Redraws the whole view.
 func refresh_view() -> void:
 	var owned := _owned()
 	if owned == null or _type == null: return
+	ladder = UpgradeLogic.start_ladder(owned, _type)
 	var e := _entry(tower_id)
 	TdCollection.clear_children(_vname)
 	var n := TdMenu.label(UpgradeLogic.ladder_name(_type, ladder) if ladder != "" or owned.custom_name == "" else owned.custom_name,
@@ -337,10 +327,14 @@ func refresh_view() -> void:
 	var chip := TdLvChip.make(TowerLevels.level_of(owned, ladder), 18)
 	chip.size_flags_vertical = SIZE_SHRINK_CENTER
 	_vname.add_child(chip)
-	_refresh_now()
+	var now := UpgradeLogic.levelled_type(owned, _type, ladder)
+	var after := UpgradeLogic.after_type(owned, _type, ladder)
+	_card(_now, "Now", now, TowerLevels.level_of(owned, ladder), {})
 	_refresh_mid()
-	_refresh_right()
-	_refresh_forms()
+	TdCollection.clear_children(_right)
+	if after != null:
+		var diffs := UpgradeLogic.stat_diffs(_tiles(now), _tiles(after))
+		_card(_right, "After upgrade", after, after.level, diffs)
 
 func _portrait(form_id: String) -> Texture2D:
 	var fa: FormAsset = GameApp.catalog.find_form(form_id) if form_id != "" else null
@@ -353,11 +347,19 @@ func _badge(form_id: String) -> String:
 	var p := ArtPaths.kit(f.badge)
 	return p if p != "" and ResourceLoader.exists(p) else ""
 
-func _refresh_now() -> void:
-	TdCollection.clear_children(_now)
-	var owned := _owned()
-	var body := _scroll_body(_now, 8)
-	body.add_child(_caption("This tower now"))
+## The stat tiles of a type's entity ([[stat, label, value], …]).
+func _tiles(t: TowerType) -> Array:
+	if t == null or t.entity == null or _vocab == null: return []
+	return HandLogic.stat_tiles(DefStats.new(t.entity), _vocab, 4)
+
+## One card (the left "Now" and the right "After upgrade"): caption, medallion with badge and Lv chip, name,
+## "Form of Archer" for a form (nothing for the base), the stat tiles (diffs: stat → "+5" badge in the good colour on
+## the changed tiles) and the abilities (their numbers are the levelled ones).
+func _card(col: VBoxContainer, caption: String, t: TowerType, lv: int, diffs: Dictionary) -> void:
+	TdCollection.clear_children(col)
+	var body := _scroll_body(col, 8)
+	body.add_theme_constant_override("separation", 10) # the "+5" badges hang 10 px above their tiles
+	body.add_child(_caption(caption))
 	var head := TdMenu.hbox(12)
 	body.add_child(head)
 	var holder := Control.new()
@@ -367,7 +369,7 @@ func _refresh_now() -> void:
 	var m := TdTowerCard.medallion(_portrait(ladder), 84, _badge(ladder))
 	m.position = Vector2(0, 2)
 	holder.add_child(m)
-	TdLvChip.attach(m, TowerLevels.level_of(owned, ladder), 84, 18)
+	TdLvChip.attach(m, lv, 84, 18)
 	var v := TdMenu.vbox(0)
 	v.size_flags_horizontal = SIZE_EXPAND_FILL
 	v.size_flags_vertical = SIZE_SHRINK_CENTER
@@ -375,17 +377,54 @@ func _refresh_now() -> void:
 	var n := TdMenu.wrap_label(UpgradeLogic.ladder_name(_type, ladder), "h2", TITLE_INK, 28)
 	n.add_theme_font_override("font", TdTheme.font("plinth"))
 	v.add_child(n)
-	var sub := TdMenu.label(UpgradeLogic.form_sub(_type, ladder), "header", TdTheme.color("ink.2"), 18)
-	sub.add_theme_font_override("font", TdTheme.font("plinth"))
-	v.add_child(sub)
-	var lv := TdMenu.label(UpgradeLogic.level_line(owned, _type, ladder), "body", TdTheme.color("ink.2"), 18)
-	lv.add_theme_font_override("font", TdTheme.font("nunito_bold"))
-	v.add_child(lv)
-	var t := UpgradeLogic.levelled_type(owned, _type, ladder)
-	var def: EntityDef = t.entity if t != null else null
-	if def == null: return
-	if _vocab != null: body.add_child(TdTowerCard.stat_grid(HandLogic.stat_tiles(DefStats.new(def), _vocab, 4), 120))
-	for r in TdTowerCard.def_rows(def, _vocab): body.add_child(r)
+	var sub_text := UpgradeLogic.form_sub(_type, ladder)
+	if sub_text != "":
+		var sub := TdMenu.label(sub_text, "header", TdTheme.color("ink.2"), 18)
+		sub.add_theme_font_override("font", TdTheme.font("plinth"))
+		v.add_child(sub)
+	if t == null or t.entity == null: return
+	var grid := TdTowerCard.stat_grid(_tiles(t), 120)
+	grid.get_child(0).add_theme_constant_override("v_separation", 12 if not diffs.is_empty() else 6)
+	for tile in grid.get_child(0).get_children():
+		var stat: String = tile.get_meta("stat", "")
+		if diffs.has(stat): _mark(tile, diffs[stat])
+	body.add_child(grid)
+	for r in TdTowerCard.def_rows(t.entity, _vocab): body.add_child(r)
+
+## Marks a changed stat tile: a good-coloured outline and a small "+5" badge hanging on its top-right corner (an
+## overlay: the tile's value and name keep their room, "Max HP" is never squeezed).
+func _mark(tile: Control, text: String) -> void:
+	var ring := Panel.new()
+	var rs := StyleBoxFlat.new()
+	rs.draw_center = false
+	rs.border_color = GOOD
+	rs.set_border_width_all(2)
+	rs.set_corner_radius_all(8)
+	ring.add_theme_stylebox_override("panel", rs)
+	ring.mouse_filter = MOUSE_FILTER_IGNORE
+	tile.add_child(ring) # a PanelContainer child: fitted to the tile
+	var holder := Control.new() # fitted too; the badge inside it keeps its own size
+	holder.mouse_filter = MOUSE_FILTER_IGNORE
+	tile.add_child(holder)
+	var b := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = GOOD
+	sb.border_color = Color("#1E5A2C")
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(9)
+	sb.content_margin_left = 6; sb.content_margin_right = 6; sb.content_margin_top = 0; sb.content_margin_bottom = 1
+	b.add_theme_stylebox_override("panel", sb)
+	b.mouse_filter = MOUSE_FILTER_IGNORE
+	var l := TdMenu.label(text, "micro", Color.WHITE, 16)
+	l.add_theme_font_override("font", TdTheme.font("plinth"))
+	b.add_child(l)
+	holder.add_child(b)
+	b.set_anchors_preset(PRESET_TOP_RIGHT)
+	var bs := b.get_combined_minimum_size()
+	b.offset_left = -bs.x + 4
+	b.offset_right = 4
+	b.offset_top = -10
+	b.offset_bottom = -10 + bs.y
 
 func _refresh_mid() -> void:
 	TdCollection.clear_children(_mid)
@@ -394,7 +433,7 @@ func _refresh_mid() -> void:
 	if beat != "": _mid.add_child(_beat_line(beat))
 	var act := UpgradeLogic.action(owned, _type, ladder, GameApp.blacksmith_unlocked())
 	if act.kind == "max":
-		_mid.add_child(_title("Max level"))
+		_mid.add_child(_title("Highest level"))
 		var h := TdMenu.hbox(8)
 		var st := TdMenu.picture(star_texture(), Vector2(24, 24))
 		st.modulate = TdTheme.color("gold")
@@ -402,21 +441,6 @@ func _refresh_mid() -> void:
 		h.add_child(st)
 		h.add_child(TdMenu.label(UpgradeLogic.max_line(_type, ladder), "body", TdTheme.color("ink"), 22))
 		_mid.add_child(h)
-		_mid.add_child(_caption("What the levels gave"))
-		var grid := GridContainer.new()
-		grid.columns = 2
-		grid.add_theme_constant_override("h_separation", 22)
-		grid.add_theme_constant_override("v_separation", 8)
-		for row in UpgradeLogic.max_rows(_type, ladder):
-			var l := TdMenu.label(row[0], "header", TdTheme.color("ink"), 20)
-			l.add_theme_font_override("font", TdTheme.font("plinth"))
-			l.size_flags_vertical = SIZE_SHRINK_CENTER
-			grid.add_child(l)
-			var chips := TdMenu.hbox(8)
-			if row[1].is_empty(): chips.add_child(TdMenu.label("no stat change", "body", TdTheme.color("ink.2"), 18))
-			for part in row[1]: chips.add_child(_bonus_chip(part, false, false))
-			grid.add_child(chips)
-		_mid.add_child(grid)
 		return
 	_mid.add_child(_title("Level %d" % act.to))
 	_mid.add_child(_caption("Tasks"))
@@ -432,103 +456,17 @@ func _refresh_mid() -> void:
 		b.size_flags_horizontal = SIZE_EXPAND_FILL
 		b.set_interactable(false, act.reason)
 		_mid.add_child(b)
+		if act.note == "": return # a missing task: the bars say it (Eren 2026-10-16), no line
 		var why := TdMenu.hbox(8)
 		var ic := TdMenu.picture(TdTheme.texture("icon_lock" if act.lock else "icon_info"), Vector2(20, 20))
 		ic.modulate = TdTheme.color("ink.2")
 		ic.size_flags_vertical = SIZE_SHRINK_CENTER
 		why.add_child(ic)
-		var wl := TdMenu.wrap_label(act.reason, "body", TdTheme.color("ink.2"), 20)
+		var wl := TdMenu.wrap_label(act.note, "body", TdTheme.color("ink.2"), 20)
 		wl.add_theme_font_override("font", TdTheme.font("nunito_bold"))
 		wl.size_flags_horizontal = SIZE_EXPAND_FILL
 		why.add_child(wl)
 		_mid.add_child(why)
-
-func _refresh_right() -> void:
-	TdCollection.clear_children(_right)
-	var owned := _owned()
-	_right.add_child(_caption(UpgradeLogic.gives_title(owned, _type, ladder)))
-	for part in UpgradeLogic.gives(owned, _type, ladder): _right.add_child(_bonus_chip(part, true, false))
-	var then := UpgradeLogic.then_info(owned, _type, ladder)
-	_right.add_child(TdMenu.spacer(6))
-	if TowerLevels.step_for(owned, _type, ladder) != null:
-		var dash := TdTowerCard.DashLine.new()
-		dash.custom_minimum_size = Vector2(0, 3)
-		_right.add_child(dash)
-		_right.add_child(TdMenu.spacer(4))
-	if then.title != "":
-		var tt := TdMenu.label(then.title, "body", TdTheme.color("ink.2"), 18)
-		tt.add_theme_font_override("font", TdTheme.font("nunito_extrabold"))
-		_right.add_child(tt)
-		for line in then.tasks: _right.add_child(TdMenu.wrap_label(line, "body", TdTheme.color("ink.2"), 18))
-		for part in then.bonuses: _right.add_child(_bonus_chip(part, true, true))
-	else:
-		_right.add_child(TdMenu.wrap_label(then.last, "body", TdTheme.color("ink.2"), 18))
-
-func _refresh_forms() -> void:
-	TdCollection.clear_children(_forms)
-	var owned := _owned()
-	var cap := TdMenu.label("Forms", "header", TdTheme.color("cream.200"), 22)
-	cap.add_theme_font_override("font", TdTheme.font("plinth"))
-	cap.size_flags_vertical = SIZE_SHRINK_CENTER
-	_forms.add_child(cap)
-	_forms.add_child(TdMenu.spacer(0, 4))
-	var ids := UpgradeLogic.ladder_ids(owned, _type)
-	if ids.size() <= 1:
-		var l := TdMenu.label(UpgradeLogic.NoForms, "body", TdTheme.color("cream.200"), 18)
-		l.size_flags_vertical = SIZE_SHRINK_CENTER
-		_forms.add_child(l)
-		return
-	for id in ids: _forms.add_child(_form_chip(id))
-
-## One ladder in the forms row: medallion + badge, name, Lv chip, "of 5"; cobalt when shown; a small ↑ when ready.
-## A click shows that ladder.
-func _form_chip(id: String) -> Control:
-	var owned := _owned()
-	var on := id == ladder
-	var p := PanelContainer.new()
-	p.name = "Ladder_" + (id if id != "" else "base")
-	p.mouse_filter = MOUSE_FILTER_STOP
-	p.mouse_default_cursor_shape = CURSOR_POINTING_HAND
-	p.size_flags_vertical = SIZE_SHRINK_CENTER
-	var sb := StyleBoxFlat.new()
-	sb.set_corner_radius_all(12)
-	sb.content_margin_left = 6; sb.content_margin_right = 12; sb.content_margin_top = 4; sb.content_margin_bottom = 4
-	if on:
-		sb.bg_color = Color("#22385C")
-		sb.border_color = TdTheme.color("accent.light")
-		sb.set_border_width_all(3)
-	else:
-		sb.bg_color = Color(0.2, 0.15, 0.11, 0.9)
-		sb.border_color = TdTheme.color("rim")
-		sb.set_border_width_all(2)
-	p.add_theme_stylebox_override("panel", sb)
-	var h := TdMenu.hbox(8)
-	h.mouse_filter = MOUSE_FILTER_IGNORE
-	p.add_child(h)
-	var m := TdTowerCard.medallion(_portrait(id), 44, _badge(id))
-	m.size_flags_vertical = SIZE_SHRINK_CENTER
-	h.add_child(m)
-	var n := TdMenu.label(UpgradeLogic.ladder_name(_type, id), "header", Color.WHITE if on else TdTheme.color("cream.100"), 20)
-	n.add_theme_font_override("font", TdTheme.font("plinth"))
-	n.size_flags_vertical = SIZE_SHRINK_CENTER
-	h.add_child(n)
-	h.add_child(TdLvChip.make(TowerLevels.level_of(owned, id), 16))
-	var of := TdMenu.label(UpgradeLogic.of_text(_type, id), "body", TdTheme.color("cream.300"), 18)
-	of.add_theme_font_override("font", TdTheme.font("nunito_bold"))
-	of.size_flags_vertical = SIZE_SHRINK_CENTER
-	h.add_child(of)
-	var keep := TowerLevels.last_reason
-	if TowerLevels.can_upgrade(owned, _type, id):
-		var rm := TdLvChip.ready_mark(22.0)
-		rm.size_flags_vertical = SIZE_SHRINK_CENTER
-		h.add_child(rm)
-	TowerLevels.last_reason = keep
-	TdTowerTile.hit_rect_only(p)
-	p.gui_input.connect(func(ev: InputEvent):
-		if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and ev.pressed:
-			select_ladder(id)
-			p.accept_event())
-	return p
 
 # ------------------------------------------------------------------ parts
 
@@ -611,35 +549,6 @@ func _task_row(row: Dictionary) -> Control:
 			"body", GOOD if row.done else TdTheme.color("ink.2"), 18)
 		pl.add_theme_font_override("normal_font", TdTheme.font("nunito_bold"))
 		v.add_child(pl)
-	return p
-
-## A bonus: stat icon, "+5" (green, bold), "Max HP". wide: fills the column (the right card); muted: the preview.
-func _bonus_chip(part: Array, wide: bool, muted: bool) -> Control:
-	var p := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.18, 0.13, 0.09, 0.06)
-	sb.border_color = Color(0.37, 0.29, 0.21, 0.35)
-	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(10)
-	sb.content_margin_left = 10; sb.content_margin_right = 12; sb.content_margin_top = 3; sb.content_margin_bottom = 3
-	p.add_theme_stylebox_override("panel", sb)
-	p.mouse_filter = MOUSE_FILTER_IGNORE
-	p.size_flags_horizontal = SIZE_EXPAND_FILL if wide else SIZE_SHRINK_BEGIN
-	var h := TdMenu.hbox(8)
-	p.add_child(h)
-	var ic := TdMenu.picture(TdTheme.texture(TdTowerCard.STAT_ICONS.get(part[0], "icon_power")), Vector2(20, 20))
-	ic.modulate = TdTheme.color("bad.ink") if part[0] == "MaxHp" else TdTheme.color("ink.2")
-	ic.size_flags_vertical = SIZE_SHRINK_CENTER
-	h.add_child(ic)
-	var a := TdMenu.label(part[1], "header", GOOD, 22)
-	a.add_theme_font_override("font", TdTheme.font("plinth"))
-	a.size_flags_vertical = SIZE_SHRINK_CENTER
-	h.add_child(a)
-	var n := TdMenu.label(part[2], "body", TdTheme.color("ink.2"), 20)
-	n.add_theme_font_override("font", TdTheme.font("nunito_bold"))
-	n.size_flags_vertical = SIZE_SHRINK_CENTER
-	h.add_child(n)
-	if muted: p.modulate.a = 0.6
 	return p
 
 ## The gold beat over the centre column ("★ Archer reached level 3!"), fading in.
