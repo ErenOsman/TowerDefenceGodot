@@ -22,6 +22,8 @@ var icon_of: Callable = Callable()
 var status: TdEntityStatus
 ## An opaque dark backing behind the full plate (the kit's backing is translucent: a neighbour's bar showed through).
 var _backing: Panel
+## The tower's Lv chip on the full plate (hangs on the backing's top-right corner); null when none.
+var _lv: TdLvChip = null
 var _keys: Array = []
 ## key → StatusView shown in each chip (the status tooltips read it).
 var views_by_key := {}
@@ -121,6 +123,18 @@ func set_form(full: bool, width: float, p_scale: float, dimmed: bool) -> void:
 	modulate.a = 0.5 if dimmed else 1.0
 	_align()
 
+## The Lv chip shown while the plate is full (0 hides it; Upgrades — Design, mockup lv-chip "Board plate").
+func set_level(lv: int) -> void:
+	if lv <= 0:
+		if _lv != null: _lv.visible = false
+		return
+	if _lv == null:
+		_lv = TdLvChip.make(lv)
+		add_child(_lv)
+	elif _lv.level != lv: _lv.set_level(lv)
+	_lv.visible = status.full
+	_align()
+
 func set_health_preview(v) -> void:
 	status.set_health_preview(float(v) if v != null else -1.0)
 
@@ -156,6 +170,11 @@ func _align() -> void:
 		var b: Rect2 = r.backing
 		_backing.position = b.position.round()
 		_backing.size = b.size.round()
+	if _lv != null:
+		_lv.visible = _lv.visible and status.full
+		var bk: Rect2 = r.backing
+		_lv.size = _lv.get_combined_minimum_size()
+		_lv.position = Vector2(bk.end.x - _lv.size.x * 0.7, bk.position.y - _lv.size.y * 0.55).round()
 
 ## The plate never takes the pointer (clicks and hover reach the unit and the tiles under it): every control in it.
 func _ignore_pointer(n: Node) -> void:

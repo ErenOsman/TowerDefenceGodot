@@ -21,6 +21,8 @@ var shown_tower := ""
 var _portrait: Control
 var _badge_shown := ""
 var _name: Label
+## The tower's Lv chip in the name row (mockup lv-chip "Inspector card"); hidden for enemies and before the Blacksmith.
+var _lv: TdLvChip
 var _sub: Label
 var _info: TdButton
 var _health_box: VBoxContainer
@@ -62,7 +64,14 @@ func _init() -> void:
 	_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_name.clip_text = true
 	_name.custom_minimum_size = Vector2(140, 0)
-	names.add_child(_name)
+	_name.size_flags_horizontal = SIZE_EXPAND_FILL
+	var name_row := HudArt.hbox(8)
+	names.add_child(name_row)
+	name_row.add_child(_name)
+	_lv = TdLvChip.make(1, 18)
+	_lv.size_flags_vertical = SIZE_SHRINK_CENTER
+	_lv.visible = false
+	name_row.add_child(_lv)
 	var sub_row := HudArt.hbox(6)
 	names.add_child(sub_row)
 	_sub = HudArt.label("", "body", TdTheme.color("cream.300"), 20)
@@ -199,6 +208,9 @@ func refresh() -> void:
 		_badge_shown = badge
 		TdFormBadge.attach(_portrait, badge, 88) # a formed tower's form badge on its portrait
 	_name.text = hand.name if hand != null else f.name
+	var lv: int = tdef.type.level if tdef != null and tdef.type != null and not enemy and TdLvChip.shown() else 0
+	_lv.visible = lv > 0
+	if lv > 0 and lv != _lv.level: _lv.set_level(lv)
 	_name.add_theme_color_override("font_color", TdTheme.color("bad") if enemy else TdTheme.color("accent.light"))
 	if hand != null: _sub.text = "Tower · %d energy" % hand.cost
 	elif tower_id != null and c.is_coop and c.owner_of(e) != "":

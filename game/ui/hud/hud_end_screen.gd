@@ -169,6 +169,7 @@ func show_outcome(outcome: int) -> void:
 		var rec: LevelRecord = mp.find(m.id) if mp != null else null
 		var groups := MissionUiLogic.end_reward_groups(m, _won, rec != null and rec.wins == 1)
 		if not groups.is_empty(): _extra.add_child(_mission_rewards(groups))
+		_add_tasks(c)
 		if mp != null:
 			var line := MissionUiLogic.end_plays_line(m, mp)
 			var done := MissionBoard.plays_left(m, mp) <= 0
@@ -186,6 +187,7 @@ func show_outcome(outcome: int) -> void:
 				_extra.add_child(wl)
 	# Workshop tokens: "Rewards:" and a chip per token kind (icon, ×n, name)
 	elif _won and "drops" in c and not c.drops.is_empty(): _extra.add_child(_token_row(c.drops))
+	if m == null: _add_tasks(c)
 	if not _won:
 		var tip = _codex_tip("losing")
 		if tip != null:
@@ -208,6 +210,85 @@ func show_outcome(outcome: int) -> void:
 	_retry_line.text = _retry_takes(c, m) if retry_button.visible and m != null else ""
 	_retry_line.visible = _retry_line.text != ""
 	open()
+
+## The tower level tasks this level moved (Upgrades — Design; mockup end-screen-tasks), under the drops: a dark inset
+## with "Tasks", one row per advance (UpgradeLogic.end_rows: "Archer (tower 3): Get 10 kills with it   8 / 10 kills
+## +3", a done one "✓ … Done"; at most UpgradeLogic.END_ROWS, then "+2 more tasks moved") and a gold line per tower
+## made ready ("★ Guardian is ready to upgrade! Go to the Blacksmith."). Nothing when no task moved (and never before
+## the Blacksmith opens: the controller counts nothing then).
+func _add_tasks(c: LevelController) -> void:
+	var adv: Array = c.task_advances if "task_advances" in c else []
+	if adv.is_empty(): return
+	if _extra.get_child_count() > 0: _extra.add_child(TdMenu.spacer(14))
+	_extra.add_child(task_block(adv))
+
+## The Tasks inset of task_advances (public for tools).
+static func task_block(adv: Array) -> Control:
+	var p := PanelContainer.new()
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(0.09, 0.067, 0.05, 0.55)
+	box.border_color = Color(TdTheme.color("rim"), 0.8)
+	box.set_border_width_all(2)
+	box.set_corner_radius_all(14)
+	box.content_margin_left = 16; box.content_margin_right = 16; box.content_margin_top = 10; box.content_margin_bottom = 12
+	p.add_theme_stylebox_override("panel", box)
+	p.mouse_filter = MOUSE_FILTER_IGNORE
+	p.custom_minimum_size = Vector2(778, 0)
+	var v := HudArt.vbox(6)
+	p.add_child(v)
+	v.add_child(HudArt.label("Tasks", "h3", TdTheme.color("cream.100"), 22))
+	var rows := UpgradeLogic.end_rows(adv)
+	var green := Color("#7EE08A")
+	for i in mini(rows.size(), UpgradeLogic.END_ROWS):
+		var r: Dictionary = rows[i]
+		var h := HudArt.hbox(8)
+		var ic := TdMenu.picture(TdTheme.texture("icon_check") if r.done else TdDrops.icon_texture(UpgradeLogic.task_icon(r.kind)), Vector2(20, 20))
+		ic.modulate = green if r.done else TdTheme.color("cream.200")
+		ic.size_flags_vertical = SIZE_SHRINK_CENTER
+		h.add_child(ic)
+		var who := "[b][color=%s]%s[/color][/b]" % [TdTheme.rich("cream.100"), r.who]
+		if r.where != "": who += " " + r.where
+		var t := TdMenu.rich("%s: %s" % [who, r.text], "body", TdTheme.color("cream.200"), 20)
+		t.autowrap_mode = TextServer.AUTOWRAP_OFF
+		t.clip_contents = true
+		t.size_flags_horizontal = SIZE_EXPAND_FILL
+		t.size_flags_vertical = SIZE_SHRINK_CENTER
+		h.add_child(t)
+		var right := "[b][color=%s]Done[/color][/b]" % green.to_html(false) if r.done else \
+			"[b][color=%s]%s[/color][/b]  [b][color=%s]%s[/color][/b]" % [TdTheme.rich("cream.100"), r.progress, green.to_html(false), r.gain]
+		var rl := TdMenu.rich(right, "body", TdTheme.color("cream.100"), 20)
+		rl.autowrap_mode = TextServer.AUTOWRAP_OFF
+		rl.fit_content = true
+		rl.size_flags_horizontal = SIZE_SHRINK_END
+		rl.size_flags_vertical = SIZE_SHRINK_CENTER
+		h.add_child(rl)
+		v.add_child(h)
+	var more := UpgradeLogic.end_more(rows.size())
+	if more != "": v.add_child(HudArt.label(more, "body", TdTheme.color("cream.300"), 18))
+	for name in UpgradeLogic.end_ready(adv):
+		var g := PanelContainer.new()
+		var gs := StyleBoxFlat.new()
+		gs.bg_color = Color(1.0, 0.83, 0.42, 0.12)
+		gs.border_color = TdTheme.color("gold")
+		gs.set_border_width_all(2)
+		gs.set_corner_radius_all(8)
+		gs.content_margin_left = 12; gs.content_margin_right = 12; gs.content_margin_top = 4; gs.content_margin_bottom = 5
+		g.add_theme_stylebox_override("panel", gs)
+		g.mouse_filter = MOUSE_FILTER_IGNORE
+		var gh := HudArt.hbox(8)
+		g.add_child(gh)
+		var st := TdMenu.picture(TdLvChip.star_texture(), Vector2(22, 22))
+		st.modulate = TdTheme.color("gold")
+		st.size_flags_vertical = SIZE_SHRINK_CENTER
+		gh.add_child(st)
+		var gl := TdMenu.rich("[b][color=%s][font_size=22]%s is ready to upgrade![/font_size][/color][/b]  Go to the Blacksmith." % [TdTheme.rich("gold"), name],
+			"body", TdTheme.color("cream.200"), 20)
+		gl.autowrap_mode = TextServer.AUTOWRAP_OFF
+		gl.size_flags_horizontal = SIZE_EXPAND_FILL
+		gl.size_flags_vertical = SIZE_SHRINK_CENTER
+		gh.add_child(gl)
+		v.add_child(g)
+	return p
 
 ## "Retry takes 1 rested tower (Mage)" for a solo mission whose cap is not filled by rested towers ("" otherwise).
 func _retry_takes(c: LevelController, m: MissionDef) -> String:

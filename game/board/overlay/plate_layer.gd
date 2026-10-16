@@ -22,6 +22,8 @@ var timings: PresentationTimings = null
 ## Makes a plate Control: the ui-kit's TdEntityStatus (KitPlate) by default; BoardPlate is the overlay's own
 ## drawn fallback with the same calls.
 var make_plate: Callable = func(): return KitPlate.new()
+## EntityFrame → the tower's level for the Lv chip on its FULL plate (0 = none); unset = no chips.
+var level_of: Callable = Callable()
 
 var _plates := {}       # id → BoardPlate
 var _dying := {}        # id → seconds since death
@@ -129,6 +131,7 @@ func _show(id: int, view: EntityView, f: EntityFrame, dt: float, t: Presentation
 	if is_focused: _full_id = id
 	_form(plate, view, is_focused)
 	plate.show_frame(f)
+	if plate.has_method("set_level"): plate.set_level(int(level_of.call(f)) if is_focused and level_of.is_valid() else 0)
 	var previewed := f.life == LifeState.Alive and health_preview.has(id)
 	plate.set_health_preview(health_preview[id] if previewed else null)
 	var bar := _bar_visible(id, f, t)

@@ -33,6 +33,16 @@ var selected_id := ""
 var picture_of: Callable = Callable()
 ## tower id → "" (rested) or its tired line (the hand editor: Missions & Guild tower energy); unset = never tired.
 var tired_of: Callable = Callable()
+## Lv chips on the tiles (Upgrades — Design): entry → level (0 = none). Unset: the entry's "level" (HandLogic.entries:
+## its current form's level) once the Blacksmith is open (TdLvChip.shown()), else none.
+var level_of: Callable = Callable()
+## tower id → whether it can be upgraded now (the Upgrade picker's green ↑ and its "Ready to upgrade" toggle).
+var ready_of: Callable = Callable()
+## The cost coin on the tiles (off in the Upgrade picker).
+var show_cost := true
+## Which filters the left well has: "full" (Role / Delivery / Cost…) or "upgrade" (search and "Ready to upgrade",
+## mockup upgrade-picker).
+var filter_set := "full"
 
 var tiles := {}   # tower id → TdTowerTile
 var shown: Array = []
@@ -114,6 +124,10 @@ func _build_filters() -> Control:
 	for i in 4: rim.add_theme_constant_override("margin_" + sides[i], int(ceil(float(o[i]) if o.size() > i else 0.0)))
 	rim.add_child(field)
 	v.add_child(rim)
+	if filter_set == "upgrade":
+		var rt := _toggle("ready", "Ready to upgrade")
+		v.add_child(rt)
+		return well
 	v.add_child(_heading("Role"))
 	var roles := _flow()
 	for r in HandLogic.ROLES:
@@ -169,28 +183,31 @@ func _build_filters() -> Control:
 		_cost_chips.append(c)
 	v.add_child(qc)
 	for pair in [["heal", "Heals"], ["status", "Applies statuses"], ["hide", "Hide my hand"]]:
-		var t := Button.new()
-		t.text = pair[1]
-		t.toggle_mode = true
-		t.flat = true
-		t.focus_mode = FOCUS_NONE
-		t.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		t.custom_minimum_size = Vector2(0, 30)
-		t.mouse_default_cursor_shape = CURSOR_POINTING_HAND
-		t.icon = load("res://game/ui/theme/half/toggle_off.png")
-		t.add_theme_constant_override("icon_max_width", 52)
-		t.add_theme_constant_override("h_separation", 10)
-		t.add_theme_font_override("font", TdTheme.font("nunito_bold"))
-		t.add_theme_font_size_override("font_size", 18)
-		for c in ["font_color", "font_focus_color"]: t.add_theme_color_override(c, TdTheme.color("cream.200"))
-		for c in ["font_pressed_color", "font_hover_color", "font_hover_pressed_color"]: t.add_theme_color_override(c, TdTheme.color("cream.100"))
-		for sbn in ["normal", "hover", "pressed", "hover_pressed", "focus"]: t.add_theme_stylebox_override(sbn, StyleBoxEmpty.new())
-		t.toggled.connect(func(on: bool): t.icon = load("res://game/ui/theme/half/toggle_on.png" if on else "res://game/ui/theme/half/toggle_off.png"))
-		var key: String = pair[0]
-		t.toggled.connect(func(on: bool): if not _syncing: filter[key] = on; refresh_filters(); refresh_grid())
-		v.add_child(t)
-		_toggles[key] = t
+		v.add_child(_toggle(pair[0], pair[1]))
 	return well
+
+## A toggle row (switch + label) bound to filter[key].
+func _toggle(key: String, text: String) -> Button:
+	var t := Button.new()
+	t.text = text
+	t.toggle_mode = true
+	t.flat = true
+	t.focus_mode = FOCUS_NONE
+	t.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	t.custom_minimum_size = Vector2(0, 30)
+	t.mouse_default_cursor_shape = CURSOR_POINTING_HAND
+	t.icon = load("res://game/ui/theme/half/toggle_off.png")
+	t.add_theme_constant_override("icon_max_width", 52)
+	t.add_theme_constant_override("h_separation", 10)
+	t.add_theme_font_override("font", TdTheme.font("nunito_bold"))
+	t.add_theme_font_size_override("font_size", 18)
+	for c in ["font_color", "font_focus_color"]: t.add_theme_color_override(c, TdTheme.color("cream.200"))
+	for c in ["font_pressed_color", "font_hover_color", "font_hover_pressed_color"]: t.add_theme_color_override(c, TdTheme.color("cream.100"))
+	for sbn in ["normal", "hover", "pressed", "hover_pressed", "focus"]: t.add_theme_stylebox_override(sbn, StyleBoxEmpty.new())
+	t.toggled.connect(func(on: bool): t.icon = load("res://game/ui/theme/half/toggle_on.png" if on else "res://game/ui/theme/half/toggle_off.png"))
+	t.toggled.connect(func(on: bool): if not _syncing: filter[key] = on; refresh_filters(); refresh_grid())
+	_toggles[key] = t
+	return t
 
 func _build_grid() -> Control:
 	var well := TdMenu.panel(TdPanel.Kind.WELL, 12)
@@ -330,9 +347,9 @@ func refresh_filters() -> void:
 	for i in _cost_chips.size():
 		var c: Array = HandLogic.COST_CHIPS[i]
 		_cost_chips[i].button_pressed = filter.cost_min == c[1] and filter.cost_max == c[2]
-	_cost_slider.value = filter.cost_max
-	_cost_value.text = HandLogic.cost_text(filter)
-	for k in _toggles: _toggles[k].button_pressed = bool(filter[k])
+	if _cost_slider != null: _cost_slider.value = filter.cost_max # (the "upgrade" filter set has no cost)
+	if _cost_value != null: _cost_value.text = HandLogic.cost_text(filter)
+	for k in _toggles: _toggles[k].button_pressed = bool(filter.get(k, false))
 	if search.text != str(filter.q): search.text = str(filter.q)
 	_syncing = false
 
@@ -343,17 +360,23 @@ func refresh_grid() -> void:
 		c.queue_free()
 	tiles.clear()
 	shown = HandLogic.visible(entries, filter, hand, sort)
+	var ready_on: bool = filter.get("ready", false) and ready_of.is_valid()
+	if ready_on: shown = UpgradeLogic.ready_filter(shown, ready_of)
+	var levels_on := level_of.is_valid() or TdLvChip.shown()
 	for e in shown:
 		var pic: Texture2D = picture_of.call(e) if picture_of.is_valid() else portrait(e.type)
 		var t := TdTowerTile.make(e, pic, hand.find(e.id) if hand_keys else -1, tile_size)
 		t.draggable = hand_keys
 		t.set_selected(e.id == selected_id)
+		if not show_cost: t.hide_cost()
+		if levels_on: t.set_level(int(level_of.call(e)) if level_of.is_valid() else int(e.get("level", 0)))
+		if ready_of.is_valid(): t.set_ready(bool(ready_of.call(e.id)))
 		if tired_of.is_valid(): t.set_tired(str(tired_of.call(e.id)))
 		t.pressed.connect(select)
 		t.double_pressed.connect(func(id: String): activated.emit(id))
 		grid.add_child(t)
 		tiles[e.id] = t
-	count_label.text = HandLogic.count_text(shown.size(), entries.size())
+	count_label.text = UpgradeLogic.count_text(shown.size(), entries.size(), ready_on)
 	_clear.visible = HandLogic.filter_active(filter)
 	_empty.visible = shown.is_empty()
 	grid_scroll.visible = not shown.is_empty()

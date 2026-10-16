@@ -613,7 +613,10 @@ func _tower_page(t: TowerAsset) -> void:
 	_head_medal.visible = true
 	var ent: EntityAsset = fa.entity if fa != null and fa.entity != null else t.entity
 	var pic := TdMenu.unit_picture(ent.view if ent != null else "", fa.icon if fa != null else t.icon)
-	_head_medal.add_child(TdTowerCard.medallion(pic, 64, MenuLogic.form_badge(fa)))
+	var hm := TdTowerCard.medallion(pic, 64, MenuLogic.form_badge(fa))
+	_head_medal.add_child(hm)
+	# Upgrades — Design: the highest level among your towers of this type (in this form) once the Blacksmith is open
+	if TdLvChip.shown(): TdLvChip.attach(hm, UpgradeLogic.best_level(SaveData.towers.towers, t.get_id(), form_id), 64)
 	if fa != null:
 		_title.text = fa.get_display_name()
 		_subtitle.text = WorkshopLogic.subtitle(type, form_id)
@@ -643,6 +646,18 @@ func _tower_facts(t: TowerAsset, fa: FormAsset, ent: EntityAsset) -> void:
 				Color(0.37, 0.29, 0.21, 0.3)))
 		_facts.add_child(chips)
 	_facts.add_child(_fact("icon_cards", "In your collection: [color=%s][b]%d[/b][/color]" % [TdTheme.rich("ink"), MenuLogic.owned_count(SaveData.towers, t.get_id())]))
+	# Upgrades — Design § Codex: read-only "Levels", what each level gives (the shown form's own ladder); no tasks.
+	# Not before the Blacksmith opens (nothing shows levels then).
+	if TdLvChip.shown():
+		var lines := UpgradeLogic.codex_levels(GameApp.tower_type(t.get_id()), fa.get_id() if fa != null else "")
+		if not lines.is_empty():
+			var parts := []
+			for line in lines:
+				var cut: int = line.find(":")
+				parts.append("[b][color=%s]%s[/color][/b]%s" % [TdTheme.rich("ink"), line.substr(0, cut + 1), line.substr(cut + 1)])
+			var lf := _fact("icon_plus", "[b]Levels[/b]\n" + "\n".join(parts))
+			lf.get_child(0).size_flags_vertical = SIZE_SHRINK_BEGIN # the icon by the "Levels" heading, not mid-list
+			_facts.add_child(lf)
 
 func _fact(icon: String, bbcode: String, tint := Color(0, 0, 0, 0)) -> Control:
 	var h := TdMenu.hbox(8)

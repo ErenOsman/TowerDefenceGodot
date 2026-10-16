@@ -26,6 +26,8 @@ var _hovered := false
 var _medal: Control
 var _name: Label
 var _pic: Texture2D
+var _coin: Control
+var _level := 0
 
 static func make(e: Dictionary, picture: Texture2D, key: int, tile_size := SIZE) -> TdTowerTile:
 	var t := TdTowerTile.new()
@@ -60,6 +62,7 @@ func _build(e: Dictionary, key: int) -> void:
 	var coin := TdHandSlot.coin(e.cost, 32.0)
 	coin.position = Vector2(4, 4)
 	add_child(coin)
+	_coin = coin
 	# no plain tooltip: it only repeated the name the tile shows (Eren 2026-10-15; the hand editor and the Workshop picker)
 	if key >= 0:
 		var b := Panel.new()
@@ -95,11 +98,37 @@ static func hit_rect_only(root: Control, keep: Array = []) -> void:
 ## A tower that went on a mission today: the portrait at 50 % with the moon badge (Missions & Guild — Design).
 func set_tired(text: String) -> void:
 	if text == "" or _medal == null: return
-	for c in _medal.get_children(): c.modulate.a = 0.5
-	TdTiredBadge.attach(self, tile.x, 0.22, Vector2(0.24, 0.48)) # top-left, under the coin
+	for c in _medal.get_children():
+		if c is TdLvChip: continue # the Lv chip stays readable on a resting tower
+		c.modulate.a = 0.5
+	# top-left, under the coin; a little higher when a Lv chip holds the portrait's bottom-left (lv-chip mockup)
+	TdTiredBadge.attach(self, tile.x, 0.22, Vector2(0.24, 0.42 if _level > 0 else 0.48))
 	if _name != null: _name.modulate.a = 0.6
 	hit_rect_only(self)
 	tooltip_text = text # the one thing the tile cannot show: why it rests (when it is back)
+
+## The tower's Lv chip at the portrait's bottom-left (Upgrades — Design; the lv-chip mockup); 0 removes it. The chip
+## rides on the medallion (it lifts with it) and never takes the pointer: the card's hit rect stays the same.
+func set_level(lv: int) -> void:
+	_level = lv
+	if _medal == null: return
+	TdLvChip.attach(_medal, lv, MEDAL)
+	hit_rect_only(self)
+
+## The Upgrade picker's green ↑ (the tower can be upgraded now, a form included) at the tile's top-right.
+func set_ready(on: bool) -> void:
+	var old := get_node_or_null("ReadyMark")
+	if old != null:
+		remove_child(old)
+		old.queue_free()
+	if not on: return
+	var m := TdLvChip.ready_mark(28.0)
+	m.position = Vector2(tile.x - 32, 4)
+	add_child(m)
+
+## Hides the cost coin (the Upgrade picker: no energy there, mockup upgrade-picker).
+func hide_cost() -> void:
+	if _coin != null: _coin.visible = false
 
 func set_selected(v: bool) -> void:
 	selected = v

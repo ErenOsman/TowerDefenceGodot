@@ -100,7 +100,9 @@ static func entries(towers: TowerCollection, catalog: GameCatalogAsset, convert:
 			"number": type.number if type != null else 9999, "name": MenuLogic.tower_name(o, type),
 			"cost": cost, "index": i + 1, "form": form,
 			"base_name": type.get_display_name() if type != null else "", "badge": MenuLogic.form_badge(form),
-			"description": desc}
+			"description": desc,
+			# Upgrades — Design: the level its current form fights at (the Lv chip; shown only once the Blacksmith is open)
+			"level": TowerLevels.level_of(o, form.get_id() if form != null else "")}
 		e.merge(cache[key][1])
 		out.append(e)
 	return out

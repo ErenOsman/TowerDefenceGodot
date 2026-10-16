@@ -48,6 +48,7 @@ var _arrow: TextureRect
 var _trigger: TdTooltipTrigger
 
 var _badge_path := "-"
+var _level := -1
 var _placed := false
 var _picked := false
 var _poor := false
@@ -194,6 +195,15 @@ func set_badge(path: String) -> void:
 	_badge_path = path
 	TdFormBadge.attach(_render, path, 112, 0.25, Vector2(0.86, 0.80))
 	TdFormBadge.attach(_medal, path, 64, 0.42)
+
+## The tower's Lv chip (Upgrades — Design; mockup lv-chip "Tray (in hand, placed)"): at the miniature's lower-left
+## above the plinth in the hand, at the placed medallion's bottom-left; 0 = none (before the Blacksmith opens).
+## Never takes the pointer (the piece's own rect stays the hit area).
+func set_level(lv: int) -> void:
+	if lv == _level or _render == null: return
+	_level = lv
+	TdLvChip.attach(_render, lv, 112, TdLvChip.FONT_SIZE, Vector2(0.02, 0.86))
+	TdLvChip.attach(_medal, lv, 64, TdLvChip.FONT_SIZE, Vector2(-0.12, 0.86))
 
 func set_tooltip(content: Dictionary) -> void:
 	_trigger.set_tooltip(content)

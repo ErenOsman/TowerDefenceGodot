@@ -464,6 +464,7 @@ func _setup() -> void:
 	overlay = BattleOverlay.new()
 	add_child(overlay)
 	overlay.setup(camera, func(st): return _status_icon(st))
+	overlay.plates.level_of = _plate_level
 
 	presenters = DefaultPresenters.new(views, overlay, session.state, board)
 	presenters.sounds = GameSounds.new()
@@ -1852,6 +1853,21 @@ func _record(quit: bool) -> void:
 	elif app != null and app.catalog != null:
 		reward = app.catalog.grant_first_clear_reward(result, rec, sd.towers)
 	sd.save()
+
+## The Lv chip on a tower's full board plate (Upgrades — Design; mockup lv-chip "Board plate (hovered)"): the level its
+## TowerDef was built at, 0 for anything else and before the Blacksmith opens.
+func _plate_level(f: EntityFrame) -> int:
+	if f == null or session == null: return 0
+	var app = _auto("GameApp")
+	if app == null or not app.blacksmith_unlocked(): return 0
+	# the director's frames may not carry tower_id (captured without the session): ask the session by entity
+	var tid = f.tower_id
+	if tid == null:
+		var e: Entity = session.state.get_entity(f.id)
+		tid = session.tower_id_of(e) if e != null else null
+	if tid == null: return 0
+	var td: TowerDef = session.tower(tid)
+	return td.type.level if td != null and td.type != null else 0
 
 ## Counts the tower level tasks of this level (TowerTasks.apply) for the player's own towers in it — the hand's owned
 ## towers (single player: TowerDef.id is the OwnedTower id; co-op: CoopLevels.task_entries) — into the save

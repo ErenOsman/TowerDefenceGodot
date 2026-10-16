@@ -36,6 +36,7 @@ func refresh() -> void:
 		_pieces.pop_back().queue_free()
 	var keys = get_tree().root.get_node_or_null("KeyBinds")
 	var energy: int = c.shown_energy
+	var lv_on := TdLvChip.shown() # Lv chips only once the Blacksmith is open (Upgrades — Design)
 	for i in hand.size():
 		var t: TowerDef = hand[i]
 		var frame := _placed_frame(f, t.id)
@@ -53,6 +54,7 @@ func refresh() -> void:
 		piece.show_state(t.id, i, t.name, t.cost, key, HudArt.miniature(c.converter, t.entity), HudArt.portrait(c.converter, t.entity),
 			frame, cds, c.placing == t.id, affordable, frame != null and c.selected == frame.id)
 		piece.set_badge(HudText.badge_path(t))
+		piece.set_level(t.type.level if lv_on and t.type != null else 0)
 		piece.set_tooltip(_tooltip(t, i, frame, affordable, keys))
 	custom_minimum_size = Vector2(HudLayout.tray_width(hand.size()), HudLayout.TRAY_H)
 
