@@ -18,6 +18,7 @@ today cannot be joined, and a room that switches to it drops you.
 | Where | The Camp's **Signpost** gains **Missions** once Chapter 2's last level is won (the catalog's `guildUnlock`); it opens the **Guild**, a place like the Camp, with Back to the Camp | Eren 2026-10-14 |
 | Name | **Guild** (scene `game/ui/screens/guild.tscn`, `SceneFlow.Guild`) | Eren ("kamp yerine guild olabilir") |
 | What is there | **Missions** (the mission board), **Multiplayer** (the co-op lobby, moved here from the Camp), **Towers** (the hand editor, the same hands and 4 layouts as the Camp's), **Camp** (back). The Workshop stays in the Camp: tokens are earned in the Guild and spent in the Camp | Eren (missions, multiplayer, hand editing) · agents (Towers = the same hand editor; Workshop stays) |
+| Gold | **Missions are the only source of gold** too: `winGold` on every win and `firstWinGold` once; gold is paid into tower levels at the Blacksmith (Upgrades — Design, the Pay task). Chapter levels drop none | Eren 2026-10-16 ("gold, mission documentinde olabilir"; gold tasks per level) · agents (amounts) |
 | Tokens | **Missions are the only source of tokens.** Chapter levels drop none (their prize is the first-clear tower). A mission lists what it drops: `winTokens` on every win and `firstWinTokens` once | Eren (missions = token source) · agents (chapters drop nothing) |
 | Daily limit | A mission can be **played `playsPerDay` times a day** (default 1; content may say 2, 3…). A play is **consumed when the mission starts** (the level starts; in co-op, when the match starts), so a loss or a quit counts too. The count resets at **local midnight** | Eren (once a day or a set number) · agents (consumed at start, local midnight) |
 | Multiplayer | **Every multiplayer level is a mission**; the lobby lists only missions. A player whose plays of a mission are used up **cannot create or join** a room set to it ("Done today · resets in 5 h"); if the host **switches the room to** such a mission, that player **leaves the room automatically** with the same message. The match start consumes one play for everyone in the room | Eren |
@@ -79,8 +80,8 @@ A place like the Camp (stations on a ring; panels until there is art):
   changed it), the client sends `leave` and shows "Done today: the room switched to <mission>". `match_start`
   records the play for every player in the room. The relay's `rooms` list still carries the level id; the lobby
   shows "Done today" on those rooms and disables Join.
-- **Rewards.** On a win: `winTokens` to everyone in the match; `firstWinTokens` once per mission per player; the
-  end screen shows them. A loss or a quit gives nothing (but the play is spent).
+- **Rewards.** On a win: `winTokens` and `winGold` to everyone in the match; `firstWinTokens` / `firstWinGold` once per
+  mission per player; the end screen shows them. A loss or a quit gives nothing (but the play is spent).
 - **Unlock.** The catalog's `guildUnlock` (Chapter 2's last level) opens the Signpost entry and the Guild;
   a mission's own `requires` works like a level's.
 - **Validation (Validate All):** every mission's level exists; a co-op mission's player range is within 1–6 and
@@ -101,6 +102,7 @@ A place like the Camp (stations on a ring; panels until there is art):
 | `requires`, `requireAll` | level / mission ids that must be won first; empty = open with the Guild |
 | `sharedPool`, `coopHandCap` | the co-op rules (Multiplayer — Design); replaces `coop.json` as the co-op list (the relay still reads `data/coop.json`, generated from the missions by `tools/coop_json.gd`) |
 | `firstWinTokens`, `winTokens` | `[{ "token": "Token/Fire Arrow", "amount": 1 }]` |
+| `firstWinGold`, `winGold` | integers (gold; `GameData.gold` is the wallet, shown in the Guild header and the Upgrade view) |
 
 Catalog: `guildUnlock` (a level) and `missions` (ordered mission list, the board's order). The Workshop's catalog
 drop fields `firstWinTokens` / `winTokens` on chapter levels are dropped: tokens come from missions only.
@@ -145,6 +147,4 @@ and then mirrored in the Godot build; only the Godot build was done before the U
 - Reset time: local midnight (chosen) or a fixed server hour for everyone.
 - Daily rotation (a few missions a day instead of the whole board) and weekly missions.
 - Whether missions get their own levels (made for them) or keep reusing chapter levels.
-- **Gold.** If a gold currency is ever added, it belongs here: missions would be its source (like tokens), and a
-  Blacksmith shop could spend it. It is not part of tower upgrades (Eren 2026-10-16: "gold, mission documentinde
-  olabilir"). Not planned yet.
+- A Blacksmith shop that spends gold on something other than levels; not now.

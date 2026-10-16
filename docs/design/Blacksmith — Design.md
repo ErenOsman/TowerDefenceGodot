@@ -48,5 +48,5 @@ Blacksmith. Before Chapter 2 nothing of this exists in the Camp.
 
 ## Open questions
 
-- Whether the Blacksmith should also sell something for gold later (a shop station); not now. Gold itself would come
-  from missions (Missions & Guild — Design).
+- Whether the Blacksmith should also sell something for gold later (a shop station); not now. Gold comes from
+  missions and is paid into tower levels (Upgrades — Design).
