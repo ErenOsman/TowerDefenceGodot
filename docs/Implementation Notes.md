@@ -239,7 +239,7 @@ How it is read:
   = the Guild's Tower Rack, Camp = the Guild's Guild Door, on the Guild Floor, plus a warm OmniLight by the anvil.
 - Camp: the Workshop station keeps its id `"Workshop"` and slot (tests, layout.json, tools) but reads **Blacksmith ·
   Modify and upgrade towers**, gate `"blacksmith"` (`GameApp.blacksmith_unlocked()` when it exists, else Chapter 2
-  won), and slides to the Blacksmith (`camp.open_blacksmith()`, dir 1). `camp.open_workshop()` still opens the
+  won), and slides to the Blacksmith (`camp.open_blacksmith()`, dir -1: the Blacksmith lies to the LEFT of the Camp, the Guild to the right). `camp.open_workshop()` still opens the
   Workshop popup directly (dev tools, `tools/workshop_shot.gd`). The post-Chapter-2 mini tour: Guild, then Blacksmith.
 - Stations: Modify (primary, `open_modify()` = the Workshop popup, as the Camp opened it), Upgrade (`open_upgrade()`,
   a stub returning null; while `UPGRADE_READY` is false the button is disabled with "Coming soon"), Towers (the hand

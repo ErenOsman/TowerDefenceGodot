@@ -6,7 +6,8 @@ is specified elsewhere: Modify in Workshop — Design (forms and tokens), Upgrad
 and tasks).
 
 The **Blacksmith** is a place like the Guild: reached from the Camp by its own station button, which slides the
-screen to the Blacksmith (Camp out to the left, Blacksmith in from the right; back the reverse). It opens when
+screen to the Blacksmith, the mirror of the Guild's slide: the Camp moves out to the **right**, the Blacksmith comes in
+from the **left** (the Guild lies to the Camp's right, the Blacksmith to its left); back the reverse. It opens when
 Chapter 2 is cleared, together with the Guild. It holds **Modify** (the Workshop) and **Upgrade** (tower levels).
 
 ## Decisions
@@ -15,7 +16,7 @@ Chapter 2 is cleared, together with the Guild. It holds **Modify** (the Workshop
 | --- | --- | --- |
 | A place | **Blacksmith** (scene `BlacksmithScene`, `SceneFlow.Blacksmith`), like the Guild: a diorama with a ring of stations, a welcome card on the first visit (`profile.blacksmith_seen`) | Eren 2026-10-16 ("modify'ı da guild gibi bir yere yapalım, blacksmith'e") |
 | From the Camp | The Camp's **Workshop** station becomes the **Blacksmith** station (same spot, the anvil table prop), label "Blacksmith", sub-line "Modify and upgrade towers". Hidden until Chapter 2's last level is won (no greyed state), like the Guild; the first Camp visit after Chapter 2 points at Guild and Blacksmith once | Eren (after Chapter 2; hidden buttons rule of 2026-10-15) · agents |
-| Transition | Pressing it slides the screen like the Guild (`SceneFlow.slide`); "← Camp" slides back | Eren (the slide sketch, 2026-10-15) · agents (same transition) |
+| Transition | Pressing it slides the screen like the Guild (`SceneFlow.slide`) but **to the left** (the Camp goes out right, the Blacksmith comes in from the left); "← Camp" slides back | Eren 2026-10-16 ("modify da guild gibi kayacak, ama sola") |
 | Stations | **Modify** (opens the Workshop picker → Modify view, exactly as the Workshop works today), **Upgrade** (the Upgrade picker → Upgrade view, Upgrades — Design), **Towers** (the hand editor), **Camp** (back). Nothing else for now | Eren (modify and upgrade) · agents (Towers, Camp) |
 | Unlock | `GameCatalogAsset.blacksmithUnlock`: Chapter 2's last level, the same as `guildUnlock`, unless changed | agents |
 | Art | A smithy diorama from the Blender agent in the Camp/Guild kit style: forge and anvil (Modify), a whetstone or workbench with a tower figure (Upgrade), a tower rack (Towers), the door (Camp); warm interior, embers. Placeholder until it lands: the Workshop's existing anvil table on a plain floor | agents |

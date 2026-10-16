@@ -370,4 +370,4 @@ func back_to_camp() -> void:
 	if SceneFlow.is_loading: return
 	end_tour()
 	SaveData.save()
-	SceneFlow.slide(SceneFlow.Camp, -1)
+	SceneFlow.slide(SceneFlow.Camp, 1)

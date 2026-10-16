@@ -402,7 +402,7 @@ func open_workshop() -> TdPopup:
 func open_blacksmith() -> void:
 	end_tour()
 	SaveData.save()
-	SceneFlow.slide(SceneFlow.Blacksmith, 1)
+	SceneFlow.slide(SceneFlow.Blacksmith, -1) # the Blacksmith lies to the LEFT of the Camp (Eren 2026-10-16); the Guild to the right
 
 ## Guild (the button by the Signpost): the Camp slides out to the left as the Guild comes in from the right.
 func open_guild() -> void:
