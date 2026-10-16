@@ -83,7 +83,7 @@ Reference mockup (approved as the UI direction): http://92.5.94.11/art/ui/screen
 - **Right card, one action:** `Unlock · 1 Fire Arrow` (enabled only in Can unlock; under it "Unlocks for this Archer
   (tower 3)"), or `Use this form` (unlocked, not current; under it "Free: switch back any time"), or nothing for the
   current form ("This is the tower's current form"). Missing tokens: the button is disabled and a red line says what
-  is missing and where it drops ("Needs 1 more Ember Core. Found in: The Glutton (boss)").
+  is missing ("Needs 1 more Ember Core"); no "Found in" (Eren 2026-10-16: where things are earned needs no explaining).
 - **No comparison between forms** (Eren, 2026-10-14): the card shows the selected form as it is — its stat tiles,
   its abilities and passives as their tooltips show them — with no arrows against the current form and no
   Changed / Same / New / Gone tags; the player compares by clicking nodes. Then "Leads to: …" for its children.
@@ -139,8 +139,8 @@ files and fields; everything keyed by stable ids like the rest.
 | `id`, `displayName`, `description`, `icon` | "Fire Arrow — An arrowhead that still smoulders." |
 | `rarity` | `Common` / `Rare`: a hint for the header's order and the drop tables, no rule reads it |
 
-Where a token drops is not stored on the token: the Workshop derives "Found in: Night Watch, Drum Line" from the
-missions' drop lists (so it stays true when missions change).
+Where a token drops is not stored on the token and is not written anywhere in the UI; the mission's Rewards popup
+(Missions & Guild — Design) is where a player sees what a mission gives.
 
 ### Missions.json — drops
 

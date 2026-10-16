@@ -12,7 +12,7 @@ need inline; the Backpack is the full list.
 
 | Topic | Decision | Source |
 | --- | --- | --- |
-| What | A **Backpack** popup listing the player's currencies: gold first, then the tokens (icon, name, count, "Found in: …" from the mission drops as the Workshop derives it); empty kinds are not listed except gold (always shown, "0 gold") | Eren 2026-10-16 · agents (list rules) |
+| What | A **Backpack** popup listing the player's currencies: gold first, then the tokens (icon, name, count); no "found in" or "from missions" texts (Eren 2026-10-16: where things are earned needs no explaining); empty kinds are not listed except gold (always shown, "0 gold") | Eren 2026-10-16 · agents (list rules) |
 | Where | A small **Backpack** button (bag icon, the gold count beside it) at the top-right of the **Camp**, the **Guild** and the **Blacksmith**; also in the Workshop picker's and the Upgrade picker's header. Hidden before the Camp unlocks (nothing to carry yet) | agents |
 | Opens | Over the place, as a TdPopup (Esc closes it); nothing else changes | agents |
 | Future | Items and keys get sections under the currencies; the popup grows by sections, not by tabs | agents |
@@ -25,9 +25,9 @@ need inline; the Backpack is the full list.
 │ ◉ 240 gold                                              │
 │ ─────────────────────────────────────────────────────── │
 │ Tokens                                                  │
-│ (icon) Fire Arrow        ×2   Found in: Night Watch     │
-│ (icon) Ember Core        ×1   Found in: The Glutton     │
-│ (icon) Yew Bow           ×0   Found in: Drum Line       │   ← only when the kind was ever earned
+│ (icon) Fire Arrow        ×2                             │
+│ (icon) Ember Core        ×1                             │
+│ (icon) Yew Bow           ×0                             │   ← only when the kind was ever earned
 └─────────────────────────────────────────────────────────┘
 ```
 

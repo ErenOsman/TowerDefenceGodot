@@ -18,7 +18,9 @@ today cannot be joined, and a room that switches to it drops you.
 | Where | The Camp's **Signpost** gains **Missions** once Chapter 2's last level is won (the catalog's `guildUnlock`); it opens the **Guild**, a place like the Camp, with Back to the Camp | Eren 2026-10-14 |
 | Name | **Guild** (scene `game/ui/screens/guild.tscn`, `SceneFlow.Guild`) | Eren ("kamp yerine guild olabilir") |
 | What is there | **Missions** (the mission board), **Multiplayer** (the co-op lobby, moved here from the Camp), **Towers** (the hand editor, the same hands and 4 layouts as the Camp's), **Camp** (back). The Workshop stays in the Camp: tokens are earned in the Guild and spent in the Camp | Eren (missions, multiplayer, hand editing) · agents (Towers = the same hand editor; Workshop stays) |
-| Gold | **Missions are the only source of gold** too: `winGold` on every win and `firstWinGold` once; gold is paid into tower levels at the Blacksmith (Upgrades — Design, the Pay task). Chapter levels drop none | Eren 2026-10-16 ("gold, mission documentinde olabilir"; gold tasks per level) · agents (amounts) |
+| Gold | **Missions are the only source of gold**: `winGold` on every win (**100–200**, by the mission's tier); **no extra gold on the first win**. Gold is paid into base-tower levels at the Blacksmith (Upgrades — Design). Chapter levels drop none | Eren 2026-10-16 ("görevler 100-200 gold versin"; "ilk win daha çok gold vermesin") |
+| Tier | Every mission has a **tier** (1–3, its difficulty), shown on its card and detail (pips); gold scales with it (100 / 150 / 200); the board can sort by it | Eren 2026-10-16 ("Mission'ların tier'i olsun (zorluk)") · agents (3 tiers, the amounts) |
+| Rewards popup | A mission's rewards open in a **Rewards popup** (from a "Rewards" button on the card and the detail): the tier, the gold per win, the tokens (first-win and every-win), and later **chance drops** ("30%: Ember Core") — the popup is the one place that lists what a mission gives; no "found in" texts elsewhere | Eren 2026-10-16 ("ödüllerin de pop-up'u olsun; olasılıkla token çıkma gelebilir gelecekte") · agents (layout) |
 | Tokens | **Missions are the only source of tokens.** Chapter levels drop none (their prize is the first-clear tower). A mission lists what it drops: `winTokens` on every win and `firstWinTokens` once | Eren (missions = token source) · agents (chapters drop nothing) |
 | Daily limit | A mission can be **played `playsPerDay` times a day** (default 1; content may say 2, 3…). A play is **consumed when the mission starts** (the level starts; in co-op, when the match starts), so a loss or a quit counts too. The count resets at **local midnight** | Eren (once a day or a set number) · agents (consumed at start, local midnight) |
 | Multiplayer | **Every multiplayer level is a mission**; the lobby lists only missions. A player whose plays of a mission are used up **cannot create or join** a room set to it ("Done today · resets in 5 h"); if the host **switches the room to** such a mission, that player **leaves the room automatically** with the same message. The match start consumes one play for everyone in the room | Eren |
@@ -80,13 +82,13 @@ A place like the Camp (stations on a ring; panels until there is art):
   changed it), the client sends `leave` and shows "Done today: the room switched to <mission>". `match_start`
   records the play for every player in the room. The relay's `rooms` list still carries the level id; the lobby
   shows "Done today" on those rooms and disables Join.
-- **Rewards.** On a win: `winTokens` and `winGold` to everyone in the match; `firstWinTokens` / `firstWinGold` once per
-  mission per player; the end screen shows them. A loss or a quit gives nothing (but the play is spent).
+- **Rewards.** On a win: `winTokens` and `winGold` to everyone in the match; `firstWinTokens` once per mission per
+  player (no first-win gold); the end screen shows them. The Rewards popup lists them before playing. A loss or a quit gives nothing (but the play is spent).
 - **Unlock.** The catalog's `guildUnlock` (Chapter 2's last level) opens the Signpost entry and the Guild;
   a mission's own `requires` works like a level's.
 - **Validation (Validate All):** every mission's level exists; a co-op mission's player range is within 1–6 and
   its level's `coopHandCap` ≥ 1; `playsPerDay` ≥ 1; every token kind drops from at least one mission (else warn);
-  the Workshop's "Found in" reads mission drops now.
+  `tier` is 1–3; `winGold` ≥ 0.
 
 ## Data
 
@@ -102,7 +104,9 @@ A place like the Camp (stations on a ring; panels until there is art):
 | `requires`, `requireAll` | level / mission ids that must be won first; empty = open with the Guild |
 | `sharedPool`, `coopHandCap` | the co-op rules (Multiplayer — Design); replaces `coop.json` as the co-op list (the relay still reads `data/coop.json`, generated from the missions by `tools/coop_json.gd`) |
 | `firstWinTokens`, `winTokens` | `[{ "token": "Token/Fire Arrow", "amount": 1 }]` |
-| `firstWinGold`, `winGold` | integers (gold; `GameData.gold`, shown in the Backpack (Backpack — Design)) |
+| `winGold` | integer, gold on every win (100–200 by tier; `GameData.gold`, shown in the Backpack) |
+| `tier` | 1–3, the mission's difficulty (pips on the card; gold scales with it) |
+| `chanceDrops` | later: `[{ "token": …, "chance": 0.3 }]`, listed in the Rewards popup as "30%: Ember Core" |
 
 Catalog: `guildUnlock` (a level) and `missions` (ordered mission list, the board's order). The Workshop's catalog
 drop fields `firstWinTokens` / `winTokens` on chapter levels are dropped: tokens come from missions only.

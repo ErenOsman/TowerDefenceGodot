@@ -15,7 +15,7 @@ tower's level.
 | --- | --- | --- |
 | Levels | Every tower (each individual, by its id) has a **level**, 1 when the Blacksmith opens, up to the type's **max level** (5 for now, data). A level is gained by pressing **Upgrade** once that level's **tasks** are complete; one of the tasks is always the gold task ("Pay N gold") | Eren (all towers level 1 after Chapter 2; tasks; press Upgrade) · agents (per individual tower, max 5) |
 | Tasks | Each level step of a tower type lists its tasks, e.g. Archer 1 → 2: "Win a mission with this tower". Tasks are counted **per tower** (this Archer, not any Archer). Kinds (data): win a mission with the tower in the hand; win N levels with it; N kills by it; N damage dealt; N hits taken without dying; place it N times; a specific mission; a win without losing a tower | Eren (example) · agents (the kinds) |
-| Gold | Every level step also has a **gold task**: "Pay N gold", a task like the others, with a **Pay** button on its row that deposits gold from the Backpack into the step (partial deposits allowed; the bar fills like any task; deposited gold is spent). Gold comes from missions only (Missions & Guild — Design). The task kind is `Pay` with a `currency` (`gold` now; a token id later, so token tasks can follow) | Eren 2026-10-16 ("her level için altın görevi de olsun … para yatırma tuşu olmalı"; earlier: no price, "gold shouldnt be on upgrades") · agents (partial deposits, the generic `Pay` kind) |
+| Gold | Every step of a **base tower's** ladder has a **gold task**: "Pay N gold" — **100 / 200 / 300 / 500** for levels 2 / 3 / 4 / 5 — a task like the others, with a **Pay** button on its row that deposits gold from the Backpack into the step (partial deposits allowed; the bar fills like any task; deposited gold is spent). **Forms need no gold**: their ladders have no Pay task. Gold comes from missions only (Missions & Guild — Design). The task kind is `Pay` with a `currency` (`gold` now; a token id later, so token tasks can follow) | Eren 2026-10-16 ("her level için altın görevi de olsun … para yatırma tuşu olmalı"; "form'lar için altın gerekmesin, ilk upgrade costu 100 olsun (100/200/300/500)") · agents (partial deposits, the generic `Pay` kind) |
 | What a level gives | Stat bonuses set per tower type and level in the content: e.g. Archer level 2 +2 Power, level 3 +5 Max HP, …; a level may also add or change an ability at a set step (data allows it; the starter content uses stats only). Bonuses are modifiers on the tower's entity, so previews and the Codex show them | agents |
 | Forms and levels | Each **unlocked form** of a tower has its **own level and tasks** (in Forms.json), but a form's level can **never exceed the base tower's level**: the Upgrade button for a form is disabled with "Raise Archer to level 3 first". The tower fights with the level bonuses of its **current** form (base or form) | Eren (forms ≤ base) · agents (own levels per form; current form's bonuses) |
 | Before Chapter 2 | No levels exist: nothing shows "Lv", no tasks count, nothing to collect for it. On the first Blacksmith visit every tower is level 1 and its level-1 → 2 tasks start counting from then (earlier wins do not count) | Eren (level 1 after Chapter 2) · agents (counting starts at the unlock) |
@@ -40,7 +40,7 @@ button shows "N ready" when some tower can be upgraded now.
 │ portrait, Lv 2          │ Tasks                             │ portrait, Lv 3    │
 │ Max HP 20 · Power 12    │ ✓ Win a mission with this tower   │ Max HP 25 (+5)    │
 │ Range 2 · Speed 2       │ ○ Deal 60 damage with it   42/60  │ Range 3 (+1)      │
-│                         │ ○ Pay 40 gold      25/40  [Pay]   │                   │
+│                         │ ○ Pay 200 gold    120/200 [Pay]   │                   │
 │ abilities               │                                   │ abilities         │
 │                         │ [      Upgrade to level 3      ]  │                   │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -91,17 +91,17 @@ button shows "N ready" when some tower can be upgraded now.
 
 ```json
 "levels": [
-  { "to": 2, "tasks": [ { "kind": "WinMission", "count": 1 }, { "kind": "Pay", "currency": "gold", "count": 20 } ],
+  { "to": 2, "tasks": [ { "kind": "WinMission", "count": 1 }, { "kind": "Pay", "currency": "gold", "count": 100 } ],
     "bonuses": [ { "stat": "Power", "kind": "Flat", "amount": "2" } ] },
-  { "to": 3, "tasks": [ { "kind": "WinMission", "count": 1 }, { "kind": "Damage", "count": 60 }, { "kind": "Pay", "currency": "gold", "count": 40 } ],
+  { "to": 3, "tasks": [ { "kind": "WinMission", "count": 1 }, { "kind": "Damage", "count": 60 }, { "kind": "Pay", "currency": "gold", "count": 200 } ],
     "bonuses": [ { "stat": "MaxHp", "kind": "Flat", "amount": "5" } ] }
 ]
 ```
 
 Task kinds: `WinMission` (count missions won with the tower in the hand), `WinLevel`, `WinMissionId` (`mission`),
 `Kills`, `Damage`, `HitsTaken` (survived), `Placed`, `WinNoLoss` (a win without losing a tower), `Pay` (`currency`:
-`gold`, or a token id later; progressed by the Pay button, never by play; every step has exactly one gold Pay task;
-the validator requires it). Task texts come
+`gold`, or a token id later; progressed by the Pay button, never by play; every base-tower step has exactly one gold Pay task and a form step has none;
+the validator requires both). Task texts come
 from the kind and count ("Win a mission with this tower", "Deal 60 damage with it"); a task may give its own `text`.
 
 ### Catalog.json
@@ -118,18 +118,15 @@ Engine-free rules in `sim/meta/tower_levels.gd` (`max_level`, `step_for`, `can_u
 
 | Tower | To level | Tasks | Gold | Gives |
 | --- | --- | --- | --- | --- |
-| Archer | 2 | Win a mission with it | 20 | +2 Power |
-| Archer | 3 | Win a mission; deal 60 damage | 40 | +5 Max HP |
-| Archer | 4 | Win 2 missions; 10 kills | 70 | +1 Range |
-| Archer | 5 | Win 3 missions; a win without losing a tower | 100 | +3 Power, +5 Max HP |
-| Guardian | 2 | Win a mission with it | 20 | +10 Max HP |
-| Guardian | 3 | Win a mission; take 40 hits and survive | 40 | +2 Power |
-| … | | the same shape for every tower (230 gold to level 5); forms get a shorter 3-step ladder (15 / 30 / 50 gold) | | |
+| Archer | 2 | Win a mission with it | 100 | +2 Power |
+| Archer | 3 | Win a mission; deal 60 damage | 200 | +5 Max HP |
+| Archer | 4 | Win 2 missions; 10 kills | 300 | +1 Range |
+| Archer | 5 | Win 3 missions; a win without losing a tower | 500 | +3 Power, +5 Max HP |
+| Guardian | 2 | Win a mission with it | 100 | +10 Max HP |
+| Guardian | 3 | Win a mission; take 40 hits and survive | 200 | +2 Power |
+| … | | the same shape for every tower (1100 gold to level 5); forms get a shorter 3-step ladder with no gold | | |
 
-Mission gold (placeholders): Patrol 10 / 30 first win, Night Watch 15 / 40, Hold the Gate 20 / 50, Drum Line 10 / 40,
-The Glutton Returns 25 / 60.
-
-in about a week of play, if it goes on missions every day.
+Mission gold (placeholders, by tier): tier 1 missions 100, tier 2 150, tier 3 200 per win; the first win gives the same.
 
 ## Build plan
 
