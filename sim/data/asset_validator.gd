@@ -451,15 +451,18 @@ static func validate_level(l: LevelAsset) -> Array[String]:
 			var wp := "waves[%d]" % w
 			if wave.start == WaveStart.AfterWave and (wave.after_wave < 0 or wave.after_wave >= l.waves.size() or wave.after_wave == w):
 				error.call(wp, "afterWave must name another wave of this level")
+			if wave.start == WaveStart.AtRound and wave.start_round < 1: error.call(wp, "startRound must be 1 or more (the level's rounds count from 1)")
 			for s in wave.spawns.size():
 				var sp: SpawnData = wave.spawns[s]
 				if sp == null: continue
+				if sp.round < 1: error.call("%s.spawns[%d]" % [wp, s], "round must be 1 or more: a wave's rounds count from 1 (1 = the round the wave starts)")
 				if sp.enemy == null: error.call("%s.spawns[%d]" % [wp, s], "has no enemy")
 				elif sp.enemy.footing != Footing.OnPath: error.call("%s.spawns[%d]" % [wp, s], "%s's footing should be OnPath" % sp.enemy.name)
 				if sp.path < 0 or sp.path >= path_count: error.call("%s.spawns[%d]" % [wp, s], "path %d does not exist" % sp.path)
 			for e in wave.events.size():
 				var ev: LevelEventData = wave.events[e]
 				var ep := "%s.events[%d]" % [wp, e]
+				if ev != null and ev.round < 1: error.call(ep, "round must be 1 or more (1 = the round the wave starts)")
 				if ev != null and ev.kind == LevelEventKind.ChangeTerrain:
 					if ev.terrain == null: error.call(ep, "has no terrain to change the tiles to")
 					if ev.tiles == null or ev.tiles.is_empty(): error.call(ep, "has no tiles")

@@ -174,3 +174,14 @@ func _diff(a, b, path: String) -> String:
 	if (a is float or a is int) and (b is float or b is int):
 		return "" if absf(float(a) - float(b)) < 1e-6 else "%s: %s vs %s" % [path, a, b]
 	return "" if a == b else "%s: %s vs %s" % [path, a, b]
+
+func test_spawn_round_zero_is_an_error() -> void:
+	# a wave's rounds count from 1 (1 = the round the wave starts): round 0 would never spawn (Eren asked, 2026-10-16)
+	var asset: LevelAsset = lib().get_asset("Level/Chapter 1/1 First Steps")
+	var sp = asset.waves[0].spawns[0]
+	var was: int = sp.round
+	sp.round = 0
+	var errors := AssetValidator.validate_level(asset)
+	sp.round = was
+	assert_true(errors.any(func(e): return e.contains("round must be 1 or more")), "\n".join(errors))
+	assert_true(AssetValidator.validate_level(asset).is_empty())
