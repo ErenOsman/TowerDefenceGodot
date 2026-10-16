@@ -54,6 +54,11 @@ never listed.
 checks strings ≤ 64); clients parse them (`CoopSession.parse_hand_entry` / `build_hand`) and build the form's entity,
 name and cost. The tower id keeps naming only the type (`"p1:archer#1"`). Forms are content, so they are covered by
 the content hash (`ContentHash` hashes every `data/content/*.json`); an unknown form id falls back to the default form.
+**Tower levels** (Upgrades — Design): a tower above level 1 in its current form adds `":L<n>"` (`"archer@archer-fire:L3"`,
+`"guardian:L2"`; `CoopSession.hand_entry(type, form, level)`, sent by `CoopLevels.my_hand_types`); every client builds it
+at that level (`TowerLevels.apply` with the form's ladder, or the base's; capped at the max level; a bad suffix reads
+level 1). Level 1 adds nothing, so older clients still read the entry. Tasks count on each client for its own towers:
+`CoopLevels.task_entries(me)` maps `"<me>:<type>#n"` back to the owned towers `on_match_start` took.
 Each player's commands carry a per-player `seq` (1, 2, 3…); a client applies a command only when it is the acting player's
 turn in the session (the session rejects others; a rejected command from the relay is a desync).
 

@@ -152,6 +152,28 @@ How it is read:
 - Dev: SaveTools actions `chapter2` (Clear Chapter 2: opens the Guild) and `rest_missions` (Reset today's plays / rest
   all towers), shown in the F1 panel and the TD Tools Save tab.
 
+## Upgrades & Blacksmith data (2026-10-16)
+**Source of truth: `docs/design/Upgrades — Design.md`** (and `Blacksmith — Design.md` § Data). How the Godot build does it:
+- Content: `levels` on every `TowerAsset` (4 steps to level 5) and `FormAsset` (3 steps) — `TowerLevelData {to, tasks:
+  [TowerTaskData {kind (TowerTaskKind), count, mission?, text?}], bonuses: [LevelBonusData {stat, kind Flat|PctAdd,
+  amount}]}`; `GameCatalogAsset.blacksmithUnlock` (= guildUnlock; null falls back to guildUnlock). Converted to
+  `TowerType.levels` / `FormDef.levels` (`TowerLevelDef`, `TaskDef`, bonuses as `Modifier`). Validation:
+  `AssetValidator.validate_ladder` (steps 2, 3, 4 … in order, known kinds, counts > 0, WinMissionId names a mission,
+  real stats, Flat/PctAdd, numeric amounts) + a form's ladder not longer than its tower's. The content check's tower
+  and form probes print a "levels" table (tasks, gives, stats at each level).
+- Rules: `TowerLevels` (sim/meta, static, `last_reason`) and `TowerTasks` (texts, counting). Bonuses are **baked into a
+  copy of the entity's base stats** (Flat sum, then × (1 + PctAdd sum)), not added as runtime modifiers, so every stat
+  reader (inspector, previews, Codex, placement HP) sees them; the copy's `EntityDef.levelled_from` keeps
+  `AssetConverter.asset_of` (models, icons) working. Level 1 builds the content type itself (golden unchanged).
+- `Workshop.resolve` levels the type at the current form's level; `TowerType.level` says the level it was built at.
+- Counting: `LevelController._record` → `_count_tasks` (only when `GameApp.blacksmith_unlocked()` was true before this
+  result was recorded; nothing on a quit), for the hand's owned towers; the step in the form the tower played as.
+  Kills / damage / hits / placed come from the log (Place action detail = hand tower id → its first EntitySpawned);
+  combat tasks count on a loss too, win tasks only on a win. Results: `controller.task_advances` / `task_lines`.
+- Saves: `towers[i].level` / `formLevels` / `taskProgress` (written only when not default), `profile.blacksmithSeen`.
+- Dev: SaveTools `level_up_towers` ("Level up all towers": +1 level each, forms up to their tower) and
+  `complete_tasks` ("Complete current tasks"), in the F1 panel and the TD Tools Save tab.
+
 ## Missions & Guild screens
 - `SceneFlow.Guild` → `game/ui/screens/guild.tscn`: the Blender agent's 3D guild hall (`art/guild/`, layout.json in
   the Camp's schema) built like the Camp by the shared `TdStationWorld` (camp.gd uses it too: ground, props, Idle

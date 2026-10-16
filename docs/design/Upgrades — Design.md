@@ -63,6 +63,9 @@ button shows "N ready" when some tower can be upgraded now.
 - **Tasks** are defined per level step (the step to level n lists what level n needs). Progress is saved per tower and
   per form (`OwnedTower.task_progress`: step → task index → count). Counting starts at the Blacksmith unlock; only
   towers present in a won level/mission count "win" tasks, and only the acting tower counts kills/damage/hits.
+  A tower fighting **in a form** counts toward **both** ladders: the base tower's (its career) and that form's;
+  in the base form only the base ladder counts **(agents, 2026-10-16)**. The station's "N ready" counts ready
+  forms too **(agents)**.
   The sim already logs every event with the acting entity and the owned tower id, so the level's end records the
   counts without new sim rules (`TowerTasks.apply(result, log, towers)`, engine-free, in `sim/meta`).
 - **Upgrade** needs: every task of the step complete, and for a form: base level > form level. It raises the level, resets that step's progress and starts the next step's counting.
