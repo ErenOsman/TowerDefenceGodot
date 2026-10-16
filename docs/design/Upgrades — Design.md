@@ -42,7 +42,6 @@ button shows "N ready" when some tower can be upgraded now.
 │ Range 2 · Speed 2       │ ○ Deal 60 damage with it   42/60  │ Range 3 (+1)      │
 │ abilities               │                                   │ abilities         │
 │                         │ [      Upgrade to level 3      ]  │                   │
-│                         │ (disabled: "Deal 18 more damage") │                   │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -50,7 +49,9 @@ button shows "N ready" when some tower can be upgraded now.
   tower can be upgraded; a filter "Ready to upgrade".
 - **Upgrade view** (Eren 2026-10-16): **left** the tower as it is now (its current form's card: Lv, stats,
   abilities); **centre** this level's tasks with progress and the single action **Upgrade to level n**, enabled only
-  when every task is done, otherwise disabled with the first missing task as its reason; **right** the same card as
+  when every task is done, otherwise simply disabled (no reason line: the task bars already show what is
+  missing; Eren 2026-10-16 "scalable değil"). The only text under the button is the form block, "Raise <base> to
+  level n first"; **right** the same card as
   it will be **after the upgrade**, with the changed numbers marked. Nothing else: no "what the level gives" list,
   no preview of the level after, no "Level 2 of 5", no "Base form" line under a base-form tower. At max level the
   centre says the tower is at its highest level and the right card is empty.
