@@ -26,7 +26,7 @@ tower's level.
 ## Player flow
 
 ```text
-Blacksmith ──Upgrade──▶ Tower picker ──▶ Upgrade view (level, tasks, gold, Upgrade) ──Back──▶ picker ──▶ Blacksmith
+Blacksmith ──Upgrade──▶ Tower picker ──▶ Upgrade view (level, tasks, Upgrade) ──Back──▶ picker ──▶ Blacksmith
 ```
 
 A mission win: the end screen shows the tasks that advanced; the Blacksmith's Upgrade station
@@ -40,7 +40,7 @@ button shows "N ready" when some tower can be upgraded now.
 │ portrait, Lv 2          │ Tasks                             │ +5 Max HP         │
 │ Max HP 20 · Power 12    │ ✓ Win a mission with this tower   │ +1 Range          │
 │ Range 2 · Speed 2       │ ○ Deal 60 damage with it   42/60  │                   │
-│ abilities               │ ○ 150 gold          you have 240  │ Then: Level 4     │
+│ abilities               │                                   │ Then: Level 4     │
 │                         │ [      Upgrade to level 3      ]  │ Win 2 missions …  │
 │ Forms: Fire Archer Lv 1 │ (disabled: "Deal 18 more damage") │                   │
 └─────────────────────────────────────────────────────────────────────────────────┘
