@@ -41,6 +41,9 @@ this repo instead.
 | [Guided Tutorial](design/Guided%20Tutorial%20—%20Design.md) | the step-by-step tutorial level |
 | [Workshop](design/Workshop%20—%20Design.md) | tower forms and tokens |
 | [Missions & Guild](design/Missions%20&%20Guild%20—%20Design.md) | missions, the Guild, tower energy, token drops |
+| [Blacksmith](design/Blacksmith%20—%20Design.md) | the Blacksmith place: Modify and Upgrade |
+| [Upgrades](design/Upgrades%20—%20Design.md) | tower levels, tasks, gold Pay tasks, bonuses |
+| [Backpack](design/Backpack%20—%20Design.md) | what the player carries: gold, tokens |
 | [Multiplayer](design/Multiplayer%20—%20Design.md) | co-op: lobby, rooms, pools, relay |
 | [UI Design Rules](design/UI%20Design%20Rules%20—%20Design.md) | the UI rules (kit, layout, screens) |
 | [Style & Art Direction](design/Style%20&%20Art%20Direction%20—%20Design.md) | "Painted Miniatures on a Diorama Board", the Blender pipeline |

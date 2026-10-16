@@ -102,7 +102,7 @@ A place like the Camp (stations on a ring; panels until there is art):
 | `requires`, `requireAll` | level / mission ids that must be won first; empty = open with the Guild |
 | `sharedPool`, `coopHandCap` | the co-op rules (Multiplayer — Design); replaces `coop.json` as the co-op list (the relay still reads `data/coop.json`, generated from the missions by `tools/coop_json.gd`) |
 | `firstWinTokens`, `winTokens` | `[{ "token": "Token/Fire Arrow", "amount": 1 }]` |
-| `firstWinGold`, `winGold` | integers (gold; `GameData.gold` is the wallet, shown in the Guild header and the Upgrade view) |
+| `firstWinGold`, `winGold` | integers (gold; `GameData.gold`, shown in the Backpack (Backpack — Design)) |
 
 Catalog: `guildUnlock` (a level) and `missions` (ordered mission list, the board's order). The Workshop's catalog
 drop fields `firstWinTokens` / `winTokens` on chapter levels are dropped: tokens come from missions only.
