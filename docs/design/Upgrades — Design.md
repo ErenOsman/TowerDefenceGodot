@@ -6,7 +6,7 @@ here and marked **(agents)**. This doc is the source of truth for tower **levels
 keeps forms and tokens; Missions & Guild — Design keeps the missions.
 
 A tower rises in **level** by completing that tower's **tasks**, then pressing **Upgrade** in the Blacksmith. No
-currency is spent (Eren 2026-10-16: gold is not part of upgrades). Every tower starts at level 1 when the Blacksmith opens (after Chapter 2). A form never passes its base
+no level is bought outright (Eren 2026-10-16: gold is not a price; it is one task among the others, paid into the step). Every tower starts at level 1 when the Blacksmith opens (after Chapter 2). A form never passes its base
 tower's level.
 
 ## Decisions
@@ -15,7 +15,7 @@ tower's level.
 | --- | --- | --- |
 | Levels | Every tower (each individual, by its id) has a **level**, 1 when the Blacksmith opens, up to the type's **max level** (5 for now, data). A level is gained by pressing **Upgrade** once that level's **tasks** are complete; nothing is paid | Eren (all towers level 1 after Chapter 2; tasks; press Upgrade) · agents (per individual tower, max 5) |
 | Tasks | Each level step of a tower type lists its tasks, e.g. Archer 1 → 2: "Win a mission with this tower". Tasks are counted **per tower** (this Archer, not any Archer). Kinds (data): win a mission with the tower in the hand; win N levels with it; N kills by it; N damage dealt; N hits taken without dying; place it N times; a specific mission; a win without losing a tower | Eren (example) · agents (the kinds) |
-| Gold | **None.** Upgrades cost no currency; gold is not introduced (a later currency, if ever, gets its own doc) | Eren 2026-10-16 ("gold shouldn't be on upgrades") |
+| Gold | Every level step also has a **gold task**: "Pay N gold", a task like the others, with a **Pay** button on its row that deposits gold from the wallet into the step (partial deposits allowed; the bar fills like any task; deposited gold is spent). Gold comes from missions only (Missions & Guild — Design). The task kind is `Pay` with a `currency` (`gold` now; a token id later, so token tasks can follow) | Eren 2026-10-16 ("her level için altın görevi de olsun … para yatırma tuşu olmalı"; earlier: no price, "gold shouldnt be on upgrades") · agents (partial deposits, the generic `Pay` kind) |
 | What a level gives | Stat bonuses set per tower type and level in the content: e.g. Archer level 2 +2 Power, level 3 +5 Max HP, …; a level may also add or change an ability at a set step (data allows it; the starter content uses stats only). Bonuses are modifiers on the tower's entity, so previews and the Codex show them | agents |
 | Forms and levels | Each **unlocked form** of a tower has its **own level and tasks** (in Forms.json), but a form's level can **never exceed the base tower's level**: the Upgrade button for a form is disabled with "Raise Archer to level 3 first". The tower fights with the level bonuses of its **current** form (base or form) | Eren (forms ≤ base) · agents (own levels per form; current form's bonuses) |
 | Before Chapter 2 | No levels exist: nothing shows "Lv", no tasks count, nothing to collect for it. On the first Blacksmith visit every tower is level 1 and its level-1 → 2 tasks start counting from then (earlier wins do not count) | Eren (level 1 after Chapter 2) · agents (counting starts at the unlock) |
@@ -40,6 +40,7 @@ button shows "N ready" when some tower can be upgraded now.
 │ portrait, Lv 2          │ Tasks                             │ portrait, Lv 3    │
 │ Max HP 20 · Power 12    │ ✓ Win a mission with this tower   │ Max HP 25 (+5)    │
 │ Range 2 · Speed 2       │ ○ Deal 60 damage with it   42/60  │ Range 3 (+1)      │
+│                         │ ○ Pay 40 gold      25/40  [Pay]   │                   │
 │ abilities               │                                   │ abilities         │
 │                         │ [      Upgrade to level 3      ]  │                   │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -51,7 +52,8 @@ button shows "N ready" when some tower can be upgraded now.
   abilities); **centre** this level's tasks with progress and the single action **Upgrade to level n**, enabled only
   when every task is done, otherwise simply disabled (no reason line: the task bars already show what is
   missing; Eren 2026-10-16 "scalable değil"). The only text under the button is the form block, "Raise <base> to
-  level n first"; **right** the same card as
+  level n first". The gold task's row has a **Pay** button: it deposits up to the missing amount from the wallet
+  (disabled with no gold; the header shows the wallet, "you have 240"); **right** the same card as
   it will be **after the upgrade**, with the changed numbers marked. Nothing else: no "what the level gives" list,
   no preview of the level after, no "Level 2 of 5", no "Base form" line under a base-form tower. At max level the
   centre says the tower is at its highest level and the right card is empty.
@@ -89,15 +91,17 @@ button shows "N ready" when some tower can be upgraded now.
 
 ```json
 "levels": [
-  { "to": 2, "tasks": [ { "kind": "WinMission", "count": 1 } ],
+  { "to": 2, "tasks": [ { "kind": "WinMission", "count": 1 }, { "kind": "Pay", "currency": "gold", "count": 20 } ],
     "bonuses": [ { "stat": "Power", "kind": "Flat", "amount": "2" } ] },
-  { "to": 3, "tasks": [ { "kind": "WinMission", "count": 1 }, { "kind": "Damage", "count": 60 } ],
+  { "to": 3, "tasks": [ { "kind": "WinMission", "count": 1 }, { "kind": "Damage", "count": 60 }, { "kind": "Pay", "currency": "gold", "count": 40 } ],
     "bonuses": [ { "stat": "MaxHp", "kind": "Flat", "amount": "5" } ] }
 ]
 ```
 
 Task kinds: `WinMission` (count missions won with the tower in the hand), `WinLevel`, `WinMissionId` (`mission`),
-`Kills`, `Damage`, `HitsTaken` (survived), `Placed`, `WinNoLoss` (a win without losing a tower). Task texts come
+`Kills`, `Damage`, `HitsTaken` (survived), `Placed`, `WinNoLoss` (a win without losing a tower), `Pay` (`currency`:
+`gold`, or a token id later; progressed by the Pay button, never by play; every step has exactly one gold Pay task;
+the validator requires it). Task texts come
 from the kind and count ("Win a mission with this tower", "Deal 60 damage with it"); a task may give its own `text`.
 
 ### Catalog.json
@@ -134,5 +138,5 @@ in about a week of play, if it goes on missions every day.
 ## Open questions
 
 - Whether levels should also raise a tower's energy cost (no, for now).
-- A currency for upgrades: no. Gold, if it ever exists, is a mission reward (Missions & Guild — Design, Open questions).
+- Token Pay tasks (`currency` = a token id) later; the kind already allows them.
 - A "respec" or form-level transfer when a tower switches form: no; each form keeps its own ladder.
