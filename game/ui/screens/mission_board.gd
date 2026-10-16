@@ -138,7 +138,7 @@ func _card(m: MissionDef) -> Control:
 	top.add_child(TdDrops.mode_chip(m, 19))
 	var ll := TdMenu.label(MissionUiLogic.level_line(m, lv.get_display_name() if lv != null else m.level_id), "body", TdTheme.color("cream.300"), 19)
 	body.add_child(ll)
-	var drops := TdDrops.rows(m, MissionUiLogic.first_win_claimed(m, SaveData.missions), 34.0, 92.0, 19)
+	var drops := TdDrops.rows(m, MissionUiLogic.first_win_claimed(m, SaveData.missions), 34.0, 84.0, 19)
 	body.add_child(drops)
 	var line := TdMenu.hbox(8)
 	line.mouse_filter = MOUSE_FILTER_IGNORE

@@ -56,6 +56,56 @@ static func coin(token_id: String, amount: int, first := false, dim := false, si
 		"You have" if have != "" else "", have)
 	return p
 
+## The kit's gold glyph (white, tint it): the theme's "icon_gold" once kit_slices / TdTokens list it, else the
+## file res://art/ui/KitB/icons/icon_gold.png, else the plain gold badge disc.
+static func gold_icon() -> Texture2D:
+	return _kit_icon("icon_gold", "icons/icon_gold", "badges/badge_circle_gold")
+
+## The gold coin chip in the tokens' style (full colour, no tint): res://art/ui/KitB/tokens/gold.png, else gold_icon().
+static func gold_coin_texture() -> Texture2D:
+	var t := TdTheme.kit("tokens/gold")
+	return t if t != null else gold_icon()
+
+## The kit's bag glyph (white, tint it; 24 px or larger): "icon_backpack", else res://art/ui/KitB/icons/icon_backpack.png.
+static func bag_icon() -> Texture2D:
+	return _kit_icon("icon_backpack", "icons/icon_backpack", "")
+
+static func _kit_icon(sprite: String, rel: String, fallback: String) -> Texture2D:
+	if TdTheme.has_sprite(sprite): return TdTheme.texture(sprite)
+	var t := TdTheme.kit(rel)
+	if t == null and fallback != "": t = TdTheme.kit(fallback)
+	return t
+
+## A gold coin in the token coins' style: the gold chip and the amount in gold text ("25"); first = gold rim, dim =
+## claimed; text overrides the label (the end screen's "+25 gold"). Tooltip: "Gold", every win / first win only, what
+## it is for.
+static func gold_coin(amount: int, first := false, dim := false, size := 40.0, text := "") -> PanelContainer:
+	var p := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.09, 0.067, 0.05, 0.85)
+	sb.border_color = TdTheme.color("gold") if first else TdTheme.color("rim")
+	sb.set_border_width_all(3 if first else 2)
+	sb.set_corner_radius_all(int(size / 2.0))
+	sb.content_margin_left = 4; sb.content_margin_right = 8; sb.content_margin_top = 2; sb.content_margin_bottom = 2
+	p.add_theme_stylebox_override("panel", sb)
+	p.custom_minimum_size = Vector2(0, size)
+	p.mouse_filter = Control.MOUSE_FILTER_PASS
+	var h := TdMenu.hbox(4)
+	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.add_child(h)
+	var d := clampf(size - 8.0, 28.0, 36.0)
+	var pic := TdMenu.picture(gold_coin_texture(), Vector2(d, d))
+	pic.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	h.add_child(pic)
+	var l := TdMenu.label(text if text != "" else str(amount), "micro", TdTheme.color("gold"), 22 if size >= 42.0 else 18)
+	l.add_theme_font_override("font", TdTheme.font("plinth"))
+	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	h.add_child(l)
+	if dim: p.modulate = Color(1, 1, 1, 0.5)
+	TdTooltipTrigger.attach(p, TooltipText.title("%d gold" % amount, TooltipText.value_color(), "Gold"),
+		("First win only." if first else "Every win.") + "\nSpent on tower upgrades at the Blacksmith.")
+	return p
+
 ## The coins of a {token: amount} list, in order.
 static func coins(amounts: Dictionary, first := false, dim := false, size := 40.0) -> Array:
 	var out := []
@@ -76,14 +126,14 @@ static func claimed_tag(size := 20) -> HBoxContainer:
 	h.add_child(l)
 	return h
 
-## The "Each win / First win" rows of a mission (MissionUiLogic.drop_rows) as a VBox; claimed dims the first-win row.
-## label_w: the width of the row labels (so the coins line up).
+## The "Each win / First win" rows of a mission (MissionUiLogic.reward_rows: token coins, then the gold coin) as a
+## VBox; claimed dims the first-win row. label_w: the width of the row labels (so the coins line up).
 static func rows(m: MissionDef, claimed: bool, size := 40.0, label_w := 96.0, font := 20) -> VBoxContainer:
 	var v := TdMenu.vbox(8)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for r in MissionUiLogic.drop_rows(m):
+	for r in MissionUiLogic.reward_rows(m):
 		var first: bool = r[0] == "First win"
-		var h := TdMenu.hbox(8)
+		var h := TdMenu.hbox(6)
 		h.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		v.add_child(h)
 		var l := TdMenu.label(r[0], "plate", TdTheme.color("cream.200"), font)
@@ -91,6 +141,7 @@ static func rows(m: MissionDef, claimed: bool, size := 40.0, label_w := 96.0, fo
 		l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		h.add_child(l)
 		for c in coins(r[1], first, first and claimed, size): h.add_child(c)
+		if int(r[2]) > 0: h.add_child(gold_coin(int(r[2]), first, first and claimed, size))
 		if first and claimed: h.add_child(claimed_tag(font))
 	return v
 
@@ -106,7 +157,8 @@ static func icon(name: String, size: float, tint: Color) -> TextureRect:
 static func icon_texture(name: String) -> Texture2D:
 	var path := "res://art/ui/icons-extra/icon_%s.png" % name
 	if ResourceLoader.exists(path): return load(path)
-	return TdTheme.texture("icon_" + name) if TdTheme.has_sprite("icon_" + name) else null
+	if TdTheme.has_sprite("icon_" + name): return TdTheme.texture("icon_" + name)
+	return TdTheme.kit("icons/icon_" + name) # kit icons not in the generated sprite table yet (icon_gold, icon_backpack)
 
 ## A line with a leading icon: [icon] text (rich, bold allowed).
 static func icon_line(icon_name: String, bbcode: String, tint: Color, text_color: Color, font := 20) -> HBoxContainer:

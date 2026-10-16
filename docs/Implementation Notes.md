@@ -200,6 +200,39 @@ How it is read:
   `SaveData.gold`, `GameApp.gold()`. Players see it in the **Backpack** (gold + tokens), never as a "wallet".
   Dev: SaveTools `grant_gold` ("Grant 500 gold").
 
+## Backpack (2026-10-16)
+**Source of truth: `docs/design/Backpack — Design.md`**; UI/UX mockups `screens-b/backpack.html`, `backpack-button.html`,
+`upgrade-pay.html`, `upgrade-pay-nogold.html`. No new save data (`GameData.gold`, `GameData.tokens`).
+- `BackpackScreen` (`game/ui/screens/backpack.gd/.tscn`, a centred TdPopup, × only, Esc / right click / scrim close):
+  gold row ("[coin] 240 gold · From missions; spent on upgrades", always, "0" too), "Tokens" (catalog order: coin,
+  name, "×2", muted "Found in: …" = `WorkshopLogic.found_in_text`), muted "Items · Nothing here yet.". A kind shows
+  when it is owned or was ever earned (`TokenWallet.earned`); spent out = ×0 at 50 %; never earned = hidden.
+  `BackpackScreen.show_over(parent)`.
+- `TdBackpackButton` (`parts/td_backpack_button.gd`, a TdButton SECONDARY with bag glyph + gold coin + the count in
+  gold Plinth): `place_top_right(place, popups)` in the Camp, Guild and Blacksmith (`backpack_button`; 48/40 px from
+  the corner at 1920, under the popups layer); `make(host)` left of × in the Workshop and Upgrade pickers and at the
+  right of the Upgrade view's header (`pick_backpack` / `backpack_button`). Hidden until `GameApp.camp_unlocked()`.
+  Refreshes when its popup closes and through `TdBackpackButton.refresh_all(tree)` (group `backpack_button`).
+- Icons (kit drop-in 2026-10-16): `TdDrops.gold_icon()` / `bag_icon()` use the theme sprite `icon_gold` /
+  `icon_backpack` once `kit_slices.json` → `TdTokens.SPRITES` lists them (not yet: `tools/build_theme.gd` was not
+  re-run), else the files `art/ui/KitB/icons/icon_*.png`; `gold_coin_texture()` = `tokens/gold.png` (the full-colour
+  chip). `TdDrops.icon_texture(name)` also falls back to `KitB/icons/icon_<name>.png` (task row icon "gold").
+- Upgrade view Pay (`UpgradeScreen._pay_column` / `pay(task_index)`): the gold task row (`UpgradeLogic.task_rows`
+  gained `index`, `gold`, `missing`; a Pay task's unit is its currency: "25 / 40 gold") gets a secondary "Pay 15"
+  (`BackpackLogic.pay_text` = min(gold, missing)) → `GameApp.pay_into(owned, ladder, i)` → view, both headers and
+  the place's button refresh. Under it: "You have 10: pays what you can." (muted) when gold < missing; with no gold
+  the button is disabled and the red 18 px "You have no gold. / Missions give gold." (as the mockup, inside the row
+  under the button).
+- Guild: `MissionUiLogic.reward_rows(m)` = [[label, tokens, gold]] (a row shows with tokens or gold); `TdDrops.rows`
+  (board cards, detail Drops, lobby / create popup) and the room card add `TdDrops.gold_coin(amount, first, dim)`
+  after the token coins. `drop_rows` (tokens only) is unchanged for its old callers.
+- End screen: `_mission_rewards(groups, gold, gold_text)` puts one gold chip ("+40 gold" = `controller.gold_text`,
+  every-win and first-win gold together) right after "Rewards"; a gold-only win shows "Rewards [+25 gold]".
+- Texts / rules: `BackpackLogic` (`parts/backpack_logic.gd`), tests `tests/test_backpack_ui.gd`. Renders:
+  `tools/backpack_shot.gd` → `/srv/wiki-art/godot/renders/backpack/` (13 frames, own save).
+- Not done: no QA tour step; the board subtitle still says "Earn tokens for the Workshop"; the Backpack has no scroll
+  (fine for the 6 starter kinds).
+
 ## Missions & Guild screens
 - `SceneFlow.Guild` → `game/ui/screens/guild.tscn`: the Blender agent's 3D guild hall (`art/guild/`, layout.json in
   the Camp's schema) built like the Camp by the shared `TdStationWorld` (camp.gd uses it too: ground, props, Idle

@@ -46,6 +46,8 @@ var confirm_open: bool:
 	get: return is_instance_valid(_confirm) and _confirm.is_open and _confirm.answer == null
 
 var collection: TdCollection
+## The picker header's Backpack button (left of ×).
+var backpack_button: TdBackpackButton
 var _entries: Array = []
 var _type: TowerType = null
 var _found := {}   # token id → "Found in" text
@@ -112,6 +114,8 @@ func _build_pick() -> void:
 	var fill := TdMenu.spacer()
 	fill.size_flags_horizontal = SIZE_EXPAND_FILL
 	head.add_child(fill)
+	backpack_button = TdBackpackButton.make(self) # left of × (Backpack — Design)
+	head.add_child(backpack_button)
 	var x := TdMenu.close_button()
 	x.tooltip_text = "Close (Esc)"
 	x.clicked.connect(close)

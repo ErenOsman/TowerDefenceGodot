@@ -104,6 +104,15 @@ static func drop_rows(m: MissionDef) -> Array:
 	if not m.first_win_tokens.is_empty(): out.append(["First win", m.first_win_tokens])
 	return out
 
+## The "Each win / First win" rows with their gold (Backpack — Design; missions are the only gold source):
+## [[label, {token id: amount}, gold], …]; a row shows when it drops tokens or gold.
+static func reward_rows(m: MissionDef) -> Array:
+	var out := []
+	if m == null: return out
+	if not m.win_tokens.is_empty() or m.win_gold > 0: out.append(["Each win", m.win_tokens, maxi(0, m.win_gold)])
+	if not m.first_win_tokens.is_empty() or m.first_win_gold > 0: out.append(["First win", m.first_win_tokens, maxi(0, m.first_win_gold)])
+	return out
+
 ## The first-win drop was taken already (the mission was won once): shown dimmed with "claimed".
 static func first_win_claimed(m: MissionDef, mp: MissionProgress) -> bool:
 	return m != null and mp != null and mp.is_won(m.id)

@@ -39,6 +39,8 @@ var door: Control
 var stations := {}   # id → TdMenuButton
 var welcome_card: Control
 var popups: Control
+## The Backpack button (top-right; Backpack — Design).
+var backpack_button: TdBackpackButton
 var board: TdPopup = null
 var _lobby_pending := false
 
@@ -61,6 +63,9 @@ func _ready() -> void:
 	popups.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	popups.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(popups)
+	# the Backpack button (Backpack — Design): top-right, under the popups
+	backpack_button = TdBackpackButton.place_top_right(self, popups)
+	move_child(backpack_button, popups.get_index())
 	_build_welcome()
 	if GameApp.catalog != null and GameApp.catalog.grant_starting_towers(SaveData.towers): SaveData.save()
 	refresh()

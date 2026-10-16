@@ -452,13 +452,14 @@ func _fill_mission(mission: MissionDef) -> void:
 	var row := TdMenu.hbox(8)
 	box.add_child(row)
 	var claimed := MissionUiLogic.first_win_claimed(mission, mp)
-	for r in MissionUiLogic.drop_rows(mission):
+	for r in MissionUiLogic.reward_rows(mission):
 		var first: bool = r[0] == "First win"
 		if row.get_child_count() > 0: row.add_child(TdMenu.spacer(0, 6))
 		var l := TdMenu.label(r[0], "plate", TdTheme.color("cream.200"), 18)
 		l.size_flags_vertical = SIZE_SHRINK_CENTER
 		row.add_child(l)
 		for c in TdDrops.coins(r[1], first, first and claimed, 34.0): row.add_child(c)
+		if int(r[2]) > 0: row.add_child(TdDrops.gold_coin(int(r[2]), first, first and claimed, 34.0))
 		if first and claimed: row.add_child(TdDrops.claimed_tag(18))
 	_mission_box.add_child(box)
 

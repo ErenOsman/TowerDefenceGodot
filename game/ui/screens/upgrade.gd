@@ -15,7 +15,9 @@ extends TdPopup
 ##  copy) with every changed stat marked by a green "+5" badge. No max level shown; at max level the centre says
 ##  "Archer is at its highest level." and the right card is empty.
 ##  Upgrade → the shared TdConfirm ("Upgrade Archer to level 3?", "It gives +5 Max HP. …") → GameApp.upgrade_tower
-##  (saves) → the gold beat "Archer reached level 3!" over the next level. No currency, no comparison.
+##  (saves) → the gold beat "Archer reached level 3!" over the next level. The gold task's row has a Pay button
+##  ("Pay 15" = min(gold, missing); GameApp.pay_into; disabled with the red "You have no gold. Missions give gold."),
+##  and both headers carry the Backpack button (TdBackpackButton; Backpack — Design).
 ## Keys: Esc / right click = Back one step (confirm → cancel; view → picker; picker → close); Enter = the picker's
 ## Upgrade / the view's Upgrade (confirm: Enter = Upgrade). Texts and rules: UpgradeLogic, TowerLevels, TowerTasks.
 ## Open it like any station popup: `open_popup("upgrade")` in the Blacksmith (game/ui/screens/upgrade.tscn), or
@@ -48,6 +50,11 @@ var confirm_open: bool:
 	get: return is_instance_valid(_confirm) and _confirm.is_open and _confirm.answer == null
 
 var collection: TdCollection
+## The Backpack buttons: the picker's header (left of ×) and the view's header (right; Pay refreshes it).
+var pick_backpack: TdBackpackButton
+var backpack_button: TdBackpackButton
+## The view's Pay button of the gold task (null when there is none / max; tests and tools).
+var pay_button: TdButton
 var _entries: Array = []
 var _ready_ids := {}   # tower id → bool
 var _type: TowerType = null
@@ -123,6 +130,8 @@ func _build_pick() -> void:
 	var fill := TdMenu.spacer()
 	fill.size_flags_horizontal = SIZE_EXPAND_FILL
 	head.add_child(fill)
+	pick_backpack = TdBackpackButton.make(self) # left of × (Backpack — Design)
+	head.add_child(pick_backpack)
 	var x := TdMenu.close_button()
 	x.tooltip_text = "Close (Esc)"
 	x.clicked.connect(close)
@@ -161,6 +170,11 @@ func _build_view() -> void:
 	_vname = TdMenu.hbox(10)
 	_vname.size_flags_vertical = SIZE_SHRINK_CENTER
 	top.add_child(_vname)
+	var fill := TdMenu.spacer()
+	fill.size_flags_horizontal = SIZE_EXPAND_FILL
+	top.add_child(fill)
+	backpack_button = TdBackpackButton.make(self) # the gold the Pay button spends (mockup upgrade-pay)
+	top.add_child(backpack_button)
 	var body := TdMenu.hbox(16)
 	body.size_flags_vertical = SIZE_EXPAND_FILL
 	_view.add_child(body)
@@ -190,6 +204,7 @@ func _on_open() -> void:
 	beat = ""
 	cancel_confirm()
 	_reload_entries()
+	TdBackpackButton.refresh_all(get_tree())
 	if tower_id == "" or SaveData.towers.find(tower_id) == null:
 		tower_id = _entries[0].id if not _entries.is_empty() else ""
 	_refresh_pick()
@@ -429,6 +444,7 @@ func _mark(tile: Control, text: String) -> void:
 func _refresh_mid() -> void:
 	TdCollection.clear_children(_mid)
 	upgrade_button = null
+	pay_button = null
 	var owned := _owned()
 	if beat != "": _mid.add_child(_beat_line(beat))
 	var act := UpgradeLogic.action(owned, _type, ladder, GameApp.blacksmith_unlocked())
@@ -549,7 +565,47 @@ func _task_row(row: Dictionary) -> Control:
 			"body", GOOD if row.done else TdTheme.color("ink.2"), 18)
 		pl.add_theme_font_override("normal_font", TdTheme.font("nunito_bold"))
 		v.add_child(pl)
+	if row.get("gold", false) and not row.done: h.add_child(_pay_column(row))
 	return p
+
+## The gold task's Pay (mockups upgrade-pay / upgrade-pay-nogold): a secondary "Pay 15" naming what it deposits
+## (min(gold, missing): BackpackLogic.pay_text), and under it the muted "You have 15: pays what you can." when the
+## gold is short, or with no gold the button disabled and the red 18 px "You have no gold. Missions give gold.".
+func _pay_column(row: Dictionary) -> Control:
+	var gold: int = GameApp.gold()
+	var missing: int = int(row.get("missing", 0))
+	var col := TdMenu.vbox(4)
+	col.size_flags_vertical = SIZE_SHRINK_CENTER
+	var b := TdMenu.button(TdButton.Style.SECONDARY, BackpackLogic.pay_text(gold, missing), Vector2(168, 52), TdDrops.gold_icon())
+	b.size_flags_horizontal = SIZE_SHRINK_END
+	var idx: int = int(row.get("index", -1))
+	if BackpackLogic.pay_enabled(gold, missing): b.clicked.connect(func(): pay(idx))
+	else: b.set_interactable(false, BackpackLogic.NoGold)
+	pay_button = b
+	col.add_child(b)
+	var note := BackpackLogic.pay_note(gold, missing)
+	if note.text != "":
+		# the red line breaks after its first sentence, as the mockup ("You have no gold." / "Missions give gold.")
+		var l := TdMenu.wrap_label(note.text.replace(". ", ".\n") if note.bad else note.text, "body", Color("#A3301F") if note.bad else TdTheme.color("ink.2"), 18)
+		l.add_theme_font_override("font", TdTheme.font("nunito_extrabold" if note.bad else "nunito_bold"))
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		l.custom_minimum_size = Vector2(290, 0)
+		col.add_child(l)
+	return col
+
+## Pay: deposits min(gold, missing) into the gold task (GameApp.pay_into saves), then redraws the view and every
+## Backpack button. task_index -1 = the current step's gold task. Returns the gold deposited.
+func pay(task_index := -1) -> int:
+	var owned := _owned()
+	if owned == null or _type == null: return 0
+	if task_index < 0: task_index = TowerTasks.gold_task_index(TowerLevels.step_for(owned, _type, ladder))
+	var got: int = GameApp.pay_into(owned, ladder, task_index)
+	if got <= 0: return 0
+	_reload_entries()
+	refresh_view()
+	TdBackpackButton.refresh_all(get_tree())
+	changed.emit()
+	return got
 
 ## The gold beat over the centre column ("★ Archer reached level 3!"), fading in.
 func _beat_line(text: String) -> Control:

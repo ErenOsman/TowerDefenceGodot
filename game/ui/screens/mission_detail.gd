@@ -260,7 +260,7 @@ func _draw_mission(m: MissionDef, level: LevelAsset) -> void:
 		chip.modulate.a = dim
 		_enemies.add_child(chip)
 		_chips.append(chip)
-	_reward.visible = not MissionUiLogic.drop_rows(m).is_empty()
+	_reward.visible = not MissionUiLogic.reward_rows(m).is_empty()
 	_drops_box.add_child(TdDrops.rows(m, MissionUiLogic.first_win_claimed(m, SaveData.missions), 38.0, 96.0, 20))
 	_preview.show_level(level)
 	_preview.modulate = Color(1, 1, 1, 1) if dim >= 1.0 else Color(0.75, 0.75, 0.75, 0.6)

@@ -168,7 +168,8 @@ func show_outcome(outcome: int) -> void:
 		var mp = _mission_progress()
 		var rec: LevelRecord = mp.find(m.id) if mp != null else null
 		var groups := MissionUiLogic.end_reward_groups(m, _won, rec != null and rec.wins == 1)
-		if not groups.is_empty(): _extra.add_child(_mission_rewards(groups))
+		var gold: int = c.gold_drop if "gold_drop" in c else 0
+		if not groups.is_empty() or gold > 0: _extra.add_child(_mission_rewards(groups, gold, c.gold_text if gold > 0 else ""))
 		_add_tasks(c)
 		if mp != null:
 			var line := MissionUiLogic.end_plays_line(m, mp)
@@ -367,8 +368,10 @@ func _mission_progress() -> MissionProgress:
 	return sd.missions if sd != null else null
 
 ## A mission's rewards row: per group its label ("Rewards" gold, "First win" cream), the coins (first-win ones
-## gold-rimmed), then "Spend them in the Workshop.".
-func _mission_rewards(groups: Array) -> Control:
+## gold-rimmed), the gold this win gave right after "Rewards" (LevelController.gold_drop / gold_text as one gold
+## chip, "+40 gold", every-win and first-win gold together; Backpack — Design) and "Spend them in the Workshop." (when
+## tokens came).
+func _mission_rewards(groups: Array, gold := 0, gold_text := "") -> Control:
 	var p := PanelContainer.new()
 	var box := StyleBoxFlat.new()
 	box.bg_color = Color(TdTheme.color("wood.850"), 0.95)
@@ -384,11 +387,21 @@ func _mission_rewards(groups: Array) -> Control:
 	row.add_theme_constant_override("h_separation", 12)
 	row.add_theme_constant_override("v_separation", 8)
 	p.add_child(row)
+	var gold_chip: Control = null
+	if gold > 0: gold_chip = TdDrops.gold_coin(gold, false, false, 42.0, gold_text if gold_text != "" else "+%d gold" % gold)
+	if groups.is_empty() and gold_chip != null:
+		var gl := HudArt.label("Rewards", "h3", TdTheme.color("gold"), 26)
+		gl.size_flags_vertical = SIZE_SHRINK_CENTER
+		row.add_child(gl)
+		row.add_child(gold_chip)
+		return p
 	for g in groups:
 		var first: bool = g[2]
 		var l := HudArt.label(g[0], "h3" if g[0] == "Rewards" else "body", TdTheme.color("gold") if g[0] == "Rewards" else TdTheme.color("cream.200"), 26 if g[0] == "Rewards" else 21)
 		l.size_flags_vertical = SIZE_SHRINK_CENTER
 		row.add_child(l)
+		# the win's whole gold (every win + first win) right after "Rewards", not inside the first-win group
+		if gold_chip != null and gold_chip.get_parent() == null: row.add_child(gold_chip)
 		for c in TdDrops.coins(g[1], first, false, 42.0): row.add_child(c)
 	var sp := HudArt.label(MissionUiLogic.SpendInWorkshop, "body", TdTheme.color("cream.200"), 20)
 	sp.size_flags_vertical = SIZE_SHRINK_CENTER

@@ -68,6 +68,8 @@ var tour: Array = TOUR
 var bubble: TdTextBubble
 var welcome_card: Control
 var popups: Control
+## The Backpack button (top-right; Backpack — Design).
+var backpack_button: TdBackpackButton
 
 var world: TdStationWorld
 ## The Guild button's gold "New" (until the first Guild visit), or null.
@@ -209,6 +211,9 @@ func _build_ui() -> void:
 	popups.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	popups.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(popups)
+	# the Backpack button (Backpack — Design): top-right, under the popups
+	backpack_button = TdBackpackButton.place_top_right(self, popups)
+	move_child(backpack_button, popups.get_index())
 	bubble = TdTextBubble.new()
 	bubble.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(bubble)

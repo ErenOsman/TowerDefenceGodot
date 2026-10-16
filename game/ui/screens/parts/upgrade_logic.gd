@@ -104,14 +104,18 @@ static func stat_diffs(now: Array, after: Array) -> Dictionary:
 # ------------------------------------------------------------------ tasks
 
 ## The rows of the current step's tasks: {text, have, need, done, bar (a bar shows: count > 1), ratio (0..1),
-## have_text "42", need_text "60 damage", progress "42 / 60 damage", kind}. [] at max level.
+## have_text "42", need_text "60 damage", progress "42 / 60 damage", kind, index (the task's index in the step:
+## GameApp.pay_into), gold (a gold Pay task: the row gets the Pay button), missing (what is still missing)}.
+## [] at max level.
 static func task_rows(owned: OwnedTower, type: TowerType, form_id := BASE) -> Array:
 	var out := []
 	var step := TowerLevels.step_for(owned, type, form_id)
 	if step == null: return out
 	var counts := TowerLevels.task_counts(owned, type, form_id)
 	for i in step.tasks.size():
-		out.append(task_row(step.tasks[i], counts[i]))
+		var r := task_row(step.tasks[i], counts[i])
+		r["index"] = i
+		out.append(r)
 	return out
 
 ## One task row (see task_rows).
@@ -120,7 +124,8 @@ static func task_row(task: TaskDef, have: int) -> Dictionary:
 	var h := clampi(have, 0, need)
 	return {"text": TowerTasks.describe(task), "have": h, "need": need, "done": h >= need, "bar": need > 1,
 		"ratio": float(h) / float(need), "have_text": str(h), "need_text": "%d %s" % [need, unit(task, need)],
-		"progress": "%d / %d %s" % [h, need, unit(task, need)], "kind": task.kind if task != null else -1}
+		"progress": "%d / %d %s" % [h, need, unit(task, need)], "kind": task.kind if task != null else -1,
+		"index": -1, "gold": TowerTasks.is_gold(task), "missing": need - h}
 
 ## What a task counts, short, for "1 / 2 missions", "4 / 10 kills", "42 / 60 damage".
 static func unit(task: TaskDef, n: int) -> String:
@@ -134,6 +139,7 @@ static func unit(task: TaskDef, n: int) -> String:
 		TowerTaskKind.Damage: return "damage"
 		TowerTaskKind.HitsTaken: return "hit" if n == 1 else "hits"
 		TowerTaskKind.Placed: return "time" if n == 1 else "times"
+		TowerTaskKind.Pay: return TowerTasks.currency_text(task)
 	return ""
 
 ## A task kind's icon name (TdDrops.icon_texture: the extra set, then the kit): flag for wins, range (a target)
@@ -144,6 +150,7 @@ static func task_icon(kind: int) -> String:
 		TowerTaskKind.Damage: return "power"
 		TowerTaskKind.HitsTaken: return "heart"
 		TowerTaskKind.Placed: return "cards"
+		TowerTaskKind.Pay: return "gold"
 	return "flag"
 
 # ------------------------------------------------------------------ the action
