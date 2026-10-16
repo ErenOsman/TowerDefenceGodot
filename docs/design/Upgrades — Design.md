@@ -35,25 +35,29 @@ button shows "N ready" when some tower can be upgraded now.
 ## The Upgrade view
 
 ```text
-┌ ← Back   Archer  #1 · tower 3   Lv 2                                           ┐
-│ This tower now          │ Level 3                           │ What it gives     │
-│ portrait, Lv 2          │ Tasks                             │ +5 Max HP         │
-│ Max HP 20 · Power 12    │ ✓ Win a mission with this tower   │ +1 Range          │
-│ Range 2 · Speed 2       │ ○ Deal 60 damage with it   42/60  │                   │
-│ abilities               │                                   │ Then: Level 4     │
-│                         │ [      Upgrade to level 3      ]  │ Win 2 missions …  │
-│ Forms: Fire Archer Lv 1 │ (disabled: "Deal 18 more damage") │                   │
+┌ ← Back   Archer  tower 3   Lv 2                                                ┐
+│ Now                     │ Level 3                           │ After upgrade     │
+│ portrait, Lv 2          │ Tasks                             │ portrait, Lv 3    │
+│ Max HP 20 · Power 12    │ ✓ Win a mission with this tower   │ Max HP 25 (+5)    │
+│ Range 2 · Speed 2       │ ○ Deal 60 damage with it   42/60  │ Range 3 (+1)      │
+│ abilities               │                                   │ abilities         │
+│                         │ [      Upgrade to level 3      ]  │                   │
+│                         │ (disabled: "Deal 18 more damage") │                   │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 - **Picker**: the collection as in the Workshop, each tile with its Lv chip and a small "ready" mark when the
   tower can be upgraded; a filter "Ready to upgrade".
-- **Upgrade view**: left the tower as it is now (its current form's stats); centre the next level's tasks with
-  progress; the single action **Upgrade to level n**, enabled only when every task is done, otherwise disabled with
-  the first missing task as its reason. Right: what the level gives
-  and a preview of the level after. At max level: "Max level" and the list of what the levels gave.
-- **Forms**: a row under the tower lists its unlocked forms with their levels; picking one shows that form's tasks;
-  its Upgrade is disabled with "Raise <base> to level n first" while the base is behind.
+- **Upgrade view** (Eren 2026-10-16): **left** the tower as it is now (its current form's card: Lv, stats,
+  abilities); **centre** this level's tasks with progress and the single action **Upgrade to level n**, enabled only
+  when every task is done, otherwise disabled with the first missing task as its reason; **right** the same card as
+  it will be **after the upgrade**, with the changed numbers marked. Nothing else: no "what the level gives" list,
+  no preview of the level after, no "Level 2 of 5", no "Base form" line under a base-form tower. At max level the
+  centre says the tower is at its highest level and the right card is empty.
+- **Forms** (agents, 2026-10-16, from Eren's "no forms row"): the view works on the tower's **current form**: a
+  tower wearing Fire Archer shows the Fire Archer ladder and level; in its base form, the base ladder. To upgrade
+  another form, switch to it in Modify first. A form's Upgrade is disabled with "Raise <base> to level n first" while
+  the base is behind.
 - **Confirm**: Upgrade asks once through the confirm popup ("Upgrade Archer to level 3?").
 
 ## Rules
