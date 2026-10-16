@@ -1,0 +1,37 @@
+{
+ "board": {
+  "tiles": [14, 10],
+  "ground": "Guild Floor (decor below; placeholder until the smithy kit lands)",
+  "note": "PLACEHOLDER (Godot agent 2026-10-16) until the Blender agent's smithy kit: same schema as art/guild/layout.json. tile x 0..13 left->right, depth 0..9 front->back (Godot: position = Vector3(x, 0, -depth)). row: back = button above the prop, front = button below it (the buttons are placed by TdStationWorld's shared rule anyway)."
+ },
+ "kits": ["blacksmith", "camp", "guild"],
+ "kits_note": "where a prop name is looked up, in order: res://art/<kit>/<prop>.fbx, then the map-kit tiles. A new smithy kit = its FBX files in art/blacksmith/ and new prop names below (a JSON change only).",
+ "ring": {
+  "centre": [6.5, 4.5],
+  "radius": [5.0, 4.5],
+  "note": "reference only (the camera frames this centre)"
+ },
+ "centre": {
+  "prop": null,
+  "tile": [6.5, 4.5],
+  "station": null,
+  "note": "the rug, empty"
+ },
+ "slots": [
+  {"slot": 0, "tile": [6.5, 7.9], "face_yaw": 0.0, "row": "front", "station": "Modify", "prop": "Tower Workshop", "scale": 3.2,
+   "note": "placeholder: the Camp's anvil table (art/camp); later the forge and anvil"},
+  {"slot": 1, "tile": [1.9, 5.4], "face_yaw": 0.0, "row": "back", "station": "Upgrade", "prop": "Supplies", "scale": 2.6,
+   "note": "placeholder: the Camp's crates (art/camp); later a whetstone or workbench with a tower figure"},
+  {"slot": 4, "tile": [11.3, 5.6], "face_yaw": 0.0, "row": "back", "station": "Towers", "prop": "Tower Rack", "scale": 2.6,
+   "note": "the Guild's tower rack (art/guild)"},
+  {"slot": 5, "tile": [6.5, 0.3], "face_yaw": 0.0, "row": "front", "station": "Camp", "prop": "Guild Door", "scale": 2.8,
+   "note": "the Guild's door (art/guild): a hotspot back to the Camp, plus the '<- Camp' button bottom-left"}
+ ],
+ "decor": [
+  {"prop": "Guild Floor", "tile": [6.5, 4.5], "scale": 1.0, "yaw": 0}
+ ],
+ "camera": {
+  "note": "as camp.gd: c = ring centre (x, 0, -(depth + 0.6)); position c + Vector3(0, 14.5, 17.0); look_at(c); fov 34"
+ },
+ "spacing": "placeholder layout, Godot agent 2026-10-16 (Blacksmith — Design § Art)"
+}

@@ -167,9 +167,12 @@ How it is read:
   `AssetConverter.asset_of` (models, icons) working. Level 1 builds the content type itself (golden unchanged).
 - `Workshop.resolve` levels the type at the current form's level; `TowerType.level` says the level it was built at.
 - Counting: `LevelController._record` → `_count_tasks` (only when `GameApp.blacksmith_unlocked()` was true before this
-  result was recorded; nothing on a quit), for the hand's owned towers; the step in the form the tower played as.
+  result was recorded; nothing on a quit), for the hand's owned towers: the base ladder's current step, and also the
+  form's step when the tower fought in a form. `upgrade_ready_count()` counts ready towers and ready forms.
   Kills / damage / hits / placed come from the log (Place action detail = hand tower id → its first EntitySpawned);
-  combat tasks count on a loss too, win tasks only on a win. Results: `controller.task_advances` / `task_lines`.
+  combat tasks count on a loss too, win tasks only on a win. Results: `controller.task_advances` (data) /
+  `task_lines` (`TowerTasks.progress_line`: "Archer (tower 3): 8 / 10 kills +3", `ready_lines`: "Guardian is ready
+  to upgrade! Go to the Blacksmith.").
 - Saves: `towers[i].level` / `formLevels` / `taskProgress` (written only when not default), `profile.blacksmithSeen`.
 - Dev: SaveTools `level_up_towers` ("Level up all towers": +1 level each, forms up to their tower) and
   `complete_tasks` ("Complete current tasks"), in the F1 panel and the TD Tools Save tab.
@@ -226,6 +229,31 @@ How it is read:
   `MissionBoard.found_in_text`); the old "Chapter 2 levels" / "(boss)" grouping is gone.
 - Renders: `tools/guild_shot.gd` (gives The Glutton Returns a "Win Hold the Gate first" requirement in memory only,
   to show a locked card).
+
+## Blacksmith place (game/ui/screens/blacksmith.gd, 2026-10-16)
+**Source of truth: `docs/design/Blacksmith — Design.md`.** The place only; the Upgrade screens are separate work.
+- `SceneFlow.Blacksmith` → `game/ui/screens/blacksmith.tscn`, built like the Guild on `TdStationWorld` from
+  `art/blacksmith/layout.json` (the Guild schema + `"kits"`: the folders a prop name is looked up in, in order,
+  `art/<kit>/<prop>.fbx`, then the map-kit tiles; a smithy kit = its FBX in `art/blacksmith/` + new prop names, a JSON
+  change). **Placeholder art**: Modify = the Camp's Tower Workshop (anvil table), Upgrade = the Camp's Supplies, Towers
+  = the Guild's Tower Rack, Camp = the Guild's Guild Door, on the Guild Floor, plus a warm OmniLight by the anvil.
+- Camp: the Workshop station keeps its id `"Workshop"` and slot (tests, layout.json, tools) but reads **Blacksmith ·
+  Modify and upgrade towers**, gate `"blacksmith"` (`GameApp.blacksmith_unlocked()` when it exists, else Chapter 2
+  won), and slides to the Blacksmith (`camp.open_blacksmith()`, dir 1). `camp.open_workshop()` still opens the
+  Workshop popup directly (dev tools, `tools/workshop_shot.gd`). The post-Chapter-2 mini tour: Guild, then Blacksmith.
+- Stations: Modify (primary, `open_modify()` = the Workshop popup, as the Camp opened it), Upgrade (`open_upgrade()`,
+  a stub returning null; while `UPGRADE_READY` is false the button is disabled with "Coming soon"), Towers (the hand
+  editor), Camp (as the Guild: no station button, "← Camp" bottom-left + the door hotspot; `back_to_camp()` slides
+  with dir -1).
+- First visit: the welcome card (`profile.blacksmith_seen`, read with `"blacksmith_seen" in profile`; a session-only
+  static flag when the profile has no such field), after the slide; closing it starts a 3-line tour (Modify, Upgrade,
+  Towers; the Camp's Princess bubble).
+- Esc: the top popup closes first (TdPopup); then the welcome card, then the tour; on the bare Blacksmith Esc slides
+  back to the Camp (the Guild's bare Esc does nothing; the Blacksmith follows the "Esc = Camp" brief).
+- Music: `AudioMgr.play_scene_music` has no Blacksmith case, so the Camp's map track keeps playing; Boot does not
+  preload the scene (both in game/app files outside this change).
+- Renders: `tools/menus_shot.gd` step `blacksmith` (blacksmith_welcome, blacksmith_tour, blacksmith, then Esc → Camp).
+  QA: `tools/qa/guild_tour.gd` reaches the Workshop through the Blacksmith (`goto_smithy()`, `ws_open()`).
 
 ## Layout editor (dev, game/dev/layout_editor.gd, 2026-10-15)
 Eren moves the Camp and Guild props himself. F1 dev panel → Shortcuts → "Edit layout" (enabled while the Camp or

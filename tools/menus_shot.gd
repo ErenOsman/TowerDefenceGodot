@@ -6,7 +6,8 @@ extends SceneTree
 ## settings_display, settings_gameplay, settings_controls (+ a capture and a conflict), codex_towers (a page),
 ## codex_statuses, level_select (an unplayed level: no enemy chips), level_select_played (a won one: chips),
 ## level_select_locked, hand_editor, camp (after GameApp.complete_chapter1()), camp_tour, chapter_select,
-## camp_level_select, camp_open (after Chapter 2: camp_open_tour, camp_open, camp_layout_editor), loading, settings_reset (the Reset to defaults confirm). PNGs: <out dir>/menu_<n>_<step>.png.
+## camp_level_select, camp_open (after Chapter 2: camp_open_tour, camp_open, camp_layout_editor), blacksmith
+## (blacksmith_welcome, blacksmith_tour, blacksmith; then Esc back to the Camp), loading, settings_reset (the Reset to defaults confirm). PNGs: <out dir>/menu_<n>_<step>.png.
 
 var out_dir := "user://menus"
 var only: PackedStringArray = []
@@ -222,6 +223,33 @@ func _run() -> void:
 			await _shot("camp_layout_editor")
 			ed.stop()
 			await _frames(4)
+		# the Blacksmith (after Chapter 2): the Camp's Blacksmith station slides to it; the welcome card, the tour,
+		# the place; Esc on the bare place slides back to the Camp
+		if _want("blacksmith"):
+			if not _want("camp_open"):
+				app.complete_chapter2()
+				save.profile.guild_tour_seen = true
+				save.save()
+				flow.go(flow.Camp)
+				await _until(func(): return flow.current == flow.Camp and not flow.is_loading, 20.0)
+				await _frames(30)
+				camp = current_scene
+			camp.open_blacksmith()
+			await _until(func(): return flow.current == flow.Blacksmith and not flow.is_loading, 20.0)
+			await _frames(40)
+			var bs = current_scene
+			await _shot("blacksmith_welcome")
+			bs.close_welcome()
+			await _frames(30)
+			await _shot("blacksmith_tour")
+			bs.end_tour()
+			await _frames(10)
+			await _shot("blacksmith")
+			var esc := InputEventKey.new()
+			esc.keycode = KEY_ESCAPE; esc.pressed = true
+			Input.parse_input_event(esc)
+			await _until(func(): return flow.current == flow.Camp and not flow.is_loading, 20.0)
+			print("blacksmith esc → scene ", flow.name_of(flow.current))
 	# loading
 	if _want("loading") and ResourceLoader.exists("res://game/ui/screens/loading.tscn"):
 		var lv = app.next_main_level()

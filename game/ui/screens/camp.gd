@@ -2,13 +2,14 @@ extends Control
 ## The Camp (UI_Camp.cs; Camp & Chapters — Design): the home between levels once Chapter 1 is won. A 3D camp
 ## laid out from res://art/camp/layout.json (map-kit ground with its frame, the station props on a ring round the
 ## Campfire, all facing the camera; Tent and Supplies) with a station button over each prop: Chapters (the chapter picker, then a chapter's
-## levels), Towers (the hand editor over every owned tower), Codex, Workshop (towers into their forms: workshop.gd),
-## Guild (by the Signpost, "Missions and co-op": the Camp slides out to the left as the Guild comes in, SceneFlow.slide;
+## levels), Towers (the hand editor over every owned tower), Codex, Blacksmith (station id "Workshop", the anvil
+## table's slot: "Modify and upgrade towers"; slides to the Blacksmith place, SceneFlow.Blacksmith, which holds the
+## Workshop; Blacksmith — Design), Guild (by the Signpost, "Missions and co-op": the Camp slides out to the left as the Guild comes in, SceneFlow.slide;
 ## a gold "New" on the button until the first Guild visit) and Main menu; no Multiplayer here (it lives in the Guild
-## only). Eren 2026-10-15: the Workshop and Guild buttons are not shown at all before Chapter 2's last level is won
+## only). Eren 2026-10-15: the Blacksmith and Guild buttons are not shown at all before Chapter 2's last level is won
 ## (no locked state; the props stay). The first visit (PlayerProfile.camp_seen) shows a welcome card, then a tour:
 ## the Princess's speech bubble (TdTextBubble) points at each shown station in turn, the station highlighted; a click
-## goes on, Skip ends it. After Chapter 2 the next visit points once at the Guild and the Workshop
+## goes on, Skip ends it. After Chapter 2 the next visit points once at the Guild and the Blacksmith
 ## (PlayerProfile.guild_tour_seen, TOUR_OPEN). Map music comes from SceneFlow (AudioMgr.play_scene_music).
 
 const SCREENS := "res://game/ui/screens/"
@@ -22,7 +23,8 @@ const STATIONS := [
 	{"id": "Towers", "label": "Towers", "icon": "icon_cards", "action": "open_towers", "locked": false},
 	{"id": "Chapters", "label": "Chapters", "icon": "icon_castle", "action": "open_chapters", "locked": false, "primary": true},
 	{"id": "Codex", "label": "Codex", "icon": "icon_codex", "action": "open_codex", "locked": false},
-	{"id": "Workshop", "label": "Workshop", "icon": "icon_edit", "action": "open_workshop", "locked": false, "gate": "chapter2"},
+	# the Blacksmith (Blacksmith — Design): keeps the Workshop's station id and slot (layout.json, tests, tools)
+	{"id": "Workshop", "label": "Blacksmith", "sub": "Modify and upgrade towers", "icon": "icon_edit", "action": "open_blacksmith", "locked": false, "gate": "blacksmith"},
 	{"id": "Guild", "label": "Guild", "sub": MissionUiLogic.GuildSub, "icon": "extra:flag", "action": "open_guild", "locked": false, "gate": "chapter2"},
 ]
 ## Used when layout.json cannot be read (same values as layout.json, the ring layout of 2026-10-13).
@@ -46,13 +48,13 @@ const TOUR := [
 	["Chapters", "Chapters: pick a chapter, then a level. Side chapters appear here as you open them."],
 	["Towers", "Towers: every tower you own. Choose which ones you bring in your hand."],
 	["Codex", "Codex: every tower, enemy and status you have met, and tips."],
-	["Workshop", "Workshop: turn your towers into new forms with tokens from missions."],
+	["Workshop", "Blacksmith: modify your towers into new forms with tokens from missions, and upgrade them."],
 	["Guild", "The Signpost: the way to the Guild. Missions there earn tokens, and co-op lives there too."],
 ]
-## The mini tour once Chapter 2 is won (profile.guild_tour_seen): the two buttons that just appeared.
+## The mini tour once Chapter 2 is won (profile.guild_tour_seen): the two buttons that just appeared (Guild, Blacksmith).
 const TOUR_OPEN := [
 	["Guild", "The Signpost: the Guild is open. Missions there earn tokens, and co-op lives there too."],
-	["Workshop", "Workshop: spend those tokens to turn your towers into new forms."],
+	["Workshop", "The Blacksmith is open too: spend those tokens to modify your towers, and upgrade them."],
 ]
 const TOUR_SPEAKER := "Princess"
 
@@ -95,10 +97,18 @@ func _ready() -> void:
 		start_open_tour()
 	# (back from a co-op match the game returns to the Guild, which reopens the lobby; nothing to do here)
 
-## Whether a station is shown: "chapter2" stations (Workshop, Guild) only once Chapter 2's last level is won.
+## Whether a station is shown: "chapter2" (Guild) only once Chapter 2's last level is won; "blacksmith" once the
+## Blacksmith is open (the same level unless the catalog says otherwise).
 static func station_shown(st: Dictionary) -> bool:
-	if st.get("gate", "") == "chapter2": return chapter2_won()
+	match st.get("gate", ""):
+		"chapter2": return chapter2_won()
+		"blacksmith": return blacksmith_open()
 	return true
+
+## The Blacksmith is open (GameApp.blacksmith_unlocked() once it exists, else Chapter 2 won).
+static func blacksmith_open() -> bool:
+	if GameApp.has_method("blacksmith_unlocked"): return bool(GameApp.call("blacksmith_unlocked"))
+	return chapter2_won()
 
 static func chapter2_won() -> bool:
 	return MenuLogic.workshop_unlocked(GameApp.catalog, SaveData.progress) or GameApp.guild_unlocked()
@@ -163,7 +173,7 @@ func _build_ui() -> void:
 		b.font_size = 26
 		add_child(b)
 		buttons[st.id] = b
-		b.visible = station_shown(st) # Workshop and Guild: not shown at all before Chapter 2 (Eren 2026-10-15)
+		b.visible = station_shown(st) # Blacksmith and Guild: not shown at all before Chapter 2 (Eren 2026-10-15)
 		var locked_line := "Coming later" if st.locked else ""
 		var action: String = st.action
 		if locked_line != "":
@@ -279,7 +289,7 @@ func close_welcome() -> void:
 	welcome_card.visible = false
 	if not SaveData.profile.camp_seen:
 		SaveData.profile.camp_seen = true
-		# a first visit after Chapter 2 already shows the Guild and Workshop: no mini tour later
+		# a first visit after Chapter 2 already shows the Guild and Blacksmith: no mini tour later
 		if chapter2_won(): SaveData.profile.guild_tour_seen = true
 		SaveData.save()
 	tour = TOUR
@@ -384,9 +394,15 @@ func open_codex() -> TdPopup:
 func open_towers() -> TdPopup:
 	return open_popup("hand_editor")
 
-## Workshop: the picker, then a tower's forms (Workshop — Design).
+## The Workshop picker straight from the Camp (dev tools and shots; players reach it through the Blacksmith's Modify).
 func open_workshop() -> TdPopup:
 	return open_popup("workshop")
+
+## Blacksmith (the anvil table's station): the Camp slides out to the left as the Blacksmith comes in from the right.
+func open_blacksmith() -> void:
+	end_tour()
+	SaveData.save()
+	SceneFlow.slide(SceneFlow.Blacksmith, 1)
 
 ## Guild (the button by the Signpost): the Camp slides out to the left as the Guild comes in from the right.
 func open_guild() -> void:

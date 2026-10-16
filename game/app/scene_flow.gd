@@ -9,7 +9,7 @@ extends Node
 ## scene's music (AudioMgr.play_scene_music).
 ## Scenes: res://game/boot.tscn, res://game/screens/<name>.tscn (also accepted under res://game/ui/screens/),
 ## res://game/level/level.tscn; a missing one falls back to res://game/app/placeholders/<name>.tscn.
-## slide(id, dir) is the other transition (Camp ⇄ Guild, Eren 2026-10-15): both screens visible, the old one moving
+## slide(id, dir) is the other transition (Camp ⇄ Guild, Camp ⇄ Blacksmith; Eren 2026-10-15): both screens visible, the old one moving
 ## out to the left while the new one comes in from the right (dir -1: the other way), SLIDE_TIME, ease out, input
 ## blocked; the new scene can wait for slide_finished (is_sliding) before showing its own cards. go() stays a cut.
 
@@ -30,9 +30,9 @@ var is_sliding: bool = false
 ## Renders: >= 0 holds a running slide at that progress (0..1, before the ease) until set back to -1.
 var slide_hold: float = -1.0
 
-enum { Boot, MainMenu, Game, LevelSelect, Welcome, Camp, Loading, Guild }
-const NAMES := ["Boot", "MainMenu", "Game", "LevelSelect", "Welcome", "Camp", "Loading", "Guild"]
-const FILES := ["boot", "main_menu", "level", "level_select", "welcome", "camp", "loading", "guild"]
+enum { Boot, MainMenu, Game, LevelSelect, Welcome, Camp, Loading, Guild, Blacksmith }
+const NAMES := ["Boot", "MainMenu", "Game", "LevelSelect", "Welcome", "Camp", "Loading", "Guild", "Blacksmith"]
+const FILES := ["boot", "main_menu", "level", "level_select", "welcome", "camp", "loading", "guild", "blacksmith"]
 
 ## True while a scene change runs.
 var is_loading: bool = false

@@ -466,19 +466,41 @@ func tour_hand() -> void:
 
 # ------------------------------------------------------------------ the Workshop
 
-func ws_open(camp) -> TdPopup:
-	var b: TdButton = camp.buttons.get("Workshop")
+## The Workshop through the Blacksmith (Blacksmith — Design): from the Camp its Blacksmith station (id "Workshop")
+## slides to the Blacksmith; there the Modify station opens the Workshop picker.
+func ws_open(place) -> TdPopup:
+	if is_instance_valid(place) and place.get("stations") == null: # the Camp
+		var cb: TdButton = place.buttons.get("Workshop")
+		await qa.click_at(qa.centre(cb))
+		if not await qa.until(func(): return flow.current == flow.Blacksmith and not flow.is_loading, 30.0):
+			qa.find("bug", "Blacksmith station", "click did not slide to the Blacksmith")
+			return null
+		await qa.wait(20, 1.0)
+		place = current_scene
+		_smithy_ready(place)
+	var b: TdButton = place.stations.get("Modify")
 	await qa.click_at(qa.centre(b))
 	await qa.wait(14, 0.9)
 	var ws = top_popup()
 	if ws == null or not ws.has_method("open_modify"):
-		qa.find("bug", "Workshop station", "click did not open the Workshop")
+		qa.find("bug", "Modify station", "click did not open the Workshop")
 		return null
 	return ws
 
+## The Blacksmith scene, its welcome card and tour out of the way.
+func goto_smithy() -> Node:
+	var b = await go_scene(flow.Blacksmith)
+	_smithy_ready(b)
+	return b
+
+func _smithy_ready(b) -> void:
+	if b == null or not is_instance_valid(b) or b.get("welcome_card") == null: return
+	if b.welcome_card.visible: b.close_welcome()
+	b.end_tour()
+
 func tour_workshop() -> void:
 	qa.screen = "Workshop"
-	var camp = await goto_camp()
+	var camp = await goto_smithy() # the Blacksmith (holds the Workshop since 2026-10-16)
 	freeze_world(camp, true)
 	var ws = await ws_open(camp)
 	if ws == null: return
@@ -610,7 +632,7 @@ func tour_workshop() -> void:
 	save.towers.hand[0] = archer.id
 	save.save()
 	qa.step = "form elsewhere: hand editor"
-	await qa.click_at(qa.centre(camp.buttons["Towers"]))
+	await qa.click_at(qa.centre(camp.stations["Towers"]))
 	await qa.wait(14, 0.9)
 	var he = top_popup()
 	if he != null:
@@ -1085,7 +1107,7 @@ func tour_verify() -> void:
 	room.leave_room()
 	save.missions.tired.clear()
 	# workshop medallions
-	var camp = await goto_camp()
+	var camp = await goto_smithy()
 	freeze_world(camp, true)
 	var ws = await ws_open(camp)
 	if ws != null:
@@ -1247,7 +1269,7 @@ func tour_abuse() -> void:
 			await qa.wait(6, 0.4)
 	# Workshop
 	qa.step = "workshop keys"
-	var camp = await goto_camp()
+	var camp = await goto_smithy()
 	freeze_world(camp, true)
 	var ws = await ws_open(camp)
 	if ws != null:
