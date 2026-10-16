@@ -244,6 +244,7 @@ Feedback rules:
 
 - **Answer within 0.1 s.** Hover and press react at once; an action that takes longer (an enemy turn) shows that it is busy (phase text, End turn disabled with "Enemies are moving").
 - **Explain every "no" (reason lines stay at 18 px or more: they wrap to a second line, left-aligned with the icon inline, rather than shrink).** A refused click (not enough energy, wrong tile) shakes or flashes `bad` and shows the reason in the hint line, not a silent nothing.
+- **No explanatory sub-lines (Eren, 2026-10-16: "intuitive things need no explaining").** Don't add lines that say where something comes from, what it is for or how to get it ("Found in: Night Watch", "From missions; spent on upgrades", "Missions give gold"). A refusal still gives feedback (shake, `bad` flash, and the reason in the hint line or tooltip when you try), but a disabled control whose cause is already visible on screen (0 gold next to Pay, an empty task bar) needs no permanent reason line. When in doubt, leave it out; a tooltip can carry detail for those who look.
 - **Empty states say what to do.** An empty hand, an empty Codex tab or an empty list shows one line, for example "Pick up to 8 towers for your hand".
 - **Right click cancels** aiming, placing, selection and popups, in that order. It never presses a button.
 - **Errors** use `bad` text in place, never a popup, unless the player must decide something.
@@ -390,6 +391,7 @@ Icons follow the Painted Miniatures style: simple shapes, a dark 2 px outline, f
 - **Grid:** drawn on a 64×64 canvas with 4 px padding, readable at 24. Exported as PNG, power-of-two, sprites in `res://art/icons/` (gameplay) or `res://art/ui/KitB/` (interface).
 - **Colour by role:** ability icons use their effect's colour (harm `bad`, help `good`, status `status`); resource icons use their token (energy `gold`, health `hp.full`). Interface icons (close, info, settings) are single-colour `text.primary`.
 - **Unit portraits** for cards, the right bar and the Codex come from the Blender models (a 3/4 view on the dark plinth), so a tower looks the same on the board and in the hand.
+- **Badges on a tower's portrait** (cards, tray pieces, board medallion, inspector): tired (moon) top-left, form badge bottom-right, "Lv N" chip (cream Plinth pill) bottom-left; the cost coin and key number move aside rather than covering them. On the inspector card the Lv chip sits in the name row (2026-10-16).
 - **Every icon has a name.** An icon alone always has a tooltip; in lists it has a label.
 - **9-slice sprites** for panels and buttons (radius 4, 8, 12) go in `res://art/ui/KitB/` (borders in `game/ui/theme/kit_slices.json`, drawn by `TdSliceBox`), so corners stay sharp at every size.
 
