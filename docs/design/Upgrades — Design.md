@@ -125,5 +125,5 @@ in about a week of play, if it goes on missions every day.
 ## Open questions
 
 - Whether levels should also raise a tower's energy cost (no, for now).
-- A currency for upgrades or a shop, later; none for now.
+- A currency for upgrades: no. Gold, if it ever exists, is a mission reward (Missions & Guild — Design, Open questions).
 - A "respec" or form-level transfer when a tower switches form: no; each form keeps its own ladder.

@@ -136,3 +136,4 @@ Format: date · decision · reason. The commit that made the change is in bracke
 | 2026-10-04 | Input goes through the Input System package only (`InputHelper`); the old Input Manager is off (2d2b0c7, cdaa6ec) | Unity is deprecating the Input Manager |
 | 2026-10-04 | The repo is on GitHub as a private repo; nobody pushes unless the user asks | Backups and access for cloud sessions or a server, under the user's control |
 | 2026-10-03 | Chapter 1 is built by `Tools > Combat > Create Chapter 1`; a rebuild leaves unchanged abilities untouched (81381ae) | Content can be regenerated after a balance change without file churn |
+| 2026-10-16 | Gold | If a gold currency is ever added, missions are its source and the Missions & Guild doc owns it; upgrades never use it | Eren ("gold, mission documentinde olabilir") |

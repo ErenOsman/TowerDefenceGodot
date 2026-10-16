@@ -145,3 +145,6 @@ and then mirrored in the Godot build; only the Godot build was done before the U
 - Reset time: local midnight (chosen) or a fixed server hour for everyone.
 - Daily rotation (a few missions a day instead of the whole board) and weekly missions.
 - Whether missions get their own levels (made for them) or keep reusing chapter levels.
+- **Gold.** If a gold currency is ever added, it belongs here: missions would be its source (like tokens), and a
+  Blacksmith shop could spend it. It is not part of tower upgrades (Eren 2026-10-16: "gold, mission documentinde
+  olabilir"). Not planned yet.
