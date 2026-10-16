@@ -13,7 +13,7 @@ tower's level.
 
 | Topic | Decision | Source |
 | --- | --- | --- |
-| Levels | Every tower (each individual, by its id) has a **level**, 1 when the Blacksmith opens, up to the type's **max level** (5 for now, data). A level is gained by pressing **Upgrade** once that level's **tasks** are complete; nothing is paid | Eren (all towers level 1 after Chapter 2; tasks; press Upgrade) · agents (per individual tower, max 5) |
+| Levels | Every tower (each individual, by its id) has a **level**, 1 when the Blacksmith opens, up to the type's **max level** (5 for now, data). A level is gained by pressing **Upgrade** once that level's **tasks** are complete; one of the tasks is always the gold task ("Pay N gold") | Eren (all towers level 1 after Chapter 2; tasks; press Upgrade) · agents (per individual tower, max 5) |
 | Tasks | Each level step of a tower type lists its tasks, e.g. Archer 1 → 2: "Win a mission with this tower". Tasks are counted **per tower** (this Archer, not any Archer). Kinds (data): win a mission with the tower in the hand; win N levels with it; N kills by it; N damage dealt; N hits taken without dying; place it N times; a specific mission; a win without losing a tower | Eren (example) · agents (the kinds) |
 | Gold | Every level step also has a **gold task**: "Pay N gold", a task like the others, with a **Pay** button on its row that deposits gold from the Backpack into the step (partial deposits allowed; the bar fills like any task; deposited gold is spent). Gold comes from missions only (Missions & Guild — Design). The task kind is `Pay` with a `currency` (`gold` now; a token id later, so token tasks can follow) | Eren 2026-10-16 ("her level için altın görevi de olsun … para yatırma tuşu olmalı"; earlier: no price, "gold shouldnt be on upgrades") · agents (partial deposits, the generic `Pay` kind) |
 | What a level gives | Stat bonuses set per tower type and level in the content: e.g. Archer level 2 +2 Power, level 3 +5 Max HP, …; a level may also add or change an ability at a set step (data allows it; the starter content uses stats only). Bonuses are modifiers on the tower's entity, so previews and the Codex show them | agents |
@@ -116,15 +116,18 @@ Engine-free rules in `sim/meta/tower_levels.gd` (`max_level`, `step_for`, `can_u
 
 ## Starter content (placeholders; Eren rewrites)
 
-| Tower | To level | Tasks | Gives |
-| --- | --- | --- | --- |
-| Archer | 2 | Win a mission with it | +2 Power |
-| Archer | 3 | Win a mission; deal 60 damage | +5 Max HP |
-| Archer | 4 | Win 2 missions; 10 kills | +1 Range |
-| Archer | 5 | Win 3 missions; a win without losing a tower | +3 Power, +5 Max HP |
-| Guardian | 2 | Win a mission with it | +10 Max HP |
-| Guardian | 3 | Win a mission; take 40 hits and survive | +2 Power |
-| … | | the same shape for every tower; forms get a shorter 3-step ladder | |
+| Tower | To level | Tasks | Gold | Gives |
+| --- | --- | --- | --- | --- |
+| Archer | 2 | Win a mission with it | 20 | +2 Power |
+| Archer | 3 | Win a mission; deal 60 damage | 40 | +5 Max HP |
+| Archer | 4 | Win 2 missions; 10 kills | 70 | +1 Range |
+| Archer | 5 | Win 3 missions; a win without losing a tower | 100 | +3 Power, +5 Max HP |
+| Guardian | 2 | Win a mission with it | 20 | +10 Max HP |
+| Guardian | 3 | Win a mission; take 40 hits and survive | 40 | +2 Power |
+| … | | the same shape for every tower (230 gold to level 5); forms get a shorter 3-step ladder (15 / 30 / 50 gold) | | |
+
+Mission gold (placeholders): Patrol 10 / 30 first win, Night Watch 15 / 40, Hold the Gate 20 / 50, Drum Line 10 / 40,
+The Glutton Returns 25 / 60.
 
 in about a week of play, if it goes on missions every day.
 
