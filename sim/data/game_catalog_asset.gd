@@ -36,6 +36,11 @@ var guild_unlock: LevelAsset = null
 ## The mission board's missions, in board order: Array of MissionAsset.
 var missions: Array = []
 
+# Blacksmith (Catalog.json "blacksmithUnlock")
+## The level whose win opens the Blacksmith (Modify and Upgrade) and starts tower level tasks counting — Chapter 2's
+## last, the same as guild_unlock. Null: guild_unlock is used.
+var blacksmith_unlock: LevelAsset = null
+
 # Workshop (not serialized: ContentLibrary links them from Forms.json / Tokens.json)
 ## Every token kind, in content order: Array of TokenAsset.
 var tokens: Array = []
@@ -111,6 +116,12 @@ func find_mission(mission_id: String) -> MissionAsset:
 ## The Guild is open: its unlock level (Chapter 2's last) has been won (Missions & Guild — Design).
 func guild_unlocked(progress: LevelProgress) -> bool:
 	return guild_unlock != null and progress != null and progress.is_won(guild_unlock.get_id())
+
+## The Blacksmith is open (Blacksmith — Design): blacksmith_unlock (else guild_unlock) is won. Tower level tasks count
+## only from then on (Upgrades — Design § Rules).
+func blacksmith_unlocked(progress: LevelProgress) -> bool:
+	var l := blacksmith_unlock if blacksmith_unlock != null else guild_unlock
+	return l != null and progress != null and progress.is_won(l.get_id())
 
 ## The Camp is open: its unlock level has been won (Camp & Chapters — Design).
 func camp_unlocked(progress: LevelProgress) -> bool:

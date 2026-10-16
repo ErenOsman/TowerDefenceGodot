@@ -16,6 +16,12 @@ var cost: int = 0
 var forms: Array = []
 ## Set on the type a level builds for a formed tower (Workshop.resolve): the form it fights as; null = default.
 var form: FormDef = null
+## Upgrades — Design: the base type's level ladder (Array of TowerLevelDef, the step to level 2 first). A form's
+## own ladder is FormDef.levels; a resolved type keeps the base's ladder here (see TowerLevels.ladder).
+var levels: Array = []
+## The level this type was built at (TowerLevels.apply on the owned tower's level for its current form); 1 = no
+## bonuses applied (and every type the content builds).
+var level: int = 1
 ## Set with form: the base type (whose id, forms and default entity this one shares). Null on a base type.
 var base: TowerType = null
 

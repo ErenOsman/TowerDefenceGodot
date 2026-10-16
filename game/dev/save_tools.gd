@@ -16,6 +16,8 @@ const ACTIONS := [
 	["unlock_forms", "Unlock all forms"],
 	["chapter2", "Clear Chapter 2"],
 	["rest_missions", "Reset today's plays / rest all towers"],
+	["level_up_towers", "Level up all towers"],
+	["complete_tasks", "Complete current tasks"],
 ]
 
 ## The file's text ("" when there is none).
@@ -114,6 +116,10 @@ static func run(action: String, data: GameData, catalog: GameCatalogAsset, arg =
 			var tired := data.missions.tired.size()
 			data.missions.rest_all()
 			return "Missions: today's plays reset (%d), every tower rested (%d)." % [plays, tired]
+		"level_up_towers":
+			return "Upgrades: %d level(s) added (tasks skipped; forms stay at or below their tower)." % TowerLevels.level_up_all(data.towers.towers, type_lookup(catalog))
+		"complete_tasks":
+			return "Upgrades: %d step(s) with every task complete: press Upgrade in the Blacksmith." % TowerLevels.complete_tasks(data.towers.towers, type_lookup(catalog))
 		"add_tokens":
 			# arg: [token id, amount] (the F1 panel's Tokens line)
 			var a: Array = arg if arg is Array and arg.size() >= 2 else ["", 0]
@@ -122,6 +128,13 @@ static func run(action: String, data: GameData, catalog: GameCatalogAsset, arg =
 			data.tokens.add(token.get_id(), int(a[1]))
 			return "+%d %s (now %d)." % [int(a[1]), token.get_display_name(), data.tokens.count(token.get_id())]
 	return "Unknown action '%s'." % action
+
+## A Callable(type id) -> TowerType (base type, forms and ladders) over the catalog, for the Upgrades cheats.
+static func type_lookup(catalog: GameCatalogAsset) -> Callable:
+	var conv := AssetConverter.new()
+	return func(type_id: String) -> TowerType:
+		var a: TowerAsset = catalog.find_tower(type_id) if catalog != null else null
+		return conv.tower_type(a) if a != null else null
 
 ## Workshop cheat: unlocks every form of every owned tower's type (no tokens spent; the current forms stay).
 ## Returns how many unlocks it added.

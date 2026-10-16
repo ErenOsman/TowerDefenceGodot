@@ -24,6 +24,8 @@ var cost: int = -1
 var unlock: Array = []
 ## Where the node sits around the root (0, 1, 2… clockwise from the top); children sit beyond their parent.
 var order: int = 0
+## Upgrades — Design: the form's own level ladder, Array of TowerLevelData (never longer than its tower's).
+var levels: Array = []
 
 ## The id, else the asset name.
 func get_id() -> String:

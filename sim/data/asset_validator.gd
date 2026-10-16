@@ -24,10 +24,10 @@ static func validate_asset(asset, vocab: Vocabulary = null) -> Array[String]:
 	if asset is GameRulesAsset: return validate_rules(asset, vocab)
 	if asset is EntityAsset: return validate_entity(asset, vocab)
 	if asset is ItemAsset: return validate_item(asset, vocab)
-	if asset is TowerAsset: return validate_tower(asset)
+	if asset is TowerAsset: return validate_tower(asset, vocab)
 	if asset is LevelAsset: return validate_level(asset)
 	if asset is GameCatalogAsset: return validate_catalog(asset)
-	if asset is FormAsset: return validate_form(asset)
+	if asset is FormAsset: return validate_form(asset, vocab)
 	if asset is TokenAsset: return validate_token(asset)
 	if asset is MissionAsset: return validate_mission(asset)
 	var none: Array[String] = []
@@ -76,9 +76,12 @@ const MaxFormDepth := 2
 
 ## A tower form (Workshop — Design § Validation): its id, tower, entity (a Unit standing OffPath), parent (a form of
 ## the same tower, no cycles, depth ≤ MaxFormDepth) and unlock cost (at least one token; tokens exist; amounts > 0).
-static func validate_form(f: FormAsset) -> Array[String]:
+static func validate_form(f: FormAsset, vocab: Vocabulary = null) -> Array[String]:
 	var errors: Array[String] = []
 	var error := func(message: String) -> void: errors.append("%s: %s" % [f.name, message])
+	for e in validate_ladder(f.levels, vocab): error.call(e)
+	if f.tower != null and f.levels.size() > f.tower.levels.size():
+		error.call("its levels go to %d, past its tower's %d (a form never passes its tower's level)" % [f.levels.size() + 1, f.tower.levels.size() + 1])
 	if f.id.is_empty(): error.call("has no form ID (saves would refer to the asset name, which breaks on rename)")
 	if f.tower == null: error.call("has no tower")
 	if f.entity == null: error.call("has no entity")
@@ -221,13 +224,48 @@ static func validate_entity(e: EntityAsset, vocab: Vocabulary) -> Array[String]:
 	if e.passives != null and e.passives.has(null): v.error("passives", "has an empty entry")
 	return v.errors
 
-static func validate_tower(t: TowerAsset) -> Array[String]:
+static func validate_tower(t: TowerAsset, vocab: Vocabulary = null) -> Array[String]:
 	var errors: Array[String] = []
+	for e in validate_ladder(t.levels, vocab): errors.append("%s: %s" % [t.name, e])
 	if t.id.is_empty(): errors.append("%s: has no type ID (saves would refer to the asset name, which breaks on rename)" % t.name)
 	if t.entity == null: errors.append("%s: has no entity" % t.name)
 	else:
 		if t.entity.kind != EntityKind.Unit: errors.append("%s: its entity should be a Unit" % t.name)
 		if t.entity.footing != Footing.OffPath: errors.append("%s: its entity's footing should be OffPath (towers never stand on a path)" % t.name)
+	return errors
+
+## A level ladder (Upgrades — Design § Validation): steps reach 2, 3, 4 … in order; every task kind is known, counts
+## > 0, a WinMissionId task names a mission; every bonus names a real stat (when vocab is given), is Flat or PctAdd
+## and has a numeric amount. Messages without the asset name.
+static func validate_ladder(levels: Array, vocab: Vocabulary = null) -> Array[String]:
+	var errors: Array[String] = []
+	for i in levels.size():
+		var l = levels[i]
+		var p := "levels[%d]" % i
+		if l == null:
+			errors.append("%s is empty" % p)
+			continue
+		if l.to != i + 2: errors.append("%s: to %d, expected %d (steps reach levels 2, 3, 4 … in order)" % [p, l.to, i + 2])
+		if l.tasks.is_empty(): errors.append("%s has no tasks" % p)
+		for j in l.tasks.size():
+			var t = l.tasks[j]
+			var tp := "%s.tasks[%d]" % [p, j]
+			if t == null:
+				errors.append("%s is empty" % tp)
+				continue
+			if t.kind < 0 or t.kind >= TowerTaskKind.NAMES.size(): errors.append("%s: unknown task kind %d" % [tp, t.kind])
+			if t.count <= 0: errors.append("%s: count must be at least 1" % tp)
+			if t.kind == TowerTaskKind.WinMissionId and t.mission == null: errors.append("%s: WinMissionId needs a mission" % tp)
+		for j in l.bonuses.size():
+			var b = l.bonuses[j]
+			var bp := "%s.bonuses[%d]" % [p, j]
+			if b == null:
+				errors.append("%s is empty" % bp)
+				continue
+			if b.stat.is_empty(): errors.append("%s has no stat" % bp)
+			elif vocab != null and not vocab.is_stat(b.stat): errors.append("%s: '%s' is not a registered stat" % [bp, b.stat])
+			if b.kind != ModKind.Flat and b.kind != ModKind.PctAdd: errors.append("%s: kind must be Flat or PctAdd" % bp)
+			if AssetConverter.try_parse(b.amount) == null: errors.append("%s: amount '%s' is not a number" % [bp, b.amount])
 	return errors
 
 ## The game catalog: empty entries, levels without an id or listed twice, broken requirements
@@ -263,6 +301,8 @@ static func validate_catalog(c: GameCatalogAsset) -> Array[String]:
 	# Missions & Guild: the guild unlock is a catalog level; the board's missions are listed once
 	if c.guild_unlock != null and c.find_level(c.guild_unlock.get_id()) == null:
 		error.call("guildUnlock %s is not a level of the chapters" % c.guild_unlock.get_id())
+	if c.blacksmith_unlock != null and c.find_level(c.blacksmith_unlock.get_id()) == null:
+		error.call("blacksmithUnlock %s is not a level of the chapters" % c.blacksmith_unlock.get_id())
 	var mission_ids := {}
 	for i in c.missions.size():
 		var m = c.missions[i]

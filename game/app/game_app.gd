@@ -59,6 +59,34 @@ func tower_type(type_id: String) -> TowerType:
 func resolved_type(owned: OwnedTower) -> TowerType:
 	return Workshop.resolve(owned, tower_type(owned.type)) if owned != null else null
 
+# ---------------------------------------------------------------- Blacksmith & Upgrades
+
+## The Blacksmith is open (catalog blacksmithUnlock, Chapter 2's last level, won): levels show and tasks count.
+func blacksmith_unlocked() -> bool:
+	return catalog != null and catalog.blacksmith_unlocked(SaveData.progress)
+
+## How many upgrades are ready now — towers (default form) and unlocked forms (tasks done, base level above the
+## form's) — the Upgrade station's "N ready".
+## 0 before the Blacksmith unlock.
+func upgrade_ready_count() -> int:
+	if not blacksmith_unlocked(): return 0
+	return TowerLevels.ready_count(SaveData.towers.towers, tower_type)
+
+## Whether an owned tower can be upgraded now in a form ("" = default); TowerLevels.last_reason says why not
+## ("Deal 18 more damage with it", "Raise Archer to level 3 first", "Max level").
+func can_upgrade(owned: OwnedTower, form_id: String = "") -> bool:
+	if not blacksmith_unlocked():
+		TowerLevels.last_reason = "The Blacksmith is not open yet"
+		return false
+	return TowerLevels.can_upgrade(owned, tower_type(owned.type) if owned != null else null, form_id)
+
+## Upgrades an owned tower in a form when can_upgrade says yes, and saves. False (TowerLevels.last_reason) otherwise.
+func upgrade_tower(owned: OwnedTower, form_id: String = "") -> bool:
+	if not can_upgrade(owned, form_id): return false
+	if not TowerLevels.upgrade(owned, tower_type(owned.type), form_id): return false
+	SaveData.save()
+	return true
+
 # ---------------------------------------------------------------- Missions & Guild
 
 var _missions: Array = []

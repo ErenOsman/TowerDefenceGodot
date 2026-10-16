@@ -51,6 +51,8 @@ const SCHEMA := {
 	"TowerAsset": {
 		"number": "int", "id": "string", "displayName": "string", "description": "string", "icon": "art",
 		"entity": "ref:EntityAsset", "cost": "int",
+		# Upgrades — Design (no C# counterpart): the level ladder
+		"levels": "list:obj:TowerLevelData",
 	},
 	"LevelAsset": {
 		"number": "int", "id": "string", "displayName": "string", "description": "string", "icon": "art", "music": "art",
@@ -81,6 +83,8 @@ const SCHEMA := {
 		"tutorial": "ref:LevelAsset", "tutorialReward": "ref:TowerAsset", "campUnlock": "ref:LevelAsset", "codex": "ref:CodexAsset",
 		# Missions & Guild (no C# counterpart)
 		"guildUnlock": "ref:LevelAsset", "missions": "list:ref:MissionAsset",
+		# Blacksmith — Design (no C# counterpart)
+		"blacksmithUnlock": "ref:LevelAsset",
 	},
 	"CodexAsset": {
 		"towers": "list:ref:TowerAsset", "enemies": "list:ref:EntityAsset", "statuses": "list:ref:StatusAsset", "tips": "list:obj:CodexTip",
@@ -91,6 +95,8 @@ const SCHEMA := {
 		"id": "string", "displayName": "string", "description": "string", "icon": "art", "badge": "art",
 		"tower": "ref:TowerAsset", "parent": "ref:FormAsset", "entity": "ref:EntityAsset", "cost": "int",
 		"unlock": "list:obj:TokenAmount", "order": "int",
+		# Upgrades — Design: the form's own level ladder
+		"levels": "list:obj:TowerLevelData",
 	},
 	"TokenAsset": {"id": "string", "displayName": "string", "description": "string", "icon": "art", "rarity": "enum:TokenRarity"},
 	# Missions & Guild — Design: Missions.json (no C# counterpart)
@@ -139,6 +145,10 @@ const SCHEMA := {
 	},
 	"TokenAmount": {"token": "ref:TokenAsset", "amount": "int"},
 	"PlayerRange": {"min": "int", "max": "int"},
+	# Upgrades — Design: a level step, its tasks and bonuses (no C# counterpart)
+	"TowerLevelData": {"to": "int", "tasks": "list:obj:TowerTaskData", "bonuses": "list:obj:LevelBonusData"},
+	"TowerTaskData": {"kind": "enum:TowerTaskKind", "count": "int", "mission": "ref:MissionAsset", "text": "string"},
+	"LevelBonusData": {"stat": "string", "kind": "enum:ModKind", "amount": "string"},
 	"CodexTip": {"id": "string", "title": "string", "text": "string", "image": "art"},
 	# ------------------------------------------------------------------ core classes the assets embed (other slices own them)
 	"PatternDef": {
@@ -226,6 +236,9 @@ static func create(type_name: String) -> Object:
 		"TokenAmount": return TokenAmount.new()
 		"MissionAsset": return MissionAsset.new()
 		"PlayerRange": return PlayerRange.new()
+		"TowerLevelData": return TowerLevelData.new()
+		"TowerTaskData": return TowerTaskData.new()
+		"LevelBonusData": return LevelBonusData.new()
 		"StepList": return StepList.new()
 		"LibraryEntry": return LibraryEntry.new()
 		"ReplacementData": return ReplacementData.new()
@@ -313,6 +326,7 @@ static func enum_class(enum_name: String):
 		"CasterAnimation": return CasterAnimation
 		"TokenRarity": return TokenRarity
 		"MissionMode": return MissionMode
+		"TowerTaskKind": return TowerTaskKind
 	return null
 
 ## The C# class name of a content object (its GDScript class_name), or "" for none.

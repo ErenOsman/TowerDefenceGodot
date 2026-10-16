@@ -36,6 +36,10 @@ var die_with_summoner: bool = false
 
 var footing: int = Footing.Any
 
+## Upgrades: a levelled copy (TowerLevels.apply) points at the definition it was copied from, so lookups by
+## definition (AssetConverter.asset_of: model, icon, presentation) still find the content asset. Null otherwise.
+var levelled_from: EntityDef = null
+
 func stat(p_stat: String, value) -> EntityDef:
 	base_stats[p_stat] = float(value)
 	return self

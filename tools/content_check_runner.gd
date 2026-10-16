@@ -839,7 +839,25 @@ func _probe_tower(asset: TowerAsset, tt, probe: Dictionary) -> void:
 		var def = conv.entity(asset.entity)
 		if def != null:
 			_describe_entity(def, probe)
+			_probe_ladder(asset.levels, def, probe)
 			_run_road(def, true, probe)
+
+## Upgrades — Design: the ladder as a table, one row per level: the tasks to reach it, what it gives and the entity's
+## stats at that level (TowerLevels: bonuses cumulative). No ladder: a line says so.
+func _probe_ladder(levels: Array, def: EntityDef, probe: Dictionary) -> void:
+	var lad: Array = conv.tower_levels(levels)
+	if lad.is_empty():
+		probe.lines.append("levels: none (stays at level 1)")
+		return
+	probe.lines.append("levels: 1–%d" % TowerLevels.max_level(lad))
+	var rows := [["1", "-", "-", _stats_text(def.base_stats)]]
+	for s in lad:
+		var tasks := PackedStringArray()
+		for t in s.tasks: tasks.append(TowerTasks.describe(t))
+		rows.append([str(s.to), "; ".join(tasks), TowerLevels.bonuses_text(s.bonuses) if not s.bonuses.is_empty() else "-",
+			_stats_text(TowerLevels.stats_with(def.base_stats, TowerLevels.bonuses_at(lad, s.to)))])
+		if s.bonuses.is_empty(): probe.warnings.append("level %d gives nothing" % s.to)
+	probe.tables.append({"title": "levels", "columns": ["level", "tasks", "gives", "stats at that level"], "rows": rows})
 
 # ------------------------------------------------------------------ Level
 
@@ -1046,7 +1064,11 @@ func _probe_form(f: FormAsset, probe: Dictionary) -> void:
 		if not drops: probe.warnings.append("its unlock token %s drops from no mission: it can never be unlocked" % lib.key_of(amt.token))
 	if f.entity != null:
 		var def = conv.entity(f.entity)
-		if def != null: _describe_entity(def, probe)
+		if def != null:
+			_describe_entity(def, probe)
+			_probe_ladder(f.levels, def, probe)
+	if f.tower != null and f.levels.size() > f.tower.levels.size():
+		probe.warnings.append("its ladder (to level %d) is longer than its tower's (to level %d)" % [f.levels.size() + 1, f.tower.levels.size() + 1])
 
 func _probe_token(t: TokenAsset, probe: Dictionary) -> void:
 	var rows := []

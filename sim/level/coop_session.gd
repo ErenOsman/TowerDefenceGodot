@@ -90,6 +90,8 @@ static func split(amount: int, n: int) -> Array:
 ## each type from 1. type_by_id: Callable(String) -> TowerType; unknown types are skipped.
 ## Workshop: an entry "<type id>@<form id>" brings the tower as that form (Workshop.resolve_form: the form's entity,
 ## name and cost; its tower ID still names only the type). An unknown form id falls back to the default form.
+## Upgrades: an entry ending ":L<n>" ("archer@archer-fire:L3", "guardian:L2") brings it at that level (TowerLevels.apply
+## with the form's ladder, or the base's), so every client builds the same entity.
 static func build_hand(player_id: String, type_ids: Array, type_by_id: Callable) -> Array:
 	var out := []
 	var counts := {}
@@ -101,19 +103,29 @@ static func build_hand(player_id: String, type_ids: Array, type_by_id: Callable)
 		counts[type_id] = counts.get(type_id, 0) + 1
 		var d := TowerDef.new()
 		d.id = "%s:%s#%d" % [player_id, type_id, counts[type_id]]
-		d.type = Workshop.resolve_form(type, type.find_form(parsed[1])) if parsed[1] != "" else type
+		var t: TowerType = Workshop.resolve_form(type, type.find_form(parsed[1])) if parsed[1] != "" else type
+		var lvl: int = mini(parsed[2], TowerLevels.max_level(t))
+		d.type = TowerLevels.apply(t, lvl) if lvl > 1 else t
 		out.append(d)
 	return out
 
-## A protocol hand entry → [type id, form id] ("archer@archer-fire" → ["archer", "archer-fire"]; "archer" → ["archer", ""]).
+## A protocol hand entry → [type id, form id, level] ("archer@archer-fire:L3" → ["archer", "archer-fire", 3];
+## "archer" → ["archer", "", 1]; a missing or bad level reads 1).
 static func parse_hand_entry(entry: String) -> Array:
+	var lvl := 1
+	var colon := entry.rfind(":L")
+	if colon >= 0 and entry.substr(colon + 2).is_valid_int():
+		lvl = maxi(1, entry.substr(colon + 2).to_int())
+		entry = entry.substr(0, colon)
 	var at := entry.find("@")
-	if at < 0: return [entry, ""]
-	return [entry.substr(0, at), entry.substr(at + 1)]
+	if at < 0: return [entry, "", lvl]
+	return [entry.substr(0, at), entry.substr(at + 1), lvl]
 
-## The protocol hand entry of a tower type in a form ("" = the default): "archer" or "archer@archer-fire".
-static func hand_entry(type_id: String, form_id: String = "") -> String:
-	return type_id if form_id == "" else "%s@%s" % [type_id, form_id]
+## The protocol hand entry of a tower type in a form ("" = the default) at a level (1 = no suffix): "archer",
+## "archer@archer-fire", "archer@archer-fire:L3", "guardian:L2".
+static func hand_entry(type_id: String, form_id: String = "", level: int = 1) -> String:
+	var s := type_id if form_id == "" else "%s@%s" % [type_id, form_id]
+	return s if level <= 1 else "%s:L%d" % [s, level]
 
 # ------------------------------------------------------------------ queries
 

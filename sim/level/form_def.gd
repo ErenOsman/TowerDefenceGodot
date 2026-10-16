@@ -26,6 +26,8 @@ var unlock: Dictionary = {}
 var tokens: Dictionary = {}
 ## Where the node sits around the root (0, 1, 2… clockwise from the top).
 var order: int = 0
+## Upgrades — Design: the form's own level ladder (Array of TowerLevelDef); the base's bonuses do not carry into it.
+var levels: Array = []
 
 ## How deep the node sits: 1 for a root child, 2 for its child…
 var depth: int:

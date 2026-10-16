@@ -89,7 +89,13 @@ static func from_json(text: String) -> GameData:
 
 static func towers_to_dict(t: TowerCollection) -> Dictionary:
 	var list := []
-	for o in t.towers: list.append({"id": o.id, "type": o.type, "customName": o.custom_name, "form": o.form, "forms": o.forms.duplicate()})
+	for o in t.towers:
+		var d := {"id": o.id, "type": o.type, "customName": o.custom_name, "form": o.form, "forms": o.forms.duplicate()}
+		# Upgrades (written only when they differ from the defaults, so a save without levels stays as it was)
+		if o.level != 1: d["level"] = o.level
+		if not o.form_levels.is_empty(): d["formLevels"] = o.form_levels.duplicate()
+		if not o.task_progress.is_empty(): d["taskProgress"] = o.task_progress.duplicate(true)
+		list.append(d)
 	return {"towers": list, "hand": t.hand.duplicate()}
 
 static func towers_from_dict(d) -> TowerCollection:
@@ -106,6 +112,18 @@ static func towers_from_dict(d) -> TowerCollection:
 		owned.forms = _strings(o.get("forms"))
 		owned.form = _str(o.get("form"))
 		if owned.form != "" and not owned.forms.has(owned.form): owned.form = ""
+		# Upgrades (older saves: level 1 everywhere, no task progress)
+		owned.level = maxi(1, int(o.get("level", 1)))
+		var fl = o.get("formLevels")
+		if fl is Dictionary:
+			for k in fl: owned.form_levels[str(k)] = maxi(1, int(fl[k]))
+		var tp = o.get("taskProgress")
+		if tp is Dictionary:
+			for k in tp:
+				var counts := []
+				if tp[k] is Array:
+					for c in tp[k]: counts.append(maxi(0, int(c)))
+				owned.task_progress[str(k)] = counts
 		t.towers.append(owned)
 	t.hand = _strings(d.get("hand"))
 	return t
@@ -138,7 +156,7 @@ static func progress_from_dict(d) -> LevelProgress:
 
 static func profile_to_dict(p: PlayerProfile) -> Dictionary:
 	return {"created": p.created, "playerName": p.player_name, "tutorial": p.tutorial,
-		"campSeen": p.camp_seen, "guildSeen": p.guild_seen,
+		"campSeen": p.camp_seen, "guildSeen": p.guild_seen, "blacksmithSeen": p.blacksmith_seen,
 		"guildTourSeen": p.guild_tour_seen, "seenIntros": p.seen_intros.duplicate()}
 
 static func profile_from_dict(d) -> PlayerProfile:
@@ -150,6 +168,7 @@ static func profile_from_dict(d) -> PlayerProfile:
 	p.tutorial = maxi(0, TutorialState.parse(t)) if t is String else clampi(int(t), 0, TutorialState.Skipped)
 	p.camp_seen = bool(d.get("campSeen", false))
 	p.guild_seen = bool(d.get("guildSeen", false))
+	p.blacksmith_seen = bool(d.get("blacksmithSeen", false))
 	p.guild_tour_seen = bool(d.get("guildTourSeen", false))
 	p.seen_intros = _strings(d.get("seenIntros"))
 	return p

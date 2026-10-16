@@ -21,6 +21,9 @@ var entity: EntityAsset = null
 ## Energy to place it. Selling refunds cost × 0.5 × Hp / MaxHp.
 var cost: int = 3
 
+## Upgrades — Design: the level ladder, Array of TowerLevelData (the step to level 2 first); max level = size + 1.
+var levels: Array = []
+
 ## Not serialized: the type's forms (FormAsset whose tower is this one) in content order, linked by ContentLibrary.
 var forms: Array = []
 

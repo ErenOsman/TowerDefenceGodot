@@ -97,8 +97,10 @@ static func tired_note(cap: int, now = null) -> String:
 static func on_match_start(info: Dictionary, now = null) -> Array:
 	var m := mission_for_level(str(info.get("level", "")))
 	var sd = _node("SaveData")
+	last_taken = []
 	if m == null or sd == null: return []
 	var taken := MissionBoard.taken(sd.towers.hand, sd.missions, m.coop_hand_cap, now)
+	last_taken = taken.duplicate()
 	MissionBoard.record_play(m, sd.missions, taken, now)
 	if sd.has_method("save"): sd.save()
 	return taken
@@ -139,15 +141,39 @@ static func energy_text(level_id: String, players: int) -> String:
 
 ## The tower TYPE ids the player brings (the protocol's `hand`): the saved hand's owned RESTED towers (tired ones
 ## skipped: every co-op level is a mission), in order, cut to cap. A formed tower is sent as "<type id>@<form id>"
-## (CoopSession.hand_entry; the relay never reads it).
+## (CoopSession.hand_entry; the relay never reads it). Upgrades: a tower above level 1 in its current form adds
+## ":L<n>" ("archer@archer-fire:L3") so every client builds it at that level.
 static func my_hand_types(cap: int, now = null) -> Array:
 	var sd = _node("SaveData")
+	var app = _app()
 	var out := []
 	if sd == null: return out
 	for id in MissionBoard.rested_hand(sd.towers.hand, sd.missions, now):
 		var owned = sd.towers.find(id)
-		if owned != null: out.append(CoopSession.hand_entry(owned.type, owned.form))
+		if owned != null:
+			var type: TowerType = app.tower_type(owned.type) if app != null else null
+			out.append(CoopSession.hand_entry(owned.type, owned.form, TowerLevels.current_level(owned, type) if type != null else 1))
 		if out.size() >= cap: break
+	return out
+
+## The owned tower ids this player's last mission match took (on_match_start), in the order sent.
+static var last_taken: Array = []
+
+## The task entries (TowerTasks.entry) of this player's towers in the running co-op match: the towers on_match_start
+## took, each with the session tower id CoopSession.build_hand gave it ("<me>:<type id>#n", n counting each type in
+## the order sent). [] when the match is no mission (nothing counts there) or without the autoloads.
+static func task_entries(me: String) -> Array:
+	var sd = _node("SaveData")
+	var app = _app()
+	var out := []
+	if sd == null or app == null: return out
+	var counts := {}
+	for id in last_taken:
+		var owned = sd.towers.find(id)
+		if owned == null: continue
+		counts[owned.type] = int(counts.get(owned.type, 0)) + 1
+		var type: TowerType = app.tower_type(owned.type)
+		if type != null: out.append(TowerTasks.entry(owned, type, "%s:%s#%d" % [me, owned.type, counts[owned.type]], "", sd.towers.towers.find(owned) + 1))
 	return out
 
 ## A TowerAsset by type id or hand entry ("archer@archer-fire" → the Archer; for pictures), or null.

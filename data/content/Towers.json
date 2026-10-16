@@ -1,86 +1,463 @@
 {
- "type": "TowerAsset",
- "assets": {
-  "Tower/Alchemist Tower": {
-   "number": 7,
-   "id": "alchemist",
-   "displayName": "Alchemist",
-   "description": "Throws flasks of acid onto groups: the acid keeps eating them for a few turns, stacking.",
-   "icon": "art/icons/Units/Alchemist.png",
-   "entity": "Unit/Tower/Alchemist",
-   "cost": 220
-  },
-  "Tower/Archer Tower": {
-   "number": 1,
-   "id": "archer",
-   "displayName": "Archer",
-   "description": "Shoots enemies up to 2 tiles away and can move between shots.",
-   "icon": "art/icons/Units/Archer.png",
-   "entity": "Unit/Tower/Archer",
-   "cost": 100
-  },
-  "Tower/Ballista Tower": {
-   "number": 6,
-   "id": "ballista",
-   "displayName": "Ballista",
-   "description": "A siege bow: it hits hard from far away, but cannot shoot what stands next to it.",
-   "icon": "art/icons/Units/Ballista.png",
-   "entity": "Unit/Tower/Ballista",
-   "cost": 240
-  },
-  "Tower/Cannon Tower": {
-   "number": 9,
-   "id": "cannon",
-   "displayName": "Cannon",
-   "description": "Slow and heavy: a shell every third turn that wrecks a whole group. It cannot fire at what is next to it.",
-   "icon": "art/icons/Units/Cannon.png",
-   "entity": "Unit/Tower/Cannon",
-   "cost": 280
-  },
-  "Tower/Drummer Tower": {
-   "number": 8,
-   "id": "drummer",
-   "displayName": "Drummer",
-   "description": "A drummer beating a war drum: towers within 2 tiles of it hit 3 harder, and Rally speeds them up for a while.",
-   "icon": "art/icons/Units/Drummer.png",
-   "entity": "Unit/Tower/Drummer",
-   "cost": 200
-  },
-  "Tower/Guardian Tower": {
-   "number": 2,
-   "id": "guardian",
-   "displayName": "Guardian",
-   "description": "A sturdy tower that taunts enemies into hitting it instead of the others.",
-   "icon": "art/icons/Units/Guardian.png",
-   "entity": "Unit/Tower/Guardian",
-   "cost": 100
-  },
-  "Tower/Mage Tower": {
-   "number": 3,
-   "id": "mage",
-   "displayName": "Mage",
-   "description": "Slow but hits groups: Firebolt burns everything around the tile it hits.",
-   "icon": "art/icons/Units/Mage.png",
-   "entity": "Unit/Tower/Mage",
-   "cost": 120
-  },
-  "Tower/Priest Tower": {
-   "number": 4,
-   "id": "priest",
-   "displayName": "Priest",
-   "description": "Keeps the others standing: Mend heals the most hurt tower.",
-   "icon": "art/icons/Units/Priest.png",
-   "entity": "Unit/Tower/Priest",
-   "cost": 100
-  },
-  "Tower/Wisp Tower": {
-   "number": 5,
-   "id": "wisp",
-   "displayName": "Wisp",
-   "description": "A spirit tower: it zaps from afar and blinks across the field, over walls and roads.",
-   "icon": "art/icons/Units/Wisp.png",
-   "entity": "Unit/Tower/Wisp",
-   "cost": 200
+  "type": "TowerAsset",
+  "assets": {
+    "Tower/Alchemist Tower": {
+      "number": 7,
+      "id": "alchemist",
+      "displayName": "Alchemist",
+      "description": "Throws flasks of acid onto groups: the acid keeps eating them for a few turns, stacking.",
+      "icon": "art/icons/Units/Alchemist.png",
+      "entity": "Unit/Tower/Alchemist",
+      "cost": 220,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Potency", "kind": "Flat", "amount": "1" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "Damage", "count": 60 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "3" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "Kills", "count": 10 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "1" }
+          ]
+        },
+        {
+          "to": 5,
+          "tasks": [
+            { "kind": "WinMission", "count": 3 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Potency", "kind": "Flat", "amount": "1" },
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
+          ]
+        }
+      ]
+    },
+    "Tower/Archer Tower": {
+      "number": 1,
+      "id": "archer",
+      "displayName": "Archer",
+      "description": "Shoots enemies up to 2 tiles away and can move between shots.",
+      "icon": "art/icons/Units/Archer.png",
+      "entity": "Unit/Tower/Archer",
+      "cost": 100,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "2" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "Damage", "count": 60 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "Kills", "count": 10 }
+          ],
+          "bonuses": [
+            { "stat": "Range", "kind": "Flat", "amount": "1" }
+          ]
+        },
+        {
+          "to": 5,
+          "tasks": [
+            { "kind": "WinMission", "count": 3 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "3" },
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
+          ]
+        }
+      ]
+    },
+    "Tower/Ballista Tower": {
+      "number": 6,
+      "id": "ballista",
+      "displayName": "Ballista",
+      "description": "A siege bow: it hits hard from far away, but cannot shoot what stands next to it.",
+      "icon": "art/icons/Units/Ballista.png",
+      "entity": "Unit/Tower/Ballista",
+      "cost": 240,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "3" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "Damage", "count": 120 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "Kills", "count": 8 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "4" }
+          ]
+        },
+        {
+          "to": 5,
+          "tasks": [
+            { "kind": "WinMission", "count": 3 },
+            { "kind": "Damage", "count": 400 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "5" },
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
+          ]
+        }
+      ]
+    },
+    "Tower/Cannon Tower": {
+      "number": 9,
+      "id": "cannon",
+      "displayName": "Cannon",
+      "description": "Slow and heavy: a shell every third turn that wrecks a whole group. It cannot fire at what is next to it.",
+      "icon": "art/icons/Units/Cannon.png",
+      "entity": "Unit/Tower/Cannon",
+      "cost": 280,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "3" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "Damage", "count": 150 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "Kills", "count": 12 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "4" }
+          ]
+        },
+        {
+          "to": 5,
+          "tasks": [
+            { "kind": "WinMission", "count": 3 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "PctAdd", "amount": "0.1" },
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
+          ]
+        }
+      ]
+    },
+    "Tower/Drummer Tower": {
+      "number": 8,
+      "id": "drummer",
+      "displayName": "Drummer",
+      "description": "A drummer beating a war drum: towers within 2 tiles of it hit 3 harder, and Rally speeds them up for a while.",
+      "icon": "art/icons/Units/Drummer.png",
+      "entity": "Unit/Tower/Drummer",
+      "cost": 200,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMissionId", "count": 1, "mission": "Mission/Drum Line" },
+            { "kind": "Placed", "count": 5 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "HitsTaken", "count": 20 }
+          ],
+          "bonuses": [
+            { "stat": "Duration", "kind": "Flat", "amount": "1" }
+          ]
+        },
+        {
+          "to": 5,
+          "tasks": [
+            { "kind": "WinMission", "count": 3 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "10" }
+          ]
+        }
+      ]
+    },
+    "Tower/Guardian Tower": {
+      "number": 2,
+      "id": "guardian",
+      "displayName": "Guardian",
+      "description": "A sturdy tower that taunts enemies into hitting it instead of the others.",
+      "icon": "art/icons/Units/Guardian.png",
+      "entity": "Unit/Tower/Guardian",
+      "cost": 100,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "10" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "HitsTaken", "count": 40 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "2" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "HitsTaken", "count": 80 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "15" }
+          ]
+        },
+        {
+          "to": 5,
+          "tasks": [
+            { "kind": "WinMission", "count": 3 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "10" },
+            { "stat": "Power", "kind": "Flat", "amount": "2" }
+          ]
+        }
+      ]
+    },
+    "Tower/Mage Tower": {
+      "number": 3,
+      "id": "mage",
+      "displayName": "Mage",
+      "description": "Slow but hits groups: Firebolt burns everything around the tile it hits.",
+      "icon": "art/icons/Units/Mage.png",
+      "entity": "Unit/Tower/Mage",
+      "cost": 120,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "1" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "Damage", "count": 80 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "3" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "Kills", "count": 12 }
+          ],
+          "bonuses": [
+            { "stat": "Potency", "kind": "Flat", "amount": "1" }
+          ]
+        },
+        {
+          "to": 5,
+          "tasks": [
+            { "kind": "WinMission", "count": 3 },
+            { "kind": "Damage", "count": 250 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "2" },
+            { "stat": "MaxHp", "kind": "Flat", "amount": "3" }
+          ]
+        }
+      ]
+    },
+    "Tower/Priest Tower": {
+      "number": 4,
+      "id": "priest",
+      "displayName": "Priest",
+      "description": "Keeps the others standing: Mend heals the most hurt tower.",
+      "icon": "art/icons/Units/Priest.png",
+      "entity": "Unit/Tower/Priest",
+      "cost": 100,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Potency", "kind": "Flat", "amount": "2" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "Placed", "count": 5 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "3" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "WinLevel", "count": 3 }
+          ],
+          "bonuses": [
+            { "stat": "Potency", "kind": "Flat", "amount": "3" }
+          ]
+        },
+        {
+          "to": 5,
+          "tasks": [
+            { "kind": "WinMission", "count": 3 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" },
+            { "stat": "Potency", "kind": "Flat", "amount": "2" }
+          ]
+        }
+      ]
+    },
+    "Tower/Wisp Tower": {
+      "number": 5,
+      "id": "wisp",
+      "displayName": "Wisp",
+      "description": "A spirit tower: it zaps from afar and blinks across the field, over walls and roads.",
+      "icon": "art/icons/Units/Wisp.png",
+      "entity": "Unit/Tower/Wisp",
+      "cost": 200,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "2" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "Damage", "count": 80 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "3" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "Kills", "count": 10 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "2" }
+          ]
+        },
+        {
+          "to": 5,
+          "tasks": [
+            { "kind": "WinMission", "count": 3 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "3" },
+            { "stat": "MaxHp", "kind": "Flat", "amount": "3" }
+          ]
+        }
+      ]
+    }
   }
- }
 }

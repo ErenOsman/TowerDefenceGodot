@@ -67,8 +67,12 @@ static func current_form(tower: OwnedTower, type: TowerType) -> FormDef:
 ## else a TowerType with the base's id (saves, Codex and co-op key on it) and forms, the form's display name,
 ## description, entity and energy cost (its own, else the base's), with `form` and `base` set.
 ## A form id the content no longer has falls back to the base type.
+## Upgrades — Design: above level 1 the type is levelled (TowerLevels.apply: the current form's level and ladder —
+## the base's for the default form, the form's own for a form — baked into a copy of the entity; `level` set).
 static func resolve(tower: OwnedTower, type: TowerType) -> TowerType:
-	return resolve_form(type, current_form(tower, type))
+	var t := resolve_form(type, current_form(tower, type))
+	var lvl := TowerLevels.current_level(tower, type)
+	return TowerLevels.apply(t, lvl) if lvl > 1 else t
 
 ## The type a level builds for a form of a type (null form = the type itself).
 static func resolve_form(type: TowerType, form: FormDef) -> TowerType:
@@ -81,6 +85,7 @@ static func resolve_form(type: TowerType, form: FormDef) -> TowerType:
 	t.entity = form.entity if form.entity != null else base.entity
 	t.cost = form.cost_or(base.cost)
 	t.forms = base.forms
+	t.levels = base.levels
 	t.form = form
 	t.base = base
 	return t

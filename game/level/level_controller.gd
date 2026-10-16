@@ -139,6 +139,13 @@ var mission: MissionDef = null
 var mission_towers: Array = []
 ## Why the mission could not start (MissionBoard.last_reason), "" otherwise.
 var mission_error: String = ""
+## Upgrades — Design: the tower level tasks this result advanced (TowerTasks.apply: {tower, index, name, form, to, task,
+## kind, text, noun, before, after, gain, count, done, ready}); [] before the Blacksmith unlock, on a quit and when
+## nothing moved. A tower in a form advances both its base ladder and the form's.
+var task_advances: Array = []
+## The end screen's lines for them (TowerTasks.lines): "Archer (tower 3): 8 / 10 kills +3", then
+## "Guardian is ready to upgrade! Go to the Blacksmith."
+var task_lines: Array = []
 ## The end screen's line for them: "Rewards: Fire Arrow ×2, Ember Core ×1" ("" for none).
 var drops_text: String:
 	get:
@@ -1832,6 +1839,9 @@ func _record(quit: bool) -> void:
 	if _recorded or session == null or level == null or sd == null: return
 	_recorded = true
 	var result := LevelResults.from(session, level.get_id(), Time.get_datetime_string_from_system(true) + "Z", quit)
+	# tower level tasks count from the Blacksmith unlock on (checked before this result is recorded: the win that
+	# opens it does not count)
+	_count_tasks(result, app != null and app.blacksmith_unlocked(), sd, app)
 	if mission != null:
 		drops = MissionBoard.finish(result, mission, sd.missions, sd.tokens)
 		sd.save()
@@ -1842,6 +1852,23 @@ func _record(quit: bool) -> void:
 	elif app != null and app.catalog != null:
 		reward = app.catalog.grant_first_clear_reward(result, rec, sd.towers)
 	sd.save()
+
+## Counts the tower level tasks of this level (TowerTasks.apply) for the player's own towers in it — the hand's owned
+## towers (single player: TowerDef.id is the OwnedTower id; co-op: CoopLevels.task_entries) — into the save
+## (the caller saves) and keeps the advances / end-screen lines.
+func _count_tasks(result: LevelResult, unlocked: bool, sd, app) -> void:
+	task_advances = []
+	task_lines = []
+	if not unlocked or app == null or sd == null: return
+	var entries: Array = []
+	if coop != null: entries = CoopLevels.task_entries(coop.me)
+	else:
+		for td in session.hand:
+			var owned: OwnedTower = sd.towers.find(td.id)
+			var type: TowerType = app.tower_type(owned.type) if owned != null else null
+			if type != null: entries.append(TowerTasks.entry(owned, type, td.id, "", sd.towers.towers.find(owned) + 1))
+	task_advances = TowerTasks.apply(result, session.log, entries, mission.id if mission != null else "", true)
+	task_lines = TowerTasks.lines(task_advances)
 
 ## The level's intro plays the first time the level is played (the tutorial's: until it is finished).
 func _start_intro() -> void:

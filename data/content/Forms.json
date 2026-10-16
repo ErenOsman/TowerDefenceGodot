@@ -14,7 +14,38 @@
       "unlock": [
         { "token": "Token/Fire Arrow", "amount": 1 }
       ],
-      "order": 0
+      "order": 0,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "1" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "Kills", "count": 8 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "2" }
+          ]
+        }
+      ]
     },
     "Form/Inferno Archer": {
       "id": "archer-inferno",
@@ -30,7 +61,38 @@
         { "token": "Token/Ember Core", "amount": 1 },
         { "token": "Token/Fire Arrow", "amount": 1 }
       ],
-      "order": 0
+      "order": 0,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "1" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "Kills", "count": 8 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "2" }
+          ]
+        }
+      ]
     },
     "Form/Poison Archer": {
       "id": "archer-poison",
@@ -45,7 +107,38 @@
       "unlock": [
         { "token": "Token/Poison Gland", "amount": 1 }
       ],
-      "order": 1
+      "order": 1,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "1" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "Kills", "count": 8 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "2" }
+          ]
+        }
+      ]
     },
     "Form/Longbow": {
       "id": "archer-longbow",
@@ -60,7 +153,38 @@
       "unlock": [
         { "token": "Token/Yew Bow", "amount": 2 }
       ],
-      "order": 2
+      "order": 2,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "1" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "Kills", "count": 8 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "2" }
+          ]
+        }
+      ]
     },
     "Form/Bastion": {
       "id": "guardian-bastion",
@@ -75,7 +199,38 @@
       "unlock": [
         { "token": "Token/Steel Plate", "amount": 1 }
       ],
-      "order": 0
+      "order": 0,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "HitsTaken", "count": 30 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "1" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "10" }
+          ]
+        }
+      ]
     },
     "Form/Spiked Guardian": {
       "id": "guardian-spiked",
@@ -91,7 +246,38 @@
         { "token": "Token/Steel Plate", "amount": 1 },
         { "token": "Token/Ember Core", "amount": 1 }
       ],
-      "order": 1
+      "order": 1,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "5" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "HitsTaken", "count": 30 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "1" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "10" }
+          ]
+        }
+      ]
     },
     "Form/Pyromancer": {
       "id": "mage-pyro",
@@ -107,7 +293,38 @@
         { "token": "Token/Arcane Shard", "amount": 1 },
         { "token": "Token/Ember Core", "amount": 1 }
       ],
-      "order": 0
+      "order": 0,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "1" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "Damage", "count": 80 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "3" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "2" }
+          ]
+        }
+      ]
     },
     "Form/Frost Mage": {
       "id": "mage-frost",
@@ -122,7 +339,38 @@
       "unlock": [
         { "token": "Token/Arcane Shard", "amount": 1 }
       ],
-      "order": 1
+      "order": 1,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "1" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "Damage", "count": 80 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "3" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "2" }
+          ]
+        }
+      ]
     },
     "Form/Storm Mage": {
       "id": "mage-storm",
@@ -137,7 +385,38 @@
       "unlock": [
         { "token": "Token/Arcane Shard", "amount": 2 }
       ],
-      "order": 2
+      "order": 2,
+      "levels": [
+        {
+          "to": 2,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "1" }
+          ]
+        },
+        {
+          "to": 3,
+          "tasks": [
+            { "kind": "WinMission", "count": 1 },
+            { "kind": "Damage", "count": 80 }
+          ],
+          "bonuses": [
+            { "stat": "MaxHp", "kind": "Flat", "amount": "3" }
+          ]
+        },
+        {
+          "to": 4,
+          "tasks": [
+            { "kind": "WinMission", "count": 2 },
+            { "kind": "WinNoLoss", "count": 1 }
+          ],
+          "bonuses": [
+            { "stat": "Power", "kind": "Flat", "amount": "2" }
+          ]
+        }
+      ]
     }
   }
 }

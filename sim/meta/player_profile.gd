@@ -17,6 +17,8 @@ var camp_seen: bool = false
 var guild_seen: bool = false
 ## The Camp's second mini tour (the Guild and Workshop buttons, shown once after Chapter 2) has happened. Godot-first.
 var guild_tour_seen: bool = false
+## The Blacksmith's first visit (its welcome card) has happened (Blacksmith — Design). Godot-first.
+var blacksmith_seen: bool = false
 ## Level ids whose intro sequence has played, and meet_key(entity id) for entrance lines heard.
 var seen_intros: Array = []
 

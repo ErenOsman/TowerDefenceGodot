@@ -342,8 +342,8 @@ func test_workshop_level_places_the_form() -> void:
 	assert_eq(s.tower_id_of(placed), "t1")
 
 func test_workshop_coop_hand_entries() -> void:
-	assert_seq(CoopSession.parse_hand_entry("archer@archer-fire"), ["archer", "archer-fire"])
-	assert_seq(CoopSession.parse_hand_entry("archer"), ["archer", ""])
+	assert_seq(CoopSession.parse_hand_entry("archer@archer-fire"), ["archer", "archer-fire", 1])
+	assert_seq(CoopSession.parse_hand_entry("archer"), ["archer", "", 1])
 	assert_eq(CoopSession.hand_entry("archer", "archer-fire"), "archer@archer-fire")
 	assert_eq(CoopSession.hand_entry("archer"), "archer")
 	var c := AssetConverter.new()

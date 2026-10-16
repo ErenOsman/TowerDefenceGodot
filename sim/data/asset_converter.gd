@@ -12,6 +12,7 @@ var _assets := {}  # def → asset
 ## for its icon. Null for definitions this converter did not build, or (with type_name, C# AssetOf<T>)
 ## when the asset is not of that class.
 func asset_of(def, type_name: String = ""):
+	if def is EntityDef and not _assets.has(def) and def.levelled_from != null: return asset_of(def.levelled_from, type_name)
 	if def == null or not _assets.has(def): return null
 	var asset = _assets[def]
 	if type_name != "" and not ContentSerializer.is_type(asset, type_name): return null
@@ -169,10 +170,38 @@ func tower_type(a: TowerAsset) -> TowerType:
 	d.cost = a.cost
 	_remember(a, d)
 	d.entity = entity(a.entity)
+	d.levels = tower_levels(a.levels)
 	var forms := []
 	for f in a.forms:
 		if f != null: forms.append(form(f))
 	d.forms = forms
+	return d
+
+## A level ladder (Upgrades — Design): Array of TowerLevelData → Array of TowerLevelDef (null entries skipped).
+func tower_levels(list: Array) -> Array:
+	var out := []
+	for l in list:
+		if l != null: out.append(tower_level(l))
+	return out
+
+## One level step: its tasks (TaskDef) and bonuses (Modifier: target = the stat, the kind, the amount as a constant
+## formula). Not cached (a plain value object).
+func tower_level(a: TowerLevelData) -> TowerLevelDef:
+	if a == null: return null
+	var d := TowerLevelDef.new()
+	d.to = a.to
+	for t in a.tasks:
+		if t == null: continue
+		var task := TaskDef.new()
+		task.kind = t.kind
+		task.count = t.count
+		task.text = t.text
+		if t.mission != null:
+			task.mission = t.mission.get_id()
+			task.mission_name = t.mission.get_display_name()
+		d.tasks.append(task)
+	for b in a.bonuses:
+		if b != null and not b.stat.is_empty(): d.bonuses.append(Modifier.new(b.stat, b.kind, b.amount))
 	return d
 
 ## A tower form (Workshop — Design): its entity, cost, unlock cost and parent. (No C# counterpart.)
@@ -196,6 +225,7 @@ func form(a: FormAsset) -> FormDef:
 		d.tokens[t.id] = t
 	d.parent = form(a.parent)
 	d.entity = entity(a.entity)
+	d.levels = tower_levels(a.levels)
 	return d
 
 ## A token kind (Workshop — Design).
