@@ -64,11 +64,13 @@ func test_the_starter_ladders_of_the_doc() -> void:
 		var tasks: Array = s.tasks.map(func(t): return "%s %d" % [TowerTaskKind.name_of(t.kind), t.count])
 		rows.append("%d: %s → %s" % [s.to, ", ".join(PackedStringArray(tasks)), TowerLevels.bonuses_text(s.bonuses)])
 	assert_seq(rows, [
-		"2: WinMission 1 → +2 Power",
-		"3: WinMission 1, Damage 60 → +5 Max HP",
-		"4: WinMission 2, Kills 10 → +1 Range",
-		"5: WinMission 3, WinNoLoss 1 → +3 Power, +5 Max HP",
+		"2: WinMission 1, Pay 20 → +2 Power",
+		"3: WinMission 1, Damage 60, Pay 40 → +5 Max HP",
+		"4: WinMission 2, Kills 10, Pay 70 → +1 Range",
+		"5: WinMission 3, WinNoLoss 1, Pay 100 → +3 Power, +5 Max HP",
 	])
+	assert_eq(archer.levels[0].tasks[1].currency, "gold")
+	assert_eq(TowerTasks.describe(archer.levels[1].tasks[2]), "Pay 40 gold")
 	var guardian := _type("guardian")
 	assert_eq(TowerTasks.describe(guardian.levels[0].tasks[0]), "Win a mission with this tower")
 	assert_eq(TowerLevels.bonuses_text(guardian.levels[0].bonuses), "+10 Max HP")
@@ -127,12 +129,15 @@ func test_can_upgrade_reasons_and_upgrade() -> void:
 	assert_false(TowerLevels.can_upgrade(o, type))
 	assert_eq(TowerLevels.last_reason, "Win a mission with this tower")
 	o.task_progress["2"] = [1]
+	assert_false(TowerLevels.can_upgrade(o, type), "the gold task is open")
+	assert_eq(TowerLevels.last_reason, "Pay 20 gold")
+	o.task_progress["2"] = [1, 20]
 	assert_true(TowerLevels.can_upgrade(o, type), TowerLevels.last_reason)
 	assert_true(TowerLevels.upgrade(o, type))
 	assert_eq(o.level, 2)
 	assert_false(o.task_progress.has("2"), "the step's progress is dropped")
-	assert_eq(TowerLevels.task_counts(o, type), [0, 0])
-	o.task_progress["3"] = [1, 42]
+	assert_eq(TowerLevels.task_counts(o, type), [0, 0, 0])
+	o.task_progress["3"] = [1, 42, 40]
 	assert_false(TowerLevels.upgrade(o, type))
 	assert_eq(TowerLevels.last_reason, "Deal 18 more damage with it")
 	assert_eq(o.level, 2, "nothing changes on a refusal")
@@ -146,13 +151,13 @@ func test_can_upgrade_reasons_and_upgrade() -> void:
 	assert_eq(TowerLevels.max_level(type.find_form("archer-fire")), 4)
 	assert_false(TowerLevels.can_upgrade(o, type, "archer-fire"))
 	assert_eq(TowerLevels.last_reason, "Win a mission with this tower")
-	o.task_progress["archer-fire:2"] = [1]
+	o.task_progress["archer-fire:2"] = [1, 15]
 	assert_true(TowerLevels.upgrade(o, type, "archer-fire"), TowerLevels.last_reason)
 	assert_eq(o.form_levels, {"archer-fire": 2})
-	o.task_progress["archer-fire:3"] = [1, 8]
+	o.task_progress["archer-fire:3"] = [1, 8, 30]
 	assert_false(TowerLevels.can_upgrade(o, type, "archer-fire"))
 	assert_eq(TowerLevels.last_reason, "Raise Archer to level 3 first")
-	o.task_progress["3"] = [1, 60]
+	o.task_progress["3"] = [1, 60, 40]
 	assert_true(TowerLevels.upgrade(o, type))
 	assert_true(TowerLevels.can_upgrade(o, type, "archer-fire"), "the base is ahead again")
 	# max level
@@ -314,14 +319,17 @@ func test_a_tower_in_a_form_counts_toward_both_ladders() -> void:
 	o.form = "archer-fire"
 	var log := EventLog.new()
 	var adv := TowerTasks.apply(_result(), log, [TowerTasks.entry(o, type)], "patrol", true)
-	assert_eq(o.task_progress, {"2": [1], "archer-fire:2": [1]}, "the base's step and the form's step both count")
+	assert_eq(o.task_progress, {"2": [1, 0], "archer-fire:2": [1, 0]}, "the base's step and the form's step both count (gold untouched)")
 	assert_seq(adv.map(func(a): return "%s|%s" % [a.name, a.form]), ["Archer|", "Fire Archer|archer-fire"])
-	assert_eq(adv[0].ready, true, "the base step is ready")
-	assert_eq(adv[1].ready, false, "the form waits for its tower (base level 1 = form level 1)")
+	assert_eq(adv[0].ready, false, "the base step still waits for its gold")
+	assert_eq(TowerTasks.deposit(o, type, "", 1, 500), 20)
+	assert_eq(TowerTasks.deposit(o, type, "archer-fire", 1, 500), 15)
+	assert_true(TowerLevels.can_upgrade(o, type), TowerLevels.last_reason)
+	assert_false(TowerLevels.can_upgrade(o, type, "archer-fire"), "the form waits for its tower (base level 1 = form level 1)")
 	assert_eq(TowerLevels.ready_count([o], func(_id): return type), 0, "the base is ready, but the tower wears the waiting form")
 	assert_true(TowerLevels.upgrade(o, type))
 	assert_eq(TowerLevels.ready_count([o], func(_id): return type), 1, "now the worn form is the ready one")
-	o.task_progress["3"] = [1, 60]
+	o.task_progress["3"] = [1, 60, 40]
 	assert_eq(TowerLevels.ready_count([o], func(_id): return type), 1, "the base is ready too, but only the current form counts")
 	o.form = ""
 	assert_eq(TowerLevels.ready_count([o], func(_id): return type), 1, "back in the base form: the base counts, the form not")
@@ -330,7 +338,7 @@ func test_a_tower_in_a_form_counts_toward_both_ladders() -> void:
 	var p := _owned("archer", "own-2")
 	p.forms = ["archer-fire"]
 	TowerTasks.apply(_result(), log, [TowerTasks.entry(p, type)], "patrol", true)
-	assert_eq(p.task_progress, {"2": [1]})
+	assert_eq(p.task_progress, {"2": [1, 0]})
 
 func test_only_the_acting_tower_and_towers_present_count() -> void:
 	var type := _fixture_type()

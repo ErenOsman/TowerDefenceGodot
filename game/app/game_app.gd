@@ -87,6 +87,24 @@ func upgrade_tower(owned: OwnedTower, form_id: String = "") -> bool:
 	SaveData.save()
 	return true
 
+## The gold wallet (Upgrades — Design § Gold): GameData.gold, earned from missions only.
+func gold() -> int:
+	return SaveData.data.gold
+
+## The Pay button: deposits gold from the wallet into the Pay task task_index of the owned tower's current step in a
+## form ("" = the base ladder): min(wallet, what the task misses) (TowerTasks.deposit), taken from GameData.gold and
+## saved. Returns the amount deposited (0: Blacksmith closed, no gold, task full / not a gold Pay task, no such step).
+func pay_into(owned: OwnedTower, form_id: String, task_index: int) -> int:
+	if owned == null or not blacksmith_unlocked(): return 0
+	var type := tower_type(owned.type)
+	var step := TowerLevels.step_for(owned, type, form_id) if type != null else null
+	if step == null or task_index < 0 or task_index >= step.tasks.size() or not TowerTasks.is_gold(step.tasks[task_index]): return 0
+	var taken := TowerTasks.deposit(owned, type, form_id, task_index, SaveData.data.gold)
+	if taken <= 0: return 0
+	SaveData.data.gold -= taken
+	SaveData.save()
+	return taken
+
 # ---------------------------------------------------------------- Missions & Guild
 
 var _missions: Array = []

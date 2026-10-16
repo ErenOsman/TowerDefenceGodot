@@ -29,6 +29,10 @@ var coop_hand_cap: int = 3
 var first_win_tokens: Array = []
 ## Tokens given on every win: Array of TokenAmount.
 var win_tokens: Array = []
+## Gold given once, with the first win (Upgrades — Design § Gold: missions are the only gold source).
+var first_win_gold: int = 0
+## Gold given on every win.
+var win_gold: int = 0
 
 ## The id, else the asset name.
 func get_id() -> String:

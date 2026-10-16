@@ -158,6 +158,8 @@ static func validate_mission(m: MissionAsset) -> Array[String]:
 			var u = list[i]
 			if u == null or u.token == null: error.call("%s[%d] has no token" % [list_name, i])
 			elif u.amount <= 0: error.call("%s[%d] needs a positive amount" % [list_name, i])
+	if m.first_win_gold < 0: error.call("firstWinGold must not be negative")
+	if m.win_gold < 0: error.call("winGold must not be negative")
 	return errors
 
 static func validate_ability(a: AbilityAsset, vocab: Vocabulary) -> Array[String]:
@@ -235,9 +237,11 @@ static func validate_tower(t: TowerAsset, vocab: Vocabulary = null) -> Array[Str
 	return errors
 
 ## A level ladder (Upgrades — Design § Validation): steps reach 2, 3, 4 … in order; every task kind is known, counts
-## > 0, a WinMissionId task names a mission; every bonus names a real stat (when vocab is given), is Flat or PctAdd
-## and has a numeric amount. Messages without the asset name.
-static func validate_ladder(levels: Array, vocab: Vocabulary = null) -> Array[String]:
+## > 0, a WinMissionId task names a mission; every step has exactly one gold Pay task (Eren 2026-10-16), a Pay task
+## names a currency ("gold", or a token id: checked against `tokens` (token ids, Array or Dictionary) when given;
+## ContentCheck passes the content's), only Pay tasks carry a currency; every bonus names a real stat (when vocab is
+## given), is Flat or PctAdd and has a numeric amount. Messages without the asset name.
+static func validate_ladder(levels: Array, vocab: Vocabulary = null, tokens = null) -> Array[String]:
 	var errors: Array[String] = []
 	for i in levels.size():
 		var l = levels[i]
@@ -247,6 +251,7 @@ static func validate_ladder(levels: Array, vocab: Vocabulary = null) -> Array[St
 			continue
 		if l.to != i + 2: errors.append("%s: to %d, expected %d (steps reach levels 2, 3, 4 … in order)" % [p, l.to, i + 2])
 		if l.tasks.is_empty(): errors.append("%s has no tasks" % p)
+		var gold_tasks := 0
 		for j in l.tasks.size():
 			var t = l.tasks[j]
 			var tp := "%s.tasks[%d]" % [p, j]
@@ -256,6 +261,12 @@ static func validate_ladder(levels: Array, vocab: Vocabulary = null) -> Array[St
 			if t.kind < 0 or t.kind >= TowerTaskKind.NAMES.size(): errors.append("%s: unknown task kind %d" % [tp, t.kind])
 			if t.count <= 0: errors.append("%s: count must be at least 1" % tp)
 			if t.kind == TowerTaskKind.WinMissionId and t.mission == null: errors.append("%s: WinMissionId needs a mission" % tp)
+			if t.kind == TowerTaskKind.Pay:
+				if t.currency == "": errors.append("%s: Pay needs a currency (\"gold\" or a token id)" % tp)
+				elif t.currency == TowerTasks.Gold: gold_tasks += 1
+				elif tokens != null and not tokens.has(t.currency): errors.append("%s: Pay currency '%s' is neither gold nor a token id" % [tp, t.currency])
+			elif t.currency != "": errors.append("%s: currency is only for Pay tasks" % tp)
+		if gold_tasks != 1: errors.append("%s: needs exactly one gold Pay task ({ \"kind\": \"Pay\", \"currency\": \"gold\", \"count\": N }), has %d" % [p, gold_tasks])
 		for j in l.bonuses.size():
 			var b = l.bonuses[j]
 			var bp := "%s.bonuses[%d]" % [p, j]

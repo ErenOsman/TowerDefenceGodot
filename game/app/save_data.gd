@@ -29,6 +29,10 @@ var tokens: TokenWallet:
 ## Mission records, today's plays and tired towers (Missions & Guild — Design).
 var missions: MissionProgress:
 	get: return data.missions
+## The gold wallet (Upgrades — Design § Gold; earned from missions, deposited into Pay tasks).
+var gold: int:
+	get: return data.gold
+	set(v): data.gold = maxi(0, v)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS

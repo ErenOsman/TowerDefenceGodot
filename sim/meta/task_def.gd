@@ -11,3 +11,5 @@ var mission: String = ""
 var mission_name: String = ""
 ## "" = TowerTasks.describe makes it from the kind and count.
 var text: String = ""
+## Pay: what is deposited, "gold" (TowerTasks.Gold) or a token id ("" for other kinds).
+var currency: String = ""

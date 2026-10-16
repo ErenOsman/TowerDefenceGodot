@@ -104,7 +104,7 @@ const SCHEMA := {
 		"id": "string", "displayName": "string", "description": "string", "icon": "art", "level": "ref:LevelAsset",
 		"mode": "enum:MissionMode", "players": "obj:PlayerRange", "playsPerDay": "int", "requires": "list:ref:ContentAsset",
 		"requireAll": "bool", "sharedPool": "bool", "coopHandCap": "int", "firstWinTokens": "list:obj:TokenAmount",
-		"winTokens": "list:obj:TokenAmount",
+		"winTokens": "list:obj:TokenAmount", "firstWinGold": "int", "winGold": "int",
 	},
 	"AbilityPresentationAsset": {
 		"number": "int", "casterAnimation": "enum:CasterAnimation", "customTrigger": "string", "projectile": "art",
@@ -147,7 +147,7 @@ const SCHEMA := {
 	"PlayerRange": {"min": "int", "max": "int"},
 	# Upgrades — Design: a level step, its tasks and bonuses (no C# counterpart)
 	"TowerLevelData": {"to": "int", "tasks": "list:obj:TowerTaskData", "bonuses": "list:obj:LevelBonusData"},
-	"TowerTaskData": {"kind": "enum:TowerTaskKind", "count": "int", "mission": "ref:MissionAsset", "text": "string"},
+	"TowerTaskData": {"kind": "enum:TowerTaskKind", "currency": "string", "count": "int", "mission": "ref:MissionAsset", "text": "string"},
 	"LevelBonusData": {"stat": "string", "kind": "enum:ModKind", "amount": "string"},
 	"CodexTip": {"id": "string", "title": "string", "text": "string", "image": "art"},
 	# ------------------------------------------------------------------ core classes the assets embed (other slices own them)

@@ -9,3 +9,6 @@ var count: int = 1
 var mission: MissionAsset = null
 ## "" = the text made from the kind and count (TowerTasks.describe).
 var text: String = ""
+## Pay only: the currency deposited, "gold" or a token id (TokenAsset.id) later. Every step has exactly one gold Pay
+## task (AssetValidator.validate_ladder).
+var currency: String = ""

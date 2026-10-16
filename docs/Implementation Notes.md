@@ -107,7 +107,7 @@ Starter content; placeholder names and numbers) are ordinary content in `data/co
 | --- | --- |
 | `Forms.json` (`FormAsset`) | the 9 starter forms: `archer-fire`, `archer-inferno` (child of Fire Archer), `archer-poison`, `archer-longbow`, `guardian-bastion`, `guardian-spiked`, `mage-pyro`, `mage-frost`, `mage-storm`. Fields: `id, displayName, description, icon, badge, tower, parent, entity, cost (-1 = base), unlock [{token, amount}], order`. Icons = the base tower's portrait; badges `art/ui/KitB/forms/<form id>.png` |
 | `Tokens.json` (`TokenAsset`) | `fire-arrow, poison-gland, yew-bow, steel-plate, arcane-shard, ember-core` (`id, displayName, description, icon, rarity`); icons `art/ui/KitB/tokens/<token id>.png` |
-| `Missions.json` (`MissionAsset`) | the 5 starter missions: `patrol` (Two Roads, Any 1–4), `night-watch` (Rock Garden, Any 1–4), `hold-the-gate` (Three at the Gate, Coop 2–6), `drum-line` (The Drummer, Any 1–4, 2 plays a day), `glutton-returns` (The Glutton, Coop 2–6); all separate energy pools (sharedPool false), coopHandCap 3. Fields: `id, displayName, description, icon ("" until the kit has mission art), level, mode (Solo/Coop/Any), players {min, max}, playsPerDay, requires [level or mission keys], requireAll, sharedPool, coopHandCap, firstWinTokens, winTokens` |
+| `Missions.json` (`MissionAsset`) | the 5 starter missions: `patrol` (Two Roads, Any 1–4), `night-watch` (Rock Garden, Any 1–4), `hold-the-gate` (Three at the Gate, Coop 2–6), `drum-line` (The Drummer, Any 1–4, 2 plays a day), `glutton-returns` (The Glutton, Coop 2–6); all separate energy pools (sharedPool false), coopHandCap 3. Fields: `id, displayName, description, icon ("" until the kit has mission art), level, mode (Solo/Coop/Any), players {min, max}, playsPerDay, requires [level or mission keys], requireAll, sharedPool, coopHandCap, firstWinTokens, winTokens, firstWinGold, winGold` |
 | `Catalog.json`, `Rules.json` | the catalog's `guildUnlock` (= Chapter 2's last level) and `missions` (the board order); the rules' `towerEnergyPerDay` = 1. **Chapter levels drop no tokens**, missions are the only token source |
 | `Levels.json` | the **short tutorial level** `Level/Tutorial/Tutorial`: 7 × 5, road (0,2)–(5,2), castle (6,2), build tiles columns 4–6 of rows 0/1/3/4, same waves/energy/hand (Guided Tutorial — Design § The level; Eren 2026-10-14). `data/tutorial.json`'s tiles match it. Golden plays the frozen Unity snapshot's 12 × 5 entry (see "Golden" below) |
 | `Units.json`, `Abilities.json`, `Passives.json`, `Reactions.json` | the form entities (`Unit/Tower/Form/*`: copies of the base tower with the doc's stat changes, base model/icon/miniature) and their abilities (Fire Shot, Fire Volley, Venom Shot, Long Shot, Shield Bash, Fireball, Frost Bolt, Chain Spark), the Spiked Counter-attack passive and its 8-damage reaction |
@@ -142,8 +142,14 @@ How it is read:
 - A solo mission starts through `GameApp.play_mission(id)` → `LevelLaunch.request(level, mission_id)`; the level
   (`LevelController._setup`) calls `MissionBoard.start_play` (spends the play, tires the towers taken = the hand's first
   rested ones up to the level's hand cap) and builds only those towers. Retry re-requests the mission (another play).
-  The result goes to `MissionProgress` under the mission id with the mission's drops (`MissionBoard.finish`), never to
-  the chapter progress (no first-clear tower). Chapter levels never tire towers or drop tokens.
+  The result goes to `MissionProgress` under the mission id with the mission's drops (`MissionBoard.finish_reward` →
+  `{tokens, gold}`; `finish` = its tokens), never to the chapter progress (no first-clear tower). Chapter levels never
+  tire towers or drop tokens or gold.
+- **Gold** (2026-10-16): `MissionAsset` / `MissionDef` `winGold` (every win) and `firstWinGold` (with the first win),
+  ints ≥ 0 (validated; starter missions 10–25 / 30–60). `MissionBoard.gold_drop(result, record, mission)`; a loss or
+  quit gives none. `LevelController._record` adds it to `GameData.gold` and keeps it in `gold_drop` (int) /
+  `gold_text` ("+25 gold") for the end screen, apart from `drops` (token ids only, so the token row is unchanged).
+  Co-op: every client records its own player's result, so every player in a won mission match gets it.
 - Co-op: rooms still carry level ids; `CoopLevels.mission_for_level` maps them to the Coop/Any mission. `create` adds
   the extra field `mission` (the relay ignores unknown fields; it does not store or echo it). `CoopLaunch.start_match`
   → `CoopLevels.on_match_start` spends the local player's play and tires the towers sent (`my_hand_types` skips tired
@@ -155,7 +161,7 @@ How it is read:
 ## Upgrades & Blacksmith data (2026-10-16)
 **Source of truth: `docs/design/Upgrades — Design.md`** (and `Blacksmith — Design.md` § Data). How the Godot build does it:
 - Content: `levels` on every `TowerAsset` (4 steps to level 5) and `FormAsset` (3 steps) — `TowerLevelData {to, tasks:
-  [TowerTaskData {kind (TowerTaskKind), count, mission?, text?}], bonuses: [LevelBonusData {stat, kind Flat|PctAdd,
+  [TowerTaskData {kind (TowerTaskKind), currency? (Pay), count, mission?, text?}], bonuses: [LevelBonusData {stat, kind Flat|PctAdd,
   amount}]}`; `GameCatalogAsset.blacksmithUnlock` (= guildUnlock; null falls back to guildUnlock). Converted to
   `TowerType.levels` / `FormDef.levels` (`TowerLevelDef`, `TaskDef`, bonuses as `Modifier`). Validation:
   `AssetValidator.validate_ladder` (steps 2, 3, 4 … in order, known kinds, counts > 0, WinMissionId names a mission,
@@ -175,7 +181,24 @@ How it is read:
   to upgrade! Go to the Blacksmith.").
 - Saves: `towers[i].level` / `formLevels` / `taskProgress` (written only when not default), `profile.blacksmithSeen`.
 - Dev: SaveTools `level_up_towers` ("Level up all towers": +1 level each, forms up to their tower) and
-  `complete_tasks` ("Complete current tasks"), in the F1 panel and the TD Tools Save tab.
+  `complete_tasks` ("Complete current tasks", gold tasks included), in the F1 panel and the TD Tools Save tab.
+- **Gold task** (Eren 2026-10-16; Upgrades — Design § Gold): kind `Pay` (`TowerTaskKind.Pay`) with `currency`
+  (`TowerTaskData.currency` / `TaskDef.currency`, a string: `"gold"` = `TowerTasks.Gold`, a token id later). Content:
+  every step of every ladder ends with `{ "kind": "Pay", "currency": "gold", "count": N }` (towers 20/40/70/100 for
+  levels 2–5, forms 15/30/50; placeholders). Validation (`validate_ladder(levels, vocab, tokens = null)`): exactly one
+  gold Pay task per step, Pay needs a currency, counts > 0, a currency only on Pay tasks; a token currency must be a
+  token id (checked when `tokens` is given; Validate All / `ContentCheck.run` checks it against the content's tokens).
+  The content check's tower / form probes add a "gold" column and "gold tasks: 20 + 40 + 70 + 100 = 230 gold to level
+  5"; mission probes say their gold.
+- Pay tasks never count from play (`TowerTasks._gain` → 0). The Pay button deposits: `TowerTasks.deposit(tower, type,
+  form_id, task_index, have) -> int` puts min(have, missing) into the same `task_progress` count and returns it
+  (0: no step / not a Pay task / form not unlocked / full); `GameApp.pay_into(owned, form_id, task_index) -> int`
+  (gold tasks only, Blacksmith open) takes it from `GameData.gold` and saves. Deposited gold is spent: an upgrade
+  drops the step's progress. Texts: `describe` "Pay 40 gold", `progress_text` "25 / 40 gold", `missing` "Pay 15 more
+  gold" (the Upgrade button's reason). Helpers: `is_pay`, `is_gold`, `gold_task_index(step)`, `pay_missing(…)`.
+- Gold itself: `GameData.gold` (int, saved as `"gold"`, default 0, never negative; older saves load with 0),
+  `SaveData.gold`, `GameApp.gold()`. Players see it in the **Backpack** (gold + tokens), never as a "wallet".
+  Dev: SaveTools `grant_gold` ("Grant 500 gold").
 
 ## Missions & Guild screens
 - `SceneFlow.Guild` → `game/ui/screens/guild.tscn`: the Blender agent's 3D guild hall (`art/guild/`, layout.json in

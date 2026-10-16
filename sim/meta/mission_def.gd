@@ -27,6 +27,10 @@ var coop_hand_cap: int = 3
 var first_win_tokens: Dictionary = {}
 ## {token id: amount} given on every win.
 var win_tokens: Dictionary = {}
+## Gold given once, with the first win (the only gold source with win_gold; Upgrades — Design § Gold).
+var first_win_gold: int = 0
+## Gold given on every win.
+var win_gold: int = 0
 
 ## Playable in a co-op room (Coop or Any).
 var is_coop: bool:

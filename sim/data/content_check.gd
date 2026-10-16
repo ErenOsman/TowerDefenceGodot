@@ -70,6 +70,20 @@ static func run(assets: Array, vocab: Vocabulary) -> Array:
 		if t is TokenAsset and not dropped.has(t):
 			findings.append(Finding.new(t, "%s: no mission drops it (add it to a mission's firstWinTokens or winTokens)" % t.name, false))
 
+	# Upgrades: a Pay task's currency other than gold must be a token id of the content
+	var token_ids := {}
+	for t in list:
+		if t is TokenAsset: token_ids[t.get_id()] = true
+	for a in list:
+		if not (a is TowerAsset or a is FormAsset): continue
+		for i in a.levels.size():
+			var l = a.levels[i]
+			if l == null: continue
+			for j in l.tasks.size():
+				var task = l.tasks[j]
+				if task != null and task.kind == TowerTaskKind.Pay and task.currency != "" and task.currency != TowerTasks.Gold and not token_ids.has(task.currency):
+					findings.append(Finding.new(a, "%s: levels[%d].tasks[%d]: Pay currency '%s' is neither gold nor a token id" % [a.name, i, j, task.currency], true))
+
 	# the levels' look (Tiles — Design): layer cells name Tiles of the right kind, and the automatic look finds a piece
 	var kit = null
 	for a in list:

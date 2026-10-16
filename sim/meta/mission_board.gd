@@ -210,14 +210,28 @@ static func record_play(mission: MissionDef, mission_progress: MissionProgress, 
 static func drops(result: LevelResult, record: LevelRecord, mission: MissionDef) -> Dictionary:
 	return Workshop.drops(result, record, mission)
 
-## Records a mission's result (under the mission id, never in the chapter progress) and gives its drops to the
-## wallet; returns the drops ({} on a loss or quit). What the level does when a mission ends (LevelController._record).
-static func finish(result: LevelResult, mission: MissionDef, mission_progress: MissionProgress, wallet: TokenWallet) -> Dictionary:
-	if result == null or mission == null or mission_progress == null: return {}
+## The gold a mission result gives (Upgrades — Design § Gold: missions are the only gold source): winGold on every
+## win plus firstWinGold with the first win (record.wins == 1); 0 on a loss or a quit.
+static func gold_drop(result: LevelResult, record: LevelRecord, mission: MissionDef) -> int:
+	if result == null or not result.won or result.quit or mission == null: return 0
+	var n := maxi(0, mission.win_gold)
+	if record != null and record.wins == 1: n += maxi(0, mission.first_win_gold)
+	return n
+
+## Records a mission's result (under the mission id, never in the chapter progress), gives its token drops to the
+## wallet and returns {"tokens": {token id: amount}, "gold": n} ({} / 0 on a loss or quit). The gold is NOT added
+## anywhere here (the wallet of gold is GameData.gold, outside sim): the caller adds it. What the level does when a
+## mission ends (LevelController._record; in co-op every client records its own player).
+static func finish_reward(result: LevelResult, mission: MissionDef, mission_progress: MissionProgress, wallet: TokenWallet) -> Dictionary:
+	if result == null or mission == null or mission_progress == null: return {"tokens": {}, "gold": 0}
 	var record := mission_progress.record(result, mission.id)
 	var out := drops(result, record, mission)
 	if wallet != null: wallet.add_all(out)
-	return out
+	return {"tokens": out, "gold": gold_drop(result, record, mission)}
+
+## finish_reward's token drops only (older callers; the gold it would give is dropped).
+static func finish(result: LevelResult, mission: MissionDef, mission_progress: MissionProgress, wallet: TokenWallet) -> Dictionary:
+	return finish_reward(result, mission, mission_progress, wallet).tokens
 
 ## The ids of the missions that drop a token, in board order (the Workshop's "Found in").
 static func found_in(token_id: String, missions: Array) -> Array:

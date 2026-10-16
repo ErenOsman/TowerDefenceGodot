@@ -130,6 +130,10 @@ var reward: TowerAsset = null
 ## The Workshop tokens this result just gave ({token id: amount}; first-win drops first; {} on a loss/quit and on
 ## chapter levels: only missions drop tokens).
 var drops: Dictionary = {}
+## The gold this result just gave (Upgrades — Design § Gold: a mission win's winGold, plus firstWinGold with the first
+## win; 0 on a loss/quit and on chapter levels). Kept apart from `drops` (token ids only) so the token row stays as it
+## is; the end screen shows it as its own reward chip ("+25 gold").
+var gold_drop: int = 0
 ## The mission this level is played as (Missions & Guild — Design): from LevelLaunch.mission_id (solo) or the co-op
 ## room's level (CoopLevels.mission_for_level); null for a chapter level. A mission spends a play and tires the towers
 ## it takes when the level starts, records its result under the mission id (never in the chapter progress) and
@@ -151,6 +155,9 @@ var drops_text: String:
 	get:
 		var app = _auto("GameApp")
 		return HudText.rewards_text(drops, app.catalog if app != null else null)
+## The end screen's gold line: "+25 gold" ("" when the result gave none).
+var gold_text: String:
+	get: return "+%d gold" % gold_drop if gold_drop > 0 else ""
 ## The previewed tiles' screen rects this frame (tooltips keep clear of them).
 var preview_rects: Array = []
 
@@ -1844,7 +1851,10 @@ func _record(quit: bool) -> void:
 	# opens it does not count)
 	_count_tasks(result, app != null and app.blacksmith_unlocked(), sd, app)
 	if mission != null:
-		drops = MissionBoard.finish(result, mission, sd.missions, sd.tokens)
+		var got := MissionBoard.finish_reward(result, mission, sd.missions, sd.tokens)
+		drops = got.tokens
+		gold_drop = int(got.gold)
+		if gold_drop > 0: sd.data.gold += gold_drop
 		sd.save()
 		return
 	var rec: LevelRecord = sd.progress.record(result)

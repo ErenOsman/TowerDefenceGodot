@@ -850,14 +850,23 @@ func _probe_ladder(levels: Array, def: EntityDef, probe: Dictionary) -> void:
 		probe.lines.append("levels: none (stays at level 1)")
 		return
 	probe.lines.append("levels: 1–%d" % TowerLevels.max_level(lad))
-	var rows := [["1", "-", "-", _stats_text(def.base_stats)]]
+	var rows := [["1", "-", "-", "-", _stats_text(def.base_stats)]]
+	var golds := PackedStringArray()
+	var gold_total := 0
 	for s in lad:
 		var tasks := PackedStringArray()
-		for t in s.tasks: tasks.append(TowerTasks.describe(t))
-		rows.append([str(s.to), "; ".join(tasks), TowerLevels.bonuses_text(s.bonuses) if not s.bonuses.is_empty() else "-",
+		var gold := 0
+		for t in s.tasks:
+			if TowerTasks.is_gold(t): gold += maxi(1, t.count)
+			else: tasks.append(TowerTasks.describe(t))
+		golds.append(str(gold))
+		gold_total += gold
+		rows.append([str(s.to), "; ".join(tasks), str(gold) if gold > 0 else "-", TowerLevels.bonuses_text(s.bonuses) if not s.bonuses.is_empty() else "-",
 			_stats_text(TowerLevels.stats_with(def.base_stats, TowerLevels.bonuses_at(lad, s.to)))])
 		if s.bonuses.is_empty(): probe.warnings.append("level %d gives nothing" % s.to)
-	probe.tables.append({"title": "levels", "columns": ["level", "tasks", "gives", "stats at that level"], "rows": rows})
+	# Upgrades — Design § Gold: every step's gold task, and what the whole ladder costs
+	probe.lines.append("gold tasks: %s = %d gold to level %d" % [" + ".join(golds), gold_total, TowerLevels.max_level(lad)])
+	probe.tables.append({"title": "levels", "columns": ["level", "tasks", "gold", "gives", "stats at that level"], "rows": rows})
 
 # ------------------------------------------------------------------ Level
 
@@ -1094,6 +1103,8 @@ func _probe_mission(m: MissionAsset, probe: Dictionary) -> void:
 	probe.lines.append("level %s, mode %s, players %s, %d play(s) a day, drops: %s" % [lib.key_of(m.level) if m.level != null else "none",
 		MissionMode.name_of(m.mode), "%d–%d" % [m.players.min, m.players.max] if m.players != null else "?", m.plays_per_day,
 		", ".join(drops) if not drops.is_empty() else "nothing"])
+	probe.lines.append("gold: %d every win, +%d with the first win" % [m.win_gold, m.first_win_gold])
+	if m.win_gold <= 0 and m.first_win_gold <= 0: probe.warnings.append("gives no gold (missions are the only gold source)")
 	var cat := lib.catalog
 	if cat != null and not cat.missions.has(m): probe.lines.append("not on the mission board (catalog missions)")
 	if m.level != null:

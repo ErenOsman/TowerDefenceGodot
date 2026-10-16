@@ -315,6 +315,28 @@ func test_drops_win_every_time_first_win_once() -> void:
 	assert_eq(lib().catalog.grant_drops(res2, mp2.record(res2, "patrol"), w2, m("patrol")), {"yew-bow": 1})
 	assert_eq(HudText.rewards_text({"ember-core": 1}, lib().catalog), "Rewards: Ember Core ×1")
 
+func test_gold_drops_win_every_time_first_win_once() -> void:
+	# Upgrades — Design § Gold: missions are the only gold source (winGold every win, firstWinGold once)
+	for x in missions():
+		assert_true(x.win_gold >= 10 and x.win_gold <= 25, "%s: winGold %d" % [x.id, x.win_gold])
+		assert_true(x.first_win_gold >= 30 and x.first_win_gold <= 60, "%s: firstWinGold %d" % [x.id, x.first_win_gold])
+	var n := m("night-watch")
+	assert_eq([n.win_gold, n.first_win_gold], [15, 40])
+	var mp := MissionProgress.new()
+	var w := TokenWallet.new()
+	assert_eq(MissionBoard.finish_reward(_result(false), n, mp, w), {"tokens": {}, "gold": 0}, "a loss gives nothing")
+	assert_eq(MissionBoard.finish_reward(_result(true, true), n, mp, w).gold, 0, "a quit gives nothing")
+	var first := MissionBoard.finish_reward(_result(), n, mp, w)
+	assert_eq(first.gold, 55, "first win: 15 + 40")
+	assert_eq(first.tokens, {"arcane-shard": 1, "fire-arrow": 1, "poison-gland": 1})
+	assert_eq(MissionBoard.finish_reward(_result(), n, mp, w).gold, 15, "later wins: winGold only")
+	assert_eq(MissionBoard.gold_drop(_result(), null, n), 15)
+	assert_eq(MissionBoard.gold_drop(_result(), null, null), 0)
+	assert_eq(w.total(), 5, "tokens still go to the token wallet; gold is the caller's (GameData.gold)")
+	var bad := MissionAsset.new()
+	bad.name = "Bad"; bad.id = "bad"; bad.win_gold = -1
+	assert_true(AssetValidator.validate_mission(bad).any(func(e): return e.contains("winGold must not be negative")))
+
 func test_mission_records_never_touch_chapter_progress() -> void:
 	var g := GameData.new()
 	MissionBoard.finish(_result(true, false, "chapter2-4"), m("glutton-returns"), g.missions, g.tokens)

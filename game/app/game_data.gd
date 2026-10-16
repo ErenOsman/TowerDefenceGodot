@@ -18,6 +18,9 @@ var tokens: TokenWallet = TokenWallet.new()
 ## Mission records, plays spent per day and tired towers (Missions & Guild — Design). Saved under
 ## "missions"; a save without it has no mission history.
 var missions: MissionProgress = MissionProgress.new()
+## The gold wallet (Upgrades — Design § Gold): earned from missions only (winGold / firstWinGold), spent by
+## depositing into tower level steps' Pay tasks (GameApp.pay_into). Saved under "gold"; a save without it has 0.
+var gold: int = 0
 
 ## The saved hand layouts (Godot-only: the Unity GameData has no such field; see docs/Implementation Notes.md): LAYOUTS fixed
 ## entries {"name": String, "hand": [owned tower ids]}; the active one is the hand levels use (towers.hand mirrors it).
@@ -42,6 +45,7 @@ func to_dict() -> Dictionary:
 		"handLayouts": {"active": active_layout, "layouts": layouts},
 		"tokens": tokens.to_dict(),
 		"missions": missions.to_dict(),
+		"gold": gold,
 	}
 
 func to_json() -> String:
@@ -61,6 +65,8 @@ static func from_dict(d) -> GameData:
 		g.codex.viewed = _strings(c.get("viewed"))
 	g.tokens = TokenWallet.from_dict(d.get("tokens")) # a save from before the Workshop: no tokens
 	g.missions = MissionProgress.from_dict(d.get("missions")) # a save from before missions: none played
+	var gv = d.get("gold") # a save from before gold: 0
+	g.gold = maxi(0, int(gv)) if gv is int or gv is float else 0
 	var hl = d.get("handLayouts")
 	if hl is Dictionary:
 		g.active_layout = int(hl.get("active", 0))

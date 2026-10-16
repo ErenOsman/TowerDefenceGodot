@@ -18,7 +18,10 @@ const ACTIONS := [
 	["rest_missions", "Reset today's plays / rest all towers"],
 	["level_up_towers", "Level up all towers"],
 	["complete_tasks", "Complete current tasks"],
+	["grant_gold", "Grant 500 gold"],
 ]
+## What "Grant 500 gold" gives.
+const GRANT_GOLD := 500
 
 ## The file's text ("" when there is none).
 static func read_text(path: String = PATH) -> String:
@@ -120,6 +123,9 @@ static func run(action: String, data: GameData, catalog: GameCatalogAsset, arg =
 			return "Upgrades: %d level(s) added (tasks skipped; forms stay at or below their tower)." % TowerLevels.level_up_all(data.towers.towers, type_lookup(catalog))
 		"complete_tasks":
 			return "Upgrades: %d step(s) with every task complete: press Upgrade in the Blacksmith." % TowerLevels.complete_tasks(data.towers.towers, type_lookup(catalog))
+		"grant_gold":
+			data.gold += GRANT_GOLD
+			return "+%d gold (now %d)." % [GRANT_GOLD, data.gold]
 		"add_tokens":
 			# arg: [token id, amount] (the F1 panel's Tokens line)
 			var a: Array = arg if arg is Array and arg.size() >= 2 else ["", 0]

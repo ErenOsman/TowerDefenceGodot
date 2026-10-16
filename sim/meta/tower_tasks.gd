@@ -10,8 +10,13 @@ extends RefCounted
 ## tower's entity is the first EntitySpawned of that action. Kills = EntityDied whose source is such an entity;
 ## damage = the FinalDamage of its DamageDealt events (not on its own towers); hits taken = DamageDealt on it, counted
 ## only for entities that did not die; placed = its Place actions.
+##
+## Pay tasks ("Pay 40 gold", Eren 2026-10-16) are never counted from play: the Upgrade view's Pay button deposits
+## into them (deposit; GameApp.pay_into takes it from GameData.gold), stored in the same task_progress counts.
 
 const Check := "✓"
+## The Pay currency of the gold task every step has (Upgrades — Design § Gold).
+const Gold := "gold"
 
 ## One tower taking part in a level, for apply(): the owned tower, its BASE type (GameApp.tower_type(owned.type):
 ## ladders of the base and its forms), the id the session knows it by ("" = owned.id: single player; co-op:
@@ -24,7 +29,7 @@ static func entry(owned: OwnedTower, type: TowerType, session_id: String = "", d
 
 ## A task for players, from its kind and count unless it has its own text: "Win a mission with this tower",
 ## "Win 2 missions with this tower", "Deal 60 damage with it", "Defeat 10 enemies with it", "Take 40 hits and survive",
-## "Place it 3 times", "Win Drum Line with this tower", "Win without losing a tower".
+## "Place it 3 times", "Win Drum Line with this tower", "Win without losing a tower", "Pay 40 gold".
 static func describe(task: TaskDef) -> String:
 	if task == null: return ""
 	if task.text != "": return task.text
@@ -40,7 +45,56 @@ static func describe(task: TaskDef) -> String:
 		TowerTaskKind.HitsTaken: return "Take a hit and survive" if n == 1 else "Take %d hits and survive" % n
 		TowerTaskKind.Placed: return "Place it on the board" if n == 1 else "Place it %d times" % n
 		TowerTaskKind.WinNoLoss: return "Win without losing a tower" if n == 1 else "Win %d times without losing a tower" % n
+		TowerTaskKind.Pay: return "Pay %d %s" % [n, currency_text(task)]
 	return TowerTaskKind.name_of(task.kind)
+
+## A Pay task (deposited with the Pay button, never counted from play).
+static func is_pay(task: TaskDef) -> bool:
+	return task != null and task.kind == TowerTaskKind.Pay
+
+## A Pay task in gold.
+static func is_gold(task: TaskDef) -> bool:
+	return is_pay(task) and task.currency == Gold
+
+## What a Pay task deposits, for texts: "gold", else the currency (a token id; the screen may show the token's name).
+static func currency_text(task: TaskDef) -> String:
+	return Gold if task == null or task.currency == "" else task.currency
+
+## The index of a step's gold Pay task (-1 when it has none; the validator requires exactly one).
+static func gold_task_index(step: TowerLevelDef) -> int:
+	if step == null: return -1
+	for i in step.tasks.size():
+		if is_gold(step.tasks[i]): return i
+	return -1
+
+## Deposits from a wallet into the Pay task task_index of the tower's current step in that form ("" = the base
+## ladder): takes min(wallet_amount, what the task still misses), adds it to the step's task_progress count and
+## returns the amount taken (the caller removes it from the wallet). 0 when there is no such step / Pay task, the
+## form is not unlocked on the tower, the task is already full, or wallet_amount ≤ 0. Partial deposits are allowed;
+## deposited currency is spent (an upgrade drops the step's progress like any task's).
+static func deposit(tower: OwnedTower, type: TowerType, form_id: String, task_index: int, wallet_amount: int) -> int:
+	if tower == null or type == null or wallet_amount <= 0: return 0
+	if form_id != "":
+		var base: TowerType = type.base if type.base != null else type
+		if base.find_form(form_id) == null or not Workshop.is_unlocked(tower, form_id): return 0
+	var step := TowerLevels.step_for(tower, type, form_id)
+	if step == null or task_index < 0 or task_index >= step.tasks.size(): return 0
+	var task: TaskDef = step.tasks[task_index]
+	if not is_pay(task): return 0
+	var key := TowerLevels.step_key(form_id, step.to)
+	var counts := TowerLevels.counts_of(tower, key, step.tasks.size())
+	var take := mini(wallet_amount, maxi(1, task.count) - int(counts[task_index]))
+	if take <= 0: return 0
+	counts[task_index] = int(counts[task_index]) + take
+	tower.task_progress[key] = counts
+	return take
+
+## What a Pay task of the tower's current step still misses (0 when full or not a Pay task).
+static func pay_missing(tower: OwnedTower, type: TowerType, form_id: String, task_index: int) -> int:
+	var step := TowerLevels.step_for(tower, type, form_id)
+	if step == null or task_index < 0 or task_index >= step.tasks.size() or not is_pay(step.tasks[task_index]): return 0
+	var counts := TowerLevels.task_counts(tower, type, form_id)
+	return maxi(0, maxi(1, step.tasks[task_index].count) - int(counts[task_index]))
 
 ## What is still missing of a task with `have` counted (the Upgrade button's disabled reason): nothing counted yet →
 ## describe(); else "Deal 18 more damage with it", "Win 1 more mission with this tower", "Defeat 4 more enemies with
@@ -63,11 +117,13 @@ static func missing(task: TaskDef, have: int) -> String:
 		TowerTaskKind.HitsTaken: return "Take %d more hit%s and survive" % [left, _s(left)]
 		TowerTaskKind.Placed: return "Place it %d more time%s" % [left, _s(left)]
 		TowerTaskKind.WinNoLoss: return "Win %d more time%s without losing a tower" % [left, _s(left)]
+		TowerTaskKind.Pay: return "Pay %d more %s" % [left, currency_text(task)]
 	return describe(task)
 
-## "42/60" (capped at the count).
+## "42/60" (capped at the count); a Pay task: "25 / 40 gold".
 static func progress_text(task: TaskDef, have: int) -> String:
 	var n := maxi(1, task.count) if task != null else 1
+	if is_pay(task): return "%d / %d %s" % [mini(have, n), n, currency_text(task)]
 	return "%d/%d" % [mini(have, n), n]
 
 ## The end screen's lines for apply()'s advances: every progress_line ("Archer (tower 3): 8 / 10 kills +3"), then the
@@ -147,6 +203,7 @@ static func noun(task: TaskDef) -> String:
 		TowerTaskKind.HitsTaken: return "hits survived"
 		TowerTaskKind.Placed: return "times placed"
 		TowerTaskKind.WinNoLoss: return "wins without a loss"
+		TowerTaskKind.Pay: return currency_text(task)
 	return TowerTaskKind.name_of(task.kind)
 
 ## The end screen's progress line of one advance: "Archer (tower 3): 8 / 10 kills +3" ("Archer: …" without an index).
@@ -173,6 +230,7 @@ static func _gain(task: TaskDef, result: LevelResult, mission_id: String, facts:
 		TowerTaskKind.Damage: return int(facts.damage.get(sid, 0))
 		TowerTaskKind.HitsTaken: return int(facts.hits.get(sid, 0))
 		TowerTaskKind.Placed: return int(facts.placed.get(sid, 0))
+		TowerTaskKind.Pay: return 0 # deposited with the Pay button (deposit), never counted from play
 	return 0
 
 ## The per-tower facts of a level's log: {entity: {entity id: session tower id}, placed, kills, damage, hits:

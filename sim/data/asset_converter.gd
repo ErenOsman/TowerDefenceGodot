@@ -196,6 +196,7 @@ func tower_level(a: TowerLevelData) -> TowerLevelDef:
 		task.kind = t.kind
 		task.count = t.count
 		task.text = t.text
+		task.currency = t.currency
 		if t.mission != null:
 			task.mission = t.mission.get_id()
 			task.mission_name = t.mission.get_display_name()
@@ -267,6 +268,8 @@ func mission(a: MissionAsset) -> MissionDef:
 	d.coop_hand_cap = a.coop_hand_cap
 	d.first_win_tokens = GameCatalogAsset._amounts(a.first_win_tokens)
 	d.win_tokens = GameCatalogAsset._amounts(a.win_tokens)
+	d.first_win_gold = maxi(0, a.first_win_gold)
+	d.win_gold = maxi(0, a.win_gold)
 	return d
 
 ## One individual tower of a type, for a level's hand (tests and tools; the game builds it from the save).
