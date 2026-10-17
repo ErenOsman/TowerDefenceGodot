@@ -34,11 +34,9 @@
 [ext_resource type="Texture2D" path="res://art/ui/KitB/menu/menu_panel.png" id="32_l4gim"]
 [ext_resource type="Texture2D" path="res://art/ui/KitB/menu/menu_btn_primary_disabled.png" id="33_jvs78"]
 [ext_resource type="Texture2D" path="res://art/ui/KitB/menu/menu_btn_primary_hover.png" id="34_ca6m8"]
-[ext_resource type="Texture2D" path="res://art/ui/KitB/menu/menu_btn_primary_pressed.png" id="35_c08hd"]
 [ext_resource type="Texture2D" path="res://art/ui/KitB/menu/menu_btn_primary_normal.png" id="36_ff4ma"]
 [ext_resource type="Texture2D" path="res://art/ui/KitB/menu/menu_btn_wood_disabled.png" id="37_j00t2"]
 [ext_resource type="Texture2D" path="res://art/ui/KitB/menu/menu_btn_wood_hover.png" id="38_imjd2"]
-[ext_resource type="Texture2D" path="res://art/ui/KitB/menu/menu_btn_wood_pressed.png" id="39_1ekqg"]
 [ext_resource type="Texture2D" path="res://art/ui/KitB/menu/menu_btn_wood_normal.png" id="40_11hn1"]
 [ext_resource type="Texture2D" path="res://game/ui/theme/half/dropdown_arrow.png" id="41_jjr0q"]
 [ext_resource type="Texture2D" path="res://art/ui/KitB/screens/dropdown_normal.png" id="42_2fisr"]
@@ -61,7 +59,6 @@
 [ext_resource type="Texture2D" path="res://art/ui/KitB/screens/loadbar_fill.png" id="59_4mtbj"]
 [ext_resource type="Texture2D" path="res://art/ui/KitB/screens/row_locked.png" id="60_nvjc7"]
 [ext_resource type="Texture2D" path="res://art/ui/KitB/screens/row_hover.png" id="61_jsnih"]
-[ext_resource type="Texture2D" path="res://art/ui/KitB/screens/row_selected.png" id="62_ct54d"]
 [ext_resource type="Texture2D" path="res://art/ui/KitB/screens/row_normal.png" id="63_s83ue"]
 [ext_resource type="Texture2D" path="res://art/ui/KitB/screens/tab_normal.png" id="64_o6pcd"]
 [ext_resource type="Texture2D" path="res://art/ui/KitB/screens/tab_hover.png" id="65_dbmo1"]
@@ -768,7 +765,7 @@ content_margin_top = 8.0
 content_margin_right = 32.0
 content_margin_bottom = 8.0
 script = ExtResource("3_uckkr")
-texture = ExtResource("35_c08hd")
+texture = ExtResource("36_ff4ma")
 border_left = 38
 border_top = 38
 border_right = 38
@@ -804,7 +801,7 @@ content_margin_top = 8.0
 content_margin_right = 32.0
 content_margin_bottom = 8.0
 script = ExtResource("3_uckkr")
-texture = ExtResource("35_c08hd")
+texture = ExtResource("36_ff4ma")
 border_left = 38
 border_top = 38
 border_right = 38
@@ -877,7 +874,7 @@ content_margin_top = 8.0
 content_margin_right = 32.0
 content_margin_bottom = 8.0
 script = ExtResource("3_uckkr")
-texture = ExtResource("39_1ekqg")
+texture = ExtResource("40_11hn1")
 border_left = 38
 border_top = 38
 border_right = 38
@@ -913,7 +910,7 @@ content_margin_top = 8.0
 content_margin_right = 32.0
 content_margin_bottom = 8.0
 script = ExtResource("3_uckkr")
-texture = ExtResource("39_1ekqg")
+texture = ExtResource("40_11hn1")
 border_left = 38
 border_top = 38
 border_right = 38
@@ -1430,7 +1427,7 @@ content_margin_top = 6.0
 content_margin_right = 8.0
 content_margin_bottom = 6.0
 script = ExtResource("3_uckkr")
-texture = ExtResource("62_ct54d")
+texture = ExtResource("63_s83ue")
 border_left = 38
 border_top = 38
 border_right = 38
@@ -1466,7 +1463,7 @@ content_margin_top = 6.0
 content_margin_right = 8.0
 content_margin_bottom = 6.0
 script = ExtResource("3_uckkr")
-texture = ExtResource("62_ct54d")
+texture = ExtResource("63_s83ue")
 border_left = 38
 border_top = 38
 border_right = 38
@@ -1739,7 +1736,7 @@ content_margin_top = 6.0
 content_margin_right = 24.0
 content_margin_bottom = 6.0
 script = ExtResource("3_uckkr")
-texture = ExtResource("66_m4d0y")
+texture = ExtResource("64_o6pcd")
 border_left = 38
 border_top = 38
 border_right = 38
@@ -1775,7 +1772,7 @@ content_margin_top = 6.0
 content_margin_right = 24.0
 content_margin_bottom = 6.0
 script = ExtResource("3_uckkr")
-texture = ExtResource("66_m4d0y")
+texture = ExtResource("64_o6pcd")
 border_left = 38
 border_top = 38
 border_right = 38

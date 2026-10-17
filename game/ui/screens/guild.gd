@@ -93,22 +93,16 @@ func _build_title() -> void:
 	title.add_theme_constant_override("shadow_offset_y", 3)
 	title.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(title)
-	var sub := TdMenu.label(MissionUiLogic.GuildSub, "body", TdTheme.color("cream.200"), 24)
-	sub.position = Vector2(62, 112)
-	sub.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(sub)
 
 ## One Camp-style station button per station (icon, name, the line under it), placed by the world each frame.
 func _build_stations() -> void:
 	for st in MissionUiLogic.Stations:
 		var b := TdMenuButton.new()
 		b.style = TdButton.Style.MENU_PRIMARY if st.get("primary", false) else TdButton.Style.MENU_WOOD
-		var sub: String = st.sub if st.sub != "" else MissionUiLogic.missions_station_sub(0)
-		var w := maxf(236.0, 90.0 + TdTheme.font("nunito_bold").get_string_size(sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x)
-		b.custom_minimum_size = Vector2(w, 72)
+		b.custom_minimum_size = Vector2(236, 60) # no line under a station button (Eren 2026-10-17)
 		b.size = b.custom_minimum_size
 		b.text = st.label
-		b.sub = st.sub
+		b.sub = ""
 		b.icon = TdDrops.icon_texture(st.icon)
 		b.selectable = true
 		b.left_pad = 20
@@ -146,7 +140,7 @@ func _process(_delta: float) -> void:
 ## Redraws the station lines (the Missions count).
 func refresh() -> void:
 	var n := MissionUiLogic.to_play_count(GameApp.missions(), SaveData.progress, SaveData.missions, GameApp.catalog)
-	if stations.has("Missions"): stations["Missions"].sub = MissionUiLogic.missions_station_sub(n)
+	if n < 0: pass # the count no longer sits under the button (no lines under station buttons, Eren 2026-10-17)
 
 func _build_welcome() -> void:
 	welcome_card = Control.new()

@@ -164,3 +164,21 @@ func test_pressed_is_a_clean_sink() -> void:
 	assert_eq(p._sprite_now(), "btn_primary_pressed", "the kit's pressed face: same outline, darker")
 	assert_num(p._bg.self_modulate.r, 1.0)
 	p.free()
+
+## The generated theme files are what the generator makes from its inputs (UITheme.json, kit_slices.json,
+## kit_tokens.json, EXTRA_SPRITES): a hand edit of td_tokens.gd / td_theme.tres / half/ fails here. Fix: move the
+## change into an input and re-run `godot --headless --path . -s tools/build_theme.gd` (same check: `-- --check`).
+func test_theme_generator_has_no_drift() -> void:
+	var b = load("res://tools/theme_builder.gd").new()
+	var bad: PackedStringArray = b.drift()
+	assert_eq(bad.size(), 0, "\n  ".join(bad))
+
+## The roles and the kit drop-ins come from the generator (they were once only in a hand-edited td_tokens.gd).
+func test_generated_roles_and_kit_drop_ins() -> void:
+	assert_eq(TdTheme.role_sprite("panel"), "panel_wood")
+	assert_eq(TdTheme.role_sprite("decal_target"), "decal_target_valid")
+	assert_eq(TdTheme.role_sprite("stat_icon.Power"), "icon_power")
+	for s in ["icon_gold", "icon_backpack", "token_gold", "badge_tired"]:
+		assert_true(TdTheme.has_sprite(s), s)
+	assert_eq(TdTheme.texture("icon_gold"), TdTheme.kit("icons/icon_gold"), "same texture as the by-path lookup")
+	assert_eq(TdTheme.texture("token_gold"), TdTheme.kit("tokens/gold"))

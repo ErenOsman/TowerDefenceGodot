@@ -219,10 +219,10 @@ How it is read:
   the corner at 1920, under the popups layer); `make(host)` left of × in the Workshop and Upgrade pickers and at the
   right of the Upgrade view's header (`pick_backpack` / `backpack_button`). Hidden until `GameApp.camp_unlocked()`.
   Refreshes when its popup closes and through `TdBackpackButton.refresh_all(tree)` (group `backpack_button`).
-- Icons (kit drop-in 2026-10-16): `TdDrops.gold_icon()` / `bag_icon()` use the theme sprite `icon_gold` /
-  `icon_backpack` once `kit_slices.json` → `TdTokens.SPRITES` lists them (not yet: `tools/build_theme.gd` was not
-  re-run), else the files `art/ui/KitB/icons/icon_*.png`; `gold_coin_texture()` = `tokens/gold.png` (the full-colour
-  chip). `TdDrops.icon_texture(name)` also falls back to `KitB/icons/icon_<name>.png` (task row icon "gold").
+- Icons (kit drop-in 2026-10-16): `TdDrops.gold_icon()` / `bag_icon()` use the theme sprites `icon_gold` /
+  `icon_backpack` (in `TdTokens.SPRITES` since 2026-10-17, from `kit_slices.json`), else the files
+  `art/ui/KitB/icons/icon_*.png`; `gold_coin_texture()` = `tokens/gold.png` (the full-colour chip; theme sprite
+  `token_gold`, same texture). `TdDrops.icon_texture(name)` also falls back to `KitB/icons/icon_<name>.png` (task row icon "gold").
 - Upgrade view Pay (`UpgradeScreen._pay_column` / `pay(task_index)`): the gold task row (`UpgradeLogic.task_rows`
   gained `index`, `gold`, `missing`; a Pay task's unit is its currency: "25 / 40 gold") gets a secondary "Pay 15"
   (`BackpackLogic.pay_text` = min(gold, missing)) → `GameApp.pay_into(owned, ladder, i)` → view, both headers and
@@ -469,3 +469,29 @@ scroll body kept 2 px; the 84 px medallion's ring and Lv chip hang ~6 px: `TdTow
 room now, the cards' padding dropped by as much so nothing moved); the Upgrade and Workshop sliding panes (their clip cut
 the paper cards' 3 px rims: `PANE_BLEED` 6 px inside the clip, the window padding 6 px smaller); Level select's detail
 (its clipping text column ran 7 px long for The Glutton and cut the last row of enemy chips: two 18 px spacers → 12).
+
+## Theme generator (tools/build_theme.gd, 2026-10-17)
+
+`game/ui/theme/td_tokens.gd` (TdTokens), `game/ui/theme/td_theme.tres` and `game/ui/theme/half/*.png` are **outputs**:
+never edit them by hand. `tools/build_theme.gd` (entry) / `tools/theme_builder.gd` (logic) make them from inputs that all
+live in the repo: `data/content/UITheme.json` (colours, type, motion, feedback press/hover numbers, control styles with
+their per-state sprites, the named sprites that become `TdTokens.ROLES`), `game/ui/theme/kit_slices.json` and
+`game/ui/theme/kit_tokens.json` (verbatim copies of `~/uiux/kit-b/slices.json` / `tokens.json`) and `EXTRA_SPRITES` in
+`theme_builder.gd` (Godot-side sprites slices.json doesn't list). Ids in the .tres are kept from the committed file,
+so a re-run with unchanged inputs changes no byte.
+
+- Re-run: `godot --headless --path . -s tools/build_theme.gd` (twice after adding a theme icon, see the script).
+- Check: `godot --headless --path . -s tools/build_theme.gd -- --check` writes nothing, prints `THEME DRIFT` lines and
+  exits 1 when the outputs are not what the inputs make; `tests/test_ui_theme.gd` `test_theme_generator_has_no_drift`
+  runs the same check in `./test.sh`.
+- **Adding a kit sprite:** put the PNG under `art/ui/KitB/<group>/`. If the kit's `slices.json` lists it, copy the new
+  `~/uiux/kit-b/slices.json` over `game/ui/theme/kit_slices.json`; if not, add an `EXTRA_SPRITES` entry (file, PNG
+  w/h, border, outset). Re-run, then use it by name (`TdTheme.texture("icon_gold")`, `TdTheme.stylebox(...)`).
+  Content-keyed art (abilities, statuses, forms, `tokens/<id>`, units, passives, icons_64/128) stays out of the table
+  and is reached by path with `TdTheme.kit("<folder>/<name>")`. A new role sprite = a key in UITheme.json with an
+  `art/ui/KitB/….png` value; a press/hover change = the `feedback` profile in UITheme.json.
+- What had drifted (fixed 2026-10-17): the art-path migration made UITheme.json sprite values plain paths, and the
+  generator only took `"…#name"` strings as roles, so a re-run dropped the 47 single-sprite ROLES (panel, window, tooltip, decals…); the kit's
+  tokens.json was read from `~/uiux` (outside the repo); `icon_gold` / `icon_backpack` were in the kit's slices.json
+  but not in the copy; td_theme.tres still had the selected / pressed sprites as the pressed state of the unused
+  `TabButton`, `RowButton`, `MenuPrimaryButton`, `MenuWoodButton` variations after UITheme.json set those to null.

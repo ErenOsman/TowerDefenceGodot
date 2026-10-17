@@ -72,7 +72,7 @@ func test_camp_shows_guild_after_chapter2_with_new_tag_and_mini_tour() -> void:
 	assert_true(g.visible)
 	assert_true(c.buttons["Workshop"].visible)
 	assert_eq(g.text, "Guild")
-	assert_eq(g.sub, "Missions and co-op")
+	assert_eq(g.sub, "", "no line under a station button (Eren 2026-10-17)")
 	assert_not_null(c.guild_tag, "a New tag on the button until the first Guild visit")
 	assert_eq(c.guild_tag.get_parent(), g)
 	assert_true(c.open_tour_due())

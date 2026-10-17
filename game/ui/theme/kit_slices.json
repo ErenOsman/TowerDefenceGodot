@@ -345,7 +345,7 @@
       "borderRef": null,
       "outsetRef": null,
       "logicalRef": null,
-      "note": "Tail for a tooltip ABOVE its anchor. Pivot (0.5, 1) at the anchor; its top 12 px overlap the box bottom (covers the edge band)."
+      "note": "Tail for a tooltip ABOVE its anchor. Pivot (0.5, 1) at the anchor; its top 12 px overlap the box bottom (the fill covers the box rim there; the ink outline starts at the rim)."
     },
     "tooltip_tail_up": {
       "file": "png/panels/tooltip_tail_up.png",
@@ -7971,6 +7971,26 @@
     },
     "icon_enemy": {
       "file": "png/icons/icon_enemy.png",
+      "group": "icons",
+      "sizePx": {
+        "w": 64,
+        "h": 64
+      },
+      "border": null,
+      "note": "White, tint in Unity. Shown at 20-36 px."
+    },
+    "icon_gold": {
+      "file": "png/icons/icon_gold.png",
+      "group": "icons",
+      "sizePx": {
+        "w": 64,
+        "h": 64
+      },
+      "border": null,
+      "note": "White, tint in Unity. Shown at 20-36 px."
+    },
+    "icon_backpack": {
+      "file": "png/icons/icon_backpack.png",
       "group": "icons",
       "sizePx": {
         "w": 64,

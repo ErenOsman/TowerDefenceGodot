@@ -170,7 +170,8 @@ func screen_top(n: Node3D) -> Vector2:
 ## floor, left or right, the side facing more free space first; (3) above the prop. Nothing fits: the candidate that
 ## covers the least.
 ## A short leader line joins the button to its prop when there is a gap.
-func place_buttons(host: Control, buttons: Dictionary, ids: Array) -> void:
+## `nudges`: id → Vector2 added to the picked spot (a small hand adjustment, e.g. the Blacksmith's Modify up-left).
+func place_buttons(host: Control, buttons: Dictionary, ids: Array, nudges: Dictionary = {}) -> void:
 	var placed := []
 	var screen := Rect2(Vector2(BUTTON_GAP, BUTTON_GAP), host.size - Vector2(BUTTON_GAP, BUTTON_GAP) * 2.0)
 	# inside the board's left, right and front edges (a button above a back-row prop may rise past its back edge)
@@ -206,6 +207,7 @@ func place_buttons(host: Control, buttons: Dictionary, ids: Array) -> void:
 				if cost < best:
 					best = cost
 					pick = c
+		if nudges.has(id): pick.rect.position += nudges[id]
 		placed.append(pick.rect)
 		_put(host, b, pick.rect, pick.anchor)
 

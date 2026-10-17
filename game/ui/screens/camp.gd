@@ -24,8 +24,8 @@ const STATIONS := [
 	{"id": "Chapters", "label": "Chapters", "icon": "icon_castle", "action": "open_chapters", "locked": false, "primary": true},
 	{"id": "Codex", "label": "Codex", "icon": "icon_codex", "action": "open_codex", "locked": false},
 	# the Blacksmith (Blacksmith — Design): keeps the Workshop's station id and slot (layout.json, tests, tools)
-	{"id": "Workshop", "label": "Blacksmith", "sub": "Modify and upgrade towers", "icon": "icon_edit", "action": "open_blacksmith", "locked": false, "gate": "blacksmith"},
-	{"id": "Guild", "label": "Guild", "sub": MissionUiLogic.GuildSub, "icon": "extra:flag", "action": "open_guild", "locked": false, "gate": "chapter2"},
+	{"id": "Workshop", "label": "Blacksmith", "icon": "icon_edit", "action": "open_blacksmith", "locked": false, "gate": "blacksmith"},
+	{"id": "Guild", "label": "Guild", "icon": "extra:flag", "action": "open_guild", "locked": false, "gate": "chapter2"},
 ]
 ## Used when layout.json cannot be read (same values as layout.json, the ring layout of 2026-10-13).
 const FALLBACK_LAYOUT := {
@@ -156,9 +156,7 @@ func _build_ui() -> void:
 	title.add_theme_color_override("font_shadow_color", TdTheme.color("rim"))
 	title.add_theme_constant_override("shadow_offset_y", 3)
 	add_child(title)
-	var subtitle := TdMenu.label("Your home between levels", "body", TdTheme.color("cream.200"), 24)
-	subtitle.position = Vector2(62, 112)
-	add_child(subtitle)
+	# no subtitle and no lines under the station buttons: nothing is explained on an everyday screen (Eren 2026-10-17)
 	for st in STATIONS:
 		var b := TdMenuButton.new()
 		b.style = TdButton.Style.MENU_PRIMARY if st.get("primary", false) else TdButton.Style.MENU_WOOD

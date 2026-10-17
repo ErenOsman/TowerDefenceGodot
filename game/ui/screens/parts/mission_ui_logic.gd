@@ -29,14 +29,13 @@ const WelcomeRows := [
 const WelcomeButton := "Got it"
 ## The Guild's stations (guild.html): {id, label, sub, icon}; Missions is primary, its sub is counted (station_sub).
 const Stations := [
-	{"id": "Missions", "label": "Missions", "sub": "", "icon": "flag", "primary": true},
+	{"id": "Missions", "label": "Missions", "sub": "", "icon": "flag"},
 	{"id": "Multiplayer", "label": "Multiplayer", "sub": "Co-op rooms (missions only)", "icon": "users"},
 	{"id": "Towers", "label": "Towers", "sub": "Your hand and layouts", "icon": "cards"},
 	{"id": "Camp", "label": "Camp", "sub": "Back to the Camp", "icon": "back"},
 ]
 ## The Rewards popup (Missions & Guild — Design § Rewards popup): the secondary button on the cards and the detail.
 const RewardsButton := "Rewards"
-const TiredDetail := "Tired: went on a mission today. Rests in %s."
 
 # ------------------------------------------------------------------ chips and lines
 
@@ -53,11 +52,6 @@ static func mode_short(m: MissionDef) -> String:
 	if m == null: return ""
 	if m.mode == MissionMode.Any: return "Any %d–%d" % [m.min_players, m.max_players]
 	return mode_chip(m)
-
-## The board header's line, the daily reset countdown: "Resets in 5 h" (no "Earn tokens for the Workshop": Eren
-## 2026-10-16; UI/UX mockup mission-rewards.html).
-static func board_subtitle(now = null) -> String:
-	return "Resets in %s" % MissionBoard.duration_text(MissionBoard.resets_in(now))
 
 ## Under a card's name: the level ("Two Roads"), with the plays a day when more than one ("The Drummer · 2 plays a day").
 static func level_line(m: MissionDef, level_name: String) -> String:
@@ -202,28 +196,20 @@ static func primary_enabled(state: String, bring_reason: String) -> bool:
 
 # ------------------------------------------------------------------ the hand strip
 
-## Per hand slot (in hand order): {tired, goes}: tired towers stay home; "goes" marks the first rested towers up to
-## the cap (the ones the mission takes).
-static func hand_marks(hand: Array, mp: MissionProgress, cap: int, now = null) -> Array:
-	var taken := MissionBoard.taken(hand, mp, cap, now)
+## The mission's hand strip (the mission detail's and the hand editor's when opened for a mission; Eren 2026-10-17):
+## only the hand's rested towers, in hand order. Tired towers are not shown there at all (the collection still shows
+## them with the moon badge). The strip's slot i is this list's i-th tower; its key is i + 1.
+static func rested_hand(hand: Array, mp: MissionProgress, now = null) -> Array:
 	var out := []
 	for t in hand:
-		out.append({"tired": MissionBoard.is_tired(MissionBoard._id_of(t), mp, now), "goes": taken.has(t)})
+		if not MissionBoard.is_tired(MissionBoard._id_of(t), mp, now): out.append(t)
 	return out
 
-## Where the cap divider goes (before slot index; -1 = none): after the last tower that goes when the cap is
-## filled; when fewer rested towers than the cap are in the hand, after the hand (they all go). Never at 0 or 8.
-static func divider_at(hand: Array, mp: MissionProgress, cap: int, now = null, slots := TowerCollection.MaxHand) -> int:
-	if cap <= 0: return -1
-	var marks := hand_marks(hand, mp, cap, now)
-	var goes := 0
-	var last := -1
-	for i in marks.size():
-		if marks[i].goes:
-			goes += 1
-			last = i
-	var at := (last + 1) if goes >= cap else hand.size()
-	return at if at > 0 and at < slots else -1
+## The hand index a drop on the mission strip's slot `slot` means: the place of the strip's slot-th tower in the
+## hand; past the strip's last tower, the end of the hand (hand.size()).
+static func strip_to_hand_slot(hand: Array, strip: Array, slot: int) -> int:
+	if slot >= 0 and slot < strip.size(): return hand.find(strip[slot])
+	return hand.size()
 
 ## Whether any of the hand's towers is tired.
 static func any_tired(hand: Array, mp: MissionProgress, now = null) -> bool:
@@ -231,25 +217,16 @@ static func any_tired(hand: Array, mp: MissionProgress, now = null) -> bool:
 		if MissionBoard.is_tired(MissionBoard._id_of(t), mp, now): return true
 	return false
 
-## The detail's "Your hand" note (UI/UX sweep 2026-10-16, mockup mission-rewards: one short line): "Patrol takes the
-## first 4 rested"; an empty hand keeps the level select's what-to-do line.
-static func hand_note(m: MissionDef, level_name: String, hand_count: int, cap: int, _tired := false) -> String:
+## The detail's "Your hand" note: nothing (Eren 2026-10-17: no "Patrol takes the first 4 rested"); an empty hand
+## keeps the level select's what-to-do line.
+static func hand_note(_m: MissionDef, level_name: String, hand_count: int, cap: int) -> String:
 	if hand_count == 0: return MenuLogic.hand_strip_note(level_name, 0, cap)
-	return editor_cap_note(m.name if m != null else level_name, cap)
+	return ""
 
-## The hand editor's divider note when opened for a mission: "Night Watch takes the first 4 rested".
-static func editor_cap_note(mission_name: String, cap: int) -> String:
-	if mission_name == "" or cap <= 0: return ""
-	return "%s takes the first %d rested" % [mission_name, cap]
-
-## The "Tired · rests in 5 h" line under a tired tower (two lines on the small slots).
+## The "Tired · rests in 5 h" line (a tired tower's tooltip; two lines when asked).
 static func tired_line(now = null, two_lines := true) -> String:
 	var t := MissionBoard.tired_text(now)
 	return t.replace(" · ", " ·\n") if two_lines else t
-
-## The hand editor card's line for a tired tower: "Tired: went on a mission today. Rests in 5 h."
-static func tired_detail(now = null) -> String:
-	return TiredDetail % MissionBoard.duration_text(MissionBoard.resets_in(now))
 
 # ------------------------------------------------------------------ the Guild and the Camp
 

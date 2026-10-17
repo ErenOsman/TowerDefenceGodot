@@ -38,10 +38,10 @@ const Title := "Blacksmith"
 const Sub := "Modify and upgrade towers"
 ## The stations, in placement order: {id, label, sub, icon, action, primary}.
 const STATIONS := [
-	{"id": "Modify", "label": "Modify", "sub": "Tower forms", "icon": "icon_edit", "action": "open_modify", "primary": true},
-	{"id": "Upgrade", "label": "Upgrade", "sub": "Tower levels", "icon": "icon_plus", "action": "open_upgrade"},
-	{"id": "Towers", "label": "Towers", "sub": "Your hand and layouts", "icon": "icon_cards", "action": "open_towers"},
-	{"id": "Camp", "label": "Camp", "sub": "Back to the Camp", "icon": "icon_back", "action": "back_to_camp"},
+	{"id": "Modify", "label": "Modify", "sub": "", "icon": "icon_edit", "action": "open_modify", "nudge": Vector2(-30, -24)},
+	{"id": "Upgrade", "label": "Upgrade", "sub": "", "icon": "icon_plus", "action": "open_upgrade"},
+	{"id": "Towers", "label": "Towers", "sub": "", "icon": "icon_cards", "action": "open_towers"},
+	{"id": "Camp", "label": "Camp", "sub": "", "icon": "icon_back", "action": "back_to_camp"},
 ]
 ## The Upgrade station is live (the Upgrade screens' agent sets this true when open_upgrade() opens them); false:
 ## a disabled button with UPGRADE_SOON as its line and reason.
@@ -151,21 +151,17 @@ func _build_title() -> void:
 	title.add_theme_constant_override("shadow_offset_y", 3)
 	title.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(title)
-	var sub := TdMenu.label(Sub, "body", TdTheme.color("cream.200"), 24)
-	sub.position = Vector2(62, 112)
-	sub.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(sub)
 
 ## One Camp-style station button per station (icon, name, the line under it), placed by the world each frame.
 func _build_stations() -> void:
 	for st in STATIONS:
 		var b := TdMenuButton.new()
 		b.style = TdButton.Style.MENU_PRIMARY if st.get("primary", false) else TdButton.Style.MENU_WOOD
-		var sub: String = st.sub
+		var sub: String = "" # no line under a station button (Eren 2026-10-17)
 		var live: bool = st.id != "Upgrade" or UPGRADE_READY
 		if not live: sub = UPGRADE_SOON
 		var w := maxf(236.0, 90.0 + TdTheme.font("nunito_bold").get_string_size(sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x)
-		b.custom_minimum_size = Vector2(w, 72)
+		b.custom_minimum_size = Vector2(w, 72 if sub != "" else 60)
 		b.size = b.custom_minimum_size
 		b.text = st.label
 		b.sub = sub
@@ -197,7 +193,10 @@ func _build_stations() -> void:
 	_place_buttons.call_deferred()
 
 func _place_buttons() -> void:
-	world.place_buttons(self, stations, STATIONS.map(func(st): return st.id))
+	var nudges := {}
+	for st in STATIONS:
+		if st.has("nudge"): nudges[st.id] = st.nudge
+	world.place_buttons(self, stations, STATIONS.map(func(st): return st.id), nudges)
 	world.place_hotspots()
 
 func _process(_delta: float) -> void:
