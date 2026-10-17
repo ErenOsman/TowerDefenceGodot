@@ -444,3 +444,6 @@ Offline check of candidate content entries, used by the wiki's Content Editor (/
   chapter1-2 Lost round 13, 579 events), round table, script errors; Reaction / Passive → granted to a dummy, its
   trigger fired once; Form / Token / Mission → "found in", unlock/drop sanity (a mission also plays its level).
 
+## Edge clip (2026-10-17)
+
+The recurring bug Eren named: a ringed portrait, an outlined stat tile or an overhanging chip cut at a card's edge. The rule is in UI Design Rules ("Edge clip"): margins ≥ overhang, `clip_contents` only on scroll bodies, corner chips inside the rect, and `tools/qa/probe_clipping.gd` run on every screen before a render is called done.

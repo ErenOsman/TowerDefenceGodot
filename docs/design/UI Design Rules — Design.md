@@ -202,6 +202,18 @@ The base does not talk; that was only an early idea. Dialogue works like a visua
 
 **Abilities and passives share one list** (user, 2026-10-09), in the Codex and the Info windows: abilities first, then passives, under the single "Abilities" heading. A passive is told apart by its double-rim square chip, the type label "Passive" next to its name (where an ability shows "Attack · melee"), and "Always on" on the right where an ability shows its cooldown; no "Passives" heading and no "No passives" line. Statuses keep their own heading: they are temporary effects on the unit, with a duration and a source.
 
+**Edge clip ("kenar kesiği") — the rule (Eren, 2026-10-17: "bu hatayı çooook kez yaptın, bir isim koyalım").** The
+mistake: a decorated control (a portrait with its ring, a stat tile with its outline, a chip or badge that overhangs,
+a lifted button) is placed at the edge of a panel/card/scroll whose inner margin is smaller than the decoration, or
+inside a container that clips, so its left/top/right edge is cut. Every such clipped edge is a bug called an **edge
+clip**. Rules: (1) a card's content margin is at least the largest overhang of anything inside it (ring stroke, chip
+height, badge offset, the 5 px lift of a primary button) — never 0; (2) `clip_contents` is false on panels and
+containers that hold decorated children; it is true only on scroll bodies, and a scroll body keeps an inner margin
+equal to the overhang; (3) a chip or badge that sits on a corner belongs INSIDE the control's rect (reserve the room),
+not outside it; (4) before a render is called done, the checker looks at every outlined/ringed thing's four edges;
+the automated probe `tools/qa/probe_clipping.gd` walks a screen and reports any Control whose rect (or whose drawn
+overhang) leaves an ancestor's clip rect or a card's margin — run it for every new screen.
+
 **Stat tiles fit any stat (user, 2026-10-09):** two lines, so 3-digit values and long names never clip. Line 1: icon + the number (Plinth) + an optional bonus badge ("+2", "+20"); line 2: the stat's name in Nunito 18–20 ("Duration", "Potency", "Radius", "Max HP"), never truncated. Tiles sit in a 2-column grid with a fixed width; stats the unit doesn't have are left out, and more than four stats add rows. The same tile is used in the Codex, the Info windows and the HUD inspector card.
 
 ### Decisions from the build review (user, 2026-10-09)
