@@ -447,3 +447,25 @@ Offline check of candidate content entries, used by the wiki's Content Editor (/
 ## Edge clip (2026-10-17)
 
 The recurring bug Eren named: a ringed portrait, an outlined stat tile or an overhanging chip cut at a card's edge. The rule is in UI Design Rules ("Edge clip"): margins ≥ overhang, `clip_contents` only on scroll bodies, corner chips inside the rect, and `tools/qa/probe_clipping.gd` run on every screen before a render is called done.
+
+**The probe.** `cd ~/godot && GODOT_TIMEOUT=600 ./jobs.sh --render shot [--resolution 1280x720] tools/qa/probe_clipping.gd -- [screens|all] [shots=user://<dir>]`
+(about 2 min for all; exit 0 clean, 1 findings, 2 unknown screen / stuck). Screens: main_menu, settings (4 tabs), codex
+(4 sections; the towers page has the shared tower card), level_select, hand_editor, camp, guild, mission_board,
+mission_detail, rewards, blacksmith, workshop, workshop_modify, upgrade, upgrade_view, upgrade_view_form, backpack. It
+uses its own save (user://probe_clipping.json), opens each screen through SceneFlow and the screens' openers, and walks
+the top layer's visible Controls. Output: one line per finding `<screen> <node path> <edge(s)> <px>  [check: …]`, then
+`PROBE CLIP SUMMARY`. Checks: **a** the drawn rect leaves a `clip_contents` ancestor (along a scroll's axis the scroll
+rect merged with its content, so rows cut by scrolling pass; a control wholly outside a clip is slid away and
+skipped); **b** it leaves its nearest card (PanelContainer / Panel with a drawn StyleBox); **c** either one caused only
+by an overhang (TdSliceBox outset, StyleBoxFlat/Texture expand margins and shadow, TdTowerCard.RingLine stroke, a
+TdButton's bleed when it keeps none inside its rect, a `clip_overhang` Vector4 meta a screen can set on its own
+drawer) or by a known portrait decoration (ring TextureRect at a negative offset, LvChip, FormBadge, ReadyMark). A
+child that repeats its parent's finding is not listed again. The math is `tools/qa/clip_math.gd`
+(`tests/test_clip_probe.gd`). True false positives go in the probe's `WHITELIST` with a reason (empty today). A new
+screen gets an opener in `_probe_screen()`.
+
+Fixed with it (2026-10-17; the first run listed 27 findings on 6 screens): the Upgrade view's Now / After cards (the
+scroll body kept 2 px; the 84 px medallion's ring and Lv chip hang ~6 px: `TdTowerCard.medallion_overhang()` is the
+room now, the cards' padding dropped by as much so nothing moved); the Upgrade and Workshop sliding panes (their clip cut
+the paper cards' 3 px rims: `PANE_BLEED` 6 px inside the clip, the window padding 6 px smaller); Level select's detail
+(its clipping text column ran 7 px long for The Glutton and cut the last row of enemy chips: two 18 px spacers → 12).

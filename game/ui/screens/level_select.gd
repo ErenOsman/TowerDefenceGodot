@@ -155,13 +155,15 @@ func _build_detail() -> void:
 	_desc.size_flags_horizontal = SIZE_SHRINK_BEGIN
 	_info.add_child(TdMenu.spacer(6))
 	_info.add_child(_desc)
-	_info.add_child(TdMenu.spacer(18))
+	# 12, not 18 (edge clip 2026-10-17): with 18 a two-line description, the facts and three rows of enemy chips
+	# (The Glutton) ran 7 px past the clipping holder and the last row's chips were cut at the bottom
+	_info.add_child(TdMenu.spacer(12))
 	_facts = GridContainer.new()
 	_facts.columns = 2
 	_facts.add_theme_constant_override("h_separation", 12)
 	_facts.add_theme_constant_override("v_separation", 12)
 	_info.add_child(_facts)
-	_info.add_child(TdMenu.spacer(18))
+	_info.add_child(TdMenu.spacer(12))
 	_enemies_head = TdMenu.label("Enemies in this level", "plate", TdTheme.color("cream.300"), 20)
 	_info.add_child(_enemies_head)
 	# shown instead of the chips until the level has been played once (MenuLogic.EnemiesUnplayedText)

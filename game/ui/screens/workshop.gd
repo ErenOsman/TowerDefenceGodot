@@ -19,6 +19,10 @@ signal changed
 
 const WIN := Vector2(1460, 864)
 const PAD := 22.0
+## Room the sliding panes keep inside their clip (edge clip, UI Design Rules § Edge clip): the paper cards' rims
+## (paper_card outset 3) and the buttons' bleed hang past the panes; the window's padding is smaller by as much, so
+## the panes sit where they did.
+const PANE_BLEED := 6.0
 const SLIDE_TIME := 0.35
 ## The Modify view's columns (mockup grid 330px 1fr 380px).
 const NOW_W := 344.0
@@ -73,7 +77,7 @@ func _build() -> void:
 	center.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	center.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(center)
-	var p := TdMenu.panel(TdPanel.Kind.WINDOW, PAD)
+	var p := TdMenu.panel(TdPanel.Kind.WINDOW, PAD - PANE_BLEED)
 	p.custom_minimum_size = WIN
 	center.add_child(p)
 	window = p
@@ -93,15 +97,19 @@ func _build() -> void:
 	_build_mod()
 
 func _layout_panes() -> void:
-	var s := _clip.size
-	_pick.position = Vector2.ZERO
+	var s := _clip.size - Vector2(PANE_BLEED, PANE_BLEED) * 2.0
+	_pick.position = Vector2(PANE_BLEED, PANE_BLEED)
 	_pick.size = s
-	_mod.position = Vector2(s.x + PAD * 2.0, 0)
+	_mod.position = Vector2(PANE_BLEED + _pane_step(), PANE_BLEED)
 	_mod.size = s
 	if _slide_tween == null or not _slide_tween.is_running(): _slider.position.x = _slide_x()
 
 func _slide_x() -> float:
-	return 0.0 if view == "pick" else -(_clip.size.x + PAD * 2.0)
+	return 0.0 if view == "pick" else -_pane_step()
+
+## How far apart the two panes sit (one pane plus the window's padding on both sides, as before PANE_BLEED).
+func _pane_step() -> float:
+	return _clip.size.x - PANE_BLEED * 2.0 + PAD * 2.0
 
 func _build_pick() -> void:
 	var head := TdMenu.hbox(14)

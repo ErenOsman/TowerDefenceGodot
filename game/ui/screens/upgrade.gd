@@ -28,10 +28,17 @@ signal changed
 const SCENE := "res://game/ui/screens/upgrade.tscn"
 const WIN := Vector2(1460, 864)
 const PAD := 22.0
+## Room the sliding panes keep inside their clip (edge clip, UI Design Rules § Edge clip): the paper cards' rims
+## (paper_card outset 3) and the buttons' bleed hang past the panes; the window's padding is smaller by as much, so
+## the panes sit where they did.
+const PANE_BLEED := 6.0
 const SLIDE_TIME := 0.35
 ## The view's columns: now · tasks · after (the two cards the same width).
 const NOW_W := 380.0
 const RIGHT_W := 380.0
+## The Now / After cards' padding: 14 before the scroll body kept the medallion's room (edge clip, 2026-10-17); the
+## room moved inside the scroll (its clip no longer cuts the ring), so the content sits where it did.
+const CARD_PAD := 14.0 - 4.0
 const TITLE_INK := Color("#2B5594")
 const GOOD := Color("#2F8A45")
 const GOLD_BAR := Color("#C9952A")
@@ -90,7 +97,7 @@ func _build() -> void:
 	center.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	center.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(center)
-	var p := TdMenu.panel(TdPanel.Kind.WINDOW, PAD)
+	var p := TdMenu.panel(TdPanel.Kind.WINDOW, PAD - PANE_BLEED)
 	p.custom_minimum_size = WIN
 	center.add_child(p)
 	window = p
@@ -110,15 +117,19 @@ func _build() -> void:
 	_build_view()
 
 func _layout_panes() -> void:
-	var s := _clip.size
-	_pick.position = Vector2.ZERO
+	var s := _clip.size - Vector2(PANE_BLEED, PANE_BLEED) * 2.0
+	_pick.position = Vector2(PANE_BLEED, PANE_BLEED)
 	_pick.size = s
-	_view.position = Vector2(s.x + PAD * 2.0, 0)
+	_view.position = Vector2(PANE_BLEED + _pane_step(), PANE_BLEED)
 	_view.size = s
 	if _slide_tween == null or not _slide_tween.is_running(): _slider.position.x = _slide_x()
 
 func _slide_x() -> float:
-	return 0.0 if view == "pick" else -(_clip.size.x + PAD * 2.0)
+	return 0.0 if view == "pick" else -_pane_step()
+
+## How far apart the two panes sit (one pane plus the window's padding on both sides, as before PANE_BLEED).
+func _pane_step() -> float:
+	return _clip.size.x - PANE_BLEED * 2.0 + PAD * 2.0
 
 func _build_pick() -> void:
 	var head := TdMenu.hbox(14)
@@ -180,7 +191,7 @@ func _build_view() -> void:
 	_view.add_child(body)
 	var left := TdMenu.panel(TdPanel.Kind.PAPER, 16)
 	left.custom_minimum_size = Vector2(NOW_W, 0)
-	left.padding = 14
+	left.padding = CARD_PAD
 	_now = TdMenu.vbox(8)
 	left.add_child(_now)
 	body.add_child(left)
@@ -191,7 +202,7 @@ func _build_view() -> void:
 	body.add_child(mid)
 	var right := TdMenu.panel(TdPanel.Kind.PAPER, 16)
 	right.custom_minimum_size = Vector2(RIGHT_W, 0)
-	right.padding = 14
+	right.padding = CARD_PAD
 	_right = TdMenu.vbox(8)
 	right.add_child(_right)
 	body.add_child(right)
@@ -372,7 +383,8 @@ func _tiles(t: TowerType) -> Array:
 ## the changed tiles) and the abilities (their numbers are the levelled ones).
 func _card(col: VBoxContainer, caption: String, t: TowerType, lv: int, diffs: Dictionary) -> void:
 	TdCollection.clear_children(col)
-	var body := _scroll_body(col, 8)
+	# the medallion's ring and Lv chip hang ~6 px past it: the scroll body keeps that much room (edge clip)
+	var body := _scroll_body(col, 8, ceili(TdTowerCard.medallion_overhang(84)))
 	body.add_child(_caption(caption))
 	var head := TdMenu.hbox(12)
 	body.add_child(head)
@@ -472,17 +484,20 @@ func _refresh_mid() -> void:
 
 # ------------------------------------------------------------------ parts
 
-## A ScrollContainer filling a column (vertically), holding a vbox (returned).
-func _scroll_body(parent: Control, sep := 10) -> VBoxContainer:
+## A ScrollContainer filling a column (vertically), holding a vbox (returned). room: the inner margin the clipping
+## scroll keeps on the left, top and bottom (and right, beside the scroll bar's 4) for what its rows draw past their
+## rects (UI Design Rules § Edge clip).
+func _scroll_body(parent: Control, sep := 10, room := 2) -> VBoxContainer:
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = SIZE_EXPAND_FILL
 	TdDragScroll.attach(scroll, true)
 	parent.add_child(scroll)
 	var gutter := MarginContainer.new()
-	gutter.add_theme_constant_override("margin_right", 4)
-	gutter.add_theme_constant_override("margin_left", 2)
-	gutter.add_theme_constant_override("margin_top", 2)
+	gutter.add_theme_constant_override("margin_right", maxi(4, room))
+	gutter.add_theme_constant_override("margin_left", room)
+	gutter.add_theme_constant_override("margin_top", room)
+	gutter.add_theme_constant_override("margin_bottom", room if room > 2 else 0)
 	gutter.size_flags_horizontal = SIZE_EXPAND_FILL
 	scroll.add_child(gutter)
 	var body := TdMenu.vbox(sep)

@@ -136,7 +136,7 @@ func _run() -> void:
 	ws.back_to_picker()
 	await _frames(2)
 	if ws._slide_tween != null: ws._slide_tween.kill()
-	ws._slider.position.x = ws._slide_x() - (ws._clip.size.x + 44.0) * 0.45
+	ws._slider.position.x = ws._slide_x() - ws._pane_step() * 0.45
 	await _frames(2)
 	await _shot("slide")
 	# the picker: Fire Archer and Storm Mage formed

@@ -211,6 +211,13 @@ static func medallion(tex: Texture2D, diameter: float, badge_path := "", grey :=
 	TdFormBadge.attach(m, badge_path, diameter)
 	return m
 
+## How far a medallion `diameter` px across draws past its rect on every side: the portrait_ring sprite (1.12 × the
+## diameter, TdMenu.medallion), a RingLine's stroke and rim, the Lv chip hung at -0.06 × the diameter (TdLvChip.attach).
+## A card or scroll body holding one keeps at least this much inner margin (UI Design Rules § Edge clip).
+static func medallion_overhang(diameter: float) -> float:
+	var ring_line := diameter * 0.015 + (maxf(4.0, diameter * 0.055) + 4.0) / 2.0
+	return maxf(diameter * 0.06, ring_line)
+
 ## A coloured ring drawn round a medallion (form tint, Current cobalt, Can unlock gold).
 class RingLine extends Control:
 	var colour := Color.WHITE
