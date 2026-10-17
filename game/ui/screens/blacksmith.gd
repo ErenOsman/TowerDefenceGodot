@@ -38,7 +38,7 @@ const Title := "Blacksmith"
 const Sub := "Modify and upgrade towers"
 ## The stations, in placement order: {id, label, sub, icon, action, primary}.
 const STATIONS := [
-	{"id": "Modify", "label": "Modify", "sub": "", "icon": "icon_edit", "action": "open_modify", "nudge": Vector2(-30, -24)},
+	{"id": "Modify", "label": "Modify", "sub": "", "icon": "icon_edit", "action": "open_modify", "nudge": Vector2(12, -36)},
 	{"id": "Upgrade", "label": "Upgrade", "sub": "", "icon": "icon_plus", "action": "open_upgrade"},
 	{"id": "Towers", "label": "Towers", "sub": "", "icon": "icon_cards", "action": "open_towers"},
 	{"id": "Camp", "label": "Camp", "sub": "", "icon": "icon_back", "action": "back_to_camp"},
@@ -146,7 +146,7 @@ static func _mark_seen() -> void:
 
 func _build_title() -> void:
 	var title := TdMenu.label(Title, "display", TdTheme.color("cream.100"), 64)
-	title.position = Vector2(58, 28)
+	title.position = Vector2(30, 28) # a little further left, clear of the props (Eren 2026-10-17)
 	title.add_theme_color_override("font_shadow_color", TdTheme.color("rim"))
 	title.add_theme_constant_override("shadow_offset_y", 3)
 	title.mouse_filter = MOUSE_FILTER_IGNORE

@@ -204,7 +204,9 @@ static func stylebox_face(name: String, band_px: int) -> StyleBox:
 	var b: TdSliceBox = base.duplicate()
 	var ts := b.texture.get_size()
 	b.region = Rect2(0, 0, ts.x, ts.y - band_px)
-	b.border_bottom = maxi(0, b.border_bottom - band_px)
+	# the face keeps its bottom corners: the bottom slice stays at least as tall as the top one (the corner radius),
+	# else the pressed face's corners stretch flat (Eren 2026-10-17: the pressed Blacksmith button's bottom looked cut)
+	b.border_bottom = maxi(b.border_top, b.border_bottom - band_px)
 	b.outset_bottom = b.outset_bottom - band_px * SPRITE_SCALE
 	_boxes[key] = b
 	return b
