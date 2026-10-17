@@ -253,7 +253,7 @@ func test_camp_layout_reads_the_stations() -> void:
 	var layout: Dictionary = camp.load_layout()
 	var names := []
 	for s in layout.slots:
-		if s.get("station") != null: names.append(s.station)
+		if s.get("station") != null: names.append(camp.STATION_ALIASES.get(s.station, s.station)) # the v2 layout says "Blacksmith" for the Workshop station
 	for st in camp.STATIONS: assert_contains(names, st.id, "every station has a slot in layout.json")
 
 func test_level_select_chapter_tag_new_until_played() -> void:
