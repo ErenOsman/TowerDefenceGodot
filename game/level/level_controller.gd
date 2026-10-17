@@ -1463,13 +1463,15 @@ func _ready_glow(p: Vector2i) -> void:
 	if glow != null: board.highlight(p, Color(1, 1, 1, 0.8), 1.3, 0.015, glow)
 	else: board.highlight(p, Color(0.45, 0.7, 1.0, 0.22), 0.96, 0.015)
 
-## The cobalt selection ring round a unit: a true circle on screen (Eren 2026-10-15), drawn by the overlay's
-## SelectRingLayer round the feet of its view (where it stands while an action plays), else of its tile.
+## The cobalt selection ring under a unit: the kit's ground decal on its tile (the look Eren liked; the screen-circle
+## version of 2026-10-15 is gone again, 2026-10-17 "eskiden seçili kulenin altındaki şey çok iyiydi"). While an
+## action plays the ring follows the tile the view stands on.
 func _selection_ring(id: int, tile: Vector2i, strength: float) -> void:
-	if overlay == null or overlay.rings == null: return
 	var v := view_of(id)
-	var at := v.world_position if v != null and v.visible else GridSpace.to_world(tile)
-	overlay.rings.add_ring(Vector3(at.x, 0.0, at.z), strength)
+	var p := GridSpace.to_tile(v.world_position) if v != null and v.visible else tile
+	var ring := _decal("board/decal_select_ring")
+	if ring != null: board.highlight(p, Color(1, 1, 1, strength), 1.15, 0.03, ring)
+	else: board.highlight(p, Color(SELECT_COLOR, SELECT_COLOR.a * strength))
 
 ## The units you command that can still cast something besides walking (cached per version).
 func _ready_units_now() -> Array:
