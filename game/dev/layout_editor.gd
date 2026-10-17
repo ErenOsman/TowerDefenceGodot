@@ -57,7 +57,10 @@ func start(s: Control) -> bool:
 	return true
 
 func place_name() -> String:
-	return layout_path.get_base_dir().get_file().capitalize() # "Camp" / "Guild"
+	var d := layout_path.get_base_dir()
+	# a versioned kit (art/camp/v2/layout.json) is still the Camp
+	if d.get_file().length() >= 2 and d.get_file().begins_with("v") and d.get_file().substr(1).is_valid_int(): d = d.get_base_dir()
+	return d.get_file().capitalize() # "Camp" / "Guild"
 
 func _build() -> void:
 	_catcher = Control.new()

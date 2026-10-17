@@ -1,5 +1,6 @@
 extends TestCase
-## The Camp's Guild station and the Chapter 2 gate (Eren 2026-10-15), the post-Chapter-2 mini tour flag, the
+## The Camp v2 layout (art/camp/v2/layout.json: the Smithy and the Guild hall as buildings, closed before Chapter 2,
+## open after it with a button and a door hotspot), the Chapter 2 gate (Eren 2026-10-15), the post-Chapter-2 mini tour flag, the
 ## SceneFlow slide's pose, and the layout editor (TdLayoutEditor) on a live Camp: select, move with snapping,
 ## turn, scale, delete decor, and the saved layout keeping the schema. Uses its own save path (restored after).
 
@@ -36,24 +37,43 @@ func _camp() -> Control:
 	holder.add_child(c)
 	return c
 
-func test_camp_guild_slot_in_layout() -> void:
+func test_camp_v2_layout() -> void:
 	var layout: Dictionary = load("res://game/ui/screens/camp.gd").load_layout()
-	var by_slot := {}
-	for s in layout.slots: by_slot[int(s.slot)] = s
-	assert_eq(by_slot[5].station, "Guild", "the Guild stands where Multiplayer stood")
-	assert_eq(by_slot[5].prop, "Signpost")
-	assert_eq(by_slot[5].row, "front")
-	assert_null(by_slot[4].station, "slot 4 is free")
-	assert_null(by_slot[4].prop)
-	for s in layout.slots: assert_ne(s.station, "Multiplayer", "no Multiplayer in the Camp")
+	assert_eq(layout.kits, ["camp/v2", "camp", "tiles"])
+	assert_eq(layout.ring.centre, [6.5, 5.0], "the camera target (the chimney smoke in frame)")
+	var by_station := {}
+	for s in layout.slots: by_station[str(s.station)] = s
+	assert_eq(by_station.keys().size(), 5)
+	for id in ["Chapters", "Towers", "Codex", "Blacksmith", "Guild"]: assert_true(by_station.has(id), id)
+	for id in ["Blacksmith", "Guild"]:
+		var s: Dictionary = by_station[id]
+		assert_true(s.has("prop_closed") and s.has("unlock"), "%s is a building with a closed facade" % id)
+		assert_eq(s.hotspot, "door")
+		assert_eq(s.door.size_local.size(), 2)
+	assert_eq(by_station["Guild"].prop, "Guild Hall Facade Open")
+	assert_eq(by_station["Blacksmith"].prop_closed, "Smithy Facade Closed")
+	for s in layout.slots:
+		assert_eq(s.row, "front", "every button on the floor in front of its prop / door")
+		assert_ne(s.station, "Multiplayer", "no Multiplayer in the Camp")
+	assert_eq(load("res://game/ui/screens/camp.gd").STATION_ALIASES["Blacksmith"], "Workshop", "the Smithy keeps the Workshop id")
 
-func test_camp_hides_guild_and_workshop_before_chapter2() -> void:
+func _shown_prop(c: Control, id: String) -> String:
+	for e in c.world.entries:
+		if e.kind == "slot" and e.node == c.props.get(id): return e.prop
+	return ""
+
+func test_camp_closed_buildings_before_chapter2() -> void:
 	_chapters(1)
 	var c := _camp()
 	assert_true(c.buttons["Chapters"].visible)
 	assert_false(c.buttons["Guild"].visible, "no Guild button before Chapter 2 (not greyed: hidden)")
 	assert_false(c.buttons["Workshop"].visible, "no Workshop button before Chapter 2")
-	assert_not_null(c.props.get("Guild"), "the Signpost prop stays on the board")
+	assert_not_null(c.props.get("Guild"), "the Guild hall stands there, closed")
+	assert_not_null(c.props.get("Workshop"), "the Smithy stands there, closed")
+	assert_true(c.is_closed("Guild") and c.is_closed("Workshop"))
+	assert_eq(_shown_prop(c, "Guild"), "Guild Hall Facade Closed")
+	assert_eq(_shown_prop(c, "Workshop"), "Smithy Facade Closed")
+	assert_true(c.hotspots.is_empty(), "no door hotspot while closed")
 	assert_null(c.guild_tag)
 	assert_false(c.open_tour_due())
 	c.show_tour_step(0)
@@ -61,7 +81,7 @@ func test_camp_hides_guild_and_workshop_before_chapter2() -> void:
 	while c.tour_step >= 0:
 		ids.append(c.tour[c.tour_step][0])
 		c.show_tour_step(c.tour_step + 1)
-	assert_eq(ids, ["Chapters", "Towers", "Codex"], "the first tour skips the hidden stations")
+	assert_eq(ids, ["Chapters", "Towers", "Codex"], "the first tour skips the closed buildings")
 
 func test_camp_shows_guild_after_chapter2_with_new_tag_and_mini_tour() -> void:
 	_chapters(2)
@@ -71,8 +91,14 @@ func test_camp_shows_guild_after_chapter2_with_new_tag_and_mini_tour() -> void:
 	var g: TdMenuButton = c.buttons["Guild"]
 	assert_true(g.visible)
 	assert_true(c.buttons["Workshop"].visible)
+	assert_false(c.is_closed("Guild") or c.is_closed("Workshop"), "the doors open after Chapter 2")
+	assert_eq(_shown_prop(c, "Guild"), "Guild Hall Facade Open")
+	assert_eq(_shown_prop(c, "Workshop"), "Smithy Facade Open")
+	assert_true(c.hotspots.has("Guild") and c.hotspots.has("Workshop"), "each open door is a hotspot")
+	assert_null(TdTooltipTrigger.find_on(c.hotspots["Guild"]), "a door hotspot has no tooltip")
+	for id in ["Chapters", "Towers", "Codex", "Workshop", "Guild"]:
+		assert_eq(c.buttons[id].sub, "", "no line under %s" % id)
 	assert_eq(g.text, "Guild")
-	assert_eq(g.sub, "", "no line under a station button (Eren 2026-10-17)")
 	assert_not_null(c.guild_tag, "a New tag on the button until the first Guild visit")
 	assert_eq(c.guild_tag.get_parent(), g)
 	assert_true(c.open_tour_due())
@@ -134,7 +160,7 @@ func test_layout_editor_moves_turns_scales_and_saves_the_schema() -> void:
 	for e in c.world.entries:
 		if e.kind == "slot" and e.node == c.props["Guild"]: guild_e = e
 		if e.kind == "decor" and e.prop == "Tent": tent_e = e
-	assert_false(guild_e.is_empty(), "the Guild's Signpost is a slot entry")
+	assert_false(guild_e.is_empty(), "the Guild hall is a slot entry")
 	assert_false(tent_e.is_empty())
 	ed.select(guild_e)
 	ed.move_selected(Vector2(10.13, 3.4))
@@ -143,24 +169,28 @@ func test_layout_editor_moves_turns_scales_and_saves_the_schema() -> void:
 	assert_true(TdLayoutEditor.prop_tile(c.props["Guild"]).distance_to(Vector2(10.13, 3.4)) < 0.001, "free with Shift")
 	ed.rotate_selected(15.0)
 	ed.scale_selected(0.1)
-	assert_num(snappedf(c.props["Guild"].scale.x, 0.01), 2.7)
+	assert_num(snappedf(c.props["Guild"].scale.x, 0.01), 2.9)
 	assert_true(ed.dirty)
 	ed.select(guild_e)
 	assert_false(ed.delete_selected(), "stations cannot be removed")
 	ed.select(tent_e)
 	assert_true(ed.delete_selected())
 	var out: Dictionary = ed.current_layout()
-	var s5: Dictionary = {}
+	var s1: Dictionary = {}
 	for s in out.slots:
-		if int(s.slot) == 5: s5 = s
-	assert_eq(s5.station, "Guild", "stations keep their slot ids")
-	assert_eq(s5.tile, [10.13, 3.4])
-	assert_num(s5.face_yaw, 15.0)
-	assert_num(s5.scale, 2.7)
-	assert_eq(s5.row, "front")
-	assert_true(s5.has("note"), "notes kept")
-	assert_eq(out.slots.size(), 7)
-	assert_eq(out.decor.map(func(d): return d.prop), ["Supplies"], "the deleted decor is gone")
+		if int(s.slot) == 1: s1 = s
+	assert_eq(s1.station, "Guild", "stations keep their slot ids")
+	assert_eq(s1.tile, [10.13, 3.4])
+	assert_num(s1.face_yaw, 15.0)
+	assert_num(s1.scale, 2.9)
+	assert_eq(s1.row, "front")
+	assert_eq(s1.prop, "Guild Hall Facade Open", "the open / closed props kept")
+	assert_eq(s1.prop_closed, "Guild Hall Facade Closed")
+	assert_true(s1.has("door") and s1.has("unlock"), "door and unlock kept")
+	assert_true(s1.has("note"), "notes kept")
+	assert_eq(out.slots.size(), 5)
+	assert_eq(out.decor.map(func(d): return d.prop), ["Camp Paths", "Hills Backdrop", "Camp Trees", "Camp Trees", "Signpost"], "the deleted decor is gone")
+	assert_eq(out.kits, ["camp/v2", "camp", "tiles"], "kits kept")
 	assert_eq(out.board.tiles, [14, 10], "whole numbers stay ints")
 	assert_true(out.has("ring") and out.has("centre"))
 	assert_eq(out.centre.prop, "Campfire")
@@ -169,7 +199,7 @@ func test_layout_editor_moves_turns_scales_and_saves_the_schema() -> void:
 	var p := ed.save()
 	assert_eq(p, "user://test_layout_camp.json")
 	var back = JSON.parse_string(FileAccess.get_file_as_string(p))
-	assert_true(back is Dictionary and back.has("slots") and back.decor.size() == 1)
+	assert_true(back is Dictionary and back.has("slots") and back.decor.size() == 5)
 	assert_false(ed.dirty)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
 	ed.free()

@@ -1,24 +1,34 @@
 extends Control
-## The Camp (UI_Camp.cs; Camp & Chapters — Design): the home between levels once Chapter 1 is won. A 3D camp
-## laid out from res://art/camp/layout.json (map-kit ground with its frame, the station props on a ring round the
-## Campfire, all facing the camera; Tent and Supplies) with a station button over each prop: Chapters (the chapter picker, then a chapter's
-## levels), Towers (the hand editor over every owned tower), Codex, Blacksmith (station id "Workshop", the anvil
-## table's slot: "Modify and upgrade towers"; slides to the Blacksmith place, SceneFlow.Blacksmith, which holds the
-## Workshop; Blacksmith — Design), Guild (by the Signpost, "Missions and co-op": the Camp slides out to the left as the Guild comes in, SceneFlow.slide;
-## a gold "New" on the button until the first Guild visit) and Main menu; no Multiplayer here (it lives in the Guild
-## only). Eren 2026-10-15: the Blacksmith and Guild buttons are not shown at all before Chapter 2's last level is won
-## (no locked state; the props stay). The first visit (PlayerProfile.camp_seen) shows a welcome card, then a tour:
+## The Camp (UI_Camp.cs; Camp & Chapters — Design § Camp v2): the home between levels once Chapter 1 is won. A 3D
+## settlement laid out from res://art/camp/v2/layout.json (map-kit ground with its frame; the Smithy and the Guild
+## hall as buildings at the back, the campfire and tent in the middle, War Table / Codex Lectern / Miniature Shelf at
+## the front; hills, trees, paths, signpost as decor; props looked up in the layout's "kits": camp/v2 → camp → tiles)
+## with a station button on the floor in front of each prop / door (no lines under them): Chapters (primary; the
+## chapter picker, then a chapter's levels), Towers (the hand editor over every owned tower), Codex, Blacksmith (the
+## Smithy: layout station "Blacksmith", id "Workshop" for saves / tests / tools; slides to SceneFlow.Blacksmith from
+## the left), Guild (the Guild hall: slides to SceneFlow.Guild from the right; a gold "New" on the button until the
+## first Guild visit) and Main menu; no Multiplayer here (it lives in the Guild only). Before Chapter 2's last level
+## is won the two buildings stand CLOSED (the layout's prop_closed: door shut, dark windows; no button, no hotspot);
+## after it they are built OPEN (prop: door open, lit, smoke / flag Idle), with the button, the doorway as a hotspot
+## (click = the station) and a warm light inside the door (TdStationWorld closed / doors). The first visit (PlayerProfile.camp_seen) shows a welcome card, then a tour:
 ## the Princess's speech bubble (TdTextBubble) points at each shown station in turn, the station highlighted; a click
 ## goes on, Skip ends it. After Chapter 2 the next visit points once at the Guild and the Blacksmith
 ## (PlayerProfile.guild_tour_seen, TOUR_OPEN). Map music comes from SceneFlow (AudioMgr.play_scene_music).
 
 const SCREENS := "res://game/ui/screens/"
-## Where the props stand: the Blender agent's camp layout (source of truth). Board 18×9 tiles, x left→right,
-## depth front→back; Godot position = Vector3(x, 0, -depth); yaw = rotation_degrees.y.
-const LAYOUT := "res://art/camp/layout.json"
+## Where the props stand: the Blender agent's Camp v2 layout (source of truth; the F1 layout editor writes it back).
+## Board 14×10 tiles, x left→right, depth front→back; Godot position = Vector3(x, 0, -depth); yaw = rotation_degrees.y.
+## (art/camp/layout.json, the v1 ring, stays in the repo for reference only.)
+const LAYOUT := "res://art/camp/v2/layout.json"
+## Prop folders when the layout names none.
+const DEFAULT_KITS := ["camp/v2", "camp", "tiles"]
+## A layout station name → the station id here (the Smithy keeps the Workshop's id: saves, tests, tools).
+const STATION_ALIASES := {"Blacksmith": "Workshop"}
+## The warm light inside each open doorway (README: FFB24A, range ~2.5); energy 0 = none.
+const DOOR_LIGHT_ENERGY := 1.2
 ## The stations, data-driven: adding one = an entry here + a slot with its name in layout.json.
-## {id, label, icon, action (method name, "" for none), locked, sub (a second line), gate ("chapter2": not shown
-## until Chapter 2's last level is won)}
+## {id, label, icon, action (method name, "" for none), locked, gate ("chapter2" / "blacksmith": not shown until
+## that unlock; a layout slot with prop_closed shows its closed facade until then)}
 const STATIONS := [
 	{"id": "Towers", "label": "Towers", "icon": "icon_cards", "action": "open_towers", "locked": false},
 	{"id": "Chapters", "label": "Chapters", "icon": "icon_castle", "action": "open_chapters", "locked": false, "primary": true},
@@ -27,21 +37,31 @@ const STATIONS := [
 	{"id": "Workshop", "label": "Blacksmith", "icon": "icon_edit", "action": "open_blacksmith", "locked": false, "gate": "blacksmith"},
 	{"id": "Guild", "label": "Guild", "icon": "extra:flag", "action": "open_guild", "locked": false, "gate": "chapter2"},
 ]
-## Used when layout.json cannot be read (same values as layout.json, the ring layout of 2026-10-13).
+## Used when layout.json cannot be read (the v2 file's values of 2026-10-17, notes left out).
 const FALLBACK_LAYOUT := {
 	"board": {"tiles": [14, 10], "ground": "map kit (BoardView ground pieces + frame)"},
-	"ring": {"centre": [6.5, 4.6], "radius": [5.2, 3.3], "slots": 7, "first_angle_deg": 90},
-	"centre": {"prop": "Campfire", "tile": [6.5, 4.6], "scale": 3.0, "yaw": 0},
+	"kits": ["camp/v2", "camp", "tiles"],
+	"ring": {"centre": [6.5, 5.0], "radius": [5.2, 3.3]},
+	"centre": {"prop": "Campfire", "tile": [6.3, 4.85], "scale": 3.0, "yaw": 0, "station": null},
 	"slots": [
-		{"slot": 0, "tile": [6.5, 7.9], "face_yaw": 0.0, "row": "back", "station": "Chapters", "prop": "War Table", "scale": 3.2},
-		{"slot": 1, "tile": [2.43, 6.66], "face_yaw": 0.0, "row": "back", "station": "Towers", "prop": "Miniature Shelf", "scale": 3.4},
-		{"slot": 2, "tile": [1.43, 3.87], "face_yaw": 0.0, "row": "front", "station": "Workshop", "prop": "Tower Workshop", "scale": 3.2},
-		{"slot": 3, "tile": [4.24, 1.63], "face_yaw": 0.0, "row": "front", "station": null, "prop": null},
-		{"slot": 4, "tile": [8.76, 1.63], "face_yaw": 0.0, "row": "front", "station": null, "prop": null},
-		{"slot": 5, "tile": [11.57, 3.87], "face_yaw": 0.0, "row": "front", "station": "Guild", "prop": "Signpost", "scale": 2.6},
-		{"slot": 6, "tile": [10.57, 6.66], "face_yaw": 0.0, "row": "back", "station": "Codex", "prop": "Codex Lectern", "scale": 3.2},
+		{"slot": 0, "tile": [2.6, 7.65], "face_yaw": 0.0, "row": "front", "station": "Blacksmith", "prop": "Smithy Facade Open",
+			"prop_closed": "Smithy Facade Closed", "scale": 2.8, "unlock": "guildUnlock", "hotspot": "door",
+			"door": {"centre_local": [0.0, 0.235, 0.33], "size_local": [0.34, 0.47]}},
+		{"slot": 1, "tile": [10.6, 7.65], "face_yaw": 0.0, "row": "front", "station": "Guild", "prop": "Guild Hall Facade Open",
+			"prop_closed": "Guild Hall Facade Closed", "scale": 2.8, "unlock": "guildUnlock", "hotspot": "door",
+			"door": {"centre_local": [0.0, 0.245, 0.38], "size_local": [0.32, 0.49]}},
+		{"slot": 2, "tile": [2.1, 1.9], "face_yaw": 0.0, "row": "front", "station": "Chapters", "prop": "War Table", "scale": 3.2},
+		{"slot": 3, "tile": [6.9, 1.5], "face_yaw": 0.0, "row": "front", "station": "Codex", "prop": "Codex Lectern", "scale": 3.2},
+		{"slot": 4, "tile": [11.5, 1.9], "face_yaw": 0.0, "row": "front", "station": "Towers", "prop": "Miniature Shelf", "scale": 3.0},
 	],
-	"decor": [{"prop": "Tent", "tile": [4.3, 1.8], "scale": 2.1, "yaw": 0}, {"prop": "Supplies", "tile": [12.2, 8.9], "scale": 2.6, "yaw": -15}],
+	"decor": [
+		{"prop": "Camp Paths", "tile": [6.5, 4.5], "scale": 1.0, "yaw": 0},
+		{"prop": "Hills Backdrop", "tile": [6.5, 8.9], "scale": 1.0, "yaw": 0},
+		{"prop": "Camp Trees", "tile": [0.15, 7.75], "scale": 1.0, "yaw": 0},
+		{"prop": "Camp Trees", "tile": [12.85, 7.75], "scale": 1.0, "yaw": 180},
+		{"prop": "Tent", "tile": [6.6, 6.5], "scale": 2.4, "yaw": 0},
+		{"prop": "Signpost", "tile": [8.35, 6.35], "scale": 2.4, "yaw": 0},
+	],
 }
 const BOARD := Vector2(14, 10)
 const TOUR := [
@@ -49,17 +69,19 @@ const TOUR := [
 	["Towers", "Towers: every tower you own. Choose which ones you bring in your hand."],
 	["Codex", "Codex: every tower, enemy and status you have met, and tips."],
 	["Workshop", "Blacksmith: modify your towers into new forms with tokens from missions, and upgrade them."],
-	["Guild", "The Signpost: the way to the Guild. Missions there earn tokens, and co-op lives there too."],
+	["Guild", "The Guild hall: missions there earn tokens, and co-op lives there too."],
 ]
-## The mini tour once Chapter 2 is won (profile.guild_tour_seen): the two buttons that just appeared (Guild, Blacksmith).
+## The mini tour once Chapter 2 is won (profile.guild_tour_seen): the two doors that just opened (Guild, Blacksmith).
 const TOUR_OPEN := [
-	["Guild", "The Signpost: the Guild is open. Missions there earn tokens, and co-op lives there too."],
-	["Workshop", "The Blacksmith is open too: spend those tokens to modify your towers, and upgrade them."],
+	["Guild", "The Guild hall is open. Missions there earn tokens, and co-op lives there too."],
+	["Workshop", "The Smithy is open too: spend those tokens to modify your towers, and upgrade them."],
 ]
 const TOUR_SPEAKER := "Princess"
 
 var buttons := {}       # station id → TdMenuButton
 var props := {}         # station id → Node3D
+## Station id → the doorway hotspot of an open building (Guild, Workshop); none while closed.
+var hotspots := {}
 var _front := {}        # station id → true when its slot is on the front of the ring (button below the prop)
 var _board := BOARD
 var tour_step := -1
@@ -131,12 +153,35 @@ func start_open_tour() -> void:
 func _build_world() -> void:
 	world = TdStationWorld.new()
 	add_child(world)
-	world.build(load_layout(), func(p): return GameApp.camp_scene(p), true)
+	var layout := load_layout()
+	var kits: Array = layout.get("kits", DEFAULT_KITS)
+	world.aliases = STATION_ALIASES
+	world.is_unlocked = func(u: String, id: String) -> bool: return slot_unlocked(u, id)
+	world.build(layout, func(p): return TdStationWorld.kit_scene(kits, p), true)
+	# the open buildings: a warm light inside each doorway (README; the swap itself is picked on build, so it shows on
+	# the first Camp visit after the unlock)
+	if DOOR_LIGHT_ENERGY > 0.0:
+		for id in world.doors:
+			if not world.closed.has(id): world.add_door_light(id, Color("FFB24A"), DOOR_LIGHT_ENERGY)
 	props = world.props
 	_front = world.front
 	_vp = world.vp
 	_cam = world.cam
 	_board = world.board
+
+## Whether a layout slot's building is open (its `unlock`; the station's gate decides when it has one, so the facade
+## and the button always agree): "guildUnlock" = Chapter 2's last level won.
+static func slot_unlocked(unlock: String, id: String) -> bool:
+	for st in STATIONS:
+		if st.id == id and st.has("gate"): return station_shown(st)
+	match unlock:
+		"guildUnlock": return GameApp.guild_unlocked()
+		"blacksmithUnlock": return blacksmith_open()
+	return true
+
+## Whether a station's building stands closed (no button, no hotspot).
+func is_closed(id: String) -> bool:
+	return world != null and world.closed.has(id)
 
 ## The camp layout (layout.json), or the built-in copy when it cannot be read.
 static func load_layout() -> Dictionary:
@@ -160,20 +205,18 @@ func _build_ui() -> void:
 	for st in STATIONS:
 		var b := TdMenuButton.new()
 		b.style = TdButton.Style.MENU_PRIMARY if st.get("primary", false) else TdButton.Style.MENU_WOOD
-		var sub: String = st.get("sub", "")
-		var w := 236.0
-		if sub != "": w = maxf(w, 90.0 + TdTheme.font("nunito_bold").get_string_size(sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x)
-		b.custom_minimum_size = Vector2(w, 72 if st.locked or sub != "" else 60)
+		b.custom_minimum_size = Vector2(236, 72 if st.locked else 60)
 		b.size = b.custom_minimum_size
 		b.text = st.label
-		b.sub = sub
+		b.sub = "" # no line under a station button (Eren 2026-10-17)
 		b.icon = TdDrops.icon_texture(st.icon.trim_prefix("extra:")) if st.icon.begins_with("extra:") else TdTheme.texture(st.icon)
 		b.selectable = true
 		b.left_pad = 20
 		b.font_size = 26
 		add_child(b)
 		buttons[st.id] = b
-		b.visible = station_shown(st) # Blacksmith and Guild: not shown at all before Chapter 2 (Eren 2026-10-15)
+		# Blacksmith and Guild: not shown at all before Chapter 2 (Eren 2026-10-15); a closed building has no button
+		b.visible = station_shown(st) and not is_closed(st.id)
 		var locked_line := "Coming later" if st.locked else ""
 		var action: String = st.action
 		if locked_line != "":
@@ -187,6 +230,11 @@ func _build_ui() -> void:
 			b.clicked.connect(Callable(self, action))
 		if not props.has(st.id) or props[st.id] == null: b.visible = false # no slot for it in the layout yet
 		if not b.visible and b.has_meta("leader"): b.get_meta("leader").visible = false
+		# an open building's doorway is a hotspot too (no tooltip; click = the station), under the buttons
+		if b.visible and action != "" and world.doors.has(st.id) and not is_closed(st.id):
+			var h := world.hotspot(self, st.id, "", Callable(self, action))
+			move_child(h, world.get_index() + 1)
+			hotspots[st.id] = h
 	# the Guild button's "New" until the first Guild visit (a small gold tag on its top-right corner)
 	var gb: TdMenuButton = buttons.get("Guild")
 	if gb != null and gb.visible and MissionUiLogic.signpost_tag(SaveData.profile.guild_seen) != "":
@@ -229,11 +277,16 @@ func _build_ui() -> void:
 	resized.connect(_place_buttons)
 	_place_buttons.call_deferred()
 
-## Each station's button sits above its prop with a leader line down to it (re-placed every frame: the 3D view's
-## size settles late); TdStationWorld.place_buttons keeps them apart.
+## Each station's button by the shared rule (TdStationWorld.place_buttons: every v2 slot is row "front", so the
+## floor in front of the prop / door first; a STATIONS entry's "nudge" is a small hand adjustment), re-placed every
+## frame (the 3D view's size settles late); the door hotspots follow their doorways.
 func _place_buttons() -> void:
 	if world == null: return
-	world.place_buttons(self, buttons, STATIONS.map(func(st): return st.id))
+	var nudges := {}
+	for st in STATIONS:
+		if st.has("nudge"): nudges[st.id] = st.nudge
+	world.place_buttons(self, buttons, STATIONS.map(func(st): return st.id), nudges)
+	world.place_hotspots()
 
 ## Places buttons without overlaps (TdStationWorld.layout_buttons; kept here for the tests and tools).
 static func layout_buttons(items: Array, width: float, gap: float, lift: float) -> Array:
@@ -336,6 +389,10 @@ func show_tour_step(index: int) -> void:
 			bubble.offset_left = pr.end.x + 8.0 if right_side else 0.0
 			bubble.offset_right = 0.0 if right_side else -(size.x - pr.position.x + 8.0)
 			tip = Vector2(pr.end.x - 6.0 if right_side else pr.position.x + 6.0, maxf(row_bottom - 4.0, pr.position.y) if not front else pr.position.y + 6.0)
+		# a building: the bubble beside it still, but pointing at its open door (the post-Chapter-2 mini tour)
+		var dr := world.door_rect(tour[index][0])
+		if dr.has_area() and not centre:
+			tip = Vector2(dr.end.x if right_side else dr.position.x, dr.get_center().y)
 		bubble.point_at(tip)
 		return
 	end_tour()
@@ -401,13 +458,13 @@ func open_towers() -> TdPopup:
 func open_workshop() -> TdPopup:
 	return open_popup("workshop")
 
-## Blacksmith (the anvil table's station): the Camp slides out to the left as the Blacksmith comes in from the right.
+## Blacksmith (the Smithy's button and door): the Camp slides out to the right as the Blacksmith comes in from the left.
 func open_blacksmith() -> void:
 	end_tour()
 	SaveData.save()
 	SceneFlow.slide(SceneFlow.Blacksmith, -1) # the Blacksmith lies to the LEFT of the Camp (Eren 2026-10-16); the Guild to the right
 
-## Guild (the button by the Signpost): the Camp slides out to the left as the Guild comes in from the right.
+## Guild (the Guild hall's button and door): the Camp slides out to the left as the Guild comes in from the right.
 func open_guild() -> void:
 	end_tour()
 	SaveData.save()
