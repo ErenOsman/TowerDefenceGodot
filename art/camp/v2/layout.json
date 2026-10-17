@@ -1,0 +1,205 @@
+{
+ "board": {
+  "tiles": [
+   14,
+   10
+  ],
+  "ground": "map kit (BoardView ground pieces + frame), as the v1 Camp",
+  "note": "tile x 0..13 left->right, depth 0..9 front->back (Godot: position = Vector3(x, 0, -depth)). Camp v2 (2026-10-17): a settlement. Back row: the Smithy (left) and the Guild hall (right) as buildings, hills + trees between and behind them; middle: the campfire and the tent; front: War Table (left), Codex Lectern (by the tent), Miniature Shelf (right). Every prop faces the camera (face_yaw 0). row: back = button above the prop, front = button below it (all stations are front: the button on the floor in front of the prop / door)."
+ },
+ "kits": [
+  "camp/v2",
+  "camp",
+  "tiles"
+ ],
+ "kits_note": "where a prop name is looked up, in order: res://art/camp/v2/<prop>.fbx, res://art/camp/, then the map-kit tiles (Signpost)",
+ "ring": {
+  "centre": [
+   6.5,
+   5.0
+  ],
+  "radius": [
+   5.2,
+   3.3
+  ],
+  "note": "reference only (camera target, as the v1 Camp); the stations are not on a ring any more"
+ },
+ "centre": {
+  "prop": "Campfire",
+  "tile": [
+   6.3,
+   4.85
+  ],
+  "scale": 3.0,
+  "yaw": 0,
+  "station": null
+ },
+ "slots": [
+  {
+   "slot": 0,
+   "tile": [
+    2.6,
+    7.65
+   ],
+   "face_yaw": 0.0,
+   "row": "front",
+   "station": "Blacksmith",
+   "prop": "Smithy Facade Open",
+   "prop_closed": "Smithy Facade Closed",
+   "scale": 2.8,
+   "unlock": "guildUnlock",
+   "hotspot": "door",
+   "door": {
+    "centre_local": [
+     0.0,
+     0.235,
+     0.33
+    ],
+    "size_local": [
+     0.34,
+     0.47
+    ],
+    "note": "the doorway: Godot prop-local (x right, y up, z toward the camera), unscaled (multiply by scale for tiles); size = width, height in the front wall plane"
+   },
+   "note": "back-left building (was the Workshop station). Before Chapter 2 (guildUnlock) show prop_closed with no button and no hotspot; after it swap in prop (same pivot, footprint, scale). The Blacksmith slides in from the left. The door is the hotspot (door rect below), the button on the floor in front"
+  },
+  {
+   "slot": 1,
+   "tile": [
+    10.6,
+    7.65
+   ],
+   "face_yaw": 0.0,
+   "row": "front",
+   "station": "Guild",
+   "prop": "Guild Hall Facade Open",
+   "prop_closed": "Guild Hall Facade Closed",
+   "scale": 2.8,
+   "unlock": "guildUnlock",
+   "hotspot": "door",
+   "door": {
+    "centre_local": [
+     0.0,
+     0.245,
+     0.38
+    ],
+    "size_local": [
+     0.32,
+     0.49
+    ],
+    "note": "the doorway: Godot prop-local (x right, y up, z toward the camera), unscaled (multiply by scale for tiles); size = width, height in the front wall plane"
+   },
+   "note": "back-right building, the Signpost (decor) by its door. Closed before Chapter 2 like the Smithy. The Guild slides in from the right"
+  },
+  {
+   "slot": 2,
+   "tile": [
+    2.1,
+    1.9
+   ],
+   "face_yaw": 0.0,
+   "row": "front",
+   "station": "Chapters",
+   "prop": "War Table",
+   "scale": 3.2,
+   "note": "front-left; the primary station"
+  },
+  {
+   "slot": 3,
+   "tile": [
+    6.9,
+    1.5
+   ],
+   "face_yaw": 0.0,
+   "row": "front",
+   "station": "Codex",
+   "prop": "Codex Lectern",
+   "scale": 3.2,
+   "note": "front centre, in front of the campfire and the tent"
+  },
+  {
+   "slot": 4,
+   "tile": [
+    11.5,
+    1.9
+   ],
+   "face_yaw": 0.0,
+   "row": "front",
+   "station": "Towers",
+   "prop": "Miniature Shelf",
+   "scale": 3.0,
+   "note": "front-right (the tower rack)"
+  }
+ ],
+ "decor": [
+  {
+   "prop": "Camp Paths",
+   "tile": [
+    6.5,
+    4.5
+   ],
+   "scale": 1.0,
+   "yaw": 0,
+   "note": "flat beaten-earth lanes (0.01 high) joining the doors, the campfire and the front stations; it spans the board's width, so TdStationWorld treats it as ground (ignored by the button rule)"
+  },
+  {
+   "prop": "Hills Backdrop",
+   "tile": [
+    6.5,
+    8.9
+   ],
+   "scale": 1.0,
+   "yaw": 0,
+   "note": "back edge, 14 tiles wide (x -0.5..13.5), depth 7.4..9.5, up to ~4.4 high with the trees; stands behind and between the buildings"
+  },
+  {
+   "prop": "Camp Trees",
+   "tile": [
+    0.15,
+    7.75
+   ],
+   "scale": 1.0,
+   "yaw": 0,
+   "note": "left edge, beside the Smithy"
+  },
+  {
+   "prop": "Camp Trees",
+   "tile": [
+    12.85,
+    7.75
+   ],
+   "scale": 1.0,
+   "yaw": 180,
+   "note": "right edge, beside the Guild hall"
+  },
+  {
+   "prop": "Tent",
+   "tile": [
+    6.6,
+    6.5
+   ],
+   "scale": 2.4,
+   "yaw": 0,
+   "note": "the player's tent in the middle, between the buildings, in front of the woods; the campfire burns before its door"
+  },
+  {
+   "prop": "Signpost",
+   "tile": [
+    8.35,
+    6.35
+   ],
+   "scale": 2.4,
+   "yaw": 0,
+   "note": "map-kit piece (art/tiles/Signpost.fbx) by the Guild hall's door"
+  }
+ ],
+ "states": {
+  "closed_until": "guildUnlock",
+  "note": "slots with prop_closed: before Chapter 2's last level is won show prop_closed (door shut, dark windows, unlit lantern, no smoke), no button and no hotspot; after it show prop (door open with warm light, lit windows and lantern, smoke / flag Idle), its button and its door hotspot, and the mini tour points at them once"
+ },
+ "camera": {
+  "note": "as camp.gd: c = ring centre (x, 0, -(depth + 0.6)); position c + Vector3(0, 14.5, 17.0); look_at(c); fov 34; background wood.900"
+ },
+ "spacing": "Blender camp_v2 kit 2026-10-17; every pair of stations is 4.6+ tiles apart (see min_distance)",
+ "min_distance": 4.62
+}
