@@ -276,7 +276,7 @@
         {
           "name": "MenuPrimary",
           "normal": "art/ui/KitB/menu/menu_btn_primary_normal.png",
-          "hover": "art/ui/KitB/menu/menu_btn_primary_hover.png",
+          "hover": null,
           "pressed": null,
           "disabled": "art/ui/KitB/menu/menu_btn_primary_disabled.png",
           "selected": "art/ui/KitB/menu/menu_btn_primary_hover.png",
@@ -287,7 +287,7 @@
         {
           "name": "MenuWood",
           "normal": "art/ui/KitB/menu/menu_btn_wood_normal.png",
-          "hover": "art/ui/KitB/menu/menu_btn_wood_hover.png",
+          "hover": null,
           "pressed": null,
           "disabled": "art/ui/KitB/menu/menu_btn_wood_disabled.png",
           "selected": "art/ui/KitB/menu/menu_btn_wood_hover.png",

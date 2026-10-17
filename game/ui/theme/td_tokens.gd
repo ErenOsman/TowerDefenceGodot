@@ -228,8 +228,8 @@ const STYLES := {
 	"Field": {"normal": "field_paper_normal", "hover": "field_paper_normal", "pressed": "", "disabled": "", "selected": "", "extra": {"Focus": "field_paper_focus", "Error": "field_paper_error"}, "label": Color(0.180392, 0.129412, 0.090196, 1.0), "label_disabled": Color(0.372549, 0.286275, 0.211765, 1.0)},
 	"Tab": {"normal": "tab_normal", "hover": "tab_hover", "pressed": "", "disabled": "tab_normal", "selected": "tab_selected", "extra": {}, "label": Color(0.960784, 0.917647, 0.839216, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
 	"Row": {"normal": "row_normal", "hover": "row_hover", "pressed": "", "disabled": "row_locked", "selected": "row_selected", "extra": {"Locked": "row_locked"}, "label": Color(0.960784, 0.917647, 0.839216, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
-	"MenuPrimary": {"normal": "menu_btn_primary_normal", "hover": "menu_btn_primary_hover", "pressed": "", "disabled": "menu_btn_primary_disabled", "selected": "menu_btn_primary_hover", "extra": {}, "label": Color(1.0, 1.0, 1.0, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
-	"MenuWood": {"normal": "menu_btn_wood_normal", "hover": "menu_btn_wood_hover", "pressed": "", "disabled": "menu_btn_wood_disabled", "selected": "menu_btn_wood_hover", "extra": {}, "label": Color(0.960784, 0.917647, 0.839216, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
+	"MenuPrimary": {"normal": "menu_btn_primary_normal", "hover": "", "pressed": "", "disabled": "menu_btn_primary_disabled", "selected": "menu_btn_primary_hover", "extra": {}, "label": Color(1.0, 1.0, 1.0, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
+	"MenuWood": {"normal": "menu_btn_wood_normal", "hover": "", "pressed": "", "disabled": "menu_btn_wood_disabled", "selected": "menu_btn_wood_hover", "extra": {}, "label": Color(0.960784, 0.917647, 0.839216, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
 }
 
 ## The theme's named sprites (panel, window, tooltip, cd_badge, clock_ring.3_1, stat_icon.Power…) -> sprite name.

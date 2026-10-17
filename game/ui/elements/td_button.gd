@@ -583,6 +583,7 @@ func _apply_icon() -> void:
 ## take PRESS_DIM on top.
 const DIM_ON_PRESS := [Style.MENU_PRIMARY, Style.MENU_WOOD, Style.TAB, Style.ROW, Style.SECONDARY, Style.ICON]
 const PRESS_DIM := 0.92
+const HOVER_LIGHT := 1.08 # menu buttons: hover brightness (no blue rim)
 ## Menu sprites (332 x 150 PNG): the face block ends at row 132 (its dark outline), rows 132..149 are the band and
 ## its outline (18 PNG rows = 9 reference px = the MenuButton press_sink).
 const MENU_BAND_PX := 18
@@ -609,6 +610,9 @@ func _redraw() -> void:
 	if flat_disabled: _bg.add_theme_stylebox_override("panel", disabled_box())
 	_band.visible = _is_menu() and sprite != "" and not flat_disabled
 	var dim := PRESS_DIM if _shown_pressed() and style in DIM_ON_PRESS else 1.0
+	# the menu buttons' hover is the normal face a touch lighter (lifted by _pose), not the kit's blue-rimmed hover
+	# sprite (Eren 2026-10-17: "kenarları mavi olmasa daha iyi")
+	if _is_menu() and hovered and interactable and not _shown_pressed(): dim = HOVER_LIGHT
 	_bg.self_modulate = Color(dim, dim, dim)
 	_face.self_modulate = Color.WHITE * (PRESS_DIM if _shown_pressed() and style == Style.ABILITY else 1.0)
 	_face.self_modulate.a = 1.0
