@@ -67,7 +67,7 @@ func refresh() -> void:
 	casting = _caster != null
 	var f: EntityFrame = c.shown.get_frame(_caster.id) if _caster != null and c.shown != null else null
 	var list: Array = _caster.abilities if _caster != null else (hand.entity.abilities if hand.entity != null else [])
-	var passives: Array = f.passives if f != null else PassiveView.of(hand.entity if hand != null else null)
+	var passives: Array = [] # no passive chips in the action bar: they cannot be used (Eren 2026-10-17); the inspector and the info window list them
 	_who.text = _caster.def.display_name if _caster != null else hand.name
 	var key := ("e%d" % _caster.id) if _caster != null else ("t" + hand.id)
 	if key != _owner_key or list.size() != _buttons.size() or passives.size() != _passives.size():

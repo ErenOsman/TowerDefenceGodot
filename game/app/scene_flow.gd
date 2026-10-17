@@ -52,6 +52,30 @@ var _loading_screen: Node = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_fade_layer = CanvasLayer.new()
+	_fade_layer.layer = 120 # over every screen, under nothing
+	_fade_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_fade_layer)
+	_fader = ColorRect.new()
+	_fader.color = Color(0.06, 0.04, 0.03, 0.0)
+	_fader.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fader.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_fade_layer.add_child(_fader)
+
+## A cut between two menu screens is softened by a short fade through dark (Eren 2026-10-17: "menüden camp'a geçiş
+## biraz daha smooth olabilir"): FADE_OUT s to dark before the swap, FADE_IN s back after it. Never for the level
+## (the loading screen does that) and never on the first screen.
+const FADE_OUT := 0.16
+const FADE_IN := 0.22
+var _fade_layer: CanvasLayer
+var _fader: ColorRect
+
+func _fade_to(alpha: float, secs: float) -> void:
+	if _fader == null: return
+	var tw := create_tween()
+	tw.set_ignore_time_scale(true)
+	tw.tween_property(_fader, "color:a", alpha, secs)
+	await tw.finished
 
 static func name_of(id: int) -> String:
 	return NAMES[id] if id >= 0 and id < NAMES.size() else str(id)
@@ -234,6 +258,8 @@ func _change(id: int, keep: Node = null) -> void:
 		return
 	var tree := get_tree()
 	var old := tree.current_scene
+	var fade := old != null and id != Loading and id != Game and current != Loading and current != Boot
+	if fade: await _fade_to(1.0, FADE_OUT)
 	if old != null and old != keep:
 		old.get_parent().remove_child(old)
 		old.queue_free()
@@ -250,6 +276,10 @@ func _change(id: int, keep: Node = null) -> void:
 	loading_progress.emit(1.0)
 	_after_open(id)
 	loading_completed.emit()
+	if fade:
+		await tree.process_frame # the new screen's first frame under the dark
+		_fade_to(0.0, FADE_IN)
+	elif _fader != null: _fader.color.a = 0.0
 
 func _after_open(id: int) -> void:
 	# NewGame.cs: a tutorial cut short (closed game, crash) counts as skipped once a menu opens
