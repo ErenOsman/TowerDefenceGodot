@@ -706,7 +706,7 @@ func select(id: int) -> void:
 	var cleared := id < 0 and _selected >= 0
 	var changed_now := id != _selected
 	_selected = id
-	if changed_now and id >= 0 and follow_selection:
+	if changed_now and id >= 0 and follow_selection and camera != null:
 		# the shown frame's tile (the view's node position can be stale or at the origin for a frame)
 		var fr: EntityFrame = shown.get_frame(id) if shown != null else null
 		if fr != null and fr.position != null: camera.glide(GridSpace.to_world(fr.pos))
