@@ -163,6 +163,12 @@ func quit_game() -> void:
 	else:
 		get_tree().quit()
 
+## Guard: outside a level the engine always runs at 1 (menus, Camp, Guild, Blacksmith, Loading, Welcome), whatever
+## path led there (Eren 2026-10-17: "ana menü gibi yerler game speed'den etkilenmemeli"). The pause menu's 0 only
+## exists inside a level, so it is never overridden here.
+func _process(_delta: float) -> void:
+	if current != Game and Engine.time_scale != 1.0: Engine.time_scale = 1.0
+
 ## A new scene never starts paused: the game speed setting again (or 1).
 func restore_game_speed() -> void:
 	get_tree().paused = false
