@@ -148,6 +148,11 @@ func _measure_reference_tile() -> void:
 
 ## Glides to centre the point (follow the action, select and show); the player's input cancels it.
 func glide(point: Vector3) -> void:
+	# a point far outside the board (a view at the origin, a bad frame) would send the camera to a board corner
+	# (Eren 2026-10-17: a click sent the screen to the top-left); such a glide is ignored
+	if bounds.has_area() and not bounds.grow(2.0).has_point(Vector2(point.x, -point.z)):
+		push_warning("[BoardCamera] glide to %s ignored: outside the board" % point)
+		return
 	_free_pan = false
 	focus_target = clamp_focus(Vector3(point.x, 0.0, point.z))
 	gliding = true
@@ -307,6 +312,9 @@ func step(dt: float) -> void:
 	if _drag_anchor != null and not Input.is_mouse_button_pressed(_drag_button): _drag_anchor = null
 	if _drag_anchor != null:
 		var now_ground = GridSpace.ground_under(self, mouse)
+		# a step of more than 4 tiles in one frame is a ray grazing the horizon (the pointer near the screen's edge or
+		# over the HUD), never a hand movement: dropped instead of throwing the board to a corner
+		if now_ground != null and (_drag_anchor - now_ground).length() > 4.0: now_ground = null
 		if now_ground != null:
 			gliding = false
 			_free_pan = true

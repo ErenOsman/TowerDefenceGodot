@@ -707,8 +707,12 @@ func select(id: int) -> void:
 	var changed_now := id != _selected
 	_selected = id
 	if changed_now and id >= 0 and follow_selection:
-		var v := view_of(id)
-		if v != null: camera.glide(v.global_position)
+		# the shown frame's tile (the view's node position can be stale or at the origin for a frame)
+		var fr: EntityFrame = shown.get_frame(id) if shown != null else null
+		if fr != null and fr.position != null: camera.glide(GridSpace.to_world(fr.pos))
+		else:
+			var v := view_of(id)
+			if v != null: camera.glide(v.global_position)
 	_message = null
 	if id >= 0 and _sequence != null: _sequence.notify(SequenceEvent.UnitSelected)
 	if id >= 0: _guided_event("selected")
