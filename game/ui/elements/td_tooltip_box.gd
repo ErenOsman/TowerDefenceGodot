@@ -9,6 +9,7 @@ extends Control
 const WIDTH := 380.0
 const MIN_WIDTH := 300.0
 const MAX_WIDTH := 420.0
+const FIT_MIN_WIDTH := 150.0 # the narrowest a short tooltip shrinks to
 const PAD_TOP := 16.0
 const PAD_RIGHT := 18.0
 const PAD_BOTTOM := 14.0
@@ -86,13 +87,31 @@ func _rich(f: Font, size: int) -> RichTextLabel:
 	r.add_theme_constant_override("line_separation", 2)
 	return r
 
+## The width of a text on one line in a rich label's font (bbcode tags stripped); 0 for an empty text.
+func _line_width(r: RichTextLabel, text: String) -> float:
+	if text == "": return 0.0
+	var re := RegEx.new(); re.compile("\\[/?[a-zA-Z_=#\\. 0-9,-]*\\]")
+	var plain := re.sub(text, "", true)
+	var f: Font = r.get_theme_font("normal_font")
+	var fs: int = r.get_theme_font_size("normal_font_size")
+	var w := 0.0
+	for line in plain.split("\n"):
+		w = maxf(w, f.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x)
+	return w
+
 ## Box width (clamped 300..420).
 func set_box_width(w: float) -> void:
 	_width = clampf(w, MIN_WIDTH, MAX_WIDTH)
 
 ## Fills the box and lays it out; its size is then final (read `size`).
 func set_content(header: String, body: String, footer_label := "", footer_value := "") -> void:
-	var inner_w := _width - PAD_LEFT - PAD_RIGHT
+	# a short tooltip fits its text (Eren 2026-10-17: a one-liner in a 380 px box has "very open sides"); a footer
+	# tooltip (stats) keeps the full width, and anything wider than the box wraps at the box width as before
+	var box_w := _width
+	if footer_label == "" and footer_value == "":
+		var need := maxf(_line_width(_header, header), _line_width(_body, body))
+		box_w = clampf(ceilf(need) + PAD_LEFT + PAD_RIGHT, FIT_MIN_WIDTH, _width)
+	var inner_w := box_w - PAD_LEFT - PAD_RIGHT
 	var y := PAD_TOP
 	_header.visible = header != ""
 	if _header.visible:
@@ -127,7 +146,7 @@ func set_content(header: String, body: String, footer_label := "", footer_value 
 		var vh := _footer_value.get_content_height()
 		_footer_value.position.y = (FOOTER_H - vh) * 0.5
 		y += FOOTER_H - 4
-	size = Vector2(_width, ceilf(y))
+	size = Vector2(box_w, ceilf(y))
 	_bg.position = Vector2.ZERO
 	_bg.size = size
 
