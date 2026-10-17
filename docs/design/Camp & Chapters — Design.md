@@ -35,6 +35,23 @@ A screen of stations (panels for now; built so they can become places in a visua
 
 First visit (`profile.campSeen`, `PlayerProfile.camp_seen`): a short welcome card, then each shown station's button highlighted in turn with one line about it; Skip ends it. Never again after that. After Chapter 2 is cleared, the next visit points once at the two buttons that appeared (Guild, then Workshop).
 
+## Camp v2 — a settlement with the Guild and the Smithy (2026-10-17)
+
+Eren (2026-10-17): "buranın baştan tasarlanması lazım, yeni guild ve blacksmith'i akılda bulundurarak". The Camp is
+redesigned around the two places that now have interiors. What follows is the agents' proposal, to be built from the
+UI/UX mockup and the Blender kit; Eren decides on the frames.
+
+| Topic | Decision | Source |
+| --- | --- | --- |
+| What the Camp is | A small outdoor **settlement** on a 14×10 board (the interiors' size), not a ring of props round a fire. The **Guild hall** and the **Smithy** stand as **buildings** with doors; the smaller stations stay props | agents |
+| Where things stand | Back row, left: the **Smithy** facade (forge chimney, anvil sign). Back row, right: the **Guild hall** facade (flag, signpost by its door). Between them, further back: hills/trees (decor). Middle: the campfire and the player's tent. Front sides: the map table (**Chapters**, left-front), the tower rack (**Towers**, right-front), the lectern (**Codex**, front, by the tent). The sides match the slides: the Blacksmith slides in from the left, the Guild from the right | agents (slide directions, Eren 2026-10-16) |
+| Buttons | One station button per station, on the floor in front of the prop/door (the shared placement rule), **no sub-lines**; Chapters stays the primary. The building doors are also hotspots | Eren 2026-10-17 (no lines under buttons) |
+| Before Chapter 2 | The two buildings stand there **closed** (door shut, dark windows, no button, no hotspot); after Chapter 2 the doors open, lanterns light, the buttons appear, and the mini tour points at them once | Eren (hidden before Chapter 2, 2026-10-15) · agents (closed buildings instead of empty slots) |
+| Art | Blender kit `art/camp/v2/`: Smithy Facade, Guild Hall Facade (each with Idle: smoke, flag), Hills backdrop, Trees; the existing props (fire, tent, map table, rack, lectern, signpost) are reused; `layout.json` in the interiors' schema (slots, centre, decor) | agents |
+| Transition | Unchanged: Guild slides in from the right, Blacksmith from the left; Main menu ⇄ Camp fades | Eren |
+
+Build plan: 1) UI/UX mockup of the settlement (camp-v2.html) and its closed/open states; 2) Blender kit (facades, backdrop) with layout.json; 3) Godot: camp.gd reads the v2 layout (station ids unchanged: Chapters, Towers, Workshop → Blacksmith, Codex, Guild), closed/open building states, the tour lines.
+
 ## Data
 
 - `campUnlock` in `data/content/Catalog.json` (`GameCatalogAsset.camp_unlock`): the level whose win opens the Camp (Chapter 1 level 4, `Level/Chapter 1/4 The Slime King`).
