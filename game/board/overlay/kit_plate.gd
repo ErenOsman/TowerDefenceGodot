@@ -124,16 +124,10 @@ func set_form(full: bool, width: float, p_scale: float, dimmed: bool) -> void:
 	_align()
 
 ## The Lv chip shown while the plate is full (0 hides it; Upgrades — Design, mockup lv-chip "Board plate").
-func set_level(lv: int) -> void:
-	if lv <= 0:
-		if _lv != null: _lv.visible = false
-		return
-	if _lv == null:
-		_lv = TdLvChip.make(lv)
-		add_child(_lv)
-	elif _lv.level != lv: _lv.set_level(lv)
-	_lv.visible = status.full
-	_align()
+func set_level(_lv_unused: int) -> void:
+	# no level on the board plate (Eren 2026-10-17: "can barında leveli yazmasın"); the chip lives on the tray piece
+	# and the inspector's portrait
+	if _lv != null: _lv.visible = false
 
 func set_health_preview(v) -> void:
 	status.set_health_preview(float(v) if v != null else -1.0)

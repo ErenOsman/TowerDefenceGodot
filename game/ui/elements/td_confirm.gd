@@ -107,7 +107,7 @@ func _on_open() -> void:
 	confirm_button.style = TdButton.Style.DANGER if danger else TdButton.Style.PRIMARY
 	confirm_button.text = confirm_text
 	if confirm_icon != null: confirm_button.icon = confirm_icon
-	confirm_button.set_key_hint("Enter")
+	# no key chip on the button (Eren 2026-10-17)
 	confirm_button.fit_to_content(BUTTON.x)
 
 ## Yes (the confirm button, Enter).

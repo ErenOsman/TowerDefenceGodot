@@ -185,6 +185,11 @@ func show_entity(id: int) -> void:
 		_right.remove_child(ch)
 		ch.queue_free()
 	var desc: String = tdef.type.description if tdef != null and tdef.type != null and tdef.type.description != "" else e.def.description
+	var lv: int = tdef.type.level if tdef != null and tdef.type != null and not enemy and TdLvChip.shown() else 0
+	if lv > 0: # "This tower is level 2." before the description (Eren 2026-10-17)
+		var l := _ink_text("body", 22)
+		l.text = "This tower is level [b]%d[/b]." % lv
+		_right.add_child(l)
 	if desc != "":
 		var d := _ink_text("body", 22)
 		d.text = TooltipText.describe(HudText.fill_stats(TooltipText.from_rich(desc), _values))
@@ -258,7 +263,7 @@ func _ability_row(a: AbilityDef, e: Entity, left: int) -> Control:
 	var row := _row(HudArt.ability_chip(c.converter, a), a.display_name, sub, desc, tags, [left, held, a.cooldown], state, words, left == 0 and not held)
 	var tip := TooltipText.ability(a.display_name, HudText.fill_stats(a.description, _values), sub, tags,
 		a.cooldown, a.cooldown_until_reset, left, [], a.start_cooldown)
-	TdTooltipTrigger.attach(row).set_tooltip(tip)
+	# no tooltip on the rows: the window already shows everything (Eren 2026-10-17)
 	row.mouse_entered.connect(func(): c.preview_ability(e, a))
 	row.mouse_exited.connect(func(): c.preview_ability(null, null))
 	return row

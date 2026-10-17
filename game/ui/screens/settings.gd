@@ -59,10 +59,9 @@ func _build() -> void:
 	col.add_child(head)
 	var title := TdMenu.label("Settings", "h2", TdTheme.color("cream.100"), 40)
 	head.add_child(title)
-	var subtitle := TdMenu.label("Changes apply and save at once", "small", TdTheme.color("cream.300"), 20)
-	subtitle.size_flags_horizontal = SIZE_EXPAND_FILL
-	subtitle.size_flags_vertical = SIZE_SHRINK_CENTER
-	head.add_child(subtitle)
+	var spacer := Control.new() # no subtitle (Eren 2026-10-17: no explanations, "yapay zeka olduğunu belli eden şeyler")
+	spacer.size_flags_horizontal = SIZE_EXPAND_FILL
+	head.add_child(spacer)
 	var x := TdMenu.close_button()
 	x.size_flags_vertical = SIZE_SHRINK_CENTER # its 52 px face, not stretched to the title row
 	x.clicked.connect(close)
@@ -129,7 +128,7 @@ func show_tab(i: int) -> void:
 		pages[k].visible = k == i
 		tab_buttons[k].selected = k == i
 	reset_button.visible = i == 3
-	_footer_hint.text = FOOTER_HINTS[i]
+	_footer_hint.text = "" # no footer hints (Eren 2026-10-17)
 	if i == 3: refresh_controls()
 
 ## Reads every control back from the settings.
@@ -162,10 +161,9 @@ func _row(page: Container, text: String, control: Control, sub := "") -> HBoxCon
 	var l := TdMenu.label(text, "body", TdTheme.color("cream.100"), 24)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	labels.add_child(l)
-	if sub != "":
-		var s := TdMenu.label(sub, "small", TdTheme.color("cream.300"), 18)
-		s.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		labels.add_child(s)
+	# the sub line is a tooltip on the row, not text under the label (Eren 2026-10-17: "açıklamalar tooltip olabilir";
+	# the audio rows have none: sounds need no explaining)
+	if sub != "": TdTooltipTrigger.attach(row).set_tooltip({"body": sub})
 	row.add_child(labels)
 	var holder := HBoxContainer.new()
 	# sliders (with their value) take the full control column; a toggle or a dropdown only its own width, so the
@@ -217,10 +215,10 @@ func _toggle_row(page: Container, text: String, setting: String, setter: Callabl
 
 func _audio_page() -> Control:
 	var p := _page()
-	_slider_row(p, "Master volume", "master_volume", func(v): SettingsMgr.set_master_volume(v), "Everything at once")
-	_slider_row(p, "Music volume", "music_volume", func(v): SettingsMgr.set_music_volume(v), "Level and menu music")
-	_slider_row(p, "Sound effects", "sfx_volume", func(v): SettingsMgr.set_sfx_volume(v), "Hits, spells, footsteps")
-	_slider_row(p, "Other volume", "other_volume", func(v): SettingsMgr.set_other_volume(v), "Clicks and the rest")
+	_slider_row(p, "Master volume", "master_volume", func(v): SettingsMgr.set_master_volume(v))
+	_slider_row(p, "Music volume", "music_volume", func(v): SettingsMgr.set_music_volume(v))
+	_slider_row(p, "Sound effects", "sfx_volume", func(v): SettingsMgr.set_sfx_volume(v))
+	_slider_row(p, "Other volume", "other_volume", func(v): SettingsMgr.set_other_volume(v))
 	return p
 
 func _display_page() -> Control:

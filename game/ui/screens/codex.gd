@@ -641,10 +641,10 @@ func _tower_facts(t: TowerAsset, fa: FormAsset, ent: EntityAsset) -> void:
 			chips.add_child(TdMenu.pill("[color=%s]●[/color] [b]%s[/b]" % [dot.to_html(false), r], Color(0.18, 0.13, 0.09, 0.06), TdTheme.color("ink"), 18,
 				Color(0.37, 0.29, 0.21, 0.3)))
 		_facts.add_child(chips)
-	_facts.add_child(_fact("icon_cards", "In your collection: [color=%s][b]%d[/b][/color]" % [TdTheme.rich("ink"), MenuLogic.owned_count(SaveData.towers, t.get_id())]))
+	# no "In your collection" and no "Levels" list on the page (Eren 2026-10-17: "codex'te buralar olmayacak")
 	# Upgrades — Design § Codex: read-only "Levels", what each level gives (the shown form's own ladder); no tasks.
 	# Not before the Blacksmith opens (nothing shows levels then).
-	if TdLvChip.shown():
+	if false and TdLvChip.shown():
 		var lines := UpgradeLogic.codex_levels(GameApp.tower_type(t.get_id()), fa.get_id() if fa != null else "")
 		if not lines.is_empty():
 			var parts := []

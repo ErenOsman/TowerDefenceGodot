@@ -178,7 +178,7 @@ func show_state(p_tower_id: String, p_index: int, tower_name: String, cost: int,
 	_key.text = key
 	if _placed:
 		_hp.set_health(placed_frame.hp, placed_frame.max_hp)
-		_hp_label.text = "%d / %d" % [placed_frame.hp, placed_frame.max_hp]
+		_hp_label.text = "" # no "HP / max" over the piece (Eren 2026-10-17: "neden 20/20 orada yazıyor")
 	for c in _pips.get_children():
 		_pips.remove_child(c)
 		c.queue_free()
@@ -203,7 +203,7 @@ func set_level(lv: int) -> void:
 	if lv == _level or _render == null: return
 	_level = lv
 	TdLvChip.attach(_render, lv, 112, TdLvChip.FONT_SIZE, Vector2(0.02, 0.86))
-	TdLvChip.attach(_medal, lv, 64, TdLvChip.FONT_SIZE, Vector2(-0.12, 0.86))
+	TdLvChip.attach(_medal, lv, 64, TdLvChip.FONT_SIZE, Vector2(0.0, 0.84)) # inside the medallion's rect (edge clip rule)
 
 func set_tooltip(content: Dictionary) -> void:
 	_trigger.set_tooltip(content)
@@ -237,7 +237,7 @@ func _restyle() -> void:
 	_medal.visible = _placed
 	_cost.visible = not _placed
 	_hp.visible = _placed
-	_hp_label.visible = _placed and hovered
+	_hp_label.visible = false
 	_glow.visible = _picked
 	_arrow.visible = _selected and show_arrow
 	_render.modulate = Color(0.6, 0.6, 0.6, 0.4) if _poor else Color.WHITE
@@ -251,7 +251,7 @@ func _restyle() -> void:
 	_plate.force_state(hovered and not _poor, false)
 	# one baseline for every plate (placed or not); the HP bar under a placed one
 	_plate.position = Vector2((SLOT.x - PLATE_W) / 2.0, PLATE_Y)
-	_hp.position.y = PLATE_Y + 28 + 4
+	_hp.position.y = PLATE_Y - 12 # above the name plate (Eren 2026-10-17)
 	_tag.visible = false # the medallion already says it is on the board (user, 2026-10-13)
 	_key.visible = not _placed
 	if _tag.visible:
