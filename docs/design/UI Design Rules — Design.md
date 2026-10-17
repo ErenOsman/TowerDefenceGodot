@@ -237,7 +237,7 @@ Every clickable thing has these states, and they look the same everywhere. `TdBu
 | --- | --- | --- | --- |
 | Normal | `ink.600` | `ink.400` | — |
 | Hover | `ink.500` | `accent.light` at 60% | Lighter face, tooltip after 0.4 s (menus only: lifts a little) |
-| Pressed | `ink.700` | `ink.400` | Slightly darker, no movement (menus only: sinks 4 px) |
+| Pressed | `ink.700` | `ink.400` | A sink, never a different shape (Eren 2026-10-17): the same outline and size as normal / hover, no press scale (a hovered menu button keeps its hover scale). Flat buttons have no band, so nothing moves: the kit's `*_pressed` face (same outline, darker; Secondary and Icon, whose pressed art is barely darker, also at 92%), or for tabs and rows (no pressed art; pressing must not look selected) their face at 92%. Deep menu buttons: the face moves down by its band's height (9 px) with label and icon and covers the band, which stays put; face at 92% |
 | Selected | `accent.fill` | `accent.light` | Stays until something else is picked |
 | Disabled | `ink.700` at 60% | none | Label `text.disabled`, no hover, tooltip says **why** ("Needs 40 energy") |
 | Focus (keyboard) | as hover | 2 px `accent` | Only when moving with keys |

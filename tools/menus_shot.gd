@@ -3,7 +3,7 @@ extends SceneTree
 ##   ~/godot/run.sh projects/td -s tools/menus_shot.gd [-- <out dir> [only,steps]]
 ##   ~/godot/run.sh projects/td --resolution 1280x720 -s tools/menus_shot.gd -- user://menus720
 ## Uses its own save (user://menus_shot.json, deleted first). Steps: welcome, main_menu, credits, settings_audio,
-## settings_display, settings_gameplay, settings_controls (+ a capture and a conflict), codex_towers (a page),
+## settings_display, settings_gameplay, settings_controls (+ a capture and a conflict), codex_towers (a page), codex_tower_locked,
 ## codex_statuses, level_select (an unplayed level: no enemy chips), level_select_played (a won one: chips),
 ## level_select_locked, hand_editor, camp (after GameApp.complete_chapter1()), camp_tour, chapter_select,
 ## camp_level_select, camp_open (after Chapter 2: camp_open_tour, camp_open, camp_layout_editor), blacksmith
@@ -114,6 +114,13 @@ func _run() -> void:
 		var cx = menu.open_popup("codex")
 		await _frames(40)
 		await _shot("codex_towers")
+		# a tower not found yet: listed and shown locked like an enemy (Eren 2026-10-17)
+		for e in cx.entries:
+			if not save.codex.is_discovered(e.section, e.id):
+				cx.select(e)
+				break
+		await _frames(8)
+		await _shot("codex_tower_locked")
 		# the Guardian's page, scrolled down
 		save.codex.discover(CodexSection.Towers, "guardian")
 		cx.show_section(CodexSection.Towers)

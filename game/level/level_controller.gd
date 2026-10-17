@@ -147,7 +147,7 @@ var mission_error: String = ""
 ## kind, text, noun, before, after, gain, count, done, ready}); [] before the Blacksmith unlock, on a quit and when
 ## nothing moved. A tower in a form advances both its base ladder and the form's.
 var task_advances: Array = []
-## The end screen's lines for them (TowerTasks.lines): "Archer (tower 3): 8 / 10 kills +3", then
+## The end screen's lines for them (TowerTasks.lines): "Archer #3: 8 / 10 kills +3", then
 ## "Guardian is ready to upgrade! Go to the Blacksmith."
 var task_lines: Array = []
 ## The end screen's line for them: "Rewards: Fire Arrow ×2, Ember Core ×1" ("" for none).
@@ -1862,6 +1862,7 @@ func _record(quit: bool) -> void:
 		reward = sd.complete_tutorial() if result.won and not result.quit else null
 	elif app != null and app.catalog != null:
 		reward = app.catalog.grant_first_clear_reward(result, rec, sd.towers)
+	if reward != null: sd.codex.discover(CodexSection.Towers, reward.get_id()) # a tower you own is discovered
 	sd.save()
 
 ## The Lv chip on a tower's full board plate (Upgrades — Design; mockup lv-chip "Board plate (hovered)"): the level its
@@ -1892,7 +1893,7 @@ func _count_tasks(result: LevelResult, unlocked: bool, sd, app) -> void:
 		for td in session.hand:
 			var owned: OwnedTower = sd.towers.find(td.id)
 			var type: TowerType = app.tower_type(owned.type) if owned != null else null
-			if type != null: entries.append(TowerTasks.entry(owned, type, td.id, "", sd.towers.towers.find(owned) + 1))
+			if type != null: entries.append(TowerTasks.entry(owned, type, td.id, "", sd.towers.ordinal_of(owned.id)))
 	task_advances = TowerTasks.apply(result, session.log, entries, mission.id if mission != null else "", true)
 	task_lines = TowerTasks.lines(task_advances)
 

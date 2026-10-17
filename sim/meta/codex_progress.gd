@@ -1,7 +1,8 @@
 class_name CodexProgress
 extends RefCounted
 ## What the player has discovered for the Codex (Codex — Design): enemies and statuses met in a level,
-## towers ever owned. Each key is "section:id" (e.g. "Enemies:slime"). A discovered entry stays "new"
+## towers owned or shown to the player (the hand editor's collection, a first-clear prize on the level / chapter
+## select; Eren 2026-10-17: unseen towers are locked like enemies). Each key is "section:id" (e.g. "Enemies:slime"). A discovered entry stays "new"
 ## (a dot in the Codex) until the player opens it. Tips need no discovery.
 
 var discovered: Array = []

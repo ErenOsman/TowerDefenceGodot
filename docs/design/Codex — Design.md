@@ -11,7 +11,7 @@ The **Codex** is the game's reference book: every tower, enemy and status the pl
 | Name | Codex |
 | Sections | Towers, Enemies, Statuses, Tips (one tab each) |
 | What shows | Discovered entries only; the rest are listed as **???** (no spoilers, a collection feel). Tips are always shown |
-| Discovered when | Towers: owned at least once. Enemies: on the board in a level. Statuses: on any unit in a level (hidden statuses never) |
+| Discovered when | Towers: owned at least once, or shown to the player (the hand editor's collection, a first-clear prize on the level or chapter select; Eren 2026-10-17). Enemies: on the board in a level. Statuses: on any unit in a level (hidden statuses never) |
 | New | A discovered entry has a dot until the player opens it |
 | Opened from | The main menu and the pause menu (over the paused level) |
 | Towers and enemies | A 3D preview of the model, turning slowly (drag to turn it), next to the stats, abilities, passives and description |
@@ -47,7 +47,7 @@ The **Codex** is the game's reference book: every tower, enemy and status the pl
 | Discovery | `LevelController._discover_for_codex` (`game/level/level_controller.gd`) |
 | Panel | `game/ui/screens/codex.gd` + `codex.tscn` (a `TdPopup`, opened from the main menu, the Camp and the pause menu: `open()`, `close()`, `closed`, `open_at(section, id)`), `TdModelPreview` (`game/ui/screens/parts/td_model_preview.gd`: the turning model in its own SubViewport world with its own lights, on unscaled time, drag to turn) |
 
-- The panel builds its tree in code from the kit (`TdMenu`, `TdButton`): tabs with icons, the "5 / 9 discovered" progress with a bar, the list (medallion, name, "• New") and the page on paper with stat tiles and ability / passive rows. Locked rows show a lock and "Not met yet" instead of **???**.
+- The panel builds its tree in code from the kit (`TdMenu`, `TdButton`): tabs with icons, the "5 / 9 discovered" progress with a bar, the list (medallion, name, "• New") and the page on paper with stat tiles and ability / passive rows. Locked rows show a lock and "Not met yet" (towers: "Not found yet") instead of **???**; towers are listed locked like enemies, and the Towers tab counts only discovered ones ("5 / 9 discovered"). Discovery of shown towers: `MenuLogic.discover_owned` (catch-up, hand editor), `level_select._draw_reward`, `chapter_select._reward`, the first-clear grant in `LevelController`.
 - Tower and enemy pages have page tabs: Overview · Abilities · Forms · Immunities (Immunities disabled; Forms disabled on enemies; docs/Implementation Notes.md "Workshop screens").
 - The model plays its Idle clip and sways around a three-quarter front view instead of turning all the way round; a drag turns it freely. It moves over the paused game too.
 

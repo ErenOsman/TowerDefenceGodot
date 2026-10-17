@@ -445,12 +445,41 @@ static func codex_entries(codex: CodexAsset, section: int) -> Array:
 				if tip != null: out.append({"section": section, "id": tip.id, "name": tip.title, "icon": tip.image, "asset": null, "tip": tip})
 	return out
 
-## The words for an undiscovered entry.
-static func locked_text(section: int) -> String:
-	match section:
-		CodexSection.Towers: return "Not yours yet. Win levels to gain new towers."
-		CodexSection.Enemies: return "Not met yet. Meet it in a level to learn about it."
-	return "Not seen yet. It is recorded the first time it appears on the board."
+## The words for an undiscovered entry: none (the title and the lock say it; no explanations on everyday screens,
+## Eren 2026-10-17).
+static func locked_text(_section: int) -> String:
+	return ""
+
+## A locked Codex entry's name in its list row and on its page: towers are found, enemies (and statuses) met.
+static func locked_title(section: int) -> String:
+	return "Not found yet" if section == CodexSection.Towers else "Not met yet"
+
+## The Codex list of a section with each entry's lock state: every entry is listed (undiscovered ones locked, their
+## name hidden behind locked_title, Eren 2026-10-17: towers too, like enemies). Adds "known" and "shown_name".
+static func codex_list(codex: CodexAsset, section: int, progress: CodexProgress) -> Array:
+	var out := []
+	for e in codex_entries(codex, section):
+		var known := progress != null and progress.is_discovered(e.section, e.id)
+		e["known"] = known
+		e["shown_name"] = e.name if known else locked_title(e.section)
+		out.append(e)
+	return out
+
+## Discovers every tower type the player owns (the Codex catch-up, the hand editor's collection); the towers you start
+## with are not news (no "New" dot), only towers earned later. True when any was new (save then).
+static func discover_owned(codex: CodexProgress, towers: TowerCollection, catalog: GameCatalogAsset) -> bool:
+	var found := false
+	for owned in towers.towers:
+		if codex.discover(CodexSection.Towers, owned.type):
+			found = true
+			if first_earned(catalog, owned.type) == "the tutorial": codex.mark_viewed(CodexSection.Towers, owned.type)
+	return found
+
+## How many entries of a codex_list are discovered.
+static func codex_known_count(list: Array) -> int:
+	var n := 0
+	for e in list: if e.get("known", false): n += 1
+	return n
 
 static func section_name(section: int) -> String:
 	return ["Tower", "Enemy", "Status", "Tip"][clampi(section, 0, 3)]
@@ -496,7 +525,7 @@ static func status_description(description: String, stacks: int, turns_left: int
 static func codex_progress_text(section: int, known: int, total: int) -> String:
 	match section:
 		CodexSection.Tips: return "%d tips" % total
-		CodexSection.Towers: return "%d %s" % [known, plural(known, "tower")] # only met towers are listed
+		CodexSection.Towers: return "%d / %d discovered" % [known, total]
 		CodexSection.Statuses: return "%d / %d seen" % [known, total]
 	return "%d / %d met" % [known, total]
 

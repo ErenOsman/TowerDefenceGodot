@@ -18,6 +18,10 @@ func _run() -> void:
 	for b in s.find_children("*", "TdButton", true, false):
 		if b.visible and b.interactable: b.force_state(false, i % 2 == 0); i += 1
 	await _frames(6); await _shot("pressed_settings")
+	# the kit demo's states grid (Normal / Hover / Pressed / Selected / Disabled per style; menu: normal, hover, hover+pressed)
+	s.close(); await _frames(10)
+	change_scene_to_file("res://game/ui/elements/demo.tscn"); await _frames(30)
+	await _shot("pressed_kit_demo")
 	quit()
 func _shot(n: String) -> void:
 	await RenderingServer.frame_post_draw

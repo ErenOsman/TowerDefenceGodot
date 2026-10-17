@@ -209,7 +209,7 @@ const MOTION := {
 ## Feedback profiles (how a control kind answers the pointer).
 const FEEDBACK := {
 	"Button": {"hover_scale": 1.0, "hover_lift": 0.0, "press_scale": 1.0, "press_sink": 0.0, "denied_shake": 6.0, "denied_time": 0.32, "spawn_scale": 0.9},
-	"MenuButton": {"hover_scale": 1.03, "hover_lift": 0.0, "press_scale": 0.98, "press_sink": 4.0, "denied_shake": 6.0, "denied_time": 0.32, "spawn_scale": 0.9},
+	"MenuButton": {"hover_scale": 1.03, "hover_lift": 0.0, "press_scale": 1.0, "press_sink": 9.0, "denied_shake": 6.0, "denied_time": 0.32, "spawn_scale": 0.9},
 	"IconButton": {"hover_scale": 1.0, "hover_lift": 0.0, "press_scale": 1.0, "press_sink": 0.0, "denied_shake": 4.0, "denied_time": 0.32, "spawn_scale": 0.9},
 	"Ability": {"hover_scale": 1.0, "hover_lift": 0.0, "press_scale": 1.0, "press_sink": 0.0, "denied_shake": 6.0, "denied_time": 0.32, "spawn_scale": 0.9},
 	"HandPiece": {"hover_scale": 1.0, "hover_lift": 0.0, "press_scale": 1.0, "press_sink": 0.0, "denied_shake": 7.0, "denied_time": 0.32, "spawn_scale": 0.9},
@@ -226,10 +226,10 @@ const STYLES := {
 	"EndTurn": {"normal": "endturn_normal", "hover": "endturn_hover", "pressed": "endturn_pressed", "disabled": "endturn_enemy", "selected": "", "extra": {"Attention": "endturn_attention"}, "label": Color(1.0, 1.0, 1.0, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
 	"NamePlate": {"normal": "nameplate_normal", "hover": "nameplate_hover", "pressed": "", "disabled": "nameplate_poor", "selected": "", "extra": {"Picked": "nameplate_picked", "Placed": "nameplate_placed", "PlacedHover": "nameplate_placed_hover", "Locked": "nameplate_poor", "Selected": "nameplate_selected"}, "label": Color(0.960784, 0.917647, 0.839216, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
 	"Field": {"normal": "field_paper_normal", "hover": "field_paper_normal", "pressed": "", "disabled": "", "selected": "", "extra": {"Focus": "field_paper_focus", "Error": "field_paper_error"}, "label": Color(0.180392, 0.129412, 0.090196, 1.0), "label_disabled": Color(0.372549, 0.286275, 0.211765, 1.0)},
-	"Tab": {"normal": "tab_normal", "hover": "tab_hover", "pressed": "tab_selected", "disabled": "tab_normal", "selected": "tab_selected", "extra": {}, "label": Color(0.960784, 0.917647, 0.839216, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
-	"Row": {"normal": "row_normal", "hover": "row_hover", "pressed": "row_selected", "disabled": "row_locked", "selected": "row_selected", "extra": {"Locked": "row_locked"}, "label": Color(0.960784, 0.917647, 0.839216, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
-	"MenuPrimary": {"normal": "menu_btn_primary_normal", "hover": "menu_btn_primary_hover", "pressed": "menu_btn_primary_pressed", "disabled": "menu_btn_primary_disabled", "selected": "menu_btn_primary_hover", "extra": {}, "label": Color(1.0, 1.0, 1.0, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
-	"MenuWood": {"normal": "menu_btn_wood_normal", "hover": "menu_btn_wood_hover", "pressed": "menu_btn_wood_pressed", "disabled": "menu_btn_wood_disabled", "selected": "menu_btn_wood_hover", "extra": {}, "label": Color(0.960784, 0.917647, 0.839216, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
+	"Tab": {"normal": "tab_normal", "hover": "tab_hover", "pressed": "", "disabled": "tab_normal", "selected": "tab_selected", "extra": {}, "label": Color(0.960784, 0.917647, 0.839216, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
+	"Row": {"normal": "row_normal", "hover": "row_hover", "pressed": "", "disabled": "row_locked", "selected": "row_selected", "extra": {"Locked": "row_locked"}, "label": Color(0.960784, 0.917647, 0.839216, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
+	"MenuPrimary": {"normal": "menu_btn_primary_normal", "hover": "menu_btn_primary_hover", "pressed": "", "disabled": "menu_btn_primary_disabled", "selected": "menu_btn_primary_hover", "extra": {}, "label": Color(1.0, 1.0, 1.0, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
+	"MenuWood": {"normal": "menu_btn_wood_normal", "hover": "menu_btn_wood_hover", "pressed": "", "disabled": "menu_btn_wood_disabled", "selected": "menu_btn_wood_hover", "extra": {}, "label": Color(0.960784, 0.917647, 0.839216, 1.0), "label_disabled": Color(0.741176, 0.662745, 0.54902, 1.0)},
 }
 
 ## The theme's named sprites (panel, window, tooltip, cd_badge, clock_ring.3_1, stat_icon.Power…) -> sprite name.

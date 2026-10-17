@@ -2,7 +2,7 @@ class_name TdButton
 extends Control
 ## The kit's button (port of UI_Button + UIFeedback + UIStateVisual + AbilityButtonView), drawn from the style B
 ## sprites: `style` picks the sprites per state and the label colours (TdTheme.control_style), the feedback profile
-## picks how it answers the pointer (hover scale/lift, press scale/sink, denied shake). The control's rect is the
+## picks how it answers the pointer (hover scale/lift, press sink, denied shake). The control's rect is the
 ## logical size from the spec; rims, bands and glows hang outside it (sprite outsets).
 ##
 ## States: Normal / Hover / Pressed / Selected / Disabled, plus the style's extra states (Ability: "Aiming",
@@ -93,6 +93,7 @@ var pressed := false
 var _content: Control
 var _glow: Control
 var _face: TextureRect
+var _band: Panel
 var _bg: Panel
 var _ring: TextureRect
 var _icon: TextureRect
@@ -137,6 +138,8 @@ func _build() -> void:
 	_glow = Panel.new(); _glow.mouse_filter = MOUSE_FILTER_IGNORE; _glow.modulate.a = 0.0
 	_content.add_child(_glow)
 	_face = _tex_rect(); _content.add_child(_face)
+	_band = Panel.new(); _band.mouse_filter = MOUSE_FILTER_IGNORE; _band.visible = false
+	_content.add_child(_band)
 	_bg = Panel.new(); _bg.mouse_filter = MOUSE_FILTER_IGNORE
 	_content.add_child(_bg)
 	_ring = _tex_rect(); _content.add_child(_ring)
@@ -469,10 +472,8 @@ func _deny() -> void:
 	denied.emit()
 
 func _tap() -> void:
-	var p := profile()
-	var t := TdTheme.motion("instant")
-	_motion.to(TdMotion.SCALE, p["press_scale"], t)
-	_tap_until = _clock + t
+	_tap_until = _clock + TdTheme.motion("instant")
+	_pose()
 	_redraw()
 	_layout()
 
@@ -516,18 +517,32 @@ func _process(delta: float) -> void:
 		_cd.texture = TdTheme.texture("cd_badge_soon" if soon else "cd_badge")
 
 func _apply_motion() -> void:
-	_content.position = _face_origin + _motion.offset()
+	var off := _motion.offset()
+	_content.position = _face_origin + off
 	_content.scale = Vector2.ONE * _motion.scale_value()
 	_content.modulate.a = _motion.alpha
+	# the menu band is the plinth's side: it stays where it is while the face sinks over it
+	if _band.visible: _band.position.y = _content.size.y - maxf(0.0, off.y)
 
+## Pressed = a sink (UI Design Rules § States, Eren 2026-10-17): the face keeps its size and sprite outline (no press
+## scale; a hovered button keeps its hover scale) and moves down by the profile's press_sink = the height of the band
+## under it (menu buttons: 9 px, the face then covers its band; flat buttons have no band: 0, they only darken), label
+## and icon with it; released, it rises back with the lift curve.
 func _pose(instant := false) -> void:
 	var p := profile()
 	var hover := hovered and interactable
-	var sc: float = p["press_scale"] * (p["hover_scale"] if hover else 1.0) if pressed else (p["hover_scale"] if hover else 1.0)
-	var lift: float = (p["hover_lift"] if hover else 0.0)
-	var t := 0.0 if instant else (TdTheme.motion("instant") if pressed else TdTheme.motion("quick"))
-	_motion.to(TdMotion.SCALE, sc, t, "" if pressed else "lift")
-	_motion.to(TdMotion.LIFT, lift, t, "" if pressed else "lift")
+	var down := _shown_pressed()
+	var sc: float = p["hover_scale"] if hover else 1.0
+	var lift: float = -float(p["press_sink"]) if down else (p["hover_lift"] if hover else 0.0)
+	var t := 0.0 if instant else (TdTheme.motion("instant") if down else TdTheme.motion("quick"))
+	_motion.to(TdMotion.SCALE, sc, t, "" if down else "lift")
+	_motion.to(TdMotion.LIFT, lift, t, "" if down else "lift")
+
+func _shown_pressed() -> bool:
+	return (pressed or _tap_until > 0.0) and interactable
+
+func _is_menu() -> bool:
+	return style == Style.MENU_PRIMARY or style == Style.MENU_WOOD
 
 func _style() -> Dictionary:
 	return TdTheme.control_style(STYLE_NAMES[style])
@@ -562,6 +577,17 @@ func _apply_icon() -> void:
 		_icon.texture = icon
 		_icon.visible = icon != null
 
+## Styles with no pressed art of their own (the menu plinths, tabs, rows): pressed shows the face they had (normal /
+## hover / selected) darkened by PRESS_DIM. The others keep the kit's *_pressed sprite: same outline as normal, a
+## darker face; Secondary and Icon's pressed faces are only ~4 % darker than normal (they read as not pressed), so they
+## take PRESS_DIM on top.
+const DIM_ON_PRESS := [Style.MENU_PRIMARY, Style.MENU_WOOD, Style.TAB, Style.ROW, Style.SECONDARY, Style.ICON]
+const PRESS_DIM := 0.92
+## Menu sprites (332 x 150 PNG): the face block ends at row 132 (its dark outline), rows 132..149 are the band and
+## its outline (18 PNG rows = 9 reference px = the MenuButton press_sink).
+const MENU_BAND_PX := 18
+const MENU_BAND_REF := 9.0
+
 func _sprite_now() -> String:
 	var shown_pressed := pressed or _tap_until > 0.0
 	var extra := _extra
@@ -573,12 +599,19 @@ func _redraw() -> void:
 	var st := _style()
 	var sprite := _sprite_now()
 	if sprite != "":
-		# the deep menu sprites' pressed variants draw a lighter side band ABOVE the sunk face (8 px rows in the PNG):
-		# leave it out so the face simply sits 4 px lower under its rim
-		var menu_pressed := (style == Style.MENU_PRIMARY or style == Style.MENU_WOOD) and sprite.ends_with("_pressed")
-		_bg.add_theme_stylebox_override("panel", TdTheme.stylebox_cut_top(sprite, 8) if menu_pressed else TdTheme.stylebox(sprite))
+		if _is_menu():
+			# two layers (see TdTheme.stylebox_face): the face block moves when pressed, the band stays under it
+			_bg.add_theme_stylebox_override("panel", TdTheme.stylebox_face(sprite, MENU_BAND_PX))
+			_band.add_theme_stylebox_override("panel", TdTheme.stylebox_band(sprite))
+		else:
+			_bg.add_theme_stylebox_override("panel", TdTheme.stylebox(sprite))
 	var flat_disabled := not interactable and style in FLAT_DISABLED
 	if flat_disabled: _bg.add_theme_stylebox_override("panel", disabled_box())
+	_band.visible = _is_menu() and sprite != "" and not flat_disabled
+	var dim := PRESS_DIM if _shown_pressed() and style in DIM_ON_PRESS else 1.0
+	_bg.self_modulate = Color(dim, dim, dim)
+	_face.self_modulate = Color.WHITE * (PRESS_DIM if _shown_pressed() and style == Style.ABILITY else 1.0)
+	_face.self_modulate.a = 1.0
 	var col: Color = st.get("label", Color.WHITE) if interactable else st.get("label_disabled", TdTheme.color("cream.300"))
 	if flat_disabled: col = DISABLED_LABEL
 	if style == Style.END_TURN and not interactable: col = TdTheme.color("cream.300")
@@ -589,19 +622,17 @@ func _redraw() -> void:
 		_icon.modulate = col
 	_focus.visible = keyboard_focus and has_focus()
 
-func _sinks() -> bool:
-	# the deep menu sprites draw their pressed face 4 px lower: the label and icon move with it
-	return (style == Style.MENU_PRIMARY or style == Style.MENU_WOOD) and (pressed or _tap_until > 0.0) and interactable
-
 func _layout() -> void:
 	if not _built: return
 	var fr := face_rect()
 	_face_origin = fr.position
 	var s := fr.size
 	_content.size = s
-	_content.pivot_offset = Vector2(0, s.y / 2.0) if (style == Style.MENU_PRIMARY or style == Style.MENU_WOOD) else s / 2.0
+	_content.pivot_offset = Vector2(0, s.y / 2.0) if _is_menu() else s / 2.0
 	_bg.position = Vector2.ZERO
 	_bg.size = s
+	_band.position = Vector2(0, s.y - maxf(0.0, _motion.offset().y))
+	_band.size = Vector2(s.x, MENU_BAND_REF + 3.0) # the sprite's bottom outset (12)
 	_focus.position = Vector2(-1, -1) if style != Style.END_TURN else Vector2(-6, -6)
 	_focus.size = s + (Vector2(2, 2) if style != Style.END_TURN else Vector2(12, 12))
 	_glow.position = Vector2.ZERO
@@ -611,8 +642,6 @@ func _layout() -> void:
 	var ro := 17.0 * s.x / 84.0 # the ring's outset scales with the button
 	_ring.position = Vector2(-ro, -ro)
 	_ring.size = s + Vector2(ro, ro) * 2.0
-	var sink := float(profile()["press_sink"]) if _sinks() else 0.0
-	if style == Style.MENU_PRIMARY or style == Style.MENU_WOOD: sink = 4.0 if _sinks() else 0.0
 	# key badge size
 	var key_w := 0.0
 	if _key.visible:
@@ -640,14 +669,14 @@ func _layout() -> void:
 			_label.size.y = label_h
 			var total := label_h + (6.0 + 24.0 if _key.visible else 0.0)
 			var y0 := (s.y - total) / 2.0
-			_label.position = Vector2(18, y0 + sink)
-			_key.position = Vector2((s.x - key_w) / 2.0, y0 + label_h + 6.0 + sink)
+			_label.position = Vector2(18, y0)
+			_key.position = Vector2((s.x - key_w) / 2.0, y0 + label_h + 6.0)
 			_icon.visible = false
 		Style.ICON:
 			_label.visible = text != ""
 			var isz := 26.0 if s.x >= 48.0 else 22.0
 			_icon.size = Vector2(isz, isz)
-			_icon.position = (s - _icon.size) / 2.0 + Vector2(0, sink)
+			_icon.position = (s - _icon.size) / 2.0
 			_label.position = Vector2.ZERO
 			_label.size = s
 			_tag.position = Vector2(s.x - _tag.get_minimum_size().x - 4, s.y - 22)
@@ -668,15 +697,15 @@ func _layout() -> void:
 			var lx := x + (0.0 if icon_after else iw + gap)
 			var ix := x + tw + gap if icon_after else x
 			_icon.size = Vector2(iw, iw)
-			_icon.position = Vector2(ix, (s.y - iw) / 2.0 + sink)
+			_icon.position = Vector2(ix, (s.y - iw) / 2.0)
 			_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-			_label.position = Vector2(lx, sink)
+			_label.position = Vector2(lx, 0.0)
 			_label.size = Vector2(maxf(tw + 2.0, 1.0), s.y)
 			if style == Style.NAME_PLATE:
 				_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-				_label.position = Vector2(3, -1 + sink)
+				_label.position = Vector2(3, -1)
 				_label.size = Vector2(s.x - 6, s.y)
-			_key.position = Vector2(x + tw + iw + gap + kgap, (s.y - 24.0) / 2.0 + sink)
+			_key.position = Vector2(x + tw + iw + gap + kgap, (s.y - 24.0) / 2.0)
 			_tag.position = Vector2(s.x - _tag.get_minimum_size().x - 6, s.y - 24)
 
 func _get_minimum_size() -> Vector2:
@@ -715,12 +744,13 @@ static func bleed_for(st: int, face: Vector2, focus := false) -> Vector4:
 	var l := maxf(o, 0.0) + (0.0 if menu else gx) + shake
 	var r := maxf(o, 0.0) + (gx * 2.0 if menu else gx) + shake
 	var t := o + gy
-	var b := o + gy
+	# the press sink: menu faces sink into their own band's footprint; any deeper sink would hang below it
+	var b := o + gy + maxf(0.0, float(p["press_sink"]) - (MENU_BAND_REF if menu else 0.0))
 	if focus:
 		l = maxf(l, 8.0); r = maxf(r, 8.0); t = maxf(t, 8.0); b = maxf(b, 8.0)
 	if st == Style.ABILITY:
 		var ro := 17.0 * face.x / 84.0
-		l = maxf(l, maxf(ro, 6.0)) + shake; b = maxf(b, ro)
+		l = maxf(l, maxf(ro, 6.0)) + shake; b = maxf(b, ro + float(p["press_sink"]))
 		t = maxf(t, 24.0); r = maxf(r, 24.0) + shake # the cooldown badge (38 round, centred 4 px out of the top-right corner)
 	return Vector4(ceilf(l), ceilf(t), ceilf(r), ceilf(b))
 

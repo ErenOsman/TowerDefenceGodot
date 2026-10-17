@@ -1,7 +1,8 @@
 extends TdPopup
 ## The Codex (UI_Codex.cs; Codex — Design; the Unity build's layout): tabs Towers / Enemies / Statuses / Tips,
 ## "5 / 9 discovered" with a gold bar, a list on the left (one row per entry: medallion, name, "• New" while new,
-## a lock and "Not met yet" while undiscovered) and the selected entry's page on paper at the right: towers and enemies get a model
+## a lock and "Not met yet" / towers "Not found yet" while undiscovered; every tower is listed, locked until owned or
+## shown as a prize) and the selected entry's page on paper at the right: towers and enemies get a model
 ## preview turning (drag to turn), stat tiles, description and ability / passive rows (icon, cooldown pips, CD words,
 ## tags, description, result chips); statuses their icon, description and rules (lasts, again); tips their text with
 ## the player's keys (KeyBinds.fill_keys). Opening an entry marks it seen (SaveData.codex) and saves. Reusable from
@@ -318,12 +319,7 @@ static func catch_up() -> void:
 	var data: GameData = SaveData.data
 	var catalog: GameCatalogAsset = GameApp.catalog
 	if catalog == null: return
-	var found := false
-	for owned in data.towers.towers:
-		if data.codex.discover(CodexSection.Towers, owned.type):
-			found = true
-			# the towers you start with are not news: only towers earned later get the "New" dot
-			if MenuLogic.first_earned(catalog, owned.type) == "the tutorial": data.codex.mark_viewed(CodexSection.Towers, owned.type)
+	var found := MenuLogic.discover_owned(data.codex, data.towers, catalog)
 	var levels := [catalog.tutorial]
 	for e in catalog.entries(): levels.append(e[0].level)
 	for l in levels:
@@ -341,15 +337,13 @@ func show_section(s: int) -> void:
 		tab_buttons[i].selected = SECTIONS[i] == s
 		var n := _new_count(SECTIONS[i])
 		_tab_new(i, n)
-	entries = MenuLogic.codex_entries(GameApp.catalog.codex if GameApp.catalog != null else null, s)
-	# no locked towers: only the ones the player has met are listed ("???" rows stay for enemies and statuses)
+	# every entry is listed; undiscovered ones (towers too, like enemies) are locked rows (MenuLogic.codex_list)
+	entries = MenuLogic.codex_list(GameApp.catalog.codex if GameApp.catalog != null else null, s, SaveData.codex)
 	var total := entries.size()
-	if s == CodexSection.Towers: entries = entries.filter(func(e): return _known(e))
 	for r in rows: r.queue_free()
 	rows.clear()
 	for e in entries: rows.append(_make_row(e))
-	var known := 0
-	for e in entries: if _known(e): known += 1
+	var known := MenuLogic.codex_known_count(entries)
 	_progress.text = MenuLogic.codex_progress_text(s, known, total)
 	_bar.visible = s != CodexSection.Tips and entries.size() > 0
 	_bar_fill.size = Vector2(_bar.custom_minimum_size.x * (float(known) / maxf(1.0, total)), 10)
@@ -410,7 +404,7 @@ func _draw_row(b: TdButton, e: Dictionary) -> void:
 	var icon: Control
 	var kit_medal := _kit_medallion(e, "medallion_256")
 	if not known:
-		icon = TdMenu.picture(TdTheme.texture("icon_lock"), Vector2(26, 26)) # a lock, "Not met yet" (no "???")
+		icon = TdMenu.picture(TdTheme.texture("icon_lock"), Vector2(26, 26)) # a lock, "Not met yet" / "Not found yet" (no "???")
 		icon.modulate = TdTheme.color("cream.300")
 		icon.position = Vector2(7, 7)
 	elif e.section == CodexSection.Towers and kit_medal != null:
@@ -422,7 +416,7 @@ func _draw_row(b: TdButton, e: Dictionary) -> void:
 	icon.position += Vector2(12, 10)
 	icon.set_meta("row_part", true)
 	b.face_node().add_child(icon)
-	var l := TdMenu.label(e.name if known else "Not met yet", "header", TdTheme.color("cream.100") if known else TdTheme.color("cream.300"), 26 if known else 22)
+	var l := TdMenu.label(e.name if known else MenuLogic.locked_title(e.section), "header", TdTheme.color("cream.100") if known else TdTheme.color("cream.300"), 26 if known else 22)
 	var dot := known and SaveData.codex.is_new(e.section, e.id)
 	l.position = Vector2(66, 0)
 	l.size = Vector2(140 if dot else 194, 60)
@@ -525,8 +519,10 @@ func _show_page(e: Dictionary) -> void:
 		_locked_pic.texture = TdTheme.texture("lock_badge")
 		var n := _locked_pic.texture.get_size() * (0.5 if _locked_pic.texture == TdTheme.texture("lock_badge") else 1.0)
 		_locked_pic.custom_minimum_size = n
+		_locked_title.text = MenuLogic.locked_title(e.section)
 		_locked_kind.text = MenuLogic.section_name(e.section)
 		_locked_hint.text = MenuLogic.locked_text(e.section)
+		_locked_hint.visible = _locked_hint.text != ""
 		return
 	var a = e.asset
 	if a is TowerAsset:

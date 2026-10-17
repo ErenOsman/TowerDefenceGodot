@@ -193,18 +193,37 @@ static func stylebox(name: String, tint := Color.WHITE, padding: Array = []) -> 
 	_boxes[key] = box
 	return box
 
-## A kit 9-slice with its top `cut_px` texture rows left out (the top border and outset shrink with it), e.g. the deep
-## menu buttons' pressed sprites, whose lighter side band was drawn above the sunk face (it read as flipped).
-static func stylebox_cut_top(name: String, cut_px: int) -> StyleBox:
-	var key := "%s|cut%d" % [name, cut_px]
+## The deep menu buttons are a face block with a thick band under it (the side of the plinth). For the pressed "sink"
+## the two are drawn as separate layers: the face block (the sprite without its bottom `band_px` texture rows, so it
+## ends at the face's own dark outline) moves; the band (the bottom outset rows) stays put and the face covers it.
+static func stylebox_face(name: String, band_px: int) -> StyleBox:
+	var key := "%s|face%d" % [name, band_px]
 	if _boxes.has(key): return _boxes[key]
 	var base := stylebox(name)
 	if not (base is TdSliceBox): return base
 	var b: TdSliceBox = base.duplicate()
 	var ts := b.texture.get_size()
-	b.region = Rect2(0, cut_px, ts.x, ts.y - cut_px)
-	b.border_top = maxi(0, b.border_top - cut_px)
-	b.outset_top = b.outset_top - cut_px * SPRITE_SCALE
+	b.region = Rect2(0, 0, ts.x, ts.y - band_px)
+	b.border_bottom = maxi(0, b.border_bottom - band_px)
+	b.outset_bottom = b.outset_bottom - band_px * SPRITE_SCALE
+	_boxes[key] = b
+	return b
+
+## The band layer of stylebox_face(): the sprite's bottom outset rows only, drawn in a rect exactly the outset tall
+## placed under the control's logical rect.
+static func stylebox_band(name: String) -> StyleBox:
+	var key := "%s|band" % name
+	if _boxes.has(key): return _boxes[key]
+	var base := stylebox(name)
+	if not (base is TdSliceBox): return base
+	var b: TdSliceBox = base.duplicate()
+	var ts := b.texture.get_size()
+	var rows := int(round(b.outset_bottom / SPRITE_SCALE))
+	b.region = Rect2(0, ts.y - rows, ts.x, rows)
+	b.border_top = 0
+	b.border_bottom = rows
+	b.outset_top = 0.0
+	b.outset_bottom = 0.0
 	_boxes[key] = b
 	return b
 

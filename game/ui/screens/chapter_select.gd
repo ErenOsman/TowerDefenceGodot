@@ -266,6 +266,8 @@ func _reason_line(reason: String) -> Control:
 ## The tower the chapter's last level gives on the first clear: medallion + "Clear reward" / "Reward earned" + name.
 func _reward(info: Dictionary) -> Control:
 	var tw: TowerAsset = info.reward
+	# a tower shown as a prize is discovered in the Codex (Eren 2026-10-17)
+	if SaveData.codex.discover(CodexSection.Towers, tw.get_id()): SaveData.save()
 	var row := TdMenu.hbox(12)
 	row.mouse_filter = MOUSE_FILTER_IGNORE
 	var medal := TdMenu.medallion(TdMenu.unit_picture(tw.entity.view if tw.entity != null else "", tw.icon), 52)

@@ -43,7 +43,7 @@ func _layout() -> void:
 	if not _built or _label == null: return
 	if style != Style.MENU_PRIMARY and style != Style.MENU_WOOD and style != Style.PRIMARY and style != Style.SECONDARY and style != Style.DANGER: return
 	var s := face_rect().size # the face (TdButton may reserve bleed room round it)
-	var sink := 4.0 if _sinks() else 0.0
+	var sink := 0.0 # pressed: the whole face node sinks (TdButton._pose), the label with it
 	var has_icon := icon != null and _icon.visible
 	var iw := 30.0 if s.y >= 80.0 else 26.0
 	if has_icon:

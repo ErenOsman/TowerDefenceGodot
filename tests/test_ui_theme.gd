@@ -59,7 +59,9 @@ func test_easing_curves() -> void:
 
 func test_feedback_profiles() -> void:
 	assert_num(TdTheme.feedback("MenuButton")["hover_scale"], 1.03)
-	assert_num(TdTheme.feedback("MenuButton")["press_sink"], 4.0)
+	assert_num(TdTheme.feedback("MenuButton")["press_sink"], 9.0) # the menu sprites' band: the pressed face covers it
+	assert_num(TdTheme.feedback("MenuButton")["press_scale"], 1.0) # a press never changes the size (Eren 2026-10-17)
+	assert_num(TdTheme.feedback("Button")["press_sink"], 0.0) # flat buttons have no band: nothing moves
 	assert_num(TdTheme.feedback("IconButton")["denied_shake"], 4.0)
 	assert_num(TdTheme.feedback("Button")["denied_time"], 0.32)
 	assert_num(TdTheme.feedback("nope")["denied_shake"], 6.0) # unknown -> Button
@@ -128,3 +130,37 @@ func test_button_bleed_room() -> void:
 	b.bleed_mode = TdButton.Bleed.OFF
 	assert_eq(b.face_rect(), Rect2(0, 0, 422, 70))
 	b.free()
+
+## Pressed reads as a sink, never a different shape (Eren 2026-10-17: "pressed buttons look buggy").
+func test_pressed_is_a_clean_sink() -> void:
+	var m := TdButton.new()
+	m.style = TdButton.Style.MENU_WOOD
+	m.custom_minimum_size = Vector2(440, 64)
+	m.size = Vector2(440, 64)
+	m.force_state(false, false)
+	var rest: Vector2 = m.face_node().position
+	m.force_state(false, true)
+	assert_eq(m.face_node().position, rest + Vector2(0, 9), "the face moves down by its band, label and icon with it")
+	assert_eq(m.face_node().scale, Vector2.ONE, "no press scale")
+	var face: TdSliceBox = m._bg.get_theme_stylebox("panel")
+	assert_eq(face.texture, TdTheme.stylebox("menu_btn_wood_normal").texture, "the normal face, no pressed sprite swap")
+	assert_num(face.outset_bottom, 3.0, "the face block alone: the band is its own layer")
+	assert_true(m._band.visible)
+	assert_num(m._band.position.y + m.face_node().position.y, rest.y + 64.0, "the band stays where it was")
+	assert_num(m._bg.self_modulate.r, 0.92)
+	m.force_state(true, true)
+	assert_num(m.face_node().scale.x, 1.03, "hovered and pressed keeps the hover scale")
+	m.free()
+	var t := TdButton.new()
+	t.style = TdButton.Style.TAB
+	t.force_state(false, true)
+	assert_eq(t._sprite_now(), "tab_normal", "a pressed tab never looks selected")
+	assert_num(t._bg.self_modulate.r, 0.92)
+	assert_eq(t.face_node().position, Vector2.ZERO, "flat: nothing moves")
+	t.free()
+	var p := TdButton.new()
+	p.style = TdButton.Style.PRIMARY
+	p.force_state(false, true)
+	assert_eq(p._sprite_now(), "btn_primary_pressed", "the kit's pressed face: same outline, darker")
+	assert_num(p._bg.self_modulate.r, 1.0)
+	p.free()
