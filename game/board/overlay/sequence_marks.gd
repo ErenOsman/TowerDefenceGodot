@@ -21,17 +21,7 @@ var cam: Camera3D = null
 ## The ring's radius in tiles (the gold ring stands a little outside the selection ring).
 const RING_TILES := 0.62
 
-func _init() -> void:
-	name = "Sequence"
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	_dim = ColorRect.new()
-	_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_dim.color = Color(0.05, 0.04, 0.03, 0.0)
-	var mat := ShaderMaterial.new()
-	var sh := Shader.new()
-	sh.code = """shader_type canvas_item;
+const DIM_SHADER := """shader_type canvas_item;
 uniform vec2 hole = vec2(-1000.0);
 uniform float radius = 120.0;
 uniform vec2 view_size = vec2(1920.0, 1080.0);
@@ -41,7 +31,25 @@ void fragment() {
 	float k = smoothstep(radius * 0.8, radius * 2.2, d); // a soft edge round the target
 	COLOR = vec4(COLOR.rgb, COLOR.a * k);
 }"""
-	mat.shader = sh
+static var _dim_shader: Shader = null
+
+## DIM_SHADER, one Shader shared by every level (compiled once, at the Boot pre-warm, not on the first marked line).
+static func dim_shader() -> Shader:
+	if _dim_shader == null:
+		_dim_shader = Shader.new()
+		_dim_shader.code = DIM_SHADER
+	return _dim_shader
+
+func _init() -> void:
+	name = "Sequence"
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	set_anchors_preset(Control.PRESET_FULL_RECT)
+	_dim = ColorRect.new()
+	_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_dim.color = Color(0.05, 0.04, 0.03, 0.0)
+	var mat := ShaderMaterial.new()
+	mat.shader = dim_shader()
 	_dim.material = mat
 	_dim.visible = false
 	add_child(_dim)

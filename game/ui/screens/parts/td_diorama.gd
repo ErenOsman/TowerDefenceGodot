@@ -64,12 +64,20 @@ var _grid_size := Vector2i(10, 6)
 func _init() -> void:
 	mouse_filter = MOUSE_FILTER_IGNORE
 
+static var _blur_shader: Shader = null
+
+## The blur shader, one for every diorama (a new Shader per instance made GL Compatibility compile it again on every
+## menu opening; one shared Shader compiles once, at the Boot pre-warm). Parameters stay per material.
+static func blur_shader() -> Shader:
+	if _blur_shader == null:
+		_blur_shader = Shader.new()
+		_blur_shader.code = BLUR_SHADER
+	return _blur_shader
+
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	var mat := ShaderMaterial.new()
-	var sh := Shader.new()
-	sh.code = BLUR_SHADER
-	mat.shader = sh
+	mat.shader = blur_shader()
 	mat.set_shader_parameter("blur", blur)
 	mat.set_shader_parameter("dim", dim)
 	mat.set_shader_parameter("tint", TdTheme.color("wood.900"))

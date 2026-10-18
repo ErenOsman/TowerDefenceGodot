@@ -337,8 +337,8 @@ How it is read:
   Towers; the Camp's Princess bubble).
 - Esc: the top popup closes first (TdPopup); then the welcome card, then the tour; on the bare Blacksmith Esc slides
   back to the Camp (the Guild's bare Esc does nothing; the Blacksmith follows the "Esc = Camp" brief).
-- Music: `AudioMgr.play_scene_music` has no Blacksmith case, so the Camp's map track keeps playing; Boot does not
-  preload the scene (both in game/app files outside this change).
+- Music: `AudioMgr.play_scene_music` has no Blacksmith case, so the Camp's map track keeps playing. The Boot
+  pre-warm loads the Blacksmith scene and kit (group "places"; see "Boot").
 - Renders: `tools/menus_shot.gd` step `blacksmith` (blacksmith_welcome, blacksmith_tour, blacksmith, then Esc → Camp).
   QA: `tools/qa/guild_tour.gd` reaches the Workshop through the Blacksmith (`goto_smithy()`, `ws_open()`).
 
@@ -387,6 +387,46 @@ takes every mouse event over the scene:
   asset icon. Form descriptions in the content are standalone (no comparisons). Every scroll bar is ≥ 12 px
   (`TdTheme._widen_scrollbars`); the collection grid drag-scrolls on empty space while tiles keep their own drag
   (`TdDragScroll` skips controls with meta `drag_source`); `tools/hand_drag_check.gd` proves reorder / remove / add / scroll.
+
+## Boot (pre-warm, game/app/boot_loading.gd, 2026-10-18)
+Eren asked whether the first-open hitch of every screen would ship. It would, in GL Compatibility (desktop and web):
+each shader variant compiles on its first draw, each font size rasterises its glyphs on first use, each scene's
+scripts compile on its first load. The Boot now does that work behind its loading bar, in priority order (`STEPS`):
+1. **fonts**: one hidden Label per font variant (`font_variants()`: the TdTokens.TYPE scale, every font + size of the
+   theme's types, `FONT_SIZES` for the explicit sizes screens pass, `OUTLINED` for board/HUD outlines; 38 today) with
+   A–Z, a–z, 0–9, ÇĞİÖŞÜçğıöşü and the UI's punctuation, drawn in the root viewport (the same oversampling as the screens).
+2. **art:menu**: theme, menu background, Welcome / main menu / loading scenes, the menu diorama's tiles and miniatures:
+   loaded, then each model drawn once in a hidden 256 px SubViewport (TdDiorama light with shadows + an omni light, so
+   the Guild hearth's / Smithy embers' light pass compiles too). Never skipped.
+3. **shared**: BoardMaterials lit / overlay / decal / on-top (their shader depends on the flags only: one of each
+   covers every colour and decal), TdStationWorld glow / dim overlays, one effect per VFX material variant
+   (`VfxKit.warm_set()`: blend × orient, 4 effects), and the UI's canvas shaders (TdButton gold tint, TdMenu circle and
+   grey circle, TdGuildBackdrop, CoopBoardPic grey, the diorama blur, the two tutorial dims).
+4. **art:camp**: Camp and level select scenes, the Camp kit (props from `art/camp/layout.json`), the whole map kit
+   (`rules.tiles`), the starting and hand towers. 5. **screens:A**: settings, hand_editor, codex.
+6. **art:places**: Guild and Blacksmith kits (`place_paths()`: every `prop` of the layout, looked up in its `kits`, then
+   `art/tiles/`; no layout → every FBX of the folder) and scenes. 7. **screens:B**: workshop, upgrade, mission_board
+   (script, no scene), backpack, rewards (given the first mission).
+8. **art:level**: level and HUD scenes, the coming level's enemies (tutorial on a first run + `next_main_level()`), the
+   board decal PNGs (the level loads behind its loading screen, so this is last).
+- Screens are opened for real (`open()`, content built from the save) under a CanvasLayer at layer −10, behind the
+  Boot's opaque panel, drawn two frames, then freed (`TdPopup._exit_tree` releases the game keys). Side effects are the
+  ones a real opening has (hand editor / codex discover owned towers and save); none needs a session. Nothing skipped
+  as unsafe; the Camp / Guild / Blacksmith scenes themselves are not instantiated (their `_ready` grants towers and
+  saves): their kits are drawn instead.
+- Budget: after the menu step, work stops once `BUDGET_WEB_MS` (2300 ms from the Boot's start) is spent on the web, so
+  with `MINIMUM_DISPLAY_TIME` and `POST_LOAD_DELAY` the Boot ends by ~3 s; natively `BUDGET_NATIVE_MS` (4000) is a
+  safety net. What does not fit loads on first use, as before, and is named in the log. `TD_BOOT_BUDGET_MS` overrides;
+  `TD_NO_PRELOAD=1` skips the whole pre-warm. Loads are threaded natively, a 30 ms slice per frame on the web.
+- Log: `[Boot] content … | fonts … ms | art … ms (files, models, materials, effects) | screens … ms | total, budget |
+  steps: <ms per step> | skipped …`. Headless probe 2026-10-18 (ARM server CPU, dummy renderer, no shader compiles):
+  content 84, fonts ~210, art ~1.7 s (93 files; camp.tscn's script compile alone ~380 ms), screens ~1.1 s, total ~3.1 s.
+- Shared shaders: TdDiorama's blur, HudSequence's and SequenceMarks' dims were a new `Shader` per instance (GL
+  Compatibility compiled them again on every menu / level opening); now one static Shader each (`blur_shader()`,
+  `dim_shader()`). TdStationWorld's overlays have static accessors (`glow_material()`, `dim_material()`).
+- Level: `BoardMaterials.prewarm()` builds the two outline textures (~40 ms each natively, GDScript per pixel; they
+  were made on the first tile hover) and the decals' mipmapped copies / border colours in the level's `_setup`, under
+  its loading screen (`LevelController.WARM_DECALS`).
 
 ## Golden (sim vs the C# oracle)
 - `tools/golden.gd` plays every level with the golden policy (seed 12345) on the GDScript sim and diffs the logs with

@@ -11,6 +11,17 @@ static var _mipmapped := {}
 static var _border := {}
 static var _outline := {}  # dashed (bool) → Texture2D
 
+## Makes the CPU-built board textures ahead (the level calls it while its loading screen is up): both outline
+## textures (~40 ms each on a desktop CPU, more on the web; they were made on the first tile hover, a hitch) and the
+## mipmapped copy and border colour of each decal. Cached for the session: free after the first level.
+static func prewarm(decals: Array) -> void:
+	outline_texture(false)
+	outline_texture(true)
+	for t in decals:
+		if t is Texture2D:
+			mipmapped(t)
+			border_color(t)
+
 ## An opaque lit material (placeholders, slabs).
 static func lit(c: Color) -> StandardMaterial3D:
 	var key := c.to_html()

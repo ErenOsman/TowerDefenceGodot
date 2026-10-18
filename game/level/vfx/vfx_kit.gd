@@ -46,6 +46,32 @@ static func names() -> Array:
 	_load()
 	return _effects.keys()
 
+## The fewest effects whose layers use every material variant of the kit (blend × orient): what the Boot pre-warm
+## plays once so their shaders compile at Boot, not on the first hit.
+static func warm_set() -> Array:
+	_load()
+	var seen := {}
+	var out := []
+	for n in _effects:
+		var add := false
+		for l in _effects[n].get("layers", []):
+			var k := "%s|%s" % [str(l.get("blend", "alpha")), str(l.get("orient", "billboard"))]
+			if not seen.has(k):
+				seen[k] = true
+				add = true
+		if add: out.append(n)
+	return out
+
+## Every sprite texture the kit's layers use (res:// paths that exist): the Boot preloads them.
+static func sprite_paths() -> Array[String]:
+	_load()
+	var out: Array[String] = []
+	for n in _effects:
+		for l in _effects[n].get("layers", []):
+			var p := SPRITES % str(l.get("sprite", ""))
+			if not out.has(p) and ResourceLoader.exists(p): out.append(p)
+	return out
+
 static func _color(n) -> Color:
 	if n == null: return Color.WHITE
 	var s := str(n)

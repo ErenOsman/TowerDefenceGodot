@@ -74,6 +74,15 @@ void fragment() {
 }
 """
 
+static var _dim_shader: Shader = null
+
+## DIM_SHADER, one Shader shared by every level (compiled once, at the Boot pre-warm, not on the first pointing line).
+static func dim_shader() -> Shader:
+	if _dim_shader == null:
+		_dim_shader = Shader.new()
+		_dim_shader.code = DIM_SHADER
+	return _dim_shader
+
 ## The dim behind a pointing bubble (~30 %), with a soft lit hole round the target.
 var _dim: ColorRect
 var _medal: Control
@@ -85,9 +94,7 @@ func _ready() -> void:
 	_dim.mouse_filter = MOUSE_FILTER_IGNORE
 	_dim.set_anchors_preset(PRESET_FULL_RECT)
 	var mat := ShaderMaterial.new()
-	var sh := Shader.new()
-	sh.code = DIM_SHADER
-	mat.shader = sh
+	mat.shader = dim_shader()
 	_dim.material = mat
 	_dim.visible = false
 	add_child(_dim)

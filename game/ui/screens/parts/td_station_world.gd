@@ -336,25 +336,33 @@ static var _dim: ShaderMaterial = null
 ## Darkens a prop (a locked station, e.g. the Camp's Signpost before Chapter 2).
 func dim(n: Node3D, on: bool) -> void:
 	if n == null: return
+	for m in n.find_children("*", "MeshInstance3D", true, false):
+		(m as MeshInstance3D).material_overlay = dim_material() if on else null
+
+## The dimming overlay (static: one shader, compiled at the Boot pre-warm).
+static func dim_material() -> ShaderMaterial:
 	if _dim == null:
 		var sh := Shader.new()
 		sh.code = "shader_type spatial;\nrender_mode unshaded, blend_mul;\nvoid fragment() { ALBEDO = vec3(0.5, 0.5, 0.52); }\n"
 		_dim = ShaderMaterial.new()
 		_dim.shader = sh
-	for m in n.find_children("*", "MeshInstance3D", true, false):
-		(m as MeshInstance3D).material_overlay = _dim if on else null
+	return _dim
 
 ## A warm additive glow over a prop's meshes (hover).
 func highlight(n: Node3D, on: bool) -> void:
 	if n == null: return
+	for m in n.find_children("*", "MeshInstance3D", true, false):
+		(m as MeshInstance3D).material_overlay = glow_material() if on else null
+	n.set_meta("highlighted", on)
+
+## The hover glow overlay (static: one shader, compiled at the Boot pre-warm).
+static func glow_material() -> ShaderMaterial:
 	if _glow == null:
 		var sh := Shader.new()
 		sh.code = "shader_type spatial;\nrender_mode unshaded, blend_add;\nvoid fragment() { ALBEDO = vec3(0.28, 0.2, 0.06); }\n"
 		_glow = ShaderMaterial.new()
 		_glow.shader = sh
-	for m in n.find_children("*", "MeshInstance3D", true, false):
-		(m as MeshInstance3D).material_overlay = _glow if on else null
-	n.set_meta("highlighted", on)
+	return _glow
 
 ## Places buttons (each [anchor point, size]) centred above their anchors, `lift` px up, without overlaps: sorted by
 ## x and pushed right to keep `gap`; the row is then shifted back inside [gap, width - gap]; a button that still

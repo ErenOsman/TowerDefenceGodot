@@ -448,6 +448,8 @@ func _setup() -> void:
 	board = BoardView.new()
 	add_child(board)
 	board.build(session.state.grid, level, _rules_asset.tiles, _model_scene)
+	# the board's CPU-built textures now, under the loading screen (they were made on the first tile hover: a hitch)
+	BoardMaterials.prewarm(WARM_DECALS.map(func(n): return _decal(n)))
 	var entities := Node3D.new()
 	entities.name = "Entities"
 	add_child(entities)
@@ -1378,6 +1380,11 @@ const STOP_COLOR := Color(1.0, 0.6, 0.1, 0.7)
 const HOVER_COLOR := Color(1.0, 1.0, 1.0, 0.2)
 const SELECT_COLOR := Color(0.3, 0.56, 0.9, 0.6)
 const PLACE_COLOR := Color(0.3, 0.9, 0.4, 0.3)
+
+## The decals whose mipmapped copy and border colour BoardMaterials.prewarm makes at level build.
+const WARM_DECALS := ["board/decal_area", "board/decal_enemy_path", "board/decal_enemy_stop", "board/decal_heal_valid",
+	"board/decal_move", "board/decal_move_dest", "board/decal_move_step", "board/decal_place", "board/decal_place_blocked",
+	"board/decal_range", "board/decal_target_valid"]
 
 static func _decal(n: String) -> Texture2D:
 	return OverlayStyle.kit(n)
