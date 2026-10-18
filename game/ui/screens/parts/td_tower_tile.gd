@@ -13,6 +13,11 @@ const SIZE := Vector2(108, 116)
 ## 118: the 224 px filter well gave the grid 10 px back; "Fire Archer" (105 px) no longer touches the rims (QA 2026-10-15).
 const WIDE := Vector2(118, 116)
 const MEDAL := 60.0
+## The moon badge's centre (px in the tile) and the Lv chip's left-centre (fractions of the medallion): the badge at
+## the left edge under the coin, the chip low at the portrait's bottom-left (Eren 2026-10-17: they overlapped).
+## Badge x 2..26, y 37..61 on the 108 px tile; the chip from y 62 (72 centre) down to ~82, above the name.
+const TIRED_AT := Vector2(14, 49)
+const LV_AT := Vector2(-0.06, 1.0)
 
 var tower_id := ""
 var selected := false
@@ -101,8 +106,8 @@ func set_tired(text: String) -> void:
 	for c in _medal.get_children():
 		if c is TdLvChip: continue # the Lv chip stays readable on a resting tower
 		c.modulate.a = 0.5
-	# top-left, under the coin; a little higher when a Lv chip holds the portrait's bottom-left (lv-chip mockup)
-	TdTiredBadge.attach(self, tile.x, 0.22, Vector2(0.24, 0.42 if _level > 0 else 0.48))
+	# top-left, under the coin, out at the tile's left edge (Eren 2026-10-17: clear of the Lv chip, which sits lower)
+	TdTiredBadge.attach(self, tile.x, 0.22, TIRED_AT / tile.x)
 	if _name != null: _name.modulate.a = 0.6
 	hit_rect_only(self)
 	tooltip_text = text # the one thing the tile cannot show: why it rests (when it is back)
@@ -112,7 +117,7 @@ func set_tired(text: String) -> void:
 func set_level(lv: int) -> void:
 	_level = lv
 	if _medal == null: return
-	TdLvChip.attach(_medal, lv, MEDAL)
+	TdLvChip.attach(_medal, lv, MEDAL, TdLvChip.FONT_SIZE, LV_AT)
 	hit_rect_only(self)
 
 ## The Upgrade picker's green ↑ (the tower can be upgraded now, a form included) at the tile's top-right.

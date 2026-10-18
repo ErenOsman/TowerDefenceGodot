@@ -3,17 +3,20 @@ extends TdPopup
 ## hand-select-level.html): a large window "Your hand 4 / 8" over the screen that opened it.
 ##  - Top: the 8 hand slots in order (slot number = the in-level key); drag to reorder, drag a piece out of the strip
 ##    (or its × on hover) to take it out, drop a collection card on a slot to put it there (on a filled slot it
-##    replaces that tower). Before a level, a divider after the level's cap: "Two Roads takes the first 4".
+##    replaces that tower). Before a level, a divider bar at the level's cap (no note: Eren 2026-10-17). Adding or
+##    removing a tower never changes the window's size or layout (fixed strip and header; nothing appears in them).
 ##  - Beside it: 4 fixed layout tabs (rename only); the active one is the hand levels use; click one to load it.
-##  - Left: search, Role / Delivery chips, cost slider + quick chips, toggles. Centre: every owned tower (each its
-##    own card; sort Default (the hidden release number) / Name / Cost). Right: the selected tower's detail card and Add to hand / Remove.
+##  - Centre: a bar with Filters (a button with the count of set filters; it opens the Role / Delivery / Cost / toggle
+##    filters in a small popup), the search and Sort (Default (the hidden release number) / Name / Cost), then every
+##    owned tower over the full width (each its own card). Right: the selected tower's detail card ("Drummer #2") and
+##    Add to hand / Remove. No instruction texts (UI Design Rules "No explanations in everyday places").
 ## Everything saves as you go (TowerCollection + GameData.hand_layouts through SaveData.save()) and emits `changed`.
 ## Opened from level select (with its level: set `level`, or set_level_context(cap, name)), the Camp's Towers station
 ## and the co-op room. Esc / right click / × close it (TdPopup).
 ## Missions & Guild (mockup hand-select-mission): towers that went on a mission today are dimmed with the moon badge
-## and "Tired · rests in 5 h" (in the strip and the collection, wherever it opens; the card says it too). Opened for a
-## mission (`mission` set, from the mission detail), the divider counts rested towers ("Night Watch takes the first 4
-## rested", after the last tower that goes) and "▲ goes" marks the towers that will come.
+## (in the strip and the collection; the tooltip says when they rest). Opened for a mission (`mission` set, from the
+## mission detail), the strip shows only the hand's rested towers (MissionUiLogic.rested_hand: the ones the mission can
+## take; key = place in that strip), the divider bar at the cap.
 
 signal changed
 
@@ -23,11 +26,14 @@ var level: LevelAsset = null
 var hand_cap := -1
 ## Overrides the level's name when not "".
 var level_name := ""
-## The mission the hand is for (null: none): the divider counts rested towers, "▲ goes" under the ones it takes.
+## The mission the hand is for (null: none): the strip shows only the hand's rested towers.
 var mission: MissionDef = null
 
 const WIN := Vector2(1460, 864)
-const GRID_COLUMNS := 6
+## The grid has the window's full width (the filters are in a popup): 8 tiles of 108 px.
+const GRID_COLUMNS := 8
+## The header row's fixed height (the title; the hand-full message appears in it without moving anything).
+const HEAD_H := 56.0
 
 var _selected := ""
 var _entries: Array = []
@@ -92,6 +98,7 @@ func _build() -> void:
 	col.add_child(body)
 	collection = TdCollection.new()
 	collection.filters_shown = GameApp.camp_unlocked() # no filters until Chapter 1 is cleared (Eren 2026-10-15)
+	collection.filters_popup = true # a Filters button + popup, the grid over the full width (Eren 2026-10-17)
 	collection.extras = true
 	collection.hand_keys = true
 	collection.columns = GRID_COLUMNS
@@ -104,6 +111,7 @@ func _build() -> void:
 
 func _build_head() -> Control:
 	var head := TdMenu.hbox(14)
+	head.custom_minimum_size = Vector2(0, HEAD_H)
 	head.add_child(TdMenu.label("Your hand", "h1", TdTheme.color("cream.100"), 44))
 	_cap_label = TdMenu.rich("", "body", TdTheme.color("cream.300"), 28)
 	_cap_label.add_theme_font_override("normal_font", TdTheme.font("plinth"))
@@ -113,9 +121,6 @@ func _build_head() -> Control:
 	_cap_label.size_flags_vertical = SIZE_SHRINK_CENTER
 	_cap_label.custom_minimum_size = Vector2(70, 0)
 	head.add_child(_cap_label)
-	var sub := TdMenu.label("Changes save as you go · drag to reorder, the key follows", "small", TdTheme.color("cream.300"), 20)
-	sub.size_flags_vertical = SIZE_SHRINK_CENTER
-	head.add_child(sub)
 	_msg = PanelContainer.new()
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0.09, 0.067, 0.05, 0.75)
@@ -145,9 +150,12 @@ func _build_head() -> Control:
 	head.add_child(x)
 	return head
 
+## The strip's padding (left, top, right, bottom): fixed, nothing appears above or under the slots.
+const TRAY_PAD := [14, 12, 14, 4]
+
 func _build_tray() -> Control:
 	_tray_panel = PanelContainer.new()
-	_tray_panel.add_theme_stylebox_override("panel", TdTheme.stylebox("hand_tray", Color.WHITE, [14, 34, 14, 4]))
+	_tray_panel.add_theme_stylebox_override("panel", TdTheme.stylebox("hand_tray", Color.WHITE, TRAY_PAD))
 	_tray_panel.size_flags_vertical = SIZE_SHRINK_BEGIN
 	var drop := TrayDrop.new()
 	drop.editor = self
@@ -168,6 +176,8 @@ func _build_detail() -> Control:
 func _on_open() -> void:
 	SaveData.data.ensure_layouts()
 	_entries = HandLogic.entries(SaveData.towers, GameApp.catalog, GameApp.convert)
+	# every tower in the collection is discovered in the Codex (owned; Eren 2026-10-17)
+	if GameApp.catalog != null and MenuLogic.discover_owned(SaveData.codex, SaveData.towers, GameApp.catalog): SaveData.save()
 	var hand: Array = SaveData.towers.hand
 	if _selected == "" or SaveData.towers.find(_selected) == null:
 		_selected = hand[0] if not hand.is_empty() else (_entries[0].id if not _entries.is_empty() else "")
@@ -191,47 +201,43 @@ func _refresh_tray(pop := false) -> void:
 		c.queue_free()
 	_slots.clear()
 	var towers := SaveData.towers
-	var c := cap()
-	var note := HandLogic.cap_note(context_name(), c)
-	var cut := c
-	var marks := MissionUiLogic.hand_marks(towers.hand, SaveData.missions, c)
-	if mission != null:
-		note = MissionUiLogic.editor_cap_note(mission.name, c)
-		cut = MissionUiLogic.divider_at(towers.hand, SaveData.missions, c)
-		if cut < 0: cut = TowerCollection.MaxHand
+	var ids := strip_ids()
+	# the divider bar stands at the cap whatever the hand holds: the strip never changes width (Eren 2026-10-17)
+	var cut := HandLogic.divider_slot(cap())
 	var made := []
-	var lines := false
 	for i in TowerCollection.MaxHand:
-		if note != "" and i == cut and cut < TowerCollection.MaxHand: _tray.add_child(_divider(note))
+		if i == cut: _tray.add_child(_divider())
 		var s: TdHandSlot
-		if i < towers.hand.size():
-			var owned := towers.find(towers.hand[i])
+		if i < ids.size():
+			var owned := towers.find(ids[i])
 			var type: TowerAsset = GameApp.catalog.find_tower(owned.type) if owned != null else null
 			s = TdHandSlot.filled(i, owned, type, _miniature(type))
 			s.set_selected(owned != null and owned.id == _selected)
 			s.pressed.connect(_select)
 			s.removed.connect(remove)
 			s.drag_began.connect(func(id: String): _drag_hand_id = id)
-			if marks[i].tired:
-				s.set_tired(MissionUiLogic.tired_line())
-				lines = true
-			elif mission != null and marks[i].goes:
-				s.set_goes()
-				lines = true
+			if mission == null and MissionBoard.is_tired(str(ids[i]), SaveData.missions): s.set_tired(MissionUiLogic.tired_line(null, false))
 			made.append(s)
 		else:
 			s = TdHandSlot.empty(i)
-		s.set_late(note != "" and i >= cut and not s.tired)
+		s.set_late(cut >= 0 and i >= cut and not s.tired)
 		s.dropped.connect(_on_drop)
 		_tray.add_child(s)
 		_slots.append(s)
-	# room under the slots for the tired / goes lines; 34 on top: the divider's note clear of the tray's rim (QA 2026-10-15:
-	# at 28 its letters touched the rim)
-	_tray_panel.add_theme_stylebox_override("panel", TdTheme.stylebox("hand_tray", Color.WHITE, [14, 34, 14, 54 if lines else 4]))
 	if pop: TdMenu.pop_in(made, 0.03)
 
-## The divider at the level's cap, its note above it.
-func _divider(note: String) -> Control:
+## The towers the strip shows, in order: the hand; opened for a mission, only its rested towers (Eren 2026-10-17).
+func strip_ids() -> Array:
+	var hand: Array = SaveData.towers.hand
+	return MissionUiLogic.rested_hand(hand, SaveData.missions) if mission != null else hand
+
+## The hand index a drop on strip slot `slot` means (the mission strip skips tired towers).
+func _hand_slot(slot: int) -> int:
+	if mission == null: return slot
+	return MissionUiLogic.strip_to_hand_slot(SaveData.towers.hand, strip_ids(), slot)
+
+## The divider bar at the level's cap (no note).
+func _divider() -> Control:
 	var d := Control.new()
 	d.custom_minimum_size = Vector2(26, TdHandSlot.SIZE.y)
 	d.mouse_filter = MOUSE_FILTER_IGNORE
@@ -241,12 +247,6 @@ func _divider(note: String) -> Control:
 	bar.size = Vector2(3, TdHandSlot.SIZE.y - 6)
 	bar.mouse_filter = MOUSE_FILTER_IGNORE
 	d.add_child(bar)
-	var l := TdMenu.label(note, "plate", TdTheme.color("cream.200"), 18)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.size = Vector2(320, 24)
-	l.position = Vector2(13 - 160, -30)
-	l.mouse_filter = MOUSE_FILTER_IGNORE
-	d.add_child(l)
 	return d
 
 func _refresh_layouts() -> void:
@@ -263,7 +263,7 @@ func _layout_tab(i: int, l: Dictionary, active: bool) -> Control:
 	tab.active = active
 	tab.custom_minimum_size = Vector2(0, 46)
 	tab.size_flags_horizontal = SIZE_EXPAND_FILL
-	tab.tooltip_text = "%s · %s" % [l.name, "Active: levels use this hand" if active else "Click to use this layout"] # the full name (the tab trims a long one)
+	tab.tooltip_text = str(l.name) # the full name (the tab trims a long one)
 	tab.clicked.connect(func(): switch_layout(i))
 	var m := MarginContainer.new()
 	m.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -342,7 +342,7 @@ func _refresh_filters() -> void:
 
 func _refresh_grid() -> void:
 	collection.entries = _entries
-	collection.hand = SaveData.towers.hand
+	collection.hand = strip_ids() # the keys the strip shows (a mission's strip: rested towers only)
 	collection.selected_id = _selected
 	collection.refresh_grid()
 
@@ -363,6 +363,7 @@ func _refresh_detail() -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.size_flags_vertical = SIZE_EXPAND_FILL
 	_detail.add_child(scroll)
+	TdDragScroll.attach(scroll, true) # mouse drag scrolls it too
 	var gutter := MarginContainer.new()
 	# no extra gutter: the ScrollContainer already counts its scrollbar in its width (a 14 px gutter on top made the
 	# 372 px card grow to 386 px)
@@ -374,11 +375,8 @@ func _refresh_detail() -> void:
 	gutter.add_child(body)
 	var head := HFlowContainer.new()
 	head.add_theme_constant_override("h_separation", 10)
-	var n := TdMenu.label(e.name, "h2", TdTheme.color("accent.ink"), 32)
+	var n := TdMenu.label(HandLogic.entry_name(e), "h2", TdTheme.color("accent.ink"), 32) # "Drummer #2"
 	head.add_child(n)
-	var num := TdMenu.label(HandLogic.number_text(e), "micro", TdTheme.color("ink.2"), 18)
-	num.size_flags_vertical = SIZE_SHRINK_END
-	head.add_child(num)
 	body.add_child(head)
 	var cost := TdMenu.rich("[img=20x20 color=%s]%s[/img] [font_size=22][color=%s]%d[/color][/font_size] energy" % [TdTheme.rich("gold.ink"),
 		TdTheme.texture("icon_energy").resource_path, TdTheme.rich("gold.ink"), e.cost], "small", TdTheme.color("ink.2"), 18)
@@ -398,15 +396,7 @@ func _refresh_detail() -> void:
 	_detail.add_child(foot)
 	var towers := SaveData.towers
 	var at := towers.hand.find(e.id)
-	if MissionBoard.is_tired(e.id, SaveData.missions):
-		var tl := TdMenu.hbox(8)
-		tl.add_child(TdDrops.icon("hourglass", 20, TdTheme.color("gold.ink")))
-		var tt := TdMenu.wrap_label(MissionUiLogic.tired_detail(), "plate", TdTheme.color("gold.ink"), 18)
-		tt.custom_minimum_size = Vector2(300, 0)
-		tl.add_child(tt)
-		foot.add_child(tl)
 	if at >= 0:
-		foot.add_child(TdMenu.label("In your hand · key %d" % (at + 1), "plate", TdTheme.color("good.ink"), 18))
 		var b := TdMenu.button(TdButton.Style.SECONDARY, "Remove from hand", _action_size(TdButton.Style.SECONDARY), TdTheme.texture("icon_close"))
 		b.font_size = 24 # at the default size the label ran to ~8 px of the rims in the fixed-width card (QA 2026-10-15)
 		var id: String = e.id
@@ -476,7 +466,8 @@ func toggle(id: String) -> void:
 	else: add(id)
 
 ## A tower dropped on a hand slot (see HandLogic.drop_on_slot).
-func drop_on_slot(id: String, slot: int) -> bool:
+func drop_on_slot(id: String, strip_slot: int) -> bool:
+	var slot := _hand_slot(strip_slot)
 	if not SaveData.towers.hand.has(id) and slot >= SaveData.towers.hand.size():
 		return add(id)
 	if not HandLogic.drop_on_slot(SaveData.towers, id, slot): return false

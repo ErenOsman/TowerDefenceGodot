@@ -213,7 +213,7 @@ func show_outcome(outcome: int) -> void:
 	open()
 
 ## The tower level tasks this level moved (Upgrades — Design; mockup end-screen-tasks), under the drops: a dark inset
-## with "Tasks", one row per advance (UpgradeLogic.end_rows: "Archer (tower 3): Get 10 kills with it   8 / 10 kills
+## with "Tasks", one row per advance (UpgradeLogic.end_rows: "Archer #3: Get 10 kills with it   8 / 10 kills
 ## +3", a done one "✓ … Done"; at most UpgradeLogic.END_ROWS, then "+2 more tasks moved") and a gold line per tower
 ## made ready ("★ Guardian is ready to upgrade! Go to the Blacksmith."). Nothing when no task moved (and never before
 ## the Blacksmith opens: the controller counts nothing then).

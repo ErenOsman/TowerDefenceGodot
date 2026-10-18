@@ -15,6 +15,24 @@ func find(id: String) -> OwnedTower:
 		if t.id == id: return t
 	return null
 
+## A tower's place among the player's towers of the SAME type, 1-based, in the order they were got ("Drummer #2" =
+## the second Drummer); 0 when the id is not owned. The id itself is untouched. Godot-first (Eren 2026-10-17).
+func ordinal_of(id: String) -> int:
+	return TowerCollection.ordinal_in(towers, id)
+
+static func ordinal_in(list: Array, id: String) -> int:
+	var type := ""
+	for t in list:
+		if t.id == id:
+			type = t.type
+			break
+	if type == "": return 0
+	var n := 0
+	for t in list:
+		if t.type == type: n += 1
+		if t.id == id: return n
+	return 0
+
 ## Gives the player a new tower of a type, with a fresh ID.
 func add(type_id: String, custom_name: String = "") -> OwnedTower:
 	var t := OwnedTower.new()

@@ -1,7 +1,8 @@
 class_name TdBackpackButton
 extends TdButton
 ## The Backpack button (Backpack — Design § Where; UI/UX mockup screens-b/backpack-button.html): a plain wood
-## secondary button with the bag glyph, the gold coin and the gold count in gold text ("[bag] [coin] 240"). At the
+## secondary button with the bag glyph, the gold coin and the gold count in gold text ("[bag] [coin] 240"; the count keeps
+## room for 4 digits, right-aligned, so the button has one width from 0 to 9999). At the
 ## top-right of the Camp, the Guild and the Blacksmith (place_top_right), and left of × in the Workshop picker's,
 ## the Upgrade picker's and the Upgrade view's headers (make). Hidden before the Camp unlocks (nothing to carry).
 ## A click opens the Backpack popup (BackpackScreen) over `host`; the count refreshes when that popup closes, and
@@ -12,6 +13,8 @@ extends TdButton
 const GROUP := "backpack_button"
 ## Where the places put it (1920×1080 reference; the mockup's right 32 / top 28 at 1280, scaled).
 const MARGIN := Vector2(48, 40)
+## The count's reserved width: 4 digits.
+const MIN_DIGITS := "8888"
 
 ## Where the Backpack popup is added (a place's popup layer, or the picker popup it sits in); null = the current scene.
 var host: Node = null
@@ -71,6 +74,12 @@ func _ready() -> void:
 	_count = TdMenu.label("0", "header", TdTheme.color("gold"), 30 if _h >= 56.0 else 28)
 	_count.add_theme_font_override("font", TdTheme.font("plinth"))
 	_count.size_flags_vertical = SIZE_SHRINK_CENTER
+	# room for 4 digits whatever the count (Eren 2026-10-17: at 0 gold it shrank to a stub): the same width with "0"
+	# as with "240", the number right-aligned against the button's end
+	var f: Font = _count.get_theme_font("font")
+	var fs: int = _count.get_theme_font_size("font_size")
+	_count.custom_minimum_size.x = ceilf(f.get_string_size(MIN_DIGITS, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x) if f != null else 0.0
+	_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_row.add_child(_count)
 	_content.resized.connect(_fit_row)
 	clicked.connect(open_backpack)

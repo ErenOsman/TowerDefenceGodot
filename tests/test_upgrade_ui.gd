@@ -210,7 +210,7 @@ func test_end_rows() -> void:
 	]
 	var rows := UpgradeLogic.end_rows(adv)
 	assert_eq(rows[0].who, "Archer")
-	assert_eq(rows[0].where, "(tower 3)")
+	assert_eq(rows[0].where, "#3", "the individual name: Archer #3 (Eren 2026-10-17)")
 	assert_eq(rows[0].progress, "8 / 10 kills")
 	assert_eq(rows[0].gain, "+3")
 	assert_false(rows[0].done)

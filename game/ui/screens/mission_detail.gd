@@ -12,9 +12,9 @@ extends "res://game/ui/screens/level_select.gd"
 ##   the note over the button only when there is something to say ("✓ Done today: …", "⚠ All your towers are tired:
 ##   …", the lock reason; no "Starting uses a play" / co-op explainer) and the primary Play (GameApp.play_mission) or
 ##   Find a room (find_room: the lobby with the mission picked). The left list follows the board's tier order.
-## - Bottom: "Your hand" with the mission's note, the 8 slots with tired towers at 50 % (moon badge, "Tired · rests
-##   in 5 h") and "▲ goes" under the towers it takes, the divider after the last of them; Change hand opens the hand
-##   editor for the mission. Texts and states: MissionUiLogic.
+## - Bottom: "Your hand" (no note: Eren 2026-10-17; an empty hand says what to do), the 8 slots holding only the
+##   hand's rested towers (the ones the mission can take; tired ones are not shown), the divider bar at the cap;
+##   Change hand opens the hand editor for the mission. Texts and states: MissionUiLogic.
 
 signal find_room(mission_id: String)
 
@@ -334,37 +334,29 @@ func _draw_hand(level: LevelAsset, pop: bool) -> void:
 	var towers := SaveData.towers
 	var hand: Array = towers.hand
 	var cap := _cap(m, level)
-	var marks := MissionUiLogic.hand_marks(hand, SaveData.missions, cap)
-	var cut := MissionUiLogic.divider_at(hand, SaveData.missions, cap)
-	var any_mark := false
+	# only the rested towers: the ones the mission can take, keyed in that order (Eren 2026-10-17; tired towers are not
+	# shown here at all); the divider bar at the cap
+	var strip := MissionUiLogic.rested_hand(hand, SaveData.missions)
+	var cut := HandLogic.divider_slot(cap)
 	for i in TowerCollection.MaxHand:
 		if i == cut: _tray.add_child(_cut())
 		var piece := HandSlot.new()
 		var benched := cut >= 0 and i >= cut
-		if i < hand.size():
-			var owned := towers.find(hand[i])
+		if i < strip.size():
+			var owned := towers.find(strip[i])
 			var type := _asset.find_tower(owned.type) if owned != null else null
-			piece.setup(owned, type, i, benched and not marks[i].tired)
-			var tired_text := MissionUiLogic.tired_line() if marks[i].tired else ""
-			piece.mark(tired_text, marks[i].goes and MissionUiLogic.any_tired(hand, SaveData.missions))
-			any_mark = any_mark or marks[i].tired
+			piece.setup(owned, type, i, benched)
 		else:
 			piece.setup(null, null, i, benched)
 		piece.pressed.connect(open_hand_editor)
 		_tray.add_child(piece)
 		_pieces.append(piece)
-	# room for the lines under the slots
-	var box := _tray.get_parent() as PanelContainer
-	if box != null:
-		var sb: StyleBoxFlat = box.get_theme_stylebox("panel").duplicate()
-		sb.content_margin_bottom = 58 if any_mark else 8 # two caption lines + ~8 px above the edge
-		box.add_theme_stylebox_override("panel", sb)
 	var lvname := level.get_display_name() if level != null else ""
-	_note.text = MissionUiLogic.hand_note(m, lvname, hand.size(), cap, MissionUiLogic.any_tired(hand.slice(0, maxi(cut, cap)), SaveData.missions))
+	_note.text = MissionUiLogic.hand_note(m, lvname, hand.size(), cap)
 	_slots_used.text = MenuLogic.slots_used_text(hand.size())
 	if pop: TdMenu.pop_in(_pieces, 0.03)
 
-## Change hand: the hand editor for this mission (its cap, the "▲ goes" marks).
+## Change hand: the hand editor for this mission (its cap; its strip shows the rested towers only).
 func open_hand_editor() -> TdPopup:
 	var he: TdPopup = load(HAND_EDITOR).instantiate()
 	he.free_on_close = true

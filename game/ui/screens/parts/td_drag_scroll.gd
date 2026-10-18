@@ -17,14 +17,24 @@ var _start_scroll := 0
 var _cancelling := false
 
 static func attach(s: ScrollContainer, paper := false) -> TdDragScroll:
-	var d := TdDragScroll.new()
-	d.scroll = s
 	var bar := s.get_v_scroll_bar()
 	if paper: bar.theme_type_variation = "PaperVScrollBar"
 	bar.custom_minimum_size.x = BAR_WIDTH
 	s.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	return attach_drag(s)
+
+## Only the drag-to-scroll (no bar styling), once per scroll: the DragScroll autoload gives it to every menu scroll.
+static func attach_drag(s: ScrollContainer) -> TdDragScroll:
+	if s.has_meta(META):
+		var had = s.get_meta(META)
+		if is_instance_valid(had): return had
+	var d := TdDragScroll.new()
+	d.scroll = s
+	s.set_meta(META, d)
 	s.add_child(d, false, Node.INTERNAL_MODE_BACK)
 	return d
+
+const META := "td_drag_scroll"
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -83,6 +93,8 @@ func _over_drag_source() -> bool:
 	var n: Node = scroll.get_viewport().gui_get_hovered_control()
 	while n != null and n != scroll:
 		if n is Control and n.get_meta("drag_source", false): return true
+		# controls that drag by themselves: a slider's knob, text selection
+		if n is Slider or n is LineEdit or n is TextEdit: return true
 		n = n.get_parent()
 	return false
 

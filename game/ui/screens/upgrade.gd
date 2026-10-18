@@ -4,9 +4,9 @@ extends TdPopup
 ## the Blacksmith's Upgrade station. Modelled on the Workshop (workshop.gd): one window, two panes that slide.
 ##  Step 1, the picker: "Upgrade · Pick a tower", the collection (TdCollection, filter set "upgrade": search and a
 ##  "Ready to upgrade" toggle that keeps the towers that can be upgraded now in their current form, "5 ready"),
-##  tiles with their Lv chip and a green ↑ when ready (no cost coin), and a paper card: name, "tower 3", Lv chip,
+##  tiles with their Lv chip and a green ↑ when ready (no cost coin), and a paper card: the individual name ("Archer #2"), Lv chip,
 ##  "Level 3: 1 of 2 tasks done" and "✓ Archer is ready to upgrade" (current form), stat tiles, Upgrade.
-##  Step 2, the Upgrade view (Eren 2026-10-16: now vs after, nothing else): "← Back", the name, "tower 3", Lv chip;
+##  Step 2, the Upgrade view (Eren 2026-10-16: now vs after, nothing else): "← Back", the individual name ("Archer #2"), Lv chip, the Backpack and × (closes the popup);
 ##  it works on the tower's CURRENT form (wearing Fire Archer: the Fire Archer ladder; no forms row). Left "Now":
 ##  the card as it is (medallion with badge and Lv chip, name, "Form of Archer" for a form only, stats,
 ##  abilities); centre "Level 3", the tasks with progress bars ("42 / 60 damage", a green ✓ when done) and ONE
@@ -186,6 +186,12 @@ func _build_view() -> void:
 	top.add_child(fill)
 	backpack_button = TdBackpackButton.make(self) # the gold the Pay button spends (mockup upgrade-pay)
 	top.add_child(backpack_button)
+	# × closes the whole Upgrade popup (Back goes one step, to the picker; Eren 2026-10-17), 20 px right of the Backpack
+	var x := TdMenu.close_button()
+	x.size_flags_vertical = SIZE_SHRINK_CENTER
+	x.tooltip_text = "Close" # Esc goes back one step here
+	x.clicked.connect(close)
+	top.add_child(x)
 	var body := TdMenu.hbox(16)
 	body.size_flags_vertical = SIZE_EXPAND_FILL
 	_view.add_child(body)
@@ -236,9 +242,6 @@ func _entry(id: String) -> Dictionary:
 func _owned() -> OwnedTower:
 	return SaveData.towers.find(tower_id)
 
-func _index_text(e: Dictionary) -> String:
-	return "tower %d" % int(e.get("index", 0))
-
 # ------------------------------------------------------------------ the picker
 
 func _refresh_pick() -> void:
@@ -266,13 +269,9 @@ func _refresh_pdetail() -> void:
 	var type := GameApp.tower_type(owned.type)
 	var head := HFlowContainer.new()
 	head.add_theme_constant_override("h_separation", 10)
-	var n := TdMenu.label(e.name, "h2", TdTheme.color("accent.ink"), 32)
+	var n := TdMenu.label(HandLogic.entry_name(e), "h2", TdTheme.color("accent.ink"), 32) # "Archer #2"
 	n.add_theme_font_override("font", TdTheme.font("plinth"))
 	head.add_child(n)
-	var num := TdMenu.label(_index_text(e), "header", TdTheme.color("ink.2"), 20)
-	num.add_theme_font_override("font", TdTheme.font("plinth"))
-	num.size_flags_vertical = SIZE_SHRINK_CENTER
-	head.add_child(num)
 	var chip := TdLvChip.make(TowerLevels.current_level(owned, type), 18)
 	chip.size_flags_vertical = SIZE_SHRINK_CENTER
 	head.add_child(chip)
@@ -342,14 +341,10 @@ func refresh_view() -> void:
 	ladder = UpgradeLogic.start_ladder(owned, _type)
 	var e := _entry(tower_id)
 	TdCollection.clear_children(_vname)
-	var n := TdMenu.label(UpgradeLogic.ladder_name(_type, ladder) if ladder != "" or owned.custom_name == "" else owned.custom_name,
-		"h1", TdTheme.color("accent.light"), 34)
+	var n := TdMenu.label(HandLogic.individual_name(UpgradeLogic.ladder_name(_type, ladder) if ladder != "" or owned.custom_name == "" else owned.custom_name,
+		int(e.get("ordinal", 0))), "h1", TdTheme.color("accent.light"), 34) # "Archer #2"
 	n.add_theme_font_override("font", TdTheme.font("plinth"))
 	_vname.add_child(n)
-	var num := TdMenu.label(_index_text(e), "header", TdTheme.color("cream.300"), 20)
-	num.add_theme_font_override("font", TdTheme.font("plinth"))
-	num.size_flags_vertical = SIZE_SHRINK_END
-	_vname.add_child(num)
 	var chip := TdLvChip.make(TowerLevels.level_of(owned, ladder), 18)
 	chip.size_flags_vertical = SIZE_SHRINK_CENTER
 	_vname.add_child(chip)

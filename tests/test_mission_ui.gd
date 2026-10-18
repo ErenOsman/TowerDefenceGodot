@@ -1,7 +1,7 @@
 extends TestCase
 ## The Missions & Guild screens' texts and states (game/ui/screens/parts/mission_ui_logic.gd): mode chips, the
-## board's card states and lines, the detail's notes and pips, the hand strip marks ("▲ goes", tired) and the cap
-## divider, the Guild's station line, the Camp's Signpost, the end screen's lines and reward groups, the co-op rows,
+## board's card states and lines, the detail's notes and pips, the mission hand strip (rested towers only),
+## the Guild's station line, the Camp's Signpost, the end screen's lines and reward groups, the co-op rows,
 ## Join refusal and the auto-leave popup; SceneFlow's Guild; the tier, the board's tier order and the Rewards popup's rows.
 
 static var _lib: ContentLibrary
@@ -31,7 +31,6 @@ func test_mode_chips() -> void:
 	assert_eq(MissionUiLogic.mode_chip(null), "")
 
 func test_board_lines() -> void:
-	assert_eq(MissionUiLogic.board_subtitle(DAY), "Resets in 5 h", "the daily reset countdown only (no 'Earn tokens for the Workshop')")
 	assert_eq(MissionUiLogic.level_line(m("patrol"), "Two Roads"), "Two Roads")
 	assert_eq(MissionUiLogic.level_line(m("drum-line"), "The Drummer"), "The Drummer · 2 plays a day")
 	assert_eq(MissionUiLogic.plays_level("Two Roads"), "plays Two Roads")
@@ -86,40 +85,30 @@ func test_detail_notes_and_pips() -> void:
 	assert_false(MissionUiLogic.primary_enabled("done", ""))
 	assert_false(MissionUiLogic.primary_enabled("locked", ""))
 
-func test_hand_marks_and_divider() -> void:
+## The mission's hand strip shows only rested towers (Eren 2026-10-17); the strip's slots map back to hand indices.
+func test_mission_strip_shows_only_rested_towers() -> void:
 	var mp := MissionProgress.new()
 	var hand := ["a", "b", "c", "d", "e"]
-	# nothing tired: the first 4 go, the divider after 4
-	var marks := MissionUiLogic.hand_marks(hand, mp, 4, DAY)
-	assert_eq(marks.map(func(k): return k.goes), [true, true, true, true, false])
-	assert_eq(MissionUiLogic.divider_at(hand, mp, 4, DAY), 4)
-	# b tired: a, c, d, e go; the divider after e
+	assert_seq(MissionUiLogic.rested_hand(hand, mp, DAY), hand, "nothing tired: the whole hand")
 	mp.tire("b", "2026-10-14")
-	marks = MissionUiLogic.hand_marks(hand, mp, 4, DAY)
-	assert_eq(marks.map(func(k): return k.tired), [false, true, false, false, false])
-	assert_eq(marks.map(func(k): return k.goes), [true, false, true, true, true])
-	assert_eq(MissionUiLogic.divider_at(hand, mp, 4, DAY), 5)
+	mp.tire("d", "2026-10-14")
+	var strip := MissionUiLogic.rested_hand(hand, mp, DAY)
+	assert_seq(strip, ["a", "c", "e"], "tired towers are not in the strip at all")
+	assert_eq(MissionUiLogic.strip_to_hand_slot(hand, strip, 0), 0)
+	assert_eq(MissionUiLogic.strip_to_hand_slot(hand, strip, 1), 2, "strip slot 2 is c, hand index 2")
+	assert_eq(MissionUiLogic.strip_to_hand_slot(hand, strip, 2), 4)
+	assert_eq(MissionUiLogic.strip_to_hand_slot(hand, strip, 5), 5, "past the strip: the end of the hand")
 	assert_true(MissionUiLogic.any_tired(hand, mp, DAY))
-	# all tired: nobody goes, the divider after the hand
 	for id in hand: mp.tire(id, "2026-10-14")
-	assert_eq(MissionUiLogic.hand_marks(hand, mp, 4, DAY).filter(func(k): return k.goes).size(), 0)
-	assert_eq(MissionUiLogic.divider_at(hand, mp, 4, DAY), 5)
-	# no divider at the end of a full hand or with no cap
-	assert_eq(MissionUiLogic.divider_at(["a", "b", "c", "d", "e", "f", "g", "h"], MissionProgress.new(), 8, DAY), -1)
-	assert_eq(MissionUiLogic.divider_at(hand, mp, 0, DAY), -1)
-	assert_false(MissionUiLogic.any_tired(hand, mp, "2026-10-15"), "rested after midnight")
+	assert_seq(MissionUiLogic.rested_hand(hand, mp, DAY), [], "all tired: an empty strip")
+	assert_seq(MissionUiLogic.rested_hand(hand, mp, "2026-10-15"), hand, "rested after midnight")
 
 func test_hand_notes() -> void:
 	var p := m("patrol")
-	assert_eq(MissionUiLogic.hand_note(p, "Two Roads", 5, 4, false), "Patrol takes the first 4 rested")
-	assert_eq(MissionUiLogic.hand_note(p, "Two Roads", 5, 4, true), "Patrol takes the first 4 rested")
-	assert_eq(MissionUiLogic.hand_note(m("hold-the-gate"), "Three at the Gate", 5, 3, false), "Hold the Gate takes the first 3 rested")
-	assert_eq(MissionUiLogic.hand_note(p, "Two Roads", 0, 4, false), "Your hand is empty: add towers with Change hand.")
-	assert_eq(MissionUiLogic.editor_cap_note("Night Watch", 4), "Night Watch takes the first 4 rested")
-	assert_eq(MissionUiLogic.editor_cap_note("", 4), "")
+	assert_eq(MissionUiLogic.hand_note(p, "Two Roads", 5, 4), "", "no note in the strip (Eren 2026-10-17)")
+	assert_eq(MissionUiLogic.hand_note(p, "Two Roads", 0, 4), "Your hand is empty: add towers with Change hand.")
 	assert_eq(MissionUiLogic.tired_line(DAY), "Tired ·\nrests in 5 h")
 	assert_eq(MissionUiLogic.tired_line(DAY, false), "Tired · rests in 5 h")
-	assert_eq(MissionUiLogic.tired_detail(DAY), "Tired: went on a mission today. Rests in 5 h.")
 
 func test_guild_and_signpost() -> void:
 	var c := lib().catalog

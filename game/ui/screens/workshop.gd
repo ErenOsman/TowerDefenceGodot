@@ -3,13 +3,13 @@ extends TdPopup
 ## station where a tower turns into one of its forms, unlocked with tokens, per individual tower.
 ##  Step 1, the picker: "Workshop · Pick a tower to modify", the collection of Hand select without the hand row
 ##  (TdCollection: search, Role / Delivery / Cost, Sort, the grid with form badges) and a detail card (name,
-##  "#1 · tower 3", energy, "Form of Archer · 1 of 4 forms unlocked", description, stat tiles, abilities, Modify).
+##  "Archer #2" (the individual name), energy, "Form of Archer · 1 of 4 forms unlocked", description, stat tiles, abilities, Modify).
 ##  Modify or a double click slides the Modify view in from the right (0.35 s; the picker slides out left).
 ##  Step 2, the Modify view: "← Back Esc", the tower's name, every token kind with its count (tooltip: name,
 ##  description, where it drops); left "This tower now"; centre the forms tree (root = the default form in the
 ##  middle, children by FormDef.order, grandchildren beyond their parent; node states Current / Unlocked / Can
-##  unlock / Needs tokens / locked; legend); right the selected node's card (the form as it is: description, stat
-##  tiles, abilities and passives; "Leads to", the unlock cost, ONE action: Unlock → confirm, Use this form, or the
+##  unlock / Needs tokens / locked; no legend, no caption); right the selected node's card (the form as it is: description, stat
+##  tiles, abilities and passives; ONE action: Unlock → confirm, Use this form, or the
 ##  reason it cannot). No comparison between forms (user decision 2026-10-14).
 ## Keys: Esc / right click = Back (confirm → cancel; Modify → picker; picker → close), arrows move between nodes,
 ## Enter = the card's action (confirm: Enter = Unlock). Every change saves through SaveData at once.
@@ -163,6 +163,12 @@ func _build_mod() -> void:
 	_tokens = TdMenu.hbox(8)
 	_tokens.size_flags_vertical = SIZE_SHRINK_CENTER
 	top.add_child(_tokens)
+	# × closes the whole Workshop popup (Back goes one step, to the picker; Eren 2026-10-17)
+	var x := TdMenu.close_button()
+	x.size_flags_vertical = SIZE_SHRINK_CENTER
+	x.tooltip_text = "Close" # Esc goes back one step here
+	x.clicked.connect(close)
+	top.add_child(x)
 	var body := TdMenu.hbox(16)
 	body.size_flags_vertical = SIZE_EXPAND_FILL
 	_mod.add_child(body)
@@ -235,9 +241,8 @@ func _refresh_pdetail() -> void:
 	var body := _scroll_body(_pdetail)
 	var head := HFlowContainer.new()
 	head.add_theme_constant_override("h_separation", 10)
-	head.add_child(TdMenu.label(e.name, "h2", TdTheme.color("accent.ink"), 32))
+	head.add_child(TdMenu.label(HandLogic.entry_name(e), "h2", TdTheme.color("accent.ink"), 32)) # "Archer #2"
 	body.add_child(head)
-	body.add_child(TdMenu.label(HandLogic.number_text(e), "micro", TdTheme.color("ink.2"), 18))
 	body.add_child(TdMenu.rich("[img=20x20 color=%s]%s[/img] [font_size=22][color=%s]%d[/color][/font_size] energy" % [TdTheme.rich("gold.ink"),
 		TdTheme.texture("icon_energy").resource_path, TdTheme.rich("gold.ink"), e.cost], "small", TdTheme.color("ink.2"), 18))
 	body.add_child(_bold_digits(WorkshopLogic.form_line(owned, type), 18))
@@ -342,15 +347,11 @@ func refresh_modify() -> void:
 	var owned := _owned()
 	if owned == null or _type == null: return
 	var e := _entry(tower_id)
-	# header: name + number, tokens
+	# header: the individual name ("Archer #2"), tokens
 	TdCollection.clear_children(_mname)
-	var n := TdMenu.label(e.get("name", ""), "h1", TdTheme.color("accent.light"), 34)
+	var n := TdMenu.label(HandLogic.entry_name(e), "h1", TdTheme.color("accent.light"), 34) # "Archer #2"
 	n.add_theme_font_override("font", TdTheme.font("plinth"))
 	_mname.add_child(n)
-	var num := TdMenu.label(HandLogic.number_text(e), "header", TdTheme.color("cream.300"), 20)
-	num.add_theme_font_override("font", TdTheme.font("plinth"))
-	num.size_flags_vertical = SIZE_SHRINK_END
-	_mname.add_child(num)
 	_refresh_tokens()
 	_refresh_now()
 	_tree.rebuild()
@@ -416,28 +417,17 @@ func _refresh_now() -> void:
 	var v := TdMenu.vbox(0)
 	v.size_flags_horizontal = SIZE_EXPAND_FILL
 	head.add_child(v)
-	var n := TdMenu.wrap_label(e.get("name", ""), "h2", TITLE_INK, 28)
+	var n := TdMenu.wrap_label(HandLogic.entry_name(e), "h2", TITLE_INK, 28) # "Archer #2"
 	n.add_theme_font_override("font", TdTheme.font("plinth"))
 	v.add_child(n)
-	var num := TdMenu.label(HandLogic.number_text(e), "header", TdTheme.color("ink.2"), 18)
-	num.add_theme_font_override("font", TdTheme.font("plinth"))
-	v.add_child(num)
-	var line := WorkshopLogic.now_line(owned, _type)
-	var fl := TdMenu.rich("%s [color=%s][b]%s[/b][/color]" % [line.get_slice(":", 0) + ":", TdTheme.rich("ink"), line.get_slice(": ", 1)], "body", TdTheme.color("ink.2"), 18)
-	fl.add_theme_font_override("normal_font", TdTheme.font("nunito_bold"))
-	v.add_child(fl)
+	# no "Form: Default" line: the medallion's ring and badge show the form (Eren 2026-10-17)
 	_def_section(body, WorkshopLogic.def_of(_type, cur))
 
-## The same structure on both Modify cards (and the picker card): the stat tiles, the ⓘ trait lines ("Burn on hit"),
-## an "Abilities" caption, the abilities, then the passives (square chips).
+## The same structure on both Modify cards (and the picker card): the stat tiles, an "Abilities" caption, the abilities, then the passives (square chips).
 func _def_section(body: VBoxContainer, def: EntityDef) -> void:
 	if def == null: return
 	if _vocab != null: body.add_child(TdTowerCard.stat_grid(HandLogic.stat_tiles(DefStats.new(def), _vocab, 4), 120))
-	for line in WorkshopLogic.trait_lines(def, _vocab):
-		var tl := TdMenu.rich("[img=18x18 color=%s]%s[/img]  %s" % [TdTheme.rich("ink.2"), TdTheme.texture("icon_info").resource_path, line],
-			"body", TdTheme.color("ink"), 18)
-		tl.add_theme_font_override("normal_font", TdTheme.font("nunito_bold"))
-		body.add_child(tl)
+	# no trait lines ("Applies Taunted", "Burn on hit"): the abilities below say it (Eren 2026-10-17)
 	var rows := TdTowerCard.def_rows(def, _vocab)
 	if rows.is_empty(): return
 	body.add_child(_caption("Abilities"))
@@ -466,7 +456,6 @@ func _refresh_card() -> void:
 	TdCollection.clear_children(_card)
 	var owned := _owned()
 	var id := node_id
-	var st := WorkshopLogic.node_state(owned, _type, id, SaveData.tokens)
 	var cur := WorkshopLogic.current_id(owned, _type)
 	var body := _scroll_body(_card, 6, 0, true)
 	if flash_id == id and id != "": body.add_child(_toast(WorkshopLogic.toast(_type, id)))
@@ -488,19 +477,13 @@ func _refresh_card() -> void:
 	body.add_child(TdMenu.rich(TooltipText.describe(WorkshopLogic.description_of(_type, id)), "body", TdTheme.color("ink"), 18))
 	# the selected form as it is (no comparison with the current form: user decision 2026-10-14)
 	_def_section(body, WorkshopLogic.def_of(_type, id))
-	# the pinned footer: Leads to, the cost row and the one action (only the body above scrolls)
+	# the pinned footer: the cost row and the one action (only the body above scrolls); no "Leads to" line: the tree
+	# shows what leads where (Eren 2026-10-17)
 	_card.add_child(TdMenu.spacer(8))
 	var foot := TdMenu.vbox(6)
 	_card.add_child(foot)
-	# "› Leads to: Inferno Archer" (kept out of the scroll so it always shows)
-	var leads := WorkshopLogic.leads_to(_type, id)
-	if leads != "":
-		var ll := TdMenu.rich("[color=%s]›[/color]  %s [color=%s][b]%s[/b][/color]" % [TdTheme.rich("ink.2"), leads.get_slice(":", 0) + ":",
-			TdTheme.rich("ink"), leads.get_slice(": ", 1)], "body", TdTheme.color("ink.2"), 18)
-		ll.add_theme_font_override("normal_font", TdTheme.font("nunito_bold"))
-		foot.add_child(ll)
 	var f := WorkshopLogic.form_of(_type, id)
-	if f != null and st in ["can", "need", "locked"]: foot.add_child(_cost_row(f))
+	# no "Unlock cost" rows: the tree node's token coins show what it costs and what you have (Eren 2026-10-17)
 	var act := WorkshopLogic.action(owned, _type, id, SaveData.tokens, int(_entry(tower_id).get("index", 0)))
 	match act.kind:
 		"current":
@@ -529,7 +512,7 @@ func _refresh_card() -> void:
 			foot.add_child(TdTowerCard.disabled_button(act.text, TdTheme.texture("icon_plus"), act.reason))
 
 ## "Unlock · [coin] 1 Fire Arrow" (one token) or "Unlock · [coin] 1 [coin] 1" (several: coins and counts only; the
-## names are in the cost row). Never wraps; gold ring (mockup .ws-gold).
+## tree node shows them). Never wraps; gold ring (mockup .ws-gold).
 func _unlock_button(f: FormDef) -> TdButton:
 	var b := TdMenu.button(TdButton.Style.PRIMARY, "", Vector2(0, 58))
 	b.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -581,45 +564,6 @@ func _token_icon(f: FormDef) -> Texture2D:
 	if f == null or f.unlock.size() != 1: return TdTheme.texture("icon_plus")
 	var t := GameApp.catalog.find_token(f.unlock.keys()[0])
 	return GameApp.kit_texture(t.icon) if t != null else TdTheme.texture("icon_plus")
-
-## "Unlock cost  [🔥 1 you have 2] …" (a token short: red).
-func _cost_row(f: FormDef) -> Control:
-	var row := HFlowContainer.new()
-	row.add_theme_constant_override("h_separation", 6)
-	row.add_theme_constant_override("v_separation", 6)
-	var cap := _cap("Unlock cost", Color(0, 0, 0, 0))
-	cap.size_flags_vertical = SIZE_SHRINK_CENTER
-	row.add_child(cap)
-	for id in f.unlock:
-		var need := int(f.unlock[id])
-		var have := SaveData.tokens.count(id)
-		var short := have < need
-		var chip := PanelContainer.new()
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(0.18, 0.13, 0.09, 0.08)
-		sb.border_color = TdTheme.color("bad.ink") if short else Color(0.37, 0.29, 0.21, 0.35)
-		sb.set_border_width_all(2)
-		sb.set_corner_radius_all(15)
-		sb.content_margin_left = 3; sb.content_margin_right = 10
-		chip.add_theme_stylebox_override("panel", sb)
-		chip.custom_minimum_size = Vector2(0, 32)
-		var h := TdMenu.hbox(6)
-		chip.add_child(h)
-		var t := GameApp.catalog.find_token(id)
-		var ic := TdMenu.picture(GameApp.kit_texture(t.icon) if t != null else null, Vector2(26, 26))
-		ic.size_flags_vertical = SIZE_SHRINK_CENTER
-		h.add_child(ic)
-		var l := TdMenu.rich("[font=%s]%d[/font]  [color=%s]you have %d[/color]" % [TdTheme.font("plinth").resource_path, need,
-			TdTheme.rich("bad.ink") if short else TdTheme.rich("ink.2"), have], "body", TdTheme.color("bad.ink") if short else TdTheme.color("ink"), 18)
-		l.autowrap_mode = TextServer.AUTOWRAP_OFF
-		l.size_flags_horizontal = SIZE_SHRINK_BEGIN
-		l.size_flags_vertical = SIZE_SHRINK_CENTER
-		l.add_theme_font_override("normal_font", TdTheme.font("nunito_bold"))
-		h.add_child(l)
-		TdTooltipTrigger.attach(chip, TooltipText.title(t.get_display_name() if t != null else id, TooltipText.value_color(), "Token"),
-			t.description if t != null else "", "You have", str(have))
-		row.add_child(chip)
-	return row
 
 ## The gold "Fire Archer unlocked" toast on the card (fades in).
 func _toast(text: String) -> Control:
@@ -740,13 +684,11 @@ func _input(event: InputEvent) -> void:
 # ------------------------------------------------------------------ the tree
 
 ## The forms tree (centre of the Modify view): connectors drawn here, a FormNode per node placed on
-## WorkshopLogic.positions() scaled into the well, the caption on top and the legend at the bottom.
+## WorkshopLogic.positions() scaled into the well (no caption, no legend: everyday-screen rule, Eren 2026-10-17).
 class FormTree extends Control:
 	var screen
 	var nodes := {}      # id → FormNode
 	var _pos := {}       # id → Vector2 in the tree frame
-	var _legend: HBoxContainer
-	var _caption: Label
 	var _empty: Label
 
 	func _init() -> void:
@@ -761,10 +703,6 @@ class FormTree extends Control:
 			remove_child(c)
 			c.queue_free()
 		nodes.clear()
-		_caption = TdMenu.label("Forms · click one to see it", "body", TdTheme.color("cream.300"), 18)
-		_caption.add_theme_font_override("font", TdTheme.font("nunito_extrabold"))
-		_caption.position = Vector2(16, 10)
-		add_child(_caption)
 		var type: TowerType = screen._type
 		_pos = WorkshopLogic.positions(type)
 		for id in WorkshopLogic.node_ids(type):
@@ -780,20 +718,6 @@ class FormTree extends Control:
 			_empty = TdMenu.label("No forms for %s yet." % type.name, "body", TdTheme.color("cream.200"), 20)
 			_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			add_child(_empty)
-		_legend = TdMenu.hbox(22)
-		_legend.alignment = BoxContainer.ALIGNMENT_CENTER
-		for pair in [["current", "Current"], ["unlocked", "Unlocked"], ["can", "Can unlock"], ["need", "Needs tokens"]]:
-			var h := TdMenu.hbox(8)
-			var d := LegendDot.new()
-			d.kind = pair[0]
-			d.custom_minimum_size = Vector2(24, 24)
-			d.size_flags_vertical = SIZE_SHRINK_CENTER
-			h.add_child(d)
-			var l := TdMenu.label(pair[1], "body", TdTheme.color("cream.200"), 18)
-			l.add_theme_font_override("font", TdTheme.font("nunito_bold"))
-			h.add_child(l)
-			_legend.add_child(h)
-		add_child(_legend)
 		restyle()
 		_place()
 
@@ -805,12 +729,11 @@ class FormTree extends Control:
 	func flash(id: String) -> void:
 		if nodes.has(id): nodes[id].flash()
 
-	## The tree frame (TREE_SIZE) scaled into the area between the caption and the legend.
+	## The tree frame (TREE_SIZE) scaled into the well.
 	func _frame() -> Array:
-		var top := 34.0
-		# the legend (40) + room for a bottom node's token chips, which hang ~118 px under its anchor (QA 2026-10-15:
-		# Longbow's "1/2" chip sat on the legend at 46)
-		var bottom := 70.0
+		var top := 12.0
+		# room for a bottom node's token chips, which hang ~118 px under its anchor
+		var bottom := 40.0
 		var avail := Vector2(size.x, size.y - top - bottom)
 		var k := minf(avail.x / WorkshopLogic.TREE_SIZE.x, avail.y / WorkshopLogic.TREE_SIZE.y)
 		k = minf(k, 1.15)
@@ -828,9 +751,6 @@ class FormTree extends Control:
 		if _empty != null:
 			_empty.size = Vector2(size.x, 30)
 			_empty.position = Vector2(0, anchor_of("").y + 130)
-		if _legend != null:
-			_legend.size = Vector2(size.x, 30)
-			_legend.position = Vector2(0, size.y - 40)
 		queue_redraw()
 
 	func _draw() -> void:
@@ -1052,32 +972,6 @@ class FormNode extends Control:
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			pressed.emit(id)
 			accept_event()
-
-## A legend swatch (mockup .lg i).
-class LegendDot extends Control:
-	var kind := ""
-	func _init() -> void:
-		mouse_filter = MOUSE_FILTER_IGNORE
-	func _draw() -> void:
-		var c := size / 2.0
-		var r := 10.0
-		match kind:
-			"current":
-				draw_circle(c, r + 4, COBALT)
-				draw_circle(c, r + 1.5, TdTheme.color("rim"))
-				draw_circle(c, r, Color("#5E4A3A"))
-			"unlocked":
-				draw_circle(c, r + 2, TdTheme.color("rim"))
-				draw_circle(c, r, TdTheme.color("good.ink"))
-			"can":
-				draw_circle(c, r + 6, Color(GOLD_RING, 0.25))
-				draw_circle(c, r + 4, GOLD_RING)
-				draw_circle(c, r + 1.5, TdTheme.color("rim"))
-				draw_circle(c, r, Color("#5E4A3A"))
-			_:
-				draw_circle(c, r + 2, TdTheme.color("rim"))
-				draw_circle(c, r, SHORT)
-				draw_circle(c, r - 2, Color("#4A4440"))
 
 ## The toast's star.
 class StarGlyph extends Control:

@@ -21,7 +21,7 @@ const Gold := "gold"
 ## One tower taking part in a level, for apply(): the owned tower, its BASE type (GameApp.tower_type(owned.type):
 ## ladders of the base and its forms), the id the session knows it by ("" = owned.id: single player; co-op:
 ## "<player id>:<type>#n") and the name the end screen shows ("" = the custom name, else the ladder's tower / form name).
-## index: the tower's 1-based place in the collection ("tower 3"; 0 = unknown).
+## index: the tower's ordinal among the player's towers of its type (TowerCollection.ordinal_of: "Archer #3"; 0 = unknown).
 static func entry(owned: OwnedTower, type: TowerType, session_id: String = "", display_name: String = "", index: int = 0) -> Dictionary:
 	return {"owned": owned, "type": type, "session_id": session_id if session_id != "" else (owned.id if owned != null else ""), "name": display_name, "index": index}
 
@@ -126,7 +126,7 @@ static func progress_text(task: TaskDef, have: int) -> String:
 	if is_pay(task): return "%d / %d %s" % [mini(have, n), n, currency_text(task)]
 	return "%d/%d" % [mini(have, n), n]
 
-## The end screen's lines for apply()'s advances: every progress_line ("Archer (tower 3): 8 / 10 kills +3"), then the
+## The end screen's lines for apply()'s advances: every progress_line ("Archer #3: 8 / 10 kills +3"), then the
 ## ready_lines ("Guardian is ready to upgrade! Go to the Blacksmith.").
 static func lines(advances: Array) -> Array:
 	var out := []
@@ -146,7 +146,7 @@ static func _s(n: int) -> String:
 ## played ("" for a chapter level). Nothing counts when `unlocked` is false (before the Blacksmith unlock: counting
 ## starts there) or on a quit. Counts never pass a task's count. Returns the advances, one per task that moved, in
 ## entry, ladder (base first) and task order:
-## {tower (owned id), index (1-based place in the collection, 0 unknown), name (custom name, else the ladder's tower /
+## {tower (owned id), index (its ordinal among its type: "Archer #3", 0 unknown), name (custom name, else the ladder's tower /
 ## form name), form ("" = the base ladder), to (the step's level), task (index), kind, text, noun, before, after,
 ## gain, count, done, ready (this level made the step upgradeable: TowerLevels.can_upgrade turned true)}.
 static func apply(result: LevelResult, log: EventLog, towers: Array, mission_id: String = "", unlocked: bool = true) -> Array:
@@ -206,9 +206,9 @@ static func noun(task: TaskDef) -> String:
 		TowerTaskKind.Pay: return currency_text(task)
 	return TowerTaskKind.name_of(task.kind)
 
-## The end screen's progress line of one advance: "Archer (tower 3): 8 / 10 kills +3" ("Archer: …" without an index).
+## The end screen's progress line of one advance: "Archer #3: 8 / 10 kills +3" ("Archer: …" without an index).
 static func progress_line(a: Dictionary) -> String:
-	var who: String = a.name if int(a.get("index", 0)) <= 0 else "%s (tower %d)" % [a.name, a.index]
+	var who: String = a.name if int(a.get("index", 0)) <= 0 else "%s #%d" % [a.name, a.index]
 	return "%s: %d / %d %s +%d" % [who, a.after, a.count, a.noun, a.gain]
 
 ## The end screen's "ready" lines: one per tower / form whose step this level made upgradeable:

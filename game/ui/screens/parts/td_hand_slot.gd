@@ -57,7 +57,6 @@ func _build(owned: OwnedTower, type: TowerAsset, mini: Texture2D) -> void:
 		n.position = Vector2(0, PLATE_Y + 2)
 		n.size = Vector2(SIZE.x, 24)
 		add_child(n)
-		tooltip_text = "Slot %d (key %d): drop a tower here" % [slot + 1, slot + 1]
 		return
 	var shadow := TdMenu.picture(TdTheme.texture("piece_shadow"), Vector2(90, 26))
 	shadow.position = Vector2((SIZE.x - 90) / 2.0, PLATE_Y - 22)
@@ -139,28 +138,14 @@ func _remove_button() -> Control:
 	return b
 
 ## A tower that went on a mission today (Missions & Guild — Design § Tower energy): the miniature at 50 % with the
-## moon badge and "Tired ·\nrests in 5 h" under the plate.
+## moon badge; no caption under it (the badge says it; Eren 2026-10-17), the tooltip says when it rests.
 func set_tired(text: String) -> void:
 	tired = text != ""
 	if not tired or tower_id == "": return
-	# the whole slot at 50 % (plate included), the badge at full strength under the coin, a muted caption
+	# the whole slot at 50 % (plate included), the badge at full strength under the coin
 	for c in get_children(): if c is CanvasItem: c.modulate.a = 0.5
 	TdTiredBadge.attach(self, SIZE.x, 0.24, Vector2(0.17, 0.44))
-	_under(text, Color(TdTheme.color("cream.300"), 0.85))
 	tooltip_text = text.replace("\n", " ")
-
-## A tower the mission takes (hand editor opened for a mission): "▲ goes" under the plate.
-func set_goes() -> void:
-	if tower_id != "" and not tired: _under("▲ goes", TdTheme.color("cream.100"))
-
-func _under(text: String, col: Color) -> void:
-	var l := TdMenu.label(text, "plate", col, 18)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.position = Vector2(-6, SIZE.y + 1)
-	l.size = Vector2(SIZE.x + 12, 22)
-	l.add_theme_constant_override("line_spacing", -4)
-	l.mouse_filter = MOUSE_FILTER_IGNORE
-	add_child(l)
 
 func set_late(v: bool) -> void:
 	late = v

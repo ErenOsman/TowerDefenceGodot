@@ -1,7 +1,7 @@
 class_name MissionBoardScreen
 extends TdPopup
 ## The mission board (Missions & Guild — Design § The Guild "Missions"; mockup screens-b/mission-board.html): a wood
-## window over the Guild. Header "Missions · Resets in 5 h", the token pills (every token kind and how many you have)
+## window over the Guild. Header "Missions" (no reset countdown: it resets at midnight, Eren 2026-10-17), the token pills (every token kind and how many you have)
 ## and ×. One card per mission, sorted by tier then the catalog's `missions` order (MissionUiLogic.board_order;
 ## unlocked or not): the board thumbnail, the name with its mode chip (Solo / Co-op 2–6 / Any · solo or 1–4), the
 ## level (and "2 plays a day"), the tier diamonds with a secondary "Rewards" button (the mission's Rewards popup,
@@ -21,7 +21,6 @@ const THUMB := Vector2(160, 116)
 var cards := {}   # mission id → the card
 var detail: TdPopup = null
 var _grid: GridContainer
-var _sub: Label
 var _inv: HBoxContainer
 var _popups: Control
 
@@ -42,9 +41,6 @@ func _build() -> void:
 	t.add_theme_color_override("font_shadow_color", TdTheme.color("rim"))
 	t.add_theme_constant_override("shadow_offset_y", 3)
 	head.add_child(t)
-	_sub = TdMenu.label("", "body", TdTheme.color("cream.200"), 21)
-	_sub.size_flags_vertical = SIZE_SHRINK_CENTER
-	head.add_child(_sub)
 	var fill := TdMenu.spacer()
 	fill.size_flags_horizontal = SIZE_EXPAND_FILL
 	head.add_child(fill)
@@ -75,7 +71,6 @@ func _on_open() -> void:
 
 ## Redraws the header and the cards (pop: the cards pop in).
 func refresh() -> void:
-	_sub.text = MissionUiLogic.board_subtitle()
 	for c in _inv.get_children():
 		_inv.remove_child(c)
 		c.queue_free()
@@ -159,7 +154,6 @@ func _card(m: MissionDef) -> Control:
 		if st.button == "Play": b.clicked.connect(func(): play(id))
 		else: b.clicked.connect(func(): request_room(id))
 		row.add_child(b)
-	TdTooltipTrigger.attach(card, "", "Click: see the mission")
 	return card
 
 ## Opens a mission's Rewards popup over the board (a card's Rewards button does); returns it.

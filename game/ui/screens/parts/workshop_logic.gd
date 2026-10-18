@@ -182,10 +182,6 @@ static func now_line(owned: OwnedTower, type: TowerType) -> String:
 	var cur := current_id(owned, type)
 	return "Form: " + ("Default" if cur == ROOT else name_of(type, cur))
 
-## "#1 · tower 3".
-static func number_text(number: int, index: int) -> String:
-	return "#%d · tower %d" % [number, index]
-
 ## "Leads to: Inferno Archer" ("" for a leaf).
 static func leads_to(type: TowerType, id: String) -> String:
 	if type == null: return ""

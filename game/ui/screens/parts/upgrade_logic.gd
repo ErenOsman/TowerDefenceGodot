@@ -218,7 +218,7 @@ static func beat_text(type: TowerType, form_id: String, level: int) -> String:
 
 # ------------------------------------------------------------------ the end screen (mockup end-screen-tasks)
 
-## The end screen's task rows from LevelController.task_advances: {who "Archer", where "(tower 3)" or "", text
+## The end screen's task rows from LevelController.task_advances: {who "Archer", where "#3" or "", text
 ## "Get 10 kills with it", done, progress "8 / 10 kills", gain "+3", kind}. A done task shows "Done" (no progress).
 static func end_rows(advances: Array) -> Array:
 	var out := []
@@ -226,7 +226,7 @@ static func end_rows(advances: Array) -> Array:
 		var n := int(a.get("count", 1))
 		var task := TaskDef.new()
 		task.kind = int(a.get("kind", -1))
-		out.append({"who": str(a.get("name", "")), "where": "(tower %d)" % int(a.index) if int(a.get("index", 0)) > 0 else "",
+		out.append({"who": str(a.get("name", "")), "where": "#%d" % int(a.index) if int(a.get("index", 0)) > 0 else "",
 			"text": str(a.get("text", "")), "done": bool(a.get("done", false)),
 			"progress": ("%d / %d %s" % [int(a.get("after", 0)), n, unit(task, n)]).strip_edges(),
 			"gain": "+%d" % int(a.get("gain", 0)), "kind": task.kind})

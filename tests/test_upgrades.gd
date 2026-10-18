@@ -302,7 +302,7 @@ func test_tasks_count_from_a_played_level() -> void:
 	assert_eq(lines[0], "Archer: 3 / 10 kills +3")
 	assert_eq(lines[2], "Archer: 1 / 1 levels won +1")
 	adv[0].index = 3
-	assert_eq(TowerTasks.progress_line(adv[0]), "Archer (tower 3): 3 / 10 kills +3")
+	assert_eq(TowerTasks.progress_line(adv[0]), "Archer #3: 3 / 10 kills +3")
 	# the same level as a mission: WinMission counts; counts are capped
 	var again := TowerTasks.apply(result, s.log, [TowerTasks.entry(o, type, "", "Ayla's Archer")], "patrol", true)
 	assert_eq(o.task_progress["2"], [6, mini(60, dealt * 2), 1, 2, 0, 1])

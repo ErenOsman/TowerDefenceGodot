@@ -7,6 +7,9 @@ extends HBoxContainer
 ## and sorting are HandLogic's. The screen owns the detail card beside it.
 ## Signals: `selected(id)` on a click, `activated(id)` on a double click. Set `entries` (HandLogic.entries), `hand`
 ## (for the keys and Hide my hand), then refresh().
+## filters_popup (the hand editor, Eren 2026-10-17): no left well; the grid's bar holds a "Filters" button (with the
+## count of set filters) that opens the filters in a small TdPopup over the screen, the search and Sort on the left,
+## the count on the right; the grid takes the full width.
 
 signal selected(tower_id: String)
 signal activated(tower_id: String)
@@ -23,6 +26,8 @@ var gap := 10
 var filter_width := 248.0
 ## Whether the filter well is shown at all (hidden until Chapter 1 is cleared, Eren 2026-10-15: new players see only the grid).
 var filters_shown := true
+## The filters in a popup behind a Filters button instead of the left well (see above).
+var filters_popup := false
 
 var entries: Array = []
 var hand: Array = []
@@ -62,6 +67,11 @@ var _clear: Button
 var _empty: VBoxContainer
 var _syncing := false
 var _built := false
+var filters_button: TdButton
+var _filters_badge: Control
+var _filters_badge_label: Label
+## The open Filters popup (null when closed).
+var filters_pop: TdPopup = null
 
 func _init() -> void:
 	add_theme_constant_override("separation", 16)
@@ -72,9 +82,10 @@ func _init() -> void:
 func build() -> void:
 	if _built: return
 	_built = true
-	var filters_well := _build_filters()
-	filters_well.visible = filters_shown
-	add_child(filters_well)
+	if not filters_popup:
+		var filters_well := _build_filters()
+		filters_well.visible = filters_shown
+		add_child(filters_well)
 	add_child(_build_grid())
 
 func _build_filters() -> Control:
@@ -86,10 +97,16 @@ func _build_filters() -> Control:
 	# when it scrolls (the hand editor's longer list) the bar stood 4 px from the search field's rim (QA 2026-10-15)
 	scroll.add_theme_constant_override("scrollbar_v_separation", 8)
 	well.add_child(scroll)
+	TdDragScroll.attach(scroll) # mouse drag scrolls the column too (Eren 2026-10-17)
 	var v := TdMenu.vbox(8) # 8 px between the filter groups (they touched at 4)
 	v.size_flags_horizontal = SIZE_EXPAND_FILL
 	scroll.add_child(v)
-	# search
+	v.add_child(_build_search())
+	_build_filter_groups(v)
+	return well
+
+## The search field (in the left well, or in the grid's bar with filters_popup).
+func _build_search() -> Control:
 	var field := PanelContainer.new()
 	field.add_theme_stylebox_override("panel", TdTheme.stylebox("field_paper_normal", Color.WHITE, [12, 2, 10, 2]))
 	field.custom_minimum_size = Vector2(0, 46)
@@ -123,11 +140,15 @@ func _build_filters() -> Control:
 	var sides := ["left", "top", "right", "bottom"]
 	for i in 4: rim.add_theme_constant_override("margin_" + sides[i], int(ceil(float(o[i]) if o.size() > i else 0.0)))
 	rim.add_child(field)
-	v.add_child(rim)
+	return rim
+
+## The filter groups under the search: Role, Delivery, Cost (and with extras the quick chips and the toggles); the
+## "upgrade" set only its toggle.
+func _build_filter_groups(v: VBoxContainer) -> void:
 	if filter_set == "upgrade":
 		var rt := _toggle("ready", "Ready to upgrade")
 		v.add_child(rt)
-		return well
+		return
 	v.add_child(_heading("Role"))
 	var roles := _flow()
 	for r in HandLogic.ROLES:
@@ -173,7 +194,7 @@ func _build_filters() -> Control:
 	sm.add_theme_constant_override("margin_right", 22)
 	sm.add_child(_cost_slider)
 	v.add_child(sm)
-	if not extras: return well
+	if not extras: return
 	var qc := _flow()
 	for i in HandLogic.COST_CHIPS.size():
 		var c := chip(HandLogic.COST_CHIPS[i][0])
@@ -184,7 +205,6 @@ func _build_filters() -> Control:
 	v.add_child(qc)
 	for pair in [["heal", "Heals"], ["status", "Applies statuses"], ["hide", "Hide my hand"]]:
 		v.add_child(_toggle(pair[0], pair[1]))
-	return well
 
 ## A toggle row (switch + label) bound to filter[key].
 func _toggle(key: String, text: String) -> Button:
@@ -227,25 +247,48 @@ func _build_grid() -> Control:
 	for s in ["font_color", "font_hover_color", "font_pressed_color"]:
 		_clear.add_theme_color_override(s, TdTheme.color("cream.200") if s == "font_color" else TdTheme.color("cream.100"))
 	_clear.pressed.connect(clear_filters)
-	gh.add_child(_clear)
-	var fill := TdMenu.spacer()
-	fill.size_flags_horizontal = SIZE_EXPAND_FILL
-	gh.add_child(fill)
 	count_label = TdMenu.label("", "plate", TdTheme.color("cream.300"), 18)
 	count_label.size_flags_vertical = SIZE_SHRINK_CENTER
-	gh.add_child(count_label)
 	var sl := TdMenu.label("Sort", "plate", TdTheme.color("cream.300"), 18)
 	sl.size_flags_vertical = SIZE_SHRINK_CENTER
-	gh.add_child(sl)
 	sort_pick = OptionButton.new()
 	for n in HandLogic.SORT_NAMES: sort_pick.add_item(n)
 	sort_pick.focus_mode = FOCUS_NONE
 	sort_pick.custom_minimum_size = Vector2(150, 42)
+	sort_pick.size_flags_vertical = SIZE_SHRINK_CENTER
 	sort_pick.add_theme_font_size_override("font_size", 18)
 	sort_pick.item_selected.connect(func(i: int):
 		sort = HandLogic.SORTS[i]
 		refresh_grid())
-	gh.add_child(sort_pick)
+	var fill := TdMenu.spacer()
+	fill.size_flags_horizontal = SIZE_EXPAND_FILL
+	if filters_popup:
+		# left: Filters, the search, Sort; right: Clear filters and the count (Eren 2026-10-17: Sort beside the filters)
+		filters_button = TdMenu.button(TdButton.Style.SECONDARY, "Filters", FILTERS_FACE)
+		filters_button.font_size = 22
+		filters_button.size_flags_vertical = SIZE_SHRINK_CENTER
+		filters_button.clicked.connect(open_filters)
+		filters_button.visible = filters_shown
+		gh.add_child(filters_button)
+		_filters_badge = _count_badge()
+		filters_button.face_node().add_child(_filters_badge)
+		var sw := _build_search()
+		sw.custom_minimum_size = Vector2(SEARCH_W, 0)
+		sw.size_flags_vertical = SIZE_SHRINK_CENTER
+		sw.visible = filters_shown
+		gh.add_child(sw)
+		gh.add_child(TdMenu.spacer(0, 6))
+		gh.add_child(sl)
+		gh.add_child(sort_pick)
+		gh.add_child(fill)
+		gh.add_child(_clear)
+		gh.add_child(count_label)
+	else:
+		gh.add_child(_clear)
+		gh.add_child(fill)
+		gh.add_child(count_label)
+		gh.add_child(sl)
+		gh.add_child(sort_pick)
 	grid_scroll = ScrollContainer.new()
 	grid_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	grid_scroll.size_flags_vertical = SIZE_EXPAND_FILL
@@ -272,6 +315,50 @@ func _build_grid() -> Control:
 	_empty.visible = false
 	v.add_child(_empty)
 	return well
+
+## The Filters button's face and the search field's width in the bar (filters_popup).
+const FILTERS_FACE := Vector2(150, 46)
+const SEARCH_W := 280.0
+## The count badge: a gold disc inside the button's face at its right end (never past the face: no edge clip).
+const BADGE_D := 26.0
+
+func _count_badge() -> Control:
+	var b := Panel.new()
+	b.name = "FiltersBadge"
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = TdTheme.color("gold")
+	sb.border_color = TdTheme.color("rim")
+	sb.set_border_width_all(2)
+	sb.set_corner_radius_all(int(BADGE_D / 2.0))
+	b.add_theme_stylebox_override("panel", sb)
+	b.size = Vector2(BADGE_D, BADGE_D)
+	b.position = Vector2(FILTERS_FACE.x - BADGE_D - 8, (FILTERS_FACE.y - BADGE_D) / 2.0)
+	b.mouse_filter = MOUSE_FILTER_IGNORE
+	_filters_badge_label = TdMenu.label("", "micro", Color("#2A1D00"), 16)
+	_filters_badge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_filters_badge_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_filters_badge_label.size = b.size
+	_filters_badge_label.position = Vector2(0, -1)
+	_filters_badge_label.mouse_filter = MOUSE_FILTER_IGNORE
+	b.add_child(_filters_badge_label)
+	b.visible = false
+	return b
+
+## Opens the filters in a small popup over the screen that holds the collection (filters_popup); returns it.
+func open_filters() -> TdPopup:
+	if filters_pop != null and is_instance_valid(filters_pop): return filters_pop
+	var host: Node = self
+	while host != null and not (host is TdPopup): host = host.get_parent()
+	if host == null: host = get_tree().root
+	var pop := FiltersPopup.new()
+	pop.free_on_close = true
+	pop.collection = self
+	host.add_child(pop)
+	pop.closed.connect(func(): filters_pop = null)
+	filters_pop = pop
+	pop.open()
+	refresh_filters()
+	return pop
 
 func _heading(text: String) -> Label:
 	return TdMenu.label(text, "header", TdTheme.color("cream.200"), 20)
@@ -342,6 +429,7 @@ func refresh() -> void:
 func refresh_filters() -> void:
 	build()
 	_syncing = true
+	_prune_chips()
 	for r in _role_chips: _role_chips[r].button_pressed = filter.roles.has(r)
 	for d in _deliv_chips: _deliv_chips[d].button_pressed = filter.delivery.has(d)
 	for i in _cost_chips.size():
@@ -351,7 +439,21 @@ func refresh_filters() -> void:
 	if _cost_value != null: _cost_value.text = HandLogic.cost_text(filter)
 	for k in _toggles: _toggles[k].button_pressed = bool(filter.get(k, false))
 	if search.text != str(filter.q): search.text = str(filter.q)
+	if _filters_badge != null:
+		var n := HandLogic.filter_count(filter)
+		_filters_badge.visible = n > 0
+		_filters_badge_label.text = str(n)
 	_syncing = false
+
+## The popup's chips are freed with it: forget them (they are made again when it opens).
+func _prune_chips() -> void:
+	if not filters_popup: return
+	for d in [_role_chips, _deliv_chips, _toggles]:
+		for k in d.keys():
+			if not is_instance_valid(d[k]): d.erase(k)
+	_cost_chips = _cost_chips.filter(func(c): return is_instance_valid(c))
+	if _cost_slider != null and not is_instance_valid(_cost_slider): _cost_slider = null
+	if _cost_value != null and not is_instance_valid(_cost_value): _cost_value = null
 
 func refresh_grid() -> void:
 	build()
@@ -412,3 +514,51 @@ class SearchGlyph extends Control:
 		var c := TdTheme.color("ink.2")
 		draw_arc(Vector2(9, 9), 6.5, 0, TAU, 24, c, 2.5, true)
 		draw_line(Vector2(14, 14), Vector2(20, 20), c, 3.0, true)
+
+## The Filters popup (filters_popup): "Filters" and ×, the filter groups in a drag-scrollable column, Clear filters.
+class FiltersPopup extends TdPopup:
+	var collection: TdCollection
+	const W := 380.0
+	const MAX_H := 640.0
+	func _build() -> void:
+		var center := CenterContainer.new()
+		center.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+		center.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(center)
+		var p := TdMenu.panel(TdPanel.Kind.WINDOW, 20)
+		p.custom_minimum_size = Vector2(W, 0)
+		center.add_child(p)
+		window = p
+		var col := TdMenu.vbox(10)
+		p.add_child(col)
+		var head := TdMenu.hbox(10)
+		col.add_child(head)
+		var t := TdMenu.label("Filters", "h2", TdTheme.color("cream.100"), 34)
+		t.size_flags_horizontal = SIZE_EXPAND_FILL
+		t.size_flags_vertical = SIZE_SHRINK_CENTER
+		head.add_child(t)
+		var x := TdMenu.close_button()
+		x.size_flags_vertical = SIZE_SHRINK_CENTER
+		x.tooltip_text = "Close (Esc)"
+		x.clicked.connect(close)
+		head.add_child(x)
+		var well := TdMenu.panel(TdPanel.Kind.WELL, 12)
+		col.add_child(well)
+		var scroll := ScrollContainer.new()
+		scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		scroll.add_theme_constant_override("scrollbar_v_separation", 8)
+		well.add_child(scroll)
+		TdDragScroll.attach(scroll)
+		var v := TdMenu.vbox(8)
+		v.size_flags_horizontal = SIZE_EXPAND_FILL
+		scroll.add_child(v)
+		collection._build_filter_groups(v)
+		# as tall as its groups, up to MAX_H (then it scrolls)
+		var fit := func(): scroll.custom_minimum_size = Vector2(0, minf(v.get_combined_minimum_size().y, MAX_H))
+		v.minimum_size_changed.connect(fit)
+		fit.call()
+		var clear := TdMenu.button(TdButton.Style.SECONDARY, "Clear filters", Vector2(220, 52), TdTheme.texture("icon_close"))
+		clear.font_size = 22
+		clear.size_flags_horizontal = SIZE_SHRINK_CENTER
+		clear.clicked.connect(func(): collection.clear_filters())
+		col.add_child(clear)

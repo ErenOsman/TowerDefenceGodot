@@ -433,6 +433,14 @@ func _sec_hand_editor() -> void:
 		sp.item_selected.emit(i)
 		await _wait(0.3)
 		_attach(_inspect("sort " + sp.get_item_text(i)), await _shot("sort_" + sp.get_item_text(i)))
+	# the Filters popup (Eren 2026-10-17: the filters live in a popup behind the bar's Filters button)
+	if he.collection.filters_button != null and he.collection.filters_button.is_visible_in_tree():
+		await _press(he.collection.filters_button)
+		await _wait(0.5)
+		_attach(_inspect("filters popup"), await _shot("filters_popup"))
+		var fp = he.collection.filters_pop
+		if fp != null: fp.close()
+		await _wait(0.4)
 	# search with no result: the empty state
 	await _press(he.collection.search)
 	await _type("zzzz")

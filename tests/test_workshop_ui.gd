@@ -92,7 +92,6 @@ func test_lines() -> void:
 	assert_eq(WorkshopLogic.leads_to(t, "archer-fire"), "Leads to: Inferno Archer")
 	assert_eq(WorkshopLogic.leads_to(t, ""), "Leads to: Fire Archer, Poison Archer, Longbow")
 	assert_eq(WorkshopLogic.leads_to(t, "archer-poison"), "")
-	assert_eq(WorkshopLogic.number_text(1, 3), "#1 · tower 3")
 	assert_eq(WorkshopLogic.chip_text(0, 1), "0/1")
 	assert_eq(WorkshopLogic.chip_text(2, 1), "1")
 	assert_eq(WorkshopLogic.toast(t, "archer-fire"), "Fire Archer unlocked")

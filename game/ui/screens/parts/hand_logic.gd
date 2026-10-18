@@ -74,7 +74,8 @@ static func traits(def: EntityDef) -> Dictionary:
 	return {"roles": r, "delivery": dl, "move": move, "heal": heal, "status": status}
 
 ## One entry per owned tower, in collection order: {id, type_id, type (TowerAsset or null), def (EntityDef or null),
-## number (the type's number), name, cost, index (1-based place in the collection: "tower 3"), roles, delivery, move,
+## number (the type's number), name, cost, index (1-based place in the collection), ordinal (1-based place among the
+## towers of its type: "Archer #2", entry_name), roles, delivery, move,
 ## heal, status}, plus the Workshop form: form (FormAsset or null), base_name (the type's name), badge (the form's
 ## badge sprite path or ""), description (the form's, else the type's). A formed tower is its form: its entity,
 ## cost, traits and name ("Fire Archer"). convert may be null (no traits then).
@@ -98,7 +99,7 @@ static func entries(towers: TowerCollection, catalog: GameCatalogAsset, convert:
 		if form != null and form.cost >= 0: cost = form.cost
 		var e := {"id": o.id, "type_id": o.type, "type": type, "def": cache[key][0],
 			"number": type.number if type != null else 9999, "name": MenuLogic.tower_name(o, type),
-			"cost": cost, "index": i + 1, "form": form,
+			"cost": cost, "index": i + 1, "ordinal": TowerCollection.ordinal_in(towers.towers, o.id), "form": form,
 			"base_name": type.get_display_name() if type != null else "", "badge": MenuLogic.form_badge(form),
 			"description": desc,
 			# Upgrades — Design: the level its current form fights at (the Lv chip; shown only once the Blacksmith is open)
@@ -309,11 +310,25 @@ static func ability_kind(ab: AbilityDef) -> String:
 		if st is JumpStep or st is TeleportStep or st is WalkStep: return "Movement"
 	return ""
 
-## "#1 · tower 3".
-static func number_text(e: Dictionary) -> String:
-	return "#%d · tower %d" % [e.number, e.index]
+## A tower's individual name (Eren 2026-10-17): its name and its place among the player's towers of the same type
+## ("Drummer #2" = the second Drummer they got; TowerCollection.ordinal_of). ordinal <= 0: the name alone.
+static func individual_name(name: String, ordinal: int) -> String:
+	return name if ordinal <= 0 else "%s #%d" % [name, ordinal]
 
-## The note at the level's cap ("Two Roads takes the first 4"); "" without a level.
-static func cap_note(level_name: String, cap: int) -> String:
-	if level_name == "" or cap <= 0: return ""
-	return "%s takes the first %d" % [level_name, cap]
+## An entry's individual name ("Fire Archer #3").
+static func entry_name(e: Dictionary) -> String:
+	return individual_name(str(e.get("name", "")), int(e.get("ordinal", 0)))
+
+## Where the hand strip's cap divider stands (before that slot; -1 = none): at the cap, whatever the hand holds, so
+## adding or removing a tower never moves it or changes the strip's width (Eren 2026-10-17).
+static func divider_slot(cap: int, slots := TowerCollection.MaxHand) -> int:
+	return cap if cap > 0 and cap < slots else -1
+
+## How many filters the Filters popup has set (the Filters button's badge): each picked role and delivery, a cost
+## range, each toggle on. The search is not counted (it sits in the bar).
+static func filter_count(f: Dictionary) -> int:
+	var n: int = f.get("roles", []).size() + f.get("delivery", []).size()
+	if int(f.get("cost_min", 0)) > 0 or int(f.get("cost_max", COST_ANY)) < COST_ANY: n += 1
+	for k in ["move", "heal", "status", "hide", "ready"]:
+		if bool(f.get(k, false)): n += 1
+	return n

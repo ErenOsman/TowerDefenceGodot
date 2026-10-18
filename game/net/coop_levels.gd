@@ -173,7 +173,7 @@ static func task_entries(me: String) -> Array:
 		if owned == null: continue
 		counts[owned.type] = int(counts.get(owned.type, 0)) + 1
 		var type: TowerType = app.tower_type(owned.type)
-		if type != null: out.append(TowerTasks.entry(owned, type, "%s:%s#%d" % [me, owned.type, counts[owned.type]], "", sd.towers.towers.find(owned) + 1))
+		if type != null: out.append(TowerTasks.entry(owned, type, "%s:%s#%d" % [me, owned.type, counts[owned.type]], "", sd.towers.ordinal_of(owned.id)))
 	return out
 
 ## A TowerAsset by type id or hand entry ("archer@archer-fire" → the Archer; for pictures), or null.

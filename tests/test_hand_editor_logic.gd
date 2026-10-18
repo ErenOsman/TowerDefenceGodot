@@ -58,7 +58,9 @@ func test_entries_are_individuals_with_their_index() -> void:
 	assert_eq(es[1].name, "Archer")
 	assert_ne(es[0].id, es[1].id)
 	assert_eq(es[1].index, 2)
-	assert_eq(HandLogic.number_text(es[2]), "#2 · tower 3")
+	assert_eq(HandLogic.entry_name(es[0]), "Archer #1")
+	assert_eq(HandLogic.entry_name(es[1]), "Archer #2")
+	assert_eq(HandLogic.entry_name(es[2]), "Guardian #1", "the ordinal counts within the type, not the collection")
 	assert_eq(es[0].cost, 100)
 
 func test_filters_on_the_real_content() -> void:
@@ -201,8 +203,6 @@ func test_detail_texts() -> void:
 	assert_eq(HandLogic.ability_subtitle(["Attack", "Projectile"], 1, false), "Attack · projectile · 1 turn CD")
 	assert_eq(HandLogic.ability_subtitle(["Movement"], 2, false), "Movement · 2 turn CD")
 	assert_eq(HandLogic.ability_subtitle(["Attack", "Spell", "Fire"], 2, false), "Attack · spell · 2 turn CD")
-	assert_eq(HandLogic.cap_note("Two Roads", 4), "Two Roads takes the first 4")
-	assert_eq(HandLogic.cap_note("", 4), "")
 	var t: TowerAsset = lib().catalog.find_tower("archer")
 	var me := DefStats.new(_conv.entity(t.entity))
 	var vocab: Vocabulary = _conv.rules(lib().rules).vocabulary
@@ -211,3 +211,48 @@ func test_detail_texts() -> void:
 	assert_seq(HandLogic.stat_tiles(DefStats.new(_conv.entity(mage.entity)), vocab).map(func(x): return x[1]),
 		["Max HP", "Power", "Range", "Speed", "Potency", "Radius"], "no cap: Potency and Radius make a third row")
 	assert_seq(HandLogic.stat_tiles(me, vocab).map(func(x): return "%s %s" % [x[2], x[1]]), ["20 Max HP", "10 Power", "2 Range", "2 Speed"])
+
+## Eren 2026-10-17: "Drummer #8 · tower 9" → "Drummer #n", n = this tower's order among the player's towers of the
+## same type (the first Drummer got is #1); the id is untouched.
+func test_individual_name_is_the_ordinal_within_the_type() -> void:
+	var c := TowerCollection.new()
+	var a1 := c.add("archer")
+	var d1 := c.add("drummer")
+	var a2 := c.add("archer")
+	var d2 := c.add("drummer")
+	var d3 := c.add("drummer")
+	assert_eq(c.ordinal_of(a1.id), 1)
+	assert_eq(c.ordinal_of(a2.id), 2)
+	assert_eq(c.ordinal_of(d1.id), 1)
+	assert_eq(c.ordinal_of(d3.id), 3)
+	assert_eq(c.ordinal_of("nope"), 0)
+	assert_eq(HandLogic.individual_name("Drummer", c.ordinal_of(d2.id)), "Drummer #2")
+	assert_eq(HandLogic.individual_name("Fire Archer", 2), "Fire Archer #2", "a formed tower keeps its type's count")
+	assert_eq(HandLogic.individual_name("Archer", 0), "Archer", "unknown: the name alone")
+	var id_before := d2.id
+	c.remove(d1.id)
+	assert_eq(c.ordinal_of(d2.id), 1, "the order of the ones still owned")
+	assert_eq(d2.id, id_before, "the id never changes")
+	var es := HandLogic.entries(c, lib().catalog, _conv)
+	var names := es.map(func(e): return HandLogic.entry_name(e))
+	assert_seq(names, ["Archer #1", "Archer #2", "Drummer #1", "Drummer #2"])
+
+## The strip never changes with the hand (Eren 2026-10-17: adding a tower made a note appear and the window reflow):
+## the divider stands at the cap whatever the hand holds; nothing else is placed by the hand's content.
+func test_strip_divider_does_not_depend_on_the_hand() -> void:
+	assert_eq(HandLogic.divider_slot(4), 4)
+	assert_eq(HandLogic.divider_slot(0), -1, "no cap: no divider")
+	assert_eq(HandLogic.divider_slot(8), -1, "a cap of 8: no divider after the last slot")
+	assert_eq(HandLogic.divider_slot(3, 8), HandLogic.divider_slot(3), "one rule for every hand size")
+
+func test_filter_count_badge() -> void:
+	var f := HandLogic.default_filter()
+	assert_eq(HandLogic.filter_count(f), 0)
+	f.q = "arch"
+	assert_eq(HandLogic.filter_count(f), 0, "the search sits in the bar: not counted")
+	f.roles = ["Attack", "Support"]
+	f.delivery = ["Melee"]
+	assert_eq(HandLogic.filter_count(f), 3)
+	HandLogic.toggle_cost_chip(f, 0)
+	f.heal = true
+	assert_eq(HandLogic.filter_count(f), 5)
