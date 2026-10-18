@@ -2,7 +2,7 @@ extends Control
 ## The Camp (UI_Camp.cs; Camp & Chapters — Design): the home between levels once Chapter 1 is won. A 3D camp
 ## laid out from res://art/camp/layout.json (map-kit ground with its frame, the station props on a ring round the
 ## Campfire, all facing the camera; Tent and Supplies) with a station button over each prop: Chapters (the chapter picker, then a chapter's
-## levels), Towers (the hand editor over every owned tower), Codex, Blacksmith (station id "Workshop", the anvil
+## levels), Towers (the hand editor over every owned tower), Codex, Blacksmith (station id "Workshop", the smithy signpost (ex anvil
 ## table's slot: "Modify and upgrade towers"; slides to the Blacksmith place, SceneFlow.Blacksmith, which holds the
 ## Workshop; Blacksmith — Design), Guild (by the Signpost, "Missions and co-op": the Camp slides out to the left as the Guild comes in, SceneFlow.slide;
 ## a gold "New" on the button until the first Guild visit) and Main menu; no Multiplayer here (it lives in the Guild
@@ -35,7 +35,7 @@ const FALLBACK_LAYOUT := {
 	"slots": [
 		{"slot": 0, "tile": [6.5, 7.9], "face_yaw": 0.0, "row": "back", "station": "Chapters", "prop": "War Table", "scale": 3.2},
 		{"slot": 1, "tile": [2.43, 6.66], "face_yaw": 0.0, "row": "back", "station": "Towers", "prop": "Miniature Shelf", "scale": 3.4},
-		{"slot": 2, "tile": [1.43, 3.87], "face_yaw": 0.0, "row": "front", "station": "Workshop", "prop": "Tower Workshop", "scale": 3.2},
+		{"slot": 2, "tile": [1.43, 3.87], "face_yaw": 0.0, "row": "front", "station": "Workshop", "prop": "Signpost Smithy", "scale": 2.6},
 		{"slot": 3, "tile": [4.24, 1.63], "face_yaw": 0.0, "row": "front", "station": null, "prop": null},
 		{"slot": 4, "tile": [8.76, 1.63], "face_yaw": 0.0, "row": "front", "station": null, "prop": null},
 		{"slot": 5, "tile": [11.57, 3.87], "face_yaw": 0.0, "row": "front", "station": "Guild", "prop": "Signpost", "scale": 2.6},
@@ -401,7 +401,7 @@ func open_towers() -> TdPopup:
 func open_workshop() -> TdPopup:
 	return open_popup("workshop")
 
-## Blacksmith (the anvil table's station): the Camp slides out to the left as the Blacksmith comes in from the right.
+## Blacksmith (the smithy signpost's station): the Camp slides out to the right as the Blacksmith comes in from the left.
 func open_blacksmith() -> void:
 	end_tour()
 	SaveData.save()
