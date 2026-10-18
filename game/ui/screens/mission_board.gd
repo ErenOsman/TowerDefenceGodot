@@ -1,7 +1,7 @@
 class_name MissionBoardScreen
 extends TdPopup
 ## The mission board (Missions & Guild — Design § The Guild "Missions"; mockup screens-b/mission-board.html): a wood
-## window over the Guild. Header "Missions" (no reset countdown: it resets at midnight, Eren 2026-10-17), the token pills (every token kind and how many you have)
+## window over the Guild. Header "Missions" (no reset countdown: it resets at midnight, Eren 2026-10-17), no token pills (the Backpack lists them)
 ## and ×. One card per mission, sorted by tier then the catalog's `missions` order (MissionUiLogic.board_order;
 ## unlocked or not): the board thumbnail, the name with its mode chip (Solo / Co-op 2–6 / Any · solo or 1–4), the
 ## level (and "2 plays a day"), the tier diamonds with a secondary "Rewards" button (the mission's Rewards popup,
@@ -74,14 +74,7 @@ func refresh() -> void:
 	for c in _inv.get_children():
 		_inv.remove_child(c)
 		c.queue_free()
-	if GameApp.catalog != null:
-		for tok in GameApp.catalog.tokens:
-			var id: String = tok.get_id()
-			var have: int = SaveData.tokens.count(id)
-			var pill := TdDrops.coin(id, have, false, false, 40.0, str(have))
-			TdTooltipTrigger.attach(pill, TooltipText.title(tok.get_display_name(), TooltipText.value_color(), "Token"),
-				tok.description, "You have", str(have))
-			_inv.add_child(pill)
+	# no token strip in the header (Eren 2026-10-17: "tokenleri böyle gösteremeyiz"); the Rewards popup and the Backpack list them
 	for c in _grid.get_children():
 		_grid.remove_child(c)
 		c.queue_free()

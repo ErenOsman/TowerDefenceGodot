@@ -359,8 +359,15 @@ func refresh_modify() -> void:
 
 func _refresh_tokens() -> void:
 	TdCollection.clear_children(_tokens)
+	# only the token kinds this tower's forms need (Eren 2026-10-17: "sadece alakalı tokenler"); the Backpack lists all
+	var wanted := {}
+	var base = _type.base if _type != null and _type.get("base") != null else _type
+	if base != null:
+		for f in base.forms:
+			for k in f.unlock.keys(): wanted[k] = true
 	for t in GameApp.catalog.tokens:
 		var id: String = t.get_id()
+		if not wanted.has(id): continue
 		var have: int = SaveData.tokens.count(id)
 		var chip := PanelContainer.new()
 		var sb := StyleBoxFlat.new()
