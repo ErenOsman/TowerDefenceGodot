@@ -29,6 +29,7 @@ func _init() -> void:
 	stretch = true
 	mouse_filter = MOUSE_FILTER_STOP
 	mouse_default_cursor_shape = CURSOR_DRAG
+	set_meta("drag_source", true) # a drag turns the model; the page scroll around it (TdDragScroll) leaves it alone
 
 func _ready() -> void:
 	_vp = SubViewport.new()

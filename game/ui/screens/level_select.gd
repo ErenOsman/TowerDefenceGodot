@@ -10,7 +10,8 @@ extends TdPopup
 ##   at least once; before that the same heading over one muted line "You'll see them when you play it.",
 ##   MenuLogic.has_played; the enemies fact tile always shows the kit's icon_enemy) whose tooltip has HP, Shield,
 ##   Speed, Power and the abilities with their cooldown; on the right the level's board as a rendered diorama
-##   (TdLevelPreview → CoopBoardPic: 35°, contain, blurred margin; cached per level, the minimap while it renders), the first-win reward card (teal) and Play
+##   (TdLevelPreview → CoopBoardPic: 35°, contain, blurred margin; the pre-rendered PNG of LevelPreviewCache, live
+##   only for a level without a fresh one), the first-win reward card (teal) and Play
 ##   (bottom-right, flat cobalt). A locked level shows the same panel greyed with its requirement and Play disabled.
 ## - Bottom: "Your hand" with a note ("Two Roads takes the first 4 towers; the rest wait on the bench."), all 8 slots
 ##   (miniature, cost coin, slot number; empty slots dashed "Empty"), a gold divider after the level's hand cap, the
@@ -657,6 +658,8 @@ func _draw_reward(entry: CatalogEntry, level: LevelAsset) -> void:
 		if e[0].level == level: reward = e[0].first_clear_reward
 	_reward.visible = reward != null
 	if reward == null: return
+	# a tower shown as a prize is discovered in the Codex (Eren 2026-10-17)
+	if SaveData.codex.discover(CodexSection.Towers, reward.get_id()): SaveData.save()
 	var won := SaveData.progress.is_won(selected)
 	var lines := MenuLogic.reward_lines(reward.get_display_name(), won)
 	_reward_title.text = lines[0]
@@ -731,6 +734,12 @@ func play() -> void:
 	SaveData.progress.last_selected = selected
 	SaveData.save()
 	GameApp.play_level(level)
+
+## Closing drops the preview's pending live render first, so no SubViewport is still rendering (and nothing swaps in)
+## after the panel is gone (the 1-frame flash on close, 2026-10-17). With pre-rendered previews there is none.
+func close() -> void:
+	if _preview != null: _preview.cancel()
+	super.close()
 
 func back() -> void:
 	SaveData.save()
@@ -817,30 +826,6 @@ class HandSlot extends Control:
 		if empty or bench: _plate.set_extra_state("Locked")
 		add_child(_plate)
 		if bench: modulate.a = 0.8 # benched slots a little dimmer (as in hand select)
-		TdTooltipTrigger.attach(self, "", "Click: change hand" if not empty else "Empty slot. Click: change hand")
-
-	## Mission marks (the mission detail): a tired tower at 50 % with the moon badge and "Tired ·\nrests in 5 h"
-	## under its plate; a tower the mission takes gets "▲ goes" there.
-	func mark(tired_text: String, goes: bool) -> void:
-		if empty: return
-		var line := ""
-		var col := TdTheme.color("cream.200")
-		if tired_text != "":
-			# the whole slot at 50 % (plate included), the badge at full strength under the coin, a muted caption
-			for c in get_children(): if c is CanvasItem: c.modulate.a = 0.5
-			TdTiredBadge.attach(self, 124.0, 0.25, Vector2(0.17, 0.5))
-			line = tired_text
-			col = Color(TdTheme.color("cream.300"), 0.85)
-		elif goes:
-			line = "▲ goes"
-			col = TdTheme.color("cream.100")
-		if line == "": return
-		var l := TdMenu.label(line, "plate", col, 18)
-		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		l.position = Vector2(-8, SLOT.y + 2)
-		l.size = Vector2(SLOT.x + 16, 22)
-		l.add_theme_constant_override("line_spacing", -4)
-		add_child(l)
 
 	func _restyle() -> void:
 		if _plate != null:

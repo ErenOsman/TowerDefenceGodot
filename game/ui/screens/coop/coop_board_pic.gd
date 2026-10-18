@@ -1,8 +1,10 @@
 class_name CoopBoardPic
 extends Control
-## A level's 3D board picture for the co-op screens, rendered at this control's own size (TdLevelPreview.render_board,
-## framed to fill the box) and cached per level and size, so a wide strip and a card each get a board that fits them.
-## The flat minimap stands in until it is ready. Renders one at a time (a queue hung off the scene root).
+## A level's board picture (co-op cards, mission cards and detail, level select through TdLevelPreview), at this
+## control's own size and cached per level and size, so a wide strip and a card each get a board that fits them.
+## The picture is the level's pre-rendered PNG (LevelPreviewCache, tools/level_previews.gd) when it has a fresh one:
+## shown at once, no 3D. Otherwise (a new or edited level in development) it renders the board live (one at a time,
+## a queue hung off the scene root); the flat minimap stands in until then (placeholder_minimap; off = nothing).
 ## Thumbnail rule (UI review round 3): "contain", never crop; a low camera (~35°) so the board fills ~90 % of the
 ## width; the margin left over shows a darkened, blurred copy of the same render instead of black.
 ##   var p := CoopBoardPic.new(); p.custom_minimum_size = Vector2(80, 54); add_child(p); p.show_level("chapter1-1")
@@ -22,6 +24,8 @@ var grey := false:
 		if _pic != null: _pic.material = grey_material() if v else null
 var pitch := 35.0
 var yaw := -8.0
+## While a live render runs: the minimap (true) or nothing (false: level select, no minimap-to-board flicker).
+var placeholder_minimap := true
 var _pic: TextureRect
 var _back: TextureRect
 var _wanted := false
@@ -43,6 +47,8 @@ func _init() -> void:
 	_pic.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	add_child(_pic)
 	resized.connect(func(): if _wanted: _request())
+	# a job skipped while this was hidden (a screen built before it opens) is asked for again when it shows
+	visibility_changed.connect(func(): if _wanted and is_visible_in_tree(): _request())
 
 ## Shows a level (minimap now, the board once rendered).
 func show_level(id: String) -> void:
@@ -52,7 +58,11 @@ func show_level(id: String) -> void:
 	if cache.has(key):
 		_set_board(cache[key])
 		return
-	_pic.texture = CoopUi.thumb(id, 8)
+	if _try_png(): return
+	# a fresh PNG waiting for the layout shows nothing meanwhile (no minimap flash); a live render shows the placeholder
+	var png := LevelPreviewCache.status(CoopLevels.level_asset(id)) == "ok"
+	_back.visible = false
+	_pic.texture = CoopUi.thumb(id, 8) if placeholder_minimap and not png else null
 	_pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_pic.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_wanted = true
@@ -65,6 +75,28 @@ func is_board_shown() -> bool:
 func _key() -> String:
 	var s := size if size.x > 4.0 else custom_minimum_size
 	return "%s@%dx%d" % [level_id, int(s.x), int(s.y)]
+
+## Shows the level's pre-rendered picture (sized like a live render of this box) when there is a fresh one.
+func _try_png() -> bool:
+	var s := size if size.x > 4.0 else custom_minimum_size
+	if s.x < 8.0 or s.y < 8.0 or level_id == "": return false
+	var tex := LevelPreviewCache.texture(CoopLevels.level_asset(level_id), Vector2i(int(s.x * SUPERSAMPLE), int(s.y * SUPERSAMPLE)))
+	if tex == null: return false
+	cache[_key()] = tex
+	_set_board(tex)
+	return true
+
+## Drops this picture's pending live render (its screen is closing): no render finishes after it is gone.
+func cancel() -> void:
+	_wanted = false
+	for j in _queue: j.pics.erase(self)
+	_queue = _queue.filter(func(j): return not j.pics.is_empty())
+
+## Whether some picture still waits for a job (valid, visible on screen, same level and size).
+static func _job_wanted(j: Dictionary) -> bool:
+	for p in j.pics:
+		if is_instance_valid(p) and p._wanted and p.is_visible_in_tree() and p.level_id == j.id and p._key() == j.key: return true
+	return false
 
 func _set_board(tex: Texture2D) -> void:
 	_wanted = false
@@ -81,6 +113,7 @@ func _request() -> void:
 	if cache.has(key):
 		_set_board(cache[key])
 		return
+	if _try_png(): return
 	for j in _queue:
 		if j.key == key:
 			if not j.pics.has(self): j.pics.append(self)
@@ -92,11 +125,17 @@ func _request() -> void:
 
 static func _run(tree: SceneTree) -> void:
 	if _busy or _queue.is_empty() or tree == null: return
-	_busy = true
 	var j: Dictionary = _queue.pop_front()
+	while not _job_wanted(j): # its screen closed or moved on: skip it
+		if _queue.is_empty(): return
+		j = _queue.pop_front()
+	_busy = true
 	var lv := CoopLevels.level_asset(j.id)
-	var tex: Texture2D = await render(tree.root, lv, j.px, j.pitch, j.yaw) if lv != null else null
-	if tex != null: cache[j.key] = tex
+	var tex: Texture2D = await render(tree.root, lv, j.px, j.pitch, j.yaw, _job_wanted.bind(j)) if lv != null else null
+	if tex != null:
+		cache[j.key] = tex
+		# swap after a drawn frame with the texture uploaded, never mid-frame (first-open flicker, 2026-10-17)
+		await RenderingServer.frame_post_draw
 	for p in j.pics:
 		if is_instance_valid(p) and p.level_id == j.id and tex != null and p._key() == j.key: p._set_board(tex)
 	_busy = false
@@ -151,7 +190,9 @@ void fragment() {
 
 ## Renders a level's board into a texture with a transparent background (TdLevelPreview.render_board's scene and
 ## framing; transparent so the blurred copy can show around it). null when it cannot.
-static func render(host: Node, lv: LevelAsset, px: Vector2i, p_pitch: float, p_yaw: float) -> Texture2D:
+## wanted (optional): checked every frame; when it turns false the SubViewport is freed at once and null returned
+## (a closing screen leaves no render running behind it).
+static func render(host: Node, lv: LevelAsset, px: Vector2i, p_pitch: float, p_yaw: float, wanted := Callable()) -> Texture2D:
 	var app := TdMenu.app()
 	if app == null or lv == null or host == null or not host.is_inside_tree(): return null
 	var def: LevelDef = app.convert.level(lv)
@@ -183,7 +224,11 @@ static func render(host: Node, lv: LevelAsset, px: Vector2i, p_pitch: float, p_y
 	cam.current = true
 	TdLevelPreview._fit(cam, Vector2(px), Vector2i(grid.width, grid.height), p_pitch, p_yaw)
 	var tree := host.get_tree()
-	for i in 4: await tree.process_frame
+	for i in 4:
+		await tree.process_frame
+		if wanted.is_valid() and not wanted.call():
+			if is_instance_valid(vp): vp.free()
+			return null
 	await RenderingServer.frame_post_draw
 	var tex: Texture2D = null
 	if is_instance_valid(vp):

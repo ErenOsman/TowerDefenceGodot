@@ -3,7 +3,8 @@ extends RefCounted
 ## Board thumbnails for the chapter cards, framed like the co-op cards and level select (UI/UX rule 2026-10-14):
 ## the shared renderer CoopBoardPic.render (35° camera, "contain": the whole board, never cropped), and the margin
 ## left over filled with a darkened, blurred copy of the render, all baked into one texture (the card shows a single
-## TextureRect). Cached per key for the session; one render at a time (a queue).
+## TextureRect). The board is the level's pre-rendered PNG (LevelPreviewCache) when it has a fresh one (composed at
+## once, no 3D); else it renders live. Cached per key for the session; one live render at a time (a queue).
 ##   ChapterThumbs.request(self, "chapter1-1", level, func(tex): rect.texture = tex)
 ## Until it is ready, show placeholder(level) (the minimap image).
 
@@ -20,9 +21,17 @@ static var cache := {}          # key -> Texture2D
 static var _queue: Array = []   # {key, level, host, done: [Callable]}
 static var _busy := false
 
-## The cached thumbnail for a key, or null.
+## The cached thumbnail for a key (a level id: also its pre-rendered picture), or null.
 static func cached(key: String) -> Texture2D:
+	if not cache.has(key): _from_png(key, CoopLevels.level_asset(key))
 	return cache.get(key)
+
+## Composes the thumbnail from the level's pre-rendered PNG into the cache; false when it has no fresh one.
+static func _from_png(key: String, level: LevelAsset) -> bool:
+	var img := compose(LevelPreviewCache.image(level, SIZE)) if level != null else null
+	if img == null: return false
+	cache[key] = ImageTexture.create_from_image(img)
+	return true
 
 ## The minimap of a level as a texture (the placeholder while the board renders); null for no level.
 static func placeholder(level: LevelAsset) -> Texture2D:
@@ -36,6 +45,9 @@ static func request(host: Node, key: String, level: LevelAsset, done: Callable) 
 		done.call(cache[key])
 		return
 	if level == null or host == null: return
+	if _from_png(key, level):
+		done.call(cache[key])
+		return
 	for j in _queue:
 		if j.key == key:
 			j.done.append(done)

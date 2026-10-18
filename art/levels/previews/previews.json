@@ -1,0 +1,55 @@
+{
+	"levels": {
+		"chapter1-1": {
+			"file": "chapter1-1.png",
+			"hash": "c32417b1f37b1438"
+		},
+		"chapter1-2": {
+			"file": "chapter1-2.png",
+			"hash": "1dd1ee84049cf092"
+		},
+		"chapter1-3": {
+			"file": "chapter1-3.png",
+			"hash": "6498dd44e2f301fd"
+		},
+		"chapter1-4": {
+			"file": "chapter1-4.png",
+			"hash": "e03e9038fd6aad8f"
+		},
+		"chapter2-1": {
+			"file": "chapter2-1.png",
+			"hash": "7f0807c776431eca"
+		},
+		"chapter2-2": {
+			"file": "chapter2-2.png",
+			"hash": "332007d62ddd07fa"
+		},
+		"chapter2-3": {
+			"file": "chapter2-3.png",
+			"hash": "be1603d4aaa21082"
+		},
+		"chapter2-4": {
+			"file": "chapter2-4.png",
+			"hash": "4ff87aac5d36871a"
+		},
+		"example-level": {
+			"file": "example-level.png",
+			"hash": "a017937803941cbc"
+		},
+		"test-level": {
+			"file": "test-level.png",
+			"hash": "1925731ea8fe3770"
+		},
+		"tutorial": {
+			"file": "tutorial.png",
+			"hash": "a5532719639e6de9"
+		}
+	},
+	"pitch": 35.0,
+	"size": [
+		1160,
+		600
+	],
+	"version": 1,
+	"yaw": -8.0
+}
