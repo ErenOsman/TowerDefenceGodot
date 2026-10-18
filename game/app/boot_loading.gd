@@ -3,7 +3,7 @@ extends Control
 ## MINIMUM_DISPLAY_TIME while the content loads, "Complete!", then Welcome on a first launch (no profile in
 ## the save) or the main menu.
 ## Preload stage (so the first Camp / menu opening does not hitch): after the content, the camp props
-## (the Camp's layout: art/camp/v2/layout.json, open and closed facades), the map-kit ground and board-edge pieces, the starting towers' models and the menu
+## (art/camp/layout.json), the map-kit ground and board-edge pieces, the starting towers' models and the menu
 ## miniatures, the shared menu background, the UI theme and the menu screens' scenes load in the background (threaded; on the web a few
 ## per frame), the bar showing real progress; each loaded scene is then drawn once in a hidden SubViewport so
 ## GL Compatibility compiles its materials (shader pre-warm). Loaded resources stay alive in GameApp.keep().
@@ -57,13 +57,9 @@ static func preload_paths() -> Array[String]:
 	var out: Array[String] = []
 	var add := func(p: String):
 		if p != "" and not out.has(p) and ResourceLoader.exists(p): out.append(p)
-	var kits := _camp_kits()
 	for prop in _camp_props():
-		for k in kits: # the first kit folder that has it (camp/v2 → camp → tiles: the Signpost is a map-kit piece)
-			var path := "res://art/%s/%s.fbx" % [k, prop]
-			if ResourceLoader.exists(path):
-				add.call(path)
-				break
+		add.call(ArtPaths.camp(prop))
+		add.call("res://art/tiles/%s.fbx" % prop) # a map-kit piece used as a Camp prop (the Signpost)
 	for piece in TILE_PIECES: add.call("res://art/tiles/%s.fbx" % piece)
 	var catalog: GameCatalogAsset = GameApp.catalog
 	if catalog != null:
@@ -77,30 +73,19 @@ static func preload_paths() -> Array[String]:
 		add.call(SceneFlow.path_of(id))
 	return out
 
-const CAMP_LAYOUT := "res://art/camp/v2/layout.json" # = camp.gd LAYOUT
-
-## The prop names in the Camp's layout (every "prop" and "prop_closed" value), Camp Ground first when it exists.
+## The prop names in res://art/camp/layout.json (every "prop" value), Camp Ground first when it exists.
 static func _camp_props() -> Array:
 	var names := []
 	if ResourceLoader.exists("res://art/camp/Camp Ground.fbx"): names.append("Camp Ground")
-	var text := FileAccess.get_file_as_string(CAMP_LAYOUT)
+	var text := FileAccess.get_file_as_string("res://art/camp/layout.json")
 	var json := JSON.new()
 	if text != "" and json.parse(text) == OK: _collect_props(json.data, names)
 	return names
 
-## The Camp layout's prop folders (its "kits"), plus camp and tiles.
-static func _camp_kits() -> Array:
-	var kits := []
-	var d = JSON.parse_string(FileAccess.get_file_as_string(CAMP_LAYOUT)) if FileAccess.file_exists(CAMP_LAYOUT) else null
-	if d is Dictionary and d.get("kits") is Array: kits = d.kits.duplicate()
-	for k in ["camp", "tiles"]:
-		if not kits.has(k): kits.append(k)
-	return kits
-
 static func _collect_props(v, names: Array) -> void:
 	if v is Dictionary:
 		for k in v:
-			if (k == "prop" or k == "prop_closed") and v[k] is String and not names.has(v[k]): names.append(v[k])
+			if k == "prop" and v[k] is String and not names.has(v[k]): names.append(v[k])
 			else: _collect_props(v[k], names)
 	elif v is Array:
 		for e in v: _collect_props(e, names)

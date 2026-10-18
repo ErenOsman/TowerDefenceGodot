@@ -1,17 +1,12 @@
 class_name TdStationWorld
 extends SubViewportContainer
 ## A "place" diorama with stations on a ring, built from a layout.json (the Camp's schema: board, ring, centre,
-## slots, decor) — shared by the Camp (art/camp/v2/layout.json), the Blacksmith and the Guild (art/guild/layout.json). Full-rect 3D
+## slots, decor) — shared by the Camp (art/camp/layout.json) and the Guild (art/guild/layout.json). Full-rect 3D
 ## view in its own world: the ground (a map-kit BoardView of the board's size, unless the layout brings its own floor
 ## as decor), the station props on their slots, the centre piece (a station too when it has a `station` field), the
 ## decor, all playing their Idle loops; TdDiorama's light, and camp.gd's camera (fov 34, framed on the ring centre).
 ## Station buttons are placed by place_buttons(): in front of the prop, else beside it, else above it — the first
 ## spot that covers no prop and no other button (UI/UX ruling 2026-10-14: props never move for buttons). A prop can also be a hotspot (hover: highlight + tooltip, click: an action).
-## Building slots (Camp v2): a slot with `prop_closed` and `unlock` shows prop_closed while is_unlocked(unlock,
-## station id) is false (`closed[id]` = true: the scene shows no button and no hotspot), else `prop` at the same
-## tile / scale / yaw; `hotspot: "door"` + `door {centre_local, size_local}` (prop-local, unscaled) make the doorway
-## the hotspot rect (door_rect) and the place for a warm light (add_door_light). `aliases` maps a layout station
-## name to the scene's id (the Camp: "Blacksmith" → "Workshop"). kit_scene() looks a prop up in the layout's "kits".
 ##   var w := TdStationWorld.new(); add_child(w); w.build(layout, func(p): return GameApp.prop_scene("guild", p), false)
 
 const BOARD := Vector2(14, 10)
@@ -28,14 +23,6 @@ var front := {}   # station id → true when its button goes below the prop (row
 ## "decor"), index (into slots / decor), prop}].
 var entries: Array = []
 var board := BOARD
-## Layout station name → the id the scene uses (set before build; e.g. {"Blacksmith": "Workshop"}).
-var aliases := {}
-## func(unlock: String, station_id: String) -> bool, set before build; invalid = every slot open.
-var is_unlocked: Callable
-## Station ids whose slot shows its prop_closed (before its unlock): no button, no hotspot.
-var closed := {}
-## Station id → the slot's door {centre_local: [x, y, z], size_local: [w, h]} (prop-local, unscaled).
-var doors := {}
 var vp: SubViewport
 var cam: Camera3D
 var root3d: Node3D
@@ -73,16 +60,9 @@ func build(layout: Dictionary, prop_loader: Callable, map_ground := true) -> voi
 	for i in slots.size():
 		var slot: Dictionary = slots[i]
 		if slot.get("prop") == null or slot.get("station") == null: continue
-		var id := str(aliases.get(str(slot.station), str(slot.station)))
-		front[id] = str(slot.get("row", "back")) == "front"
-		var prop_name := str(slot.prop)
-		if slot.get("prop_closed") != null and slot.get("unlock") != null and is_unlocked.is_valid() \
-				and not bool(is_unlocked.call(str(slot.unlock), id)):
-			prop_name = str(slot.prop_closed)
-			closed[id] = true
-		if str(slot.get("hotspot", "")) == "door" and slot.get("door") is Dictionary: doors[id] = slot.door
-		props[id] = add_prop(prop_loader, prop_name, tile_of(slot.tile), float(slot.get("scale", 1.0)), float(slot.get("face_yaw", 0.0)))
-		_entry(props[id], "slot", i, prop_name)
+		front[str(slot.station)] = str(slot.get("row", "back")) == "front"
+		props[str(slot.station)] = add_prop(prop_loader, str(slot.prop), tile_of(slot.tile), float(slot.get("scale", 1.0)), float(slot.get("face_yaw", 0.0)))
+		_entry(props[str(slot.station)], "slot", i, str(slot.prop))
 	var centre: Dictionary = layout.get("centre", {})
 	if not centre.is_empty() and centre.get("prop") != null: # a centre may be empty (the Guild's rug)
 		var c := add_prop(prop_loader, str(centre.prop), tile_of(centre.tile), float(centre.get("scale", 1.0)), float(centre.get("yaw", 0.0)))
@@ -127,15 +107,6 @@ static func load_layout(path: String, fallback: Dictionary) -> Dictionary:
 		if d is Dictionary and d.has("slots"): return d
 	return fallback
 
-## A prop's scene from the layout's kits: res://art/<kit>/<prop>.fbx for the first kit that has it ("camp/v2",
-## "camp", ...; "tiles" = the map kit), else GameApp.prop_scene's map-kit fallback; null if none.
-static func kit_scene(kits: Array, prop: String) -> PackedScene:
-	var app := TdMenu.app() # not GameApp by name: this class also compiles where the autoloads are not registered
-	if app == null: return null
-	for k in kits:
-		if ResourceLoader.exists("res://art/%s/%s.fbx" % [k, prop]): return app.prop_scene(str(k), prop)
-	return app.prop_scene(str(kits[0]) if not kits.is_empty() else "camp", prop)
-
 static func tile_of(t) -> Vector2:
 	return Vector2(float(t[0]), float(t[1])) if t is Array and t.size() >= 2 else Vector2.ZERO
 
@@ -177,42 +148,6 @@ func prop_rect(n: Node3D) -> Rect2:
 			else: r = r.expand(p)
 			first = false
 	return r
-
-## A station's doorway (layout `door`) in canvas coordinates: its four prop-local corners projected; Rect2() when
-## the station has no door.
-func door_rect(id: String) -> Rect2:
-	var n: Node3D = props.get(id)
-	if n == null or not doors.has(id) or cam == null or vp.size.x <= 0: return Rect2()
-	var d: Dictionary = doors[id]
-	var c: Array = d.get("centre_local", [0, 0, 0])
-	var sz: Array = d.get("size_local", [0, 0])
-	var k := size / Vector2(vp.size)
-	var r := Rect2()
-	for i in 4:
-		var lp := Vector3(float(c[0]) + float(sz[0]) * (0.5 if i % 2 else -0.5), float(c[1]) + float(sz[1]) * (0.5 if i >= 2 else -0.5), float(c[2]))
-		var p := cam.unproject_position(n.global_transform * lp) * k
-		if i == 0: r = Rect2(p, Vector2.ZERO)
-		else: r = r.expand(p)
-	return r
-
-## A point just inside a station's doorway (world space; `inset` prop-local units behind the door plane), or null.
-func door_point(id: String, inset := 0.12) -> Variant:
-	var n: Node3D = props.get(id)
-	if n == null or not doors.has(id): return null
-	var c: Array = doors[id].get("centre_local", [0, 0, 0])
-	return n.global_transform * Vector3(float(c[0]), float(c[1]), float(c[2]) - inset)
-
-## A warm OmniLight3D just inside a station's open doorway (Camp v2 README: FFB24A, range ~2.5); null without a door.
-func add_door_light(id: String, color := Color("FFB24A"), energy := 1.2, light_range := 2.5) -> OmniLight3D:
-	var p = door_point(id)
-	if p == null: return null
-	var l := OmniLight3D.new()
-	l.light_color = color
-	l.light_energy = energy
-	l.omni_range = light_range
-	l.position = p
-	add_light(l)
-	return l
 
 ## A prop's foot (its position on the ground, a little in front) in canvas coordinates.
 func screen_base(n: Node3D) -> Vector2:
@@ -379,9 +314,8 @@ func hotspot(host: Control, station_id: String, tip: String, on_click: Callable,
 		c.mouse_exited.connect(func(): highlight(n, false))
 	c.gui_input.connect(func(ev):
 		if ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT and not ev.pressed: on_click.call())
-	if tip != "": TdTooltipTrigger.attach(c, "", tip) # a door hotspot is tooltip-free
+	TdTooltipTrigger.attach(c, "", tip)
 	c.set_meta("prop", n)
-	c.set_meta("station", station_id)
 	_hotspots.append(c)
 	return c
 
@@ -392,9 +326,8 @@ static var _glow: ShaderMaterial = null
 func place_hotspots() -> void:
 	for c in _hotspots:
 		var n: Node3D = c.get_meta("prop")
-		if n == null or not is_instance_valid(n): continue
-		var id := str(c.get_meta("station", ""))
-		var r := door_rect(id) if doors.has(id) else prop_rect(n) # a building: just its doorway
+		if n == null: continue
+		var r := prop_rect(n)
 		c.position = r.position
 		c.size = r.size
 

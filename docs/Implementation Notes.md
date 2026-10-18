@@ -13,7 +13,7 @@ content change: `./test.sh`, `tools/soak.gd`, regenerate the reference (`tools/g
 - The Princess is never drawn on the board (Eren 2026-10-15): she speaks as a visual-novel bust on the dialogue box's edge, her model rendered once per session into a transparent texture (`TdBust`, a SubViewport); the old on-board speaker prop is removed.
 - The selection ring (selected unit, and the tower lit from its tray piece at half strength) is a true circle on screen drawn by `SelectRingLayer` in the battle overlay, centred on the unit's projected feet, radius from the tile's size on screen (Eren 2026-10-15); aim / range / hover tile markers stay ground decals.
 - TdButton reserves "bleed" room for rims/rings so clipping containers never cut hovered/selected buttons (ability buttons: 143 px + 4 px gap on the action bar).
-- Camp: a settlement from `art/camp/v2/layout.json` (Blender kit; see "Camp v2" below). The v1 ring (`art/camp/layout.json`) stays for reference only.
+- Camp: stations on a ring from `art/camp/layout.json` (Blender kit, free slots for later stations).
 - Descriptions and level intros come from the content JSON unchanged; wording fixes belong in `data/content`. The tutorial level is the exception: its guided lines live in `data/tutorial.json` (see "Tutorial lines" below).
 
 ## Decisions taken while testing the Godot build
@@ -276,8 +276,7 @@ How it is read:
   of: in front of the prop, beside it (the freer side first), above it — free = no prop's projected bounds (floors /
   halls excluded) and no other button (`TdStationWorld.place_buttons`). The Guild's Camp station is the bottom-left
   "← Camp" button plus the Guild Door as a hotspot (`TdStationWorld.hotspot`).
-- Camp (Eren 2026-10-15, replaces the Signpost hotspot of 2026-10-14; since Camp v2 the Guild is the Guild hall and
-  the Signpost is decor, see "Camp v2"): a **Guild** station button ("Guild" /
+- Camp (Eren 2026-10-15, replaces the Signpost hotspot of 2026-10-14): a **Guild** station button ("Guild" /
   "Missions and co-op", `camp.gd` STATIONS) at layout slot 5 (where Multiplayer stood; prop `Signpost`, the map-kit
   piece: `GameApp.camp_scene` falls back to `res://art/tiles/<name>.fbx`); slot 4 is free. A small gold "New" sits on
   the button's corner until the first Guild visit (`MissionUiLogic.signpost_tag(profile.guild_seen)`). No Multiplayer
@@ -318,39 +317,6 @@ How it is read:
 - Renders: `tools/guild_shot.gd` (gives The Glutton Returns a "Win Hold the Gate first" requirement in memory only,
   to show a locked card).
 
-## Camp v2 (game/ui/screens/camp.gd, 2026-10-17)
-- `camp.gd` `LAYOUT` = `res://art/camp/v2/layout.json` (Camp & Chapters — Design § Camp v2; Blender kit README in
-  the same folder). Props are looked up in the layout's `kits` in order (`camp/v2` → `camp` → `tiles`;
-  `TdStationWorld.kit_scene`). `FALLBACK_LAYOUT` is a copy of the v2 file. Nothing reads `art/camp/layout.json` (v1)
-  any more; Boot's preload reads the v2 layout (`boot_loading.gd` `CAMP_LAYOUT`, `prop` and `prop_closed`).
-- Station ids unchanged: Chapters (primary), Towers, Codex, Guild, and `Workshop` (label Blacksmith). The layout calls
-  the Smithy's station `Blacksmith`; `camp.gd` `STATION_ALIASES` maps it to `Workshop` (`TdStationWorld.aliases`), so
-  saves, tests and tools keep working. Every slot is `row: "front"`: the button goes on the floor in front of the
-  prop / door by the shared rule (`place_buttons`; a STATIONS `nudge` is honoured as in the Blacksmith). No sub-lines.
-- New per-slot fields (read by `TdStationWorld.build`):
-  - `prop_closed` + `unlock`: while `is_unlocked(unlock, id)` is false the slot shows `prop_closed` and the id is in
-    `world.closed`; the Camp then shows no button and no hotspot. `camp.slot_unlocked` decides by the station's
-    gate (Guild `chapter2` = `GameApp.guild_unlocked()` / Chapter 2 won; Workshop `blacksmith` =
-    `GameApp.blacksmith_unlocked()`), so the facade and the button always agree; otherwise by name (`guildUnlock`,
-    `blacksmithUnlock`). The variant is picked on build, so the swap shows on the first Camp visit after the unlock
-    (no live swap while the Camp is open).
-  - `hotspot: "door"` + `door {centre_local [x, y, z], size_local [w, h]}` (prop-local, unscaled; x right, y up,
-    z toward the camera): `world.doors[id]`. `door_rect(id)` projects the four corners; `hotspot()` / `place_hotspots()`
-    use it instead of the whole prop rect. The Camp makes each OPEN door a hotspot (`camp.hotspots`, under the
-    buttons, no tooltip, hover glow on the facade, click = the station's action: `open_guild` / `open_blacksmith`).
-  - A warm `OmniLight3D` inside each open doorway (`add_door_light`: FFB24A, energy `DOOR_LIGHT_ENERGY` 1.2, range
-    2.5, 0.12 prop-local behind the door plane).
-- Camera: unchanged rule, target = the layout's `ring.centre` (6.5, 5.0) so the chimney smoke stays in frame; light =
-  `TdDiorama._add_light`. The facades' `Idle` (smoke, flag, lantern / sign sway) plays through `TdDiorama._idle`.
-- Tours: the first tour skips the closed buildings (no button); the post-Chapter-2 mini tour (`TOUR_OPEN`: Guild,
-  then the Smithy) points the bubble's tip at each open door (`door_rect`). Lines now say "Guild hall" / "Smithy"
-  instead of "The Signpost".
-- Layout editor: edits whatever layout the scene loaded (v2); a slot entry is the facade shown (open or closed share
-  tile / scale / yaw), and save keeps `prop`, `prop_closed`, `unlock`, `door`, `kits`. `place_name()` skips a
-  versioned folder (`v2`) so it still says "Camp".
-- Test: `tests/test_camp_flow.gd` (v2 layout fields, closed before / open after Chapter 2, door hotspots without
-  tooltips, no sub-lines, the editor on the v2 layout).
-
 ## Blacksmith place (game/ui/screens/blacksmith.gd, 2026-10-16)
 **Source of truth: `docs/design/Blacksmith — Design.md`.** The place only; the Upgrade screens are separate work.
 - `SceneFlow.Blacksmith` → `game/ui/screens/blacksmith.tscn`, built like the Guild on `TdStationWorld` from
@@ -387,7 +353,7 @@ takes every mouse event over the scene:
   Delete removes a decor prop (stations and the centre cannot be removed), Esc stops. An overlay at the top shows the
   selected prop's name, station and slot, tile, yaw and scale (`*` = unsaved); the selected prop glows.
 - The station buttons follow live (the scenes re-place them every frame from the props' projected boxes).
-- Ctrl+S writes the scene's `LAYOUT` (`res://art/camp/v2/layout.json` / `res://art/guild/layout.json` / `res://art/blacksmith/layout.json`) in the same schema: the file is
+- Ctrl+S writes `res://art/camp/layout.json` / `res://art/guild/layout.json` in the same schema: the file is
   re-read at start and only `tile` / `face_yaw` / `yaw` / `scale` of the moved entries change; slot ids, stations,
   rows, notes, ring, centre and board are kept; deleted decor entries are dropped; whole numbers are written as ints
   (`JSON.stringify(…, " ")`, key order kept). Each prop knows its entry through `TdStationWorld.entries`
