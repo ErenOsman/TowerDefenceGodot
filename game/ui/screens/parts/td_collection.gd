@@ -518,7 +518,7 @@ class SearchGlyph extends Control:
 ## The Filters popup (filters_popup): "Filters" and ×, the filter groups in a drag-scrollable column, Clear filters.
 class FiltersPopup extends TdPopup:
 	var collection: TdCollection
-	const W := 380.0
+	const W := 560.0 # wide enough for the chip rows to breathe (Eren 2026-10-19: "filters böyle ince kalmasın")
 	const MAX_H := 640.0
 	func _build() -> void:
 		var center := CenterContainer.new()
